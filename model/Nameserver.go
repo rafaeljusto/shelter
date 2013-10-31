@@ -19,7 +19,7 @@ const (
 	NameserverStatusNotSynchronized
 )
 
-var NameserverStatus int
+type NameserverStatus int
 
 // Nameserver store the information necessary to send the requests for a specific host and
 // store the results of this requests
