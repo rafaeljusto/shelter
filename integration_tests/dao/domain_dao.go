@@ -23,7 +23,7 @@ func main() {
 	if domainRetrieved, err := domainDAO.FindByFQDN(domain.FQDN); err != nil {
 		log.Fatalln("DomainDAO integration test: Couldn't find domain in database.", err)
 
-	} else if domainRetrieved != domain {
+	} else if !compareDomains(domain, domainRetrieved) {
 		log.Fatalln("DomainDAO integration test: Domain in being persisted wrongly")
 	}
 
@@ -67,4 +67,51 @@ func newDomain() model.Domain {
 	domain.Owners = []*mail.Address{owner}
 
 	return domain
+}
+
+// Function to compare if two domains are equal, cannot use operator == because of the
+// slices inside the domain object
+func compareDomains(d1, d2 model.Domain) bool {
+	if d1.Id != d2.Id || d1.FQDN != d2.FQDN {
+		return false
+	}
+
+	if len(d1.Nameservers) != len(d2.Nameservers) {
+		return false
+	}
+
+	for i := 0; i < len(d1.Nameservers); i++ {
+		// Cannot compare the nameservers directly with operator == because of the
+		// pointers for IP addresses
+		if d1.Nameservers[i].Host != d2.Nameservers[i].Host ||
+			d1.Nameservers[i].IPv4.String() != d2.Nameservers[i].IPv4.String() ||
+			d1.Nameservers[i].IPv6.String() != d2.Nameservers[i].IPv6.String() ||
+			d1.Nameservers[i].LastStatus != d2.Nameservers[i].LastStatus ||
+			d1.Nameservers[i].LastCheck != d2.Nameservers[i].LastCheck ||
+			d1.Nameservers[i].LastOK != d2.Nameservers[i].LastOK {
+			return false
+		}
+	}
+
+	if len(d1.DSSet) != len(d2.DSSet) {
+		return false
+	}
+
+	for i := 0; i < len(d1.DSSet); i++ {
+		if d1.DSSet[i] != d2.DSSet[i] {
+			return false
+		}
+	}
+
+	if len(d1.Owners) != len(d2.Owners) {
+		return false
+	}
+
+	for i := 0; i < len(d1.Owners); i++ {
+		if d1.Owners[i].String() != d2.Owners[i].String() {
+			return false
+		}
+	}
+
+	return true
 }
