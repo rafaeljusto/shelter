@@ -26,7 +26,6 @@ type NameserverStatus int
 // Nameserver store the information necessary to send the requests for a specific host and
 // store the results of this requests
 type Nameserver struct {
-	Id         int              // Database identification
 	Host       string           // Nameserver's name
 	IPv4       net.IP           // Host's IPv4 (optional when don't need glue)
 	IPv6       net.IP           // Host's IPv6 (optional)

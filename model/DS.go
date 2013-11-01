@@ -4,6 +4,25 @@ import (
 	"time"
 )
 
+// List of possible DS algorithms (RFC 4034 - A.1, RFC 5155, RFC 5702, RFC 5933 and RFC
+// 6605). Only algorithms used for signing were listed here
+const (
+	DSAlgorithmDSASHA1      = 3   // DSA/SHA-1 [DSA]
+	DSAlgorithmRSASHA1      = 5   // RSA/SHA-1 [RSASHA1]
+	DSAlgorithmRSASHA1NSEC3 = 7   // RSA/SHA1-NSEC3 [RSASHA1-NSEC3]
+	DSAlgorithmRSASHA256    = 8   // RSA/SHA-256 [RSASHA256]
+	DSAlgorithmRSASHA512    = 10  // RSA/SHA-512 [RSASHA512]
+	DSAlgorithmGOST         = 12  // GOST R 34.10-2001
+	DSAlgorithmECDSASHA256  = 13  // ECDSA/SHA-256 - Elliptic Curve Digital Signature
+	DSAlgorithmECDSASHA384  = 14  // ECDSA/SHA-384 - Elliptic Curve Digital Signature
+	DSAlgorithmPrivateDNS   = 253 // Private [PRIVATEDNS]
+	DSAlgorithmPrivateOID   = 254 // Private [PRIVATEOID]
+)
+
+// DSAlgorithm is a number that represents one of the possible DS algorithms listed in the
+// constant group above
+type DSAlgorithm uint8
+
 // List of possible DS status
 const (
 	DSStatusOK               = iota // DNSSEC configuration for this DS is OK
@@ -26,11 +45,10 @@ type DSStatus int
 // DNSSEC problems, the worst problem (using a priority algorithm) will be stored in the
 // DS
 type DS struct {
-	Id        int       // Database identification
-	Keytag    uint16    // DNSKEY's identification number
-	Algorithm uint8     // DNSKEY's algorithm
-	Digest    string    // Hash of the DNSKEY content
-	Status    DSStatus  // Result of the last configuration check
-	LastCheck time.Time // Time of the last configuration check
-	LastOK    time.Time // Last time that the DNSSEC configuration was OK
+	Keytag    uint16      // DNSKEY's identification number
+	Algorithm DSAlgorithm // DNSKEY's algorithm
+	Digest    string      // Hash of the DNSKEY content
+	Status    DSStatus    // Result of the last configuration check
+	LastCheck time.Time   // Time of the last configuration check
+	LastOK    time.Time   // Last time that the DNSSEC configuration was OK
 }
