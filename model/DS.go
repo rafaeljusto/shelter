@@ -45,10 +45,10 @@ type DSStatus int
 // DNSSEC problems, the worst problem (using a priority algorithm) will be stored in the
 // DS
 type DS struct {
-	Keytag    uint16      // DNSKEY's identification number
-	Algorithm DSAlgorithm // DNSKEY's algorithm
-	Digest    string      // Hash of the DNSKEY content
-	Status    DSStatus    // Result of the last configuration check
-	LastCheck time.Time   // Time of the last configuration check
-	LastOK    time.Time   // Last time that the DNSSEC configuration was OK
+	Keytag     uint16      // DNSKEY's identification number
+	Algorithm  DSAlgorithm // DNSKEY's algorithm
+	Digest     string      // Hash of the DNSKEY content
+	LastStatus DSStatus    // Result of the last configuration check
+	LastCheck  time.Time   // Time of the last configuration check
+	LastOK     time.Time   // Last time that the DNSSEC configuration was OK
 }
