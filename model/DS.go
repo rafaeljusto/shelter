@@ -7,16 +7,16 @@ import (
 // List of possible DS algorithms (RFC 4034 - A.1, RFC 5155, RFC 5702, RFC 5933 and RFC
 // 6605). Only algorithms used for signing were listed here
 const (
-	DSAlgorithmDSASHA1      = 3   // DSA/SHA-1 [DSA]
-	DSAlgorithmRSASHA1      = 5   // RSA/SHA-1 [RSASHA1]
-	DSAlgorithmRSASHA1NSEC3 = 7   // RSA/SHA1-NSEC3 [RSASHA1-NSEC3]
-	DSAlgorithmRSASHA256    = 8   // RSA/SHA-256 [RSASHA256]
-	DSAlgorithmRSASHA512    = 10  // RSA/SHA-512 [RSASHA512]
-	DSAlgorithmGOST         = 12  // GOST R 34.10-2001
-	DSAlgorithmECDSASHA256  = 13  // ECDSA/SHA-256 - Elliptic Curve Digital Signature
-	DSAlgorithmECDSASHA384  = 14  // ECDSA/SHA-384 - Elliptic Curve Digital Signature
-	DSAlgorithmPrivateDNS   = 253 // Private [PRIVATEDNS]
-	DSAlgorithmPrivateOID   = 254 // Private [PRIVATEOID]
+	DSAlgorithmDSASHA1      DSAlgorithm = 3   // DSA/SHA-1 [DSA]
+	DSAlgorithmRSASHA1      DSAlgorithm = 5   // RSA/SHA-1 [RSASHA1]
+	DSAlgorithmRSASHA1NSEC3 DSAlgorithm = 7   // RSA/SHA1-NSEC3 [RSASHA1-NSEC3]
+	DSAlgorithmRSASHA256    DSAlgorithm = 8   // RSA/SHA-256 [RSASHA256]
+	DSAlgorithmRSASHA512    DSAlgorithm = 10  // RSA/SHA-512 [RSASHA512]
+	DSAlgorithmGOST         DSAlgorithm = 12  // GOST R 34.10-2001
+	DSAlgorithmECDSASHA256  DSAlgorithm = 13  // ECDSA/SHA-256 - Elliptic Curve Digital Signature
+	DSAlgorithmECDSASHA384  DSAlgorithm = 14  // ECDSA/SHA-384 - Elliptic Curve Digital Signature
+	DSAlgorithmPrivateDNS   DSAlgorithm = 253 // Private [PRIVATEDNS]
+	DSAlgorithmPrivateOID   DSAlgorithm = 254 // Private [PRIVATEOID]
 )
 
 // DSAlgorithm is a number that represents one of the possible DS algorithms listed in the
