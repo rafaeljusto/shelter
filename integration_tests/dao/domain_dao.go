@@ -17,7 +17,22 @@ func main() {
 
 	var domainDAO dao.DomainDAO
 	if err := domainDAO.Save(&domain); err != nil {
-		log.Fatalln("DomainDAO integration test:", err)
+		log.Fatalln("DomainDAO integration test: Couldn't save domain in database.", err)
+	}
+
+	if domainRetrieved, err := domainDAO.FindByFQDN(domain.FQDN); err != nil {
+		log.Fatalln("DomainDAO integration test: Couldn't find domain in database.", err)
+
+	} else if domainRetrieved != domain {
+		log.Fatalln("DomainDAO integration test: Domain in being persisted wrongly")
+	}
+
+	if err := domainDAO.RemoveByFQDN(domain.FQDN); err != nil {
+		log.Fatalln("DomainDAO integration test: Error while trying to remove a domain.", err)
+	}
+
+	if _, err := domainDAO.FindByFQDN(domain.FQDN); err == nil {
+		log.Fatalln("DomainDAO integration test: Domain was not removed from database")
 	}
 
 	log.Println("DomainDAO integration test: SUCCESS!")

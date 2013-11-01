@@ -61,3 +61,19 @@ func (dao DomainDAO) FindByFQDN(fqdn string) (model.Domain, error) {
 
 	return domain, err
 }
+
+// Remove a database entry that have a given FQDN. The system was designed to have an
+// unique FQDN. The database should be prepared (with indexes) to search faster when using
+// FQDN as condition
+func (dao DomainDAO) RemoveByFQDN(fqdn string) error {
+	// Check if the programmer forgot to set the database in DomainDAO object
+	if dao.Database == nil {
+		return ErrDomainDAOUndefinedDatabase
+	}
+
+	// We must create a BSON object to be compared with MongoDB database entries to
+	// determinate wich one is going to be removed
+	return dao.Database.C("domain").Remove(bson.M{
+		"FQDN": fqdn,
+	})
+}
