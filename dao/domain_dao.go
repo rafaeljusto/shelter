@@ -42,3 +42,22 @@ func (dao DomainDAO) Save(domain *model.Domain) error {
 
 	return err
 }
+
+// Try to find the domain using the FQDN attribute. The system was designed to have an
+// unique FQDN. The database should be prepared (with indexes) to search faster when using
+// FQDN as condition
+func (dao DomainDAO) FindByFQDN(fqdn string) (model.Domain, error) {
+	var domain model.Domain
+
+	// Check if the programmer forgot to set the database in DomainDAO object
+	if dao.Database == nil {
+		return domain, ErrDomainDAOUndefinedDatabase
+	}
+
+	// We must create a BSON object to be compared with MongoDB database entries
+	err := dao.Database.C("domain").Find(bson.M{
+		"FQDN": fqdn,
+	}).One(&domain)
+
+	return domain, err
+}
