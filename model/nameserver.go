@@ -26,10 +26,10 @@ type NameserverStatus int
 // Nameserver store the information necessary to send the requests for a specific host and
 // store the results of this requests
 type Nameserver struct {
-	Host       string           // Nameserver's name
-	IPv4       net.IP           // Host's IPv4 (optional when don't need glue)
-	IPv6       net.IP           // Host's IPv6 (optional)
-	LastStatus NameserverStatus // Result of the last configuration check
-	LastCheck  time.Time        // Time of the last configuration check
-	LastOK     time.Time        // Last time that the DNS configuration was OK
+	Host        string           // Nameserver's name
+	IPv4        net.IP           // Host's IPv4 (optional when don't need glue)
+	IPv6        net.IP           // Host's IPv6 (optional)
+	LastStatus  NameserverStatus // Result of the last configuration check
+	LastCheckAt time.Time        // Time of the last configuration check
+	LastOKAt    time.Time        // Last time that the DNS configuration was OK
 }

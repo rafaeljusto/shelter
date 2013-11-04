@@ -17,7 +17,7 @@ var (
 
 const (
 	// Collection used to store all domain objects in the MongoDB database
-	DomainDAOCollection = "domain"
+	domainDAOCollection = "domain"
 )
 
 // DomainDAO is the structure responsable for keeping the database connection to save the
@@ -43,9 +43,38 @@ func (dao DomainDAO) Save(domain *model.Domain) error {
 
 	// Upsert try to update the collection entry if exists, if not, it creates a new
 	// entry. For all the domain objects we are going to use the collection "domain"
-	_, err := dao.Database.C(DomainDAOCollection).UpsertId(domain.Id, domain)
+	_, err := dao.Database.C(domainDAOCollection).UpsertId(domain.Id, domain)
 
 	return err
+}
+
+// Retrieve all domains for a scan. This method can take a long time to load all domains,
+// so it will return a channel and will send a domain as soon as it is loaded from the
+// database
+func (dao DomainDAO) FindAll() (chan model.Domain, error) {
+	// Check if the programmer forgot to set the database in DomainDAO object
+	if dao.Database == nil {
+		return nil, ErrDomainDAOUndefinedDatabase
+	}
+
+	// Channel to be used for returning each retrieved domain
+	domainChannel := make(chan model.Domain)
+
+	go func() {
+		// Gets the database result iterator
+		it := dao.Database.C(domainDAOCollection).Find(bson.M{}).Iter()
+
+		var domain model.Domain
+		if it.Next(domain) {
+			domainChannel <- domain
+		} else {
+			// TODO: How to alert about an error that occurred here?
+			// err := it.Err()
+			return
+		}
+	}()
+
+	return domainChannel, nil
 }
 
 // Try to find the domain using the FQDN attribute. The system was designed to have an
@@ -60,7 +89,7 @@ func (dao DomainDAO) FindByFQDN(fqdn string) (model.Domain, error) {
 	}
 
 	// We must create a BSON object to be compared with MongoDB database entries
-	err := dao.Database.C(DomainDAOCollection).Find(bson.M{
+	err := dao.Database.C(domainDAOCollection).Find(bson.M{
 		"fqdn": fqdn,
 	}).One(&domain)
 
@@ -78,7 +107,7 @@ func (dao DomainDAO) RemoveByFQDN(fqdn string) error {
 
 	// We must create a BSON object to be compared with MongoDB database entries to
 	// determinate wich one is going to be removed
-	return dao.Database.C(DomainDAOCollection).Remove(bson.M{
+	return dao.Database.C(domainDAOCollection).Remove(bson.M{
 		"fqdn": fqdn,
 	})
 }

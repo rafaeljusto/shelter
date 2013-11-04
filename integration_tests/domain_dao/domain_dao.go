@@ -157,8 +157,8 @@ func compareDomains(d1, d2 model.Domain) bool {
 			d1.Nameservers[i].IPv4.String() != d2.Nameservers[i].IPv4.String() ||
 			d1.Nameservers[i].IPv6.String() != d2.Nameservers[i].IPv6.String() ||
 			d1.Nameservers[i].LastStatus != d2.Nameservers[i].LastStatus ||
-			d1.Nameservers[i].LastCheck != d2.Nameservers[i].LastCheck ||
-			d1.Nameservers[i].LastOK != d2.Nameservers[i].LastOK {
+			d1.Nameservers[i].LastCheckAt != d2.Nameservers[i].LastCheckAt ||
+			d1.Nameservers[i].LastOKAt != d2.Nameservers[i].LastOKAt {
 			return false
 		}
 	}
