@@ -15,6 +15,11 @@ var (
 	ErrDomainDAOUndefinedDatabase = errors.New("No database defined for DomainDAO")
 )
 
+const (
+	// Collection used to store all domain objects in the MongoDB database
+	DomainDAOCollection = "domain"
+)
+
 // DomainDAO is the structure responsable for keeping the database connection to save the
 // domain anytime during the their existence
 type DomainDAO struct {
@@ -38,7 +43,7 @@ func (dao DomainDAO) Save(domain *model.Domain) error {
 
 	// Upsert try to update the collection entry if exists, if not, it creates a new
 	// entry. For all the domain objects we are going to use the collection "domain"
-	_, err := dao.Database.C("domain").UpsertId(domain.Id, domain)
+	_, err := dao.Database.C(DomainDAOCollection).UpsertId(domain.Id, domain)
 
 	return err
 }
@@ -55,8 +60,8 @@ func (dao DomainDAO) FindByFQDN(fqdn string) (model.Domain, error) {
 	}
 
 	// We must create a BSON object to be compared with MongoDB database entries
-	err := dao.Database.C("domain").Find(bson.M{
-		"FQDN": fqdn,
+	err := dao.Database.C(DomainDAOCollection).Find(bson.M{
+		"fqdn": fqdn,
 	}).One(&domain)
 
 	return domain, err
@@ -73,7 +78,7 @@ func (dao DomainDAO) RemoveByFQDN(fqdn string) error {
 
 	// We must create a BSON object to be compared with MongoDB database entries to
 	// determinate wich one is going to be removed
-	return dao.Database.C("domain").Remove(bson.M{
-		"FQDN": fqdn,
+	return dao.Database.C(DomainDAOCollection).Remove(bson.M{
+		"fqdn": fqdn,
 	})
 }
