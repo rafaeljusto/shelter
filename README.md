@@ -6,11 +6,10 @@ Program created for registries to periodically validate and alert domains about 
 installation
 ============
 
-The shelter projects depends on the following packages:
+Shelter project depends on the following packages:
 * labix.org/v2/mgo
 
-All the above packages can be installed using the command:
-  go get <package_name>
+The above packages can be installed using the command "go get package_name".
 
 All system objects are persisted using a MongoDB database, this NoSQL database was
 choosen because we can embed dependency objects, and avoid table relations in a relational
