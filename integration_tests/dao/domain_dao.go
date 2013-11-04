@@ -5,6 +5,7 @@ import (
 	"net"
 	"net/mail"
 	"shelter/dao"
+	"shelter/database/mongodb"
 	"shelter/model"
 )
 
@@ -13,9 +14,16 @@ import (
 // create a new element) and if the object id is set on creation
 
 func main() {
-	domain := newDomain()
+	database, err := mongodb.Open("http://localhost:27017", "shelter")
+	if err != nil {
+		log.Fatalln("DomainDAO integration test: Error connecting the database.", err)
+	}
 
-	var domainDAO dao.DomainDAO
+	domain := newDomain()
+	domainDAO := dao.DomainDAO{
+		Database: database,
+	}
+
 	if err := domainDAO.Save(&domain); err != nil {
 		log.Fatalln("DomainDAO integration test: Couldn't save domain in database.", err)
 	}
