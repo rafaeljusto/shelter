@@ -6,12 +6,14 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"labix.org/v2/mgo"
 	"log"
 	"net"
 	"net/mail"
 	"shelter/dao"
 	"shelter/database/mongodb"
 	"shelter/model"
+	"time"
 )
 
 // This test objective is to verify the domain data persistence. The strategy is to insert
@@ -60,6 +62,20 @@ func main() {
 		fatalln("Error connecting the database", err)
 	}
 
+	// If there was some problem in the last test, there could be some data in the
+	// database, so let's clear it to don't affect this test
+	if err := database.C(dao.DomainDAOCollection).DropCollection(); err != nil {
+		fatalln("Error while trying to clear the scenario in database", err)
+	}
+
+	domainLifeCycle(database)
+	domainDAOPerformance(database)
+
+	println("SUCCESS!")
+}
+
+// Test all phases of the domain life cycle
+func domainLifeCycle(database *mgo.Database) {
 	domain := newDomain()
 	domainDAO := dao.DomainDAO{
 		Database: database,
@@ -83,8 +99,73 @@ func main() {
 	if _, err := domainDAO.FindByFQDN(domain.FQDN); err == nil {
 		fatalln("Domain was not removed from database", nil)
 	}
+}
 
-	println("SUCCESS!")
+// Check if the DAO operations are optimezed for big volume of data
+func domainDAOPerformance(database *mgo.Database) {
+	numberOfItems := 10000
+	durationTolerance := 5.0 // seconds
+
+	index := mgo.Index{
+		Name:       "fqdn",
+		Key:        []string{"fqdn"},
+		Unique:     true,
+		DropDups:   true,
+		Background: false,
+		Sparse:     false,
+	}
+
+	if err := database.C(dao.DomainDAOCollection).EnsureIndex(index); err != nil {
+		fatalln("Error trying to set the collection index", err)
+	}
+
+	domainDAO := dao.DomainDAO{
+		Database: database,
+	}
+
+	begin := time.Now()
+
+	for i := 0; i < numberOfItems; i++ {
+		domain := model.Domain{
+			FQDN: fmt.Sprintf("test%d.com.br", i),
+		}
+
+		if err := domainDAO.Save(&domain); err != nil {
+			fatalln("Couldn't save domain in database during the performance test", err)
+		}
+	}
+
+	// Try to find domains from different parts of the whole range to check indexes
+	queryRanges := numberOfItems / 4
+	fqdn1 := fmt.Sprintf("test%d.com.br", queryRanges)
+	fqdn2 := fmt.Sprintf("test%d.com.br", queryRanges*2)
+	fqdn3 := fmt.Sprintf("test%d.com.br", queryRanges*3)
+
+	if _, err := domainDAO.FindByFQDN(fqdn1); err != nil {
+		fatalln("Couldn't find domain in database during the performance test", err)
+	}
+
+	if _, err := domainDAO.FindByFQDN(fqdn2); err != nil {
+		fatalln("Couldn't find domain in database during the performance test", err)
+	}
+
+	if _, err := domainDAO.FindByFQDN(fqdn3); err != nil {
+		fatalln("Couldn't find domain in database during the performance test", err)
+	}
+
+	for i := 0; i < numberOfItems; i++ {
+		fqdn := fmt.Sprintf("test%d.com.br", i)
+		if err := domainDAO.RemoveByFQDN(fqdn); err != nil {
+			fatalln("Error while trying to remove a domain during the performance test", err)
+		}
+	}
+
+	duration := time.Since(begin)
+	if duration.Seconds() > durationTolerance {
+		fatalln(fmt.Sprintf("Domain DAO operations are too slow (%s)", duration.String()), nil)
+	} else {
+		println(fmt.Sprintf("Domain DAO operations took %s", time.Since(begin).String()))
+	}
 }
 
 // Function to read the configuration file
