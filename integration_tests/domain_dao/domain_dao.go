@@ -63,10 +63,10 @@ func main() {
 	}
 
 	// If there was some problem in the last test, there could be some data in the
-	// database, so let's clear it to don't affect this test
-	if err := database.C(dao.DomainDAOCollection).DropCollection(); err != nil {
-		fatalln("Error while trying to clear the scenario in database", err)
-	}
+	// database, so let's clear it to don't affect this test. We avoid checking the error,
+	// because if the collection does not exist yet, it will be created in the first
+	// insert
+	database.C(dao.DomainDAOCollection).DropCollection()
 
 	domainLifeCycle(database)
 	domainDAOPerformance(database)
@@ -101,7 +101,8 @@ func domainLifeCycle(database *mgo.Database) {
 	}
 }
 
-// Check if the DAO operations are optimezed for big volume of data
+// Check if the DAO operations are optimezed for big volume of data. After some results,
+// with indexes we get 80% better performance
 func domainDAOPerformance(database *mgo.Database) {
 	numberOfItems := 10000
 	durationTolerance := 5.0 // seconds
