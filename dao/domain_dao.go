@@ -4,6 +4,7 @@ import (
 	"errors"
 	"labix.org/v2/mgo"
 	"labix.org/v2/mgo/bson"
+	"shelter/database/mongodb"
 	"shelter/model"
 )
 
@@ -17,8 +18,22 @@ var (
 
 const (
 	// Collection used to store all domain objects in the MongoDB database
-	DomainDAOCollection = "domain"
+	domainDAOCollection = "domain"
 )
+
+func init() {
+	// Add index on FQDN to speed up searchs. FQDN will be a unique field in database
+	mongodb.RegisterIndexFunction(func(database *mgo.Database) error {
+		index := mgo.Index{
+			Name:     "fqdn",
+			Key:      []string{"fqdn"},
+			Unique:   true,
+			DropDups: true,
+		}
+
+		return database.C(domainDAOCollection).EnsureIndex(index)
+	})
+}
 
 // DomainDAO is the structure responsable for keeping the database connection to save the
 // domain anytime during the their existence
@@ -43,7 +58,7 @@ func (dao DomainDAO) Save(domain *model.Domain) error {
 
 	// Upsert try to update the collection entry if exists, if not, it creates a new
 	// entry. For all the domain objects we are going to use the collection "domain"
-	_, err := dao.Database.C(DomainDAOCollection).UpsertId(domain.Id, domain)
+	_, err := dao.Database.C(domainDAOCollection).UpsertId(domain.Id, domain)
 
 	return err
 }
@@ -62,7 +77,7 @@ func (dao DomainDAO) FindAll() (chan model.Domain, error) {
 
 	go func() {
 		// Gets the database result iterator
-		it := dao.Database.C(DomainDAOCollection).Find(bson.M{}).Iter()
+		it := dao.Database.C(domainDAOCollection).Find(bson.M{}).Iter()
 
 		var domain model.Domain
 		if it.Next(domain) {
@@ -89,7 +104,7 @@ func (dao DomainDAO) FindByFQDN(fqdn string) (model.Domain, error) {
 	}
 
 	// We must create a BSON object to be compared with MongoDB database entries
-	err := dao.Database.C(DomainDAOCollection).Find(bson.M{
+	err := dao.Database.C(domainDAOCollection).Find(bson.M{
 		"fqdn": fqdn,
 	}).One(&domain)
 
@@ -107,7 +122,14 @@ func (dao DomainDAO) RemoveByFQDN(fqdn string) error {
 
 	// We must create a BSON object to be compared with MongoDB database entries to
 	// determinate wich one is going to be removed
-	return dao.Database.C(DomainDAOCollection).Remove(bson.M{
+	return dao.Database.C(domainDAOCollection).Remove(bson.M{
 		"fqdn": fqdn,
 	})
+}
+
+// Remove all domain entries from the database. This is a DANGEROUS method, use with
+// caution. For now is used only by the integration test enviroments to clear the database
+// before starting a new test
+func (dao DomainDAO) RemoveAll() error {
+	return dao.Database.C(domainDAOCollection).DropCollection()
 }

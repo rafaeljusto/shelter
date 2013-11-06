@@ -6,7 +6,6 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"labix.org/v2/mgo"
 	"log"
 	"net"
 	"net/mail"
@@ -62,40 +61,59 @@ func main() {
 		fatalln("Error connecting the database", err)
 	}
 
+	domainDAO := dao.DomainDAO{
+		Database: database,
+	}
+
 	// If there was some problem in the last test, there could be some data in the
 	// database, so let's clear it to don't affect this test. We avoid checking the error,
 	// because if the collection does not exist yet, it will be created in the first
 	// insert
-	database.C(dao.DomainDAOCollection).DropCollection()
+	domainDAO.RemoveAll()
 
-	domainLifeCycle(database)
-	domainDAOPerformance(database)
+	domainLifeCycle(domainDAO)
+	domainDAOPerformance(domainDAO)
 
 	println("SUCCESS!")
 }
 
 // Test all phases of the domain life cycle
-func domainLifeCycle(database *mgo.Database) {
+func domainLifeCycle(domainDAO dao.DomainDAO) {
 	domain := newDomain()
-	domainDAO := dao.DomainDAO{
-		Database: database,
-	}
 
+	// Create domain
 	if err := domainDAO.Save(&domain); err != nil {
 		fatalln("Couldn't save domain in database", err)
 	}
 
+	// Search and compare created domain
 	if domainRetrieved, err := domainDAO.FindByFQDN(domain.FQDN); err != nil {
-		fatalln("Couldn't find domain in database", err)
+		fatalln("Couldn't find created domain in database", err)
 
 	} else if !compareDomains(domain, domainRetrieved) {
-		fatalln("Domain in being persisted wrongly", nil)
+		fatalln("Domain created in being persisted wrongly", nil)
 	}
 
+	// Update domain
+	domain.Owners = []*mail.Address{}
+	if err := domainDAO.Save(&domain); err != nil {
+		fatalln("Couldn't save domain in database", err)
+	}
+
+	// Search and compare updated domain
+	if domainRetrieved, err := domainDAO.FindByFQDN(domain.FQDN); err != nil {
+		fatalln("Couldn't find updated domain in database", err)
+
+	} else if !compareDomains(domain, domainRetrieved) {
+		fatalln("Domain updated in being persisted wrongly", nil)
+	}
+
+	// Remove domain
 	if err := domainDAO.RemoveByFQDN(domain.FQDN); err != nil {
 		fatalln("Error while trying to remove a domain", err)
 	}
 
+	// Check removal
 	if _, err := domainDAO.FindByFQDN(domain.FQDN); err == nil {
 		fatalln("Domain was not removed from database", nil)
 	}
@@ -103,28 +121,12 @@ func domainLifeCycle(database *mgo.Database) {
 
 // Check if the DAO operations are optimezed for big volume of data. After some results,
 // with indexes we get 80% better performance
-func domainDAOPerformance(database *mgo.Database) {
+func domainDAOPerformance(domainDAO dao.DomainDAO) {
 	numberOfItems := 10000
 	durationTolerance := 5.0 // seconds
 
-	index := mgo.Index{
-		Name:       "fqdn",
-		Key:        []string{"fqdn"},
-		Unique:     true,
-		DropDups:   true,
-		Background: false,
-		Sparse:     false,
-	}
-
-	if err := database.C(dao.DomainDAOCollection).EnsureIndex(index); err != nil {
-		fatalln("Error trying to set the collection index", err)
-	}
-
-	domainDAO := dao.DomainDAO{
-		Database: database,
-	}
-
-	begin := time.Now()
+	beginTimer := time.Now()
+	sectionTimer := beginTimer
 
 	for i := 0; i < numberOfItems; i++ {
 		domain := model.Domain{
@@ -135,6 +137,9 @@ func domainDAOPerformance(database *mgo.Database) {
 			fatalln("Couldn't save domain in database during the performance test", err)
 		}
 	}
+
+	insertDuration := time.Since(sectionTimer)
+	sectionTimer = time.Now()
 
 	// Try to find domains from different parts of the whole range to check indexes
 	queryRanges := numberOfItems / 4
@@ -154,6 +159,9 @@ func domainDAOPerformance(database *mgo.Database) {
 		fatalln("Couldn't find domain in database during the performance test", err)
 	}
 
+	queryDuration := time.Since(sectionTimer)
+	sectionTimer = time.Now()
+
 	for i := 0; i < numberOfItems; i++ {
 		fqdn := fmt.Sprintf("test%d.com.br", i)
 		if err := domainDAO.RemoveByFQDN(fqdn); err != nil {
@@ -161,11 +169,14 @@ func domainDAOPerformance(database *mgo.Database) {
 		}
 	}
 
-	duration := time.Since(begin)
+	removeDuration := time.Since(sectionTimer)
+	duration := time.Since(beginTimer)
+
 	if duration.Seconds() > durationTolerance {
-		fatalln(fmt.Sprintf("Domain DAO operations are too slow (%s)", duration.String()), nil)
+		fatalln(fmt.Sprintf("Domain DAO operations are too slow (total: %s, insert: %s, query: %s, remove: %s)",
+			duration.String(), insertDuration.String(), queryDuration.String(), removeDuration.String()), nil)
 	} else {
-		println(fmt.Sprintf("Domain DAO operations took %s", time.Since(begin).String()))
+		println(fmt.Sprintf("Domain DAO operations took %s", time.Since(beginTimer).String()))
 	}
 }
 
