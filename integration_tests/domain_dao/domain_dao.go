@@ -120,22 +120,39 @@ func domainLifeCycle(domainDAO dao.DomainDAO) {
 }
 
 // Check if the DAO operations are optimezed for big volume of data. After some results,
-// with indexes we get 80% better performance
+// with indexes we get 80% better performance, another good improvements was to create and
+// remove many objects at once using go routines
 func domainDAOPerformance(domainDAO dao.DomainDAO) {
-	numberOfItems := 10000
+	numberOfItems := 20000
 	durationTolerance := 5.0 // seconds
 
 	beginTimer := time.Now()
 	sectionTimer := beginTimer
 
+	// Build array to create many at once
+	var domains []*model.Domain
 	for i := 0; i < numberOfItems; i++ {
 		domain := model.Domain{
 			FQDN: fmt.Sprintf("test%d.com.br", i),
 		}
 
-		if err := domainDAO.Save(&domain); err != nil {
-			fatalln("Couldn't save domain in database during the performance test", err)
+		domains = append(domains, &domain)
+	}
+
+	errorInDomainsCreation := false
+	domainResults := domainDAO.SaveMany(domains)
+
+	// Check if there was any error while creating them
+	for _, domainResult := range domainResults {
+		if domainResult.Error != nil {
+			errorInDomainsCreation = true
+			errorln(fmt.Sprintf("Couldn't save domain %s in database during the performance test",
+				domainResult.Domain.FQDN), domainResult.Error)
 		}
+	}
+
+	if errorInDomainsCreation {
+		fatalln("Due to errors in domain creation, the performance test will be aborted", nil)
 	}
 
 	insertDuration := time.Since(sectionTimer)
@@ -148,25 +165,37 @@ func domainDAOPerformance(domainDAO dao.DomainDAO) {
 	fqdn3 := fmt.Sprintf("test%d.com.br", queryRanges*3)
 
 	if _, err := domainDAO.FindByFQDN(fqdn1); err != nil {
-		fatalln("Couldn't find domain in database during the performance test", err)
+		fatalln(fmt.Sprintf("Couldn't find domain %s in database during "+
+			"the performance test", fqdn1), err)
 	}
 
 	if _, err := domainDAO.FindByFQDN(fqdn2); err != nil {
-		fatalln("Couldn't find domain in database during the performance test", err)
+		fatalln(fmt.Sprintf("Couldn't find domain %s in database during "+
+			"the performance test", fqdn2), err)
 	}
 
 	if _, err := domainDAO.FindByFQDN(fqdn3); err != nil {
-		fatalln("Couldn't find domain in database during the performance test", err)
+		fatalln(fmt.Sprintf("Couldn't find domain %s in database during "+
+			"the performance test", fqdn3), err)
 	}
 
 	queryDuration := time.Since(sectionTimer)
 	sectionTimer = time.Now()
 
-	for i := 0; i < numberOfItems; i++ {
-		fqdn := fmt.Sprintf("test%d.com.br", i)
-		if err := domainDAO.RemoveByFQDN(fqdn); err != nil {
-			fatalln("Error while trying to remove a domain during the performance test", err)
+	errorInDomainsRemoval := false
+	domainResults = domainDAO.RemoveMany(domains)
+
+	// Check if there was any error while removing them
+	for _, domainResult := range domainResults {
+		if domainResult.Error != nil {
+			errorInDomainsRemoval = true
+			errorln(fmt.Sprintf("Error while trying to remove a domain %s during the performance test",
+				domainResult.Domain.FQDN), domainResult.Error)
 		}
+	}
+
+	if errorInDomainsRemoval {
+		fatalln("Due to errors in domain removal, the performance test will be aborted", nil)
 	}
 
 	removeDuration := time.Since(sectionTimer)
@@ -281,7 +310,7 @@ func compareDomains(d1, d2 model.Domain) bool {
 
 // Function only to add the test name before the log message. This is useful when you have
 // many tests running and logging in the same file, like in a continuous deployment
-// scenario
+// scenario. Prints a simple message without ending the test
 func println(message string) {
 	message = fmt.Sprintf("DomainDAO integration test: %s", message)
 	log.Println(message)
@@ -289,7 +318,19 @@ func println(message string) {
 
 // Function only to add the test name before the log message. This is useful when you have
 // many tests running and logging in the same file, like in a continuous deployment
-// scenario
+// scenario. Prints an error message without ending the test
+func errorln(message string, err error) {
+	message = fmt.Sprintf("DomainDAO integration test: %s", message)
+	if err != nil {
+		message = fmt.Sprintf("%s. Details: %s", message, err.Error())
+	}
+
+	log.Println(message)
+}
+
+// Function only to add the test name before the log message. This is useful when you have
+// many tests running and logging in the same file, like in a continuous deployment
+// scenario. Prints an error message and ends the test
 func fatalln(message string, err error) {
 	message = fmt.Sprintf("DomainDAO integration test: %s", message)
 	if err != nil {

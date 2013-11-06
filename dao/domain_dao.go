@@ -63,6 +63,30 @@ func (dao DomainDAO) Save(domain *model.Domain) error {
 	return err
 }
 
+// Save many domains at once, creating go routines to execute each domain in the classic
+// Save method. This happens because there's no method to execute Upsert to many documents
+// at once in the mgo API. http://stackoverflow.com/questions/19810176/mongodb-mgo-
+// library- golang-multiple-insert-updates
+func (dao DomainDAO) SaveMany(domains []*model.Domain) []DomainResult {
+	domainResultChannel := make(chan DomainResult, len(domains))
+
+	for _, domain := range domains {
+		go func(domain *model.Domain) {
+			domainResultChannel <- DomainResult{
+				Domain: domain,
+				Error:  dao.Save(domain),
+			}
+		}(domain)
+	}
+
+	var domainResults []DomainResult
+	for i := 0; i < len(domains); i++ {
+		domainResults = append(domainResults, <-domainResultChannel)
+	}
+
+	return domainResults
+}
+
 // Retrieve all domains for a scan. This method can take a long time to load all domains,
 // so it will return a channel and will send a domain as soon as it is loaded from the
 // database
@@ -111,6 +135,17 @@ func (dao DomainDAO) FindByFQDN(fqdn string) (model.Domain, error) {
 	return domain, err
 }
 
+// Remove a database entry based on a given domain id. This method is useful as a
+// RemoveMany auxiliar method, because it's faster that RemoveByFQDN
+func (dao DomainDAO) Remove(domain *model.Domain) error {
+	// Check if the programmer forgot to set the database in DomainDAO object
+	if dao.Database == nil {
+		return ErrDomainDAOUndefinedDatabase
+	}
+
+	return dao.Database.C(domainDAOCollection).RemoveId(domain.Id)
+}
+
 // Remove a database entry that have a given FQDN. The system was designed to have an
 // unique FQDN. The database should be prepared (with indexes) to search faster when using
 // FQDN as condition
@@ -127,9 +162,39 @@ func (dao DomainDAO) RemoveByFQDN(fqdn string) error {
 	})
 }
 
+// Remove many domain objects from database at once, is faster than removing each one
+// because it use go routines to execute everything concurrently
+func (dao DomainDAO) RemoveMany(domains []*model.Domain) []DomainResult {
+	domainResultChannel := make(chan DomainResult)
+
+	for _, domain := range domains {
+		go func(domain *model.Domain) {
+			domainResultChannel <- DomainResult{
+				Domain: domain,
+				Error:  dao.Remove(domain),
+			}
+		}(domain)
+	}
+
+	var domainResults []DomainResult
+	for i := 0; i < len(domains); i++ {
+		domainResults = append(domainResults, <-domainResultChannel)
+	}
+
+	return domainResults
+}
+
 // Remove all domain entries from the database. This is a DANGEROUS method, use with
 // caution. For now is used only by the integration test enviroments to clear the database
 // before starting a new test
 func (dao DomainDAO) RemoveAll() error {
 	return dao.Database.C(domainDAOCollection).DropCollection()
+}
+
+// DomainResult is used when calling methods that execute actions over many domain
+// objects. On error the caller need to know witch domain got an error. We are using this
+// solution because there's no pair structure in Go language
+type DomainResult struct {
+	Domain *model.Domain // Domain related to the result
+	Error  error         // When different of nil, represents an error of the operation
 }
