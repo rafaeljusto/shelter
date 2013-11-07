@@ -22,7 +22,7 @@ performance
 ===========
 
 The domain persistence performance is listed in the table bellow, where "#" represents the
-number of domains used in the operation, and each line was executed 5 times to calculate
+number of domains used in the operation. Each line was executed 5 times to calculate
 the average time. Also, the "find" operation represents 3 object searchs in differents
 parts of the range. For this results we are using 1000 concurrent agents (go routines) for
 insert and remove operations.
