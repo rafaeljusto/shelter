@@ -123,7 +123,7 @@ func domainLifeCycle(domainDAO dao.DomainDAO) {
 // with indexes we get 80% better performance, another good improvements was to create and
 // remove many objects at once using go routines
 func domainDAOPerformance(domainDAO dao.DomainDAO) {
-	numberOfItems := 20000
+	numberOfItems := 40000
 	durationTolerance := 5.0 // seconds
 
 	beginTimer := time.Now()
