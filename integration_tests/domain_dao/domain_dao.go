@@ -27,8 +27,8 @@ var (
 )
 
 var (
-	// Path for the configuration file with the database connection information
-	configFilePath string
+	configFilePath string // Path for the configuration file with the database connection information
+	reportFilePath string // Path to generate the domain dao performance report file
 )
 
 // DomainDAOTestConfigFile is a structure to store the test configuration file data
@@ -41,6 +41,7 @@ type DomainDAOTestConfigFile struct {
 
 func init() {
 	flag.StringVar(&configFilePath, "config", "", "Configuration file for DomainDAO test")
+	flag.StringVar(&reportFilePath, "report", "", "Report file for DomainDAO performance")
 }
 
 func main() {
@@ -73,6 +74,7 @@ func main() {
 
 	domainLifeCycle(domainDAO)
 	domainDAOPerformance(domainDAO)
+	domainDAOPerformanceReport(domainDAO)
 
 	println("SUCCESS!")
 }
@@ -126,6 +128,63 @@ func domainDAOPerformance(domainDAO dao.DomainDAO) {
 	numberOfItems := 40000
 	durationTolerance := 5.0 // seconds
 
+	totalDuration, insertDuration, queryDuration, removeDuration :=
+		calculateDomainDAODurations(domainDAO, numberOfItems)
+
+	if totalDuration.Seconds() > durationTolerance {
+		fatalln(fmt.Sprintf("Domain DAO operations are too slow (total: %s, insert: %s, query: %s, remove: %s)",
+			totalDuration.String(), insertDuration.String(), queryDuration.String(), removeDuration.String()), nil)
+	} else {
+		println(fmt.Sprintf("Domain DAO operations took %s (insert: %s, query: %s, remove: %s)",
+			totalDuration.String(), insertDuration.String(), queryDuration.String(), removeDuration.String()))
+	}
+}
+
+// Generates a report with the amount of time for each operation in the domain DAO. For
+// more realistic values it does the same operation for the same amount of data X number
+// of times to get the average time of the operation
+func domainDAOPerformanceReport(domainDAO dao.DomainDAO) {
+	if len(reportFilePath) == 0 {
+		return
+	}
+
+	// Report header
+	report := " #       | Total           | Insert          | Find            | Remove\n" +
+		"------------------------------------------------------------------\n"
+
+	// Report variables
+	averageTurns := 5
+	scale := []int{10, 50, 100, 500, 1000, 5000,
+		10000, 50000, 100000, 500000, 1000000, 5000000}
+
+	for _, numberOfItems := range scale {
+		var totalDuration, insertDuration, queryDuration, removeDuration time.Duration
+
+		for i := 0; i < averageTurns; i++ {
+			println(fmt.Sprintf("Generating report - scale %d - turn %d", numberOfItems, i+1))
+			totalDurationTmp, insertDurationTmp, queryDurationTmp, removeDurationTmp :=
+				calculateDomainDAODurations(domainDAO, numberOfItems)
+
+			totalDuration += totalDurationTmp
+			insertDuration += insertDurationTmp
+			queryDuration += queryDurationTmp
+			removeDuration += removeDurationTmp
+		}
+
+		report += fmt.Sprintf("% -8d | % 15s | % 15s | % 15s | % 15s\n",
+			numberOfItems,
+			time.Duration(int64(totalDuration)/int64(averageTurns)).String(),
+			time.Duration(int64(insertDuration)/int64(averageTurns)).String(),
+			time.Duration(int64(queryDuration)/int64(averageTurns)).String(),
+			time.Duration(int64(removeDuration)/int64(averageTurns)).String(),
+		)
+	}
+
+	ioutil.WriteFile(reportFilePath, []byte(report), 0444)
+}
+
+func calculateDomainDAODurations(domainDAO dao.DomainDAO, numberOfItems int) (totalDuration, insertDuration, queryDuration, removeDuration time.Duration) {
+
 	beginTimer := time.Now()
 	sectionTimer := beginTimer
 
@@ -155,7 +214,7 @@ func domainDAOPerformance(domainDAO dao.DomainDAO) {
 		fatalln("Due to errors in domain creation, the performance test will be aborted", nil)
 	}
 
-	insertDuration := time.Since(sectionTimer)
+	insertDuration = time.Since(sectionTimer)
 	sectionTimer = time.Now()
 
 	// Try to find domains from different parts of the whole range to check indexes
@@ -179,7 +238,7 @@ func domainDAOPerformance(domainDAO dao.DomainDAO) {
 			"the performance test", fqdn3), err)
 	}
 
-	queryDuration := time.Since(sectionTimer)
+	queryDuration = time.Since(sectionTimer)
 	sectionTimer = time.Now()
 
 	errorInDomainsRemoval := false
@@ -198,15 +257,10 @@ func domainDAOPerformance(domainDAO dao.DomainDAO) {
 		fatalln("Due to errors in domain removal, the performance test will be aborted", nil)
 	}
 
-	removeDuration := time.Since(sectionTimer)
-	duration := time.Since(beginTimer)
+	removeDuration = time.Since(sectionTimer)
+	totalDuration = time.Since(beginTimer)
 
-	if duration.Seconds() > durationTolerance {
-		fatalln(fmt.Sprintf("Domain DAO operations are too slow (total: %s, insert: %s, query: %s, remove: %s)",
-			duration.String(), insertDuration.String(), queryDuration.String(), removeDuration.String()), nil)
-	} else {
-		println(fmt.Sprintf("Domain DAO operations took %s", time.Since(beginTimer).String()))
-	}
+	return
 }
 
 // Function to read the configuration file
