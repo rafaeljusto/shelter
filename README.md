@@ -27,6 +27,7 @@ the average time. Also, the "find" operation represents 3 object searchs in diff
 parts of the range. For this results we are using 1000 concurrent agents (go routines) for
 insert and remove operations.
 
+```
  #       | Total           | Insert          | Find         | Remove
 -----------------------------------------------------------------------------
  10      |      3.513014ms |      1.442383ms |    558.179us |      1.512109ms 
@@ -41,3 +42,4 @@ insert and remove operations.
  500000  |    56.49850228s |   26.533725121s | 268.502266ms |   29.696274265s
  1000000 | 1m53.999031752s |   52.733993985s | 489.089955ms |  1m0.775947206s
  5000000 | 9m41.845527592s | 4m28.462709335s | 1.976624332s | 5m11.406193319s
+```
