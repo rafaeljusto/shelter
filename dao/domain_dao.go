@@ -74,26 +74,32 @@ func (dao DomainDAO) SaveMany(domains []*model.Domain) []DomainResult {
 // Retrieve all domains for a scan. This method can take a long time to load all domains,
 // so it will return a channel and will send a domain as soon as it is loaded from the
 // database
-func (dao DomainDAO) FindAll() (chan model.Domain, error) {
+func (dao DomainDAO) FindAll() (chan DomainResult, error) {
 	// Check if the programmer forgot to set the database in DomainDAO object
 	if dao.Database == nil {
 		return nil, ErrDomainDAOUndefinedDatabase
 	}
 
 	// Channel to be used for returning each retrieved domain
-	domainChannel := make(chan model.Domain)
+	domainChannel := make(chan DomainResult)
 
 	go func() {
 		// Gets the database result iterator
 		it := dao.Database.C(domainDAOCollection).Find(bson.M{}).Iter()
 
-		var domain model.Domain
-		if it.Next(domain) {
-			domainChannel <- domain
-		} else {
-			// TODO: How to alert about an error that occurred here?
-			// err := it.Err()
-			return
+		domain := new(model.Domain)
+		for it.Next(domain) {
+			domainChannel <- DomainResult{
+				Domain: domain,
+				Error:  nil,
+			}
+
+		}
+
+		err := it.Close()
+		domainChannel <- DomainResult{
+			Domain: nil,
+			Error:  err,
 		}
 	}()
 
@@ -154,9 +160,13 @@ func (dao DomainDAO) RemoveMany(domains []*model.Domain) []DomainResult {
 
 // Remove all domain entries from the database. This is a DANGEROUS method, use with
 // caution. For now is used only by the integration test enviroments to clear the database
-// before starting a new test
+// before starting a new test. We don't drop the collection because we don't wanna lose
+// the indexes. Dropping the collection is much faster, but this method is probably never
+// going to be a part of a critical system (I don't known any system that wants to erase
+// all your data)
 func (dao DomainDAO) RemoveAll() error {
-	return dao.Database.C(domainDAOCollection).DropCollection()
+	_, err := dao.Database.C(domainDAOCollection).RemoveAll(bson.M{})
+	return err
 }
 
 // Method used to execute an operation over domains concurrently. It was created because

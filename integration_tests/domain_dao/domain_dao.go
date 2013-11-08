@@ -73,8 +73,15 @@ func main() {
 	domainDAO.RemoveAll()
 
 	domainLifeCycle(domainDAO)
+	domainsLifeCycle(domainDAO)
+	domainUniqueFQDN(domainDAO)
 	domainDAOPerformance(domainDAO)
-	domainDAOPerformanceReport(domainDAO)
+
+	// Domain DAO performance report is optional and only generated when the report file
+	// path parameter is given
+	if len(reportFilePath) > 0 {
+		domainDAOPerformanceReport(domainDAO)
+	}
 
 	println("SUCCESS!")
 }
@@ -121,6 +128,152 @@ func domainLifeCycle(domainDAO dao.DomainDAO) {
 	}
 }
 
+// Test all phases from a domain lyfe cycle, but now working with a group of domains
+func domainsLifeCycle(domainDAO dao.DomainDAO) {
+	domains := newDomains()
+
+	// Create domains
+	domainResults := domainDAO.SaveMany(domains)
+
+	for _, domainResult := range domainResults {
+		if domainResult.Error != nil {
+			fatalln(fmt.Sprintf("Couldn't save domain %s in database",
+				domainResult.Domain.FQDN), domainResult.Error)
+		}
+	}
+
+	for _, domain := range domains {
+		// Search and compare created domains
+		if domainRetrieved, err := domainDAO.FindByFQDN(domain.FQDN); err != nil {
+			fatalln(fmt.Sprintf("Couldn't find created domain %s in database", domain.FQDN), err)
+
+		} else if !compareDomains(*domain, domainRetrieved) {
+			fatalln(fmt.Sprintf("Domain %s created in being persisted wrongly", domain.FQDN), nil)
+		}
+	}
+
+	// Update domains
+	for _, domain := range domains {
+		domain.Owners = []*mail.Address{}
+	}
+
+	domainResults = domainDAO.SaveMany(domains)
+
+	for _, domainResult := range domainResults {
+		if domainResult.Error != nil {
+			fatalln(fmt.Sprintf("Couldn't update domain %s in database",
+				domainResult.Domain.FQDN), domainResult.Error)
+		}
+	}
+
+	for _, domain := range domains {
+		// Search and compare updated domains
+		if domainRetrieved, err := domainDAO.FindByFQDN(domain.FQDN); err != nil {
+			fatalln(fmt.Sprintf("Couldn't find updated domain %s in database", domain.FQDN), err)
+
+		} else if !compareDomains(*domain, domainRetrieved) {
+			fatalln(fmt.Sprintf("Domain %s updated in being persisted wrongly", domain.FQDN), nil)
+		}
+	}
+
+	// Check if find all really return all domains
+	allDomainsChannel, err := domainDAO.FindAll()
+	if err != nil {
+		fatalln("Error while retrieving all domains from database", err)
+	}
+
+	var allDomains []model.Domain
+	for {
+		domainRetrieved := <-allDomainsChannel
+		if domainRetrieved.Error != nil {
+			fatalln("Error while retrieving all domains from database", err)
+		} else if domainRetrieved.Domain == nil {
+			break
+		}
+
+		allDomains = append(allDomains, *domainRetrieved.Domain)
+	}
+
+	if len(allDomains) != len(domains) {
+		fatalln(fmt.Sprintf("FindAll method is not returning all domains we expected %d but got %d",
+			len(domains), len(allDomains)), nil)
+	}
+
+	// Remove domains
+	domainResults = domainDAO.RemoveMany(domains)
+
+	for _, domainResult := range domainResults {
+		if domainResult.Error != nil {
+			fatalln(fmt.Sprintf("Error while trying to remove domain %s from database",
+				domainResult.Domain.FQDN), domainResult.Error)
+		}
+	}
+
+	for _, domain := range domains {
+		// Check removals
+		if _, err := domainDAO.FindByFQDN(domain.FQDN); err == nil {
+			fatalln(fmt.Sprintf("Domain %s was not removed from database", domain.FQDN), nil)
+		}
+	}
+
+	// Let's add and remove the domains again to test the remove all method
+
+	domainResults = domainDAO.SaveMany(domains)
+	for _, domainResult := range domainResults {
+		if domainResult.Error != nil {
+			fatalln(fmt.Sprintf("Couldn't save domain %s in database",
+				domainResult.Domain.FQDN), domainResult.Error)
+		}
+	}
+
+	if err := domainDAO.RemoveAll(); err != nil {
+		fatalln("Couldn't remove all domains", err)
+	}
+
+	allDomainsChannel, err = domainDAO.FindAll()
+	if err != nil {
+		fatalln("Error while retrieving all domains from database", err)
+	}
+
+	allDomains = []model.Domain{}
+	for {
+		domainRetrieved := <-allDomainsChannel
+		if domainRetrieved.Error != nil {
+			fatalln("Error while retrieving all domains from database", err)
+		} else if domainRetrieved.Domain == nil {
+			break
+		}
+
+		allDomains = append(allDomains, *domainRetrieved.Domain)
+	}
+
+	if len(allDomains) > 0 {
+		fatalln("RemoveAll method is not removing the domains from the database", nil)
+	}
+}
+
+// FQDN must be unique in the database, today we limit this using an unique index key
+func domainUniqueFQDN(domainDAO dao.DomainDAO) {
+	domain1 := newDomain()
+
+	// Create domain
+	if err := domainDAO.Save(&domain1); err != nil {
+		fatalln("Couldn't save domain in database", err)
+	}
+
+	domain2 := newDomain()
+
+	// Create another domain with the same FQDN
+	if err := domainDAO.Save(&domain2); err == nil {
+		fatalln("Allowing more than one object with the same FQDN", nil)
+	}
+
+	// Remove domain
+	if err := domainDAO.RemoveByFQDN(domain1.FQDN); err != nil {
+		fatalln("Error while trying to remove a domain", err)
+	}
+}
+
 // Check if the DAO operations are optimezed for big volume of data. After some results,
 // with indexes we get 80% better performance, another good improvements was to create and
 // remove many objects at once using go routines
@@ -144,10 +297,6 @@ func domainDAOPerformance(domainDAO dao.DomainDAO) {
 // more realistic values it does the same operation for the same amount of data X number
 // of times to get the average time of the operation
 func domainDAOPerformanceReport(domainDAO dao.DomainDAO) {
-	if len(reportFilePath) == 0 {
-		return
-	}
-
 	// Report header
 	report := " #       | Total           | Insert          | Find            | Remove\n" +
 		"------------------------------------------------------------------\n"
@@ -183,7 +332,8 @@ func domainDAOPerformanceReport(domainDAO dao.DomainDAO) {
 	ioutil.WriteFile(reportFilePath, []byte(report), 0444)
 }
 
-func calculateDomainDAODurations(domainDAO dao.DomainDAO, numberOfItems int) (totalDuration, insertDuration, queryDuration, removeDuration time.Duration) {
+func calculateDomainDAODurations(domainDAO dao.DomainDAO, numberOfItems int) (totalDuration, insertDuration,
+	queryDuration, removeDuration time.Duration) {
 
 	beginTimer := time.Now()
 	sectionTimer := beginTimer
@@ -313,6 +463,59 @@ func newDomain() model.Domain {
 	domain.Owners = []*mail.Address{owner}
 
 	return domain
+}
+
+// Function to mock a group of domains
+func newDomains() []*model.Domain {
+	owner1, _ := mail.ParseAddress("adm@test1.com.br")
+	owner2, _ := mail.ParseAddress("adm@test2.com.br")
+
+	return []*model.Domain{
+		{
+			FQDN: "test1.com.br",
+			Nameservers: []model.Nameserver{
+				{
+					Host: "ns1.test1.com.br",
+					IPv4: net.ParseIP("192.168.0.1"),
+					IPv6: net.ParseIP("::1"),
+				},
+				{
+					Host: "ns2.test1.com.br",
+					IPv4: net.ParseIP("192.168.1.2"),
+				},
+			},
+			DSSet: []model.DS{
+				{
+					Keytag:    1324,
+					Algorithm: model.DSAlgorithmRSASHA256,
+					Digest:    "A790A11EA430A85DA77245F091891F73AA7404AA",
+				},
+			},
+			Owners: []*mail.Address{owner1},
+		},
+		{
+			FQDN: "test2.com.br",
+			Nameservers: []model.Nameserver{
+				{
+					Host: "ns1.test2.com.br",
+					IPv4: net.ParseIP("192.168.0.3"),
+					IPv6: net.ParseIP("::2"),
+				},
+				{
+					Host: "ns2.test2.com.br",
+					IPv4: net.ParseIP("192.168.0.4"),
+				},
+			},
+			DSSet: []model.DS{
+				{
+					Keytag:    4321,
+					Algorithm: model.DSAlgorithmGOST,
+					Digest:    "A790A11EA430A85DA77245F091891F73AA7404BB",
+				},
+			},
+			Owners: []*mail.Address{owner2},
+		},
+	}
 }
 
 // Function to compare if two domains are equal, cannot use operator == because of the

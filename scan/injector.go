@@ -21,7 +21,7 @@ type Injector struct {
 // three more parameters to define the maximum number of days to verify a domain
 // configured correctly with DNS/DNSSEC, a domain with problems and to alert for DNSSEC
 // signatures that are near from the expiration date
-func (i Injector) Start(domainsToQueryChannel chan model.Domain,
+func (i Injector) Start(domainsToQueryChannel chan *model.Domain,
 	maxOKVerificationDays, maxErrorVerificationDays, maxExpirationAlertDays int) error {
 	var domainDAO dao.DomainDAO
 
@@ -38,7 +38,19 @@ func (i Injector) Start(domainsToQueryChannel chan model.Domain,
 
 	for {
 		// Get domain from the database (one-by-one)
-		domain := <-domainChannel
+		domainResult := <-domainChannel
+
+		// Problem detected while retrieving a domain
+		if domainResult.Error != nil {
+			return err
+		}
+
+		// Check if we don't have domains anymore
+		if domainResult.Domain == nil {
+			return nil
+		}
+
+		domain := domainResult.Domain
 
 		var maxDays int
 
