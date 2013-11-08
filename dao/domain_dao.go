@@ -73,7 +73,8 @@ func (dao DomainDAO) SaveMany(domains []*model.Domain) []DomainResult {
 
 // Retrieve all domains for a scan. This method can take a long time to load all domains,
 // so it will return a channel and will send a domain as soon as it is loaded from the
-// database
+// database. The method ends when it returns a nil domain or an error in the channel
+// result
 func (dao DomainDAO) FindAll() (chan DomainResult, error) {
 	// Check if the programmer forgot to set the database in DomainDAO object
 	if dao.Database == nil {
