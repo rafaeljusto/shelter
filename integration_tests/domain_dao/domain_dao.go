@@ -52,6 +52,7 @@ func main() {
 		fmt.Println(err.Error())
 		fmt.Println("Usage:")
 		flag.PrintDefaults()
+		return
 
 	} else if err != nil {
 		fatalln("Error reading configuration file", err)
