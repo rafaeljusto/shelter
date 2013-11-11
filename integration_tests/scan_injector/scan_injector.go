@@ -7,8 +7,14 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net"
+	"net/mail"
 	"shelter/dao"
 	"shelter/database/mongodb"
+	"shelter/model"
+	"shelter/scan"
+	"strconv"
+	"time"
 )
 
 // This test objective is to verify the domain selection rules in the injector scanner
@@ -24,6 +30,15 @@ var (
 
 var (
 	configFilePath string // Path for the configuration file with the database connection information
+)
+
+// Define some scan important variables for the test enviroment, this values indicates if
+// a domain is going to be selected for scan or not, based on the last check, if has
+// errors or if the DNSSEC expiration date is near
+const (
+	maxOKVerificationDays    = 7
+	maxErrorVerificationDays = 3
+	maxExpirationAlertDays   = 10
 )
 
 // ScanInjectorTestConfigFile is a structure to store the test configuration file data
@@ -60,9 +75,133 @@ func main() {
 		Database: database,
 	}
 
-	// TODO
+	// Remove all data before starting the test. This is necessary because maybe in the last
+	// test there was an error and the data wasn't removed from the database
+	domainDAO.RemoveAll()
+
+	domainWithDNSErrors(domainDAO)
+	domainWithDNSSECErrors(domainDAO)
+	domainWithNoErrors(domainDAO)
 
 	println("SUCCESS!")
+}
+
+func domainWithDNSErrors(domainDAO dao.DomainDAO) {
+	domain := newDomain()
+
+	// Set all nameservers with error and the last check equal of the error check interval,
+	// this will force the domain to be checked
+	for index, _ := range domain.Nameservers {
+		lessThreeDays, _ :=
+			time.ParseDuration("-" + strconv.Itoa(maxErrorVerificationDays*24) + "h")
+
+		domain.Nameservers[index].LastCheckAt = time.Now().Add(lessThreeDays)
+		domain.Nameservers[index].LastStatus = model.NameserverStatusFail
+	}
+
+	if err := domainDAO.Save(&domain); err != nil {
+		fatalln("Error saving domain for scan scenario", err)
+	}
+
+	if domains := runScan(domainDAO); len(domains) != 1 {
+		fatalln(fmt.Sprintf("Couldn't load a domain with DNS errors for scan. "+
+			"Expected 1 got %d", len(domains)), nil)
+	}
+
+	if err := domainDAO.RemoveByFQDN(domain.FQDN); err != nil {
+		fatalln("Error removing domain", err)
+	}
+}
+
+func domainWithDNSSECErrors(domainDAO dao.DomainDAO) {
+	domain := newDomain()
+
+	// Set all DS records with error and the last check equal of the error check interval,
+	// this will force the domain to be checked
+	for index, _ := range domain.DSSet {
+		lessThreeDays, _ :=
+			time.ParseDuration("-" + strconv.Itoa(maxErrorVerificationDays*24) + "h")
+
+		domain.DSSet[index].LastCheckAt = time.Now().Add(lessThreeDays)
+		domain.DSSet[index].LastStatus = model.DSStatusTimeout
+	}
+
+	if err := domainDAO.Save(&domain); err != nil {
+		fatalln("Error saving domain for scan scenario", err)
+	}
+
+	if domains := runScan(domainDAO); len(domains) != 1 {
+		fatalln(fmt.Sprintf("Couldn't load a domain with DNSSEC errors for scan. "+
+			"Expected 1 got %d", len(domains)), nil)
+	}
+
+	if err := domainDAO.RemoveByFQDN(domain.FQDN); err != nil {
+		fatalln("Error removing domain", err)
+	}
+}
+
+func domainWithNoErrors(domainDAO dao.DomainDAO) {
+	domain := newDomain()
+
+	// Set all nameservers as configured correctly and the last check as now, this domain is
+	// unlikely to be selected
+	for index, _ := range domain.Nameservers {
+		domain.Nameservers[index].LastCheckAt = time.Now()
+		domain.Nameservers[index].LastStatus = model.NameserverStatusOK
+	}
+
+	// Set all DS records as configured correctly and the last check as now, this domain is
+	// unlikely to be selected
+	for index, _ := range domain.DSSet {
+		domain.DSSet[index].LastCheckAt = time.Now()
+		domain.DSSet[index].LastStatus = model.DSStatusOK
+	}
+
+	if err := domainDAO.Save(&domain); err != nil {
+		fatalln("Error saving domain for scan scenario", err)
+	}
+
+	if domains := runScan(domainDAO); len(domains) > 0 {
+		fatalln(fmt.Sprintf("Selected a domain configured correctly for the scan. "+
+			"Expected 0 got %d", len(domains)), nil)
+	}
+
+	if err := domainDAO.RemoveByFQDN(domain.FQDN); err != nil {
+		fatalln("Error removing domain", err)
+	}
+}
+
+// Method responsable to configure and start scan injector for tests
+func runScan(domainDAO dao.DomainDAO) []*model.Domain {
+	scanInjector := scan.Injector{
+		Database: domainDAO.Database,
+	}
+
+	domainsToQueryChannel := make(chan dao.DomainResult, 100)
+
+	if err := scanInjector.Start(domainsToQueryChannel, maxOKVerificationDays,
+		maxErrorVerificationDays, maxExpirationAlertDays); err != nil {
+
+		fatalln("Error retrieving domains for scan", err)
+	}
+
+	var domains []*model.Domain
+
+	for {
+		domainResult := <-domainsToQueryChannel
+
+		// Detect the poison pills
+		if domainResult.Error != nil {
+			fatalln("Error selecting domain", domainResult.Error)
+
+		} else if domainResult.Domain == nil {
+			break
+		}
+
+		domains = append(domains, domainResult.Domain)
+	}
+
+	return domains
 }
 
 // Function to read the configuration file
@@ -86,11 +225,42 @@ func readConfigFile() (ScanInjectorTestConfigFile, error) {
 	return configFile, nil
 }
 
+// Function to mock a domain object
+func newDomain() model.Domain {
+	var domain model.Domain
+	domain.FQDN = "rafael.net.br"
+
+	domain.Nameservers = []model.Nameserver{
+		{
+			Host: "ns1.rafael.net.br",
+			IPv4: net.ParseIP("127.0.0.1"),
+			IPv6: net.ParseIP("::1"),
+		},
+		{
+			Host: "ns2.rafael.net.br",
+			IPv4: net.ParseIP("127.0.0.2"),
+		},
+	}
+
+	domain.DSSet = []model.DS{
+		{
+			Keytag:    1234,
+			Algorithm: model.DSAlgorithmRSASHA1,
+			Digest:    "A790A11EA430A85DA77245F091891F73AA740483",
+		},
+	}
+
+	owner, _ := mail.ParseAddress("test@rafael.net.br")
+	domain.Owners = []*mail.Address{owner}
+
+	return domain
+}
+
 // Function only to add the test name before the log message. This is useful when you have
 // many tests running and logging in the same file, like in a continuous deployment
 // scenario. Prints a simple message without ending the test
 func println(message string) {
-	message = fmt.Sprintf("DomainDAO integration test: %s", message)
+	message = fmt.Sprintf("Scan Injector integration test: %s", message)
 	log.Println(message)
 }
 
@@ -98,7 +268,7 @@ func println(message string) {
 // many tests running and logging in the same file, like in a continuous deployment
 // scenario. Prints an error message and ends the test
 func fatalln(message string, err error) {
-	message = fmt.Sprintf("DomainDAO integration test: %s", message)
+	message = fmt.Sprintf("Scan Injector integration test: %s", message)
 	if err != nil {
 		message = fmt.Sprintf("%s. Details: %s", message, err.Error())
 	}
