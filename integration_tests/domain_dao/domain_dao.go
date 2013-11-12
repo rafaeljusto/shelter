@@ -289,8 +289,11 @@ func domainDAOPerformance(domainDAO dao.DomainDAO) {
 		fatalln(fmt.Sprintf("Domain DAO operations are too slow (total: %s, insert: %s, query: %s, remove: %s)",
 			totalDuration.String(), insertDuration.String(), queryDuration.String(), removeDuration.String()), nil)
 	} else {
-		println(fmt.Sprintf("Domain DAO operations took %s (insert: %s, query: %s, remove: %s)",
-			totalDuration.String(), insertDuration.String(), queryDuration.String(), removeDuration.String()))
+		// For now we are not printing the results to make a claner output when everything is
+		// fine. For getting the time marks of domain dao you can use the argument -report
+		//
+		//println(fmt.Sprintf("Domain DAO operations took %s (insert: %s, query: %s, remove: %s)",
+		//	totalDuration.String(), insertDuration.String(), queryDuration.String(), removeDuration.String()))
 	}
 }
 

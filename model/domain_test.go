@@ -1,9 +1,137 @@
 package model
 
 import (
+	"strconv"
 	"testing"
 	"time"
 )
+
+func TestShouldBeScanned(t *testing.T) {
+	var (
+		maxOKVerificationDays    = 7
+		maxErrorVerificationDays = 3
+		maxExpirationAlertDays   = 10
+	)
+
+	maxErrorVerificationDuration, _ :=
+		time.ParseDuration("-" + strconv.Itoa(maxErrorVerificationDays*24) + "h")
+	maxOKVerificationDuration, _ :=
+		time.ParseDuration("-" + strconv.Itoa(maxOKVerificationDays*24) + "h")
+	maxExpirationAlertDuration, _ :=
+		time.ParseDuration("-" + strconv.Itoa(maxExpirationAlertDays*24) + "h")
+
+	d := Domain{
+		Nameservers: []Nameserver{
+			{
+				LastStatus:  NameserverStatusFail,
+				LastCheckAt: time.Now().Add(maxErrorVerificationDuration),
+			},
+			{
+				LastStatus:  NameserverStatusOK,
+				LastCheckAt: time.Now().Add(maxErrorVerificationDuration),
+			},
+		},
+	}
+
+	if !d.ShouldBeScanned(maxOKVerificationDays,
+		maxErrorVerificationDays, maxExpirationAlertDays) {
+
+		t.Error("Did not select a domain with DNS errors and in the limit " +
+			"of errors max verification period")
+	}
+
+	d = Domain{
+		DSSet: []DS{
+			{
+				LastStatus:  DSStatusTimeout,
+				LastCheckAt: time.Now().Add(maxErrorVerificationDuration),
+			},
+			{
+				LastStatus:  DSStatusTimeout,
+				LastCheckAt: time.Now().Add(maxErrorVerificationDuration),
+			},
+		},
+	}
+
+	if !d.ShouldBeScanned(maxOKVerificationDays,
+		maxErrorVerificationDays, maxExpirationAlertDays) {
+
+		t.Error("Did not select a domain with DNSSEC errors and in the limit " +
+			"of errors max verification period")
+	}
+
+	d = Domain{
+		Nameservers: []Nameserver{
+			{
+				LastStatus:  NameserverStatusOK,
+				LastCheckAt: time.Now().Add(maxOKVerificationDuration),
+			},
+			{
+				LastStatus:  NameserverStatusOK,
+				LastCheckAt: time.Now().Add(maxOKVerificationDuration),
+			},
+		},
+	}
+
+	if !d.ShouldBeScanned(maxOKVerificationDays,
+		maxErrorVerificationDays, maxExpirationAlertDays) {
+
+		t.Error("Did not select a domain configured correctly but in the limit " +
+			"of ok max verification period")
+	}
+
+	d = Domain{
+		Nameservers: []Nameserver{
+			{
+				LastStatus:  NameserverStatusOK,
+				LastCheckAt: time.Now(),
+			},
+			{
+				LastStatus:  NameserverStatusOK,
+				LastCheckAt: time.Now(),
+			},
+		},
+
+		DSSet: []DS{
+			{
+				LastStatus:  DSStatusOK,
+				LastCheckAt: time.Now(),
+				ExpiresAt:   time.Now().Add(maxExpirationAlertDuration),
+			},
+			{
+				LastStatus:  DSStatusOK,
+				LastCheckAt: time.Now(),
+			},
+		},
+	}
+
+	if !d.ShouldBeScanned(maxOKVerificationDays,
+		maxErrorVerificationDays, maxExpirationAlertDays) {
+
+		t.Error("Did not select a domain with DNSSEC signatures near expiration")
+	}
+
+	d = Domain{
+		Nameservers: []Nameserver{
+			{
+				LastStatus:  NameserverStatusOK,
+				LastCheckAt: time.Now(),
+			},
+			{
+				LastStatus:  NameserverStatusOK,
+				LastCheckAt: time.Now(),
+			},
+		},
+	}
+
+	if d.ShouldBeScanned(maxOKVerificationDays,
+		maxErrorVerificationDays, maxExpirationAlertDays) {
+
+		t.Error("Selected a domain configured correctly and checked now, " +
+			"this shouldn't happen, or this domain is very lucky, we should " +
+			"take a look in the algorithm")
+	}
+}
 
 func TestAllNameserversOK(t *testing.T) {
 	d := Domain{
@@ -17,7 +145,7 @@ func TestAllNameserversOK(t *testing.T) {
 		},
 	}
 
-	if d.AllNameserversOK() {
+	if d.allNameserversOK() {
 		t.Error("Fail to detect a nameserver with error")
 	}
 
@@ -25,7 +153,7 @@ func TestAllNameserversOK(t *testing.T) {
 		Nameservers: []Nameserver{},
 	}
 
-	if !d.AllNameserversOK() {
+	if !d.allNameserversOK() {
 		t.Error("Fail to inform all nameservers are OK when there are no nameservers")
 	}
 
@@ -40,7 +168,7 @@ func TestAllNameserversOK(t *testing.T) {
 		},
 	}
 
-	if !d.AllNameserversOK() {
+	if !d.allNameserversOK() {
 		t.Error("Fail to inform that all nameservers are OK")
 	}
 }
@@ -57,7 +185,7 @@ func TestAllDSSetOK(t *testing.T) {
 		},
 	}
 
-	if d.AllDSSetOK() {
+	if d.allDSSetOK() {
 		t.Error("Fail to detect a DS with error")
 	}
 
@@ -65,7 +193,7 @@ func TestAllDSSetOK(t *testing.T) {
 		DSSet: []DS{},
 	}
 
-	if !d.AllDSSetOK() {
+	if !d.allDSSetOK() {
 		t.Error("Fail to inform all DS set are OK when there are no DS records")
 	}
 
@@ -80,7 +208,7 @@ func TestAllDSSetOK(t *testing.T) {
 		},
 	}
 
-	if !d.AllDSSetOK() {
+	if !d.allDSSetOK() {
 		t.Error("Fail to inform that all DS set are OK")
 	}
 }
@@ -113,7 +241,7 @@ func TestDaysSinceLastCheck(t *testing.T) {
 		},
 	}
 
-	if days := d.DaysSinceLastCheck(); days != 2 {
+	if days := d.daysSinceLastCheck(); days != 2 {
 		t.Errorf("Not counting correctly the number of days since last "+
 			"check for nameservers. Should be 2, but got %d", days)
 	}
@@ -140,14 +268,14 @@ func TestDaysSinceLastCheck(t *testing.T) {
 		},
 	}
 
-	if days := d.DaysSinceLastCheck(); days != 3 {
+	if days := d.daysSinceLastCheck(); days != 3 {
 		t.Errorf("Not counting correctly the number of days since last "+
 			"check for DS set. Should be 3, but got %d", days)
 	}
 
 	d = Domain{}
 
-	if d.DaysSinceLastCheck() < 365 {
+	if d.daysSinceLastCheck() < 365 {
 		t.Errorf("Not counting correctly the number of days since last check " +
 			"when the object is empty")
 	}
@@ -165,7 +293,7 @@ func TestNearDNSSECExpirationDate(t *testing.T) {
 		},
 	}
 
-	if !d.IsNearDNSSECExpirationDate(10) {
+	if !d.isNearDNSSECExpirationDate(10) {
 		t.Error("Could not detect when the DNSSEC expiration is near")
 	}
 
@@ -177,7 +305,7 @@ func TestNearDNSSECExpirationDate(t *testing.T) {
 		},
 	}
 
-	if d.IsNearDNSSECExpirationDate(10) {
+	if d.isNearDNSSECExpirationDate(10) {
 		t.Error("Could not detect when the DNSSEC expiration is far")
 	}
 
@@ -185,7 +313,7 @@ func TestNearDNSSECExpirationDate(t *testing.T) {
 		DSSet: []DS{},
 	}
 
-	if d.IsNearDNSSECExpirationDate(10) {
+	if d.isNearDNSSECExpirationDate(10) {
 		t.Error("Could not detect when there's no expiration date")
 	}
 }
