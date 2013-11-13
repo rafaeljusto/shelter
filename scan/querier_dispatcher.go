@@ -1,7 +1,6 @@
 package scan
 
 import (
-	"shelter/dao"
 	"shelter/model"
 	"sync"
 )
@@ -13,7 +12,7 @@ type QuerierDispatcher struct {
 
 // This is the method that start the querier dispatcher and the queriers. It is
 // asynchronous and will ends after receiving the poison pill from the injector
-func (q QuerierDispatcher) Start(domainsToQueryChannel chan dao.DomainResult,
+func (q QuerierDispatcher) Start(domainsToQueryChannel chan *model.Domain,
 	domainsBufferSize, numberOfQueriers int) chan *model.Domain {
 
 	// Create the output channel used for each querier to add the result for the collector,
@@ -29,7 +28,7 @@ func (q QuerierDispatcher) Start(domainsToQueryChannel chan dao.DomainResult,
 
 	// Initialize each querier
 	for index, _ := range queriersChannels {
-		queriersChannels[index] = Querier{}.Start(queriers)
+		queriersChannels[index] = Querier{}.Start(queriers, domainsToSave)
 	}
 
 	go func() {
@@ -37,17 +36,21 @@ func (q QuerierDispatcher) Start(domainsToQueryChannel chan dao.DomainResult,
 
 		for {
 			// Retrieve a domain from the injector
-			domainResult := <-domainsToQueryChannel
+			domain := <-domainsToQueryChannel
 
 			// Detect the poinson pill from the injector
-			if domainResult.Domain == nil || domainResult.Error != nil {
+			if domain == nil {
 				// Finish all queriers sending a nil domain
 				for _, queriersChannels := range queriersChannels {
 					queriersChannels <- nil
 				}
 
-				// Wait for queriers and move out
+				// Wait for queriers to finish
 				queriers.Wait()
+
+				// Send the poison pill to the collector
+				domainsToSave <- nil
+
 				return
 			}
 
@@ -58,7 +61,7 @@ func (q QuerierDispatcher) Start(domainsToQueryChannel chan dao.DomainResult,
 			}
 
 			// Send to the querier a domain
-			queriersChannels[index] <- domainResult.Domain
+			queriersChannels[index] <- domain
 		}
 	}()
 

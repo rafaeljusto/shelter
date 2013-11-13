@@ -179,27 +179,34 @@ func runScan(domainDAO dao.DomainDAO) []*model.Domain {
 		Database: domainDAO.Database,
 	}
 
-	domainsToQueryChannel, err := scanInjector.Start(domainsBufferSize,
-		maxOKVerificationDays, maxErrorVerificationDays, maxExpirationAlertDays)
+	errorsChannel := make(chan error)
 
-	if err != nil {
-		fatalln("Error retrieving domains for scan", err)
-	}
+	domainsToQueryChannel := scanInjector.Start(domainsBufferSize,
+		maxOKVerificationDays, maxErrorVerificationDays, maxExpirationAlertDays,
+		errorsChannel)
 
 	var domains []*model.Domain
 
 	for {
-		domainResult := <-domainsToQueryChannel
+		exit := false
 
-		// Detect the poison pills
-		if domainResult.Error != nil {
-			fatalln("Error selecting domain", domainResult.Error)
+		select {
+		case domain := <-domainsToQueryChannel:
+			// Detect the poison pills
+			if domain == nil {
+				exit = true
 
-		} else if domainResult.Domain == nil {
-			break
+			} else {
+				domains = append(domains, domain)
+			}
+
+		case err := <-errorsChannel:
+			fatalln("Error selecting domain", err)
 		}
 
-		domains = append(domains, domainResult.Domain)
+		if exit {
+			break
+		}
 	}
 
 	return domains
