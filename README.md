@@ -9,6 +9,7 @@ installation
 
 The shelter projects depends on the following packages:
 * labix.org/v2/mgo
+* github.com/miekg/dns
 
 All the above packages can be installed using the command:
   go get <package_name>
@@ -30,9 +31,9 @@ insert and remove operations.
 ```
  #       | Total           | Insert          | Find         | Remove
 -----------------------------------------------------------------------------
- 10      |      3.513014ms |      1.442383ms |    558.179us |      1.512109ms 
- 50      |      7.421929ms |      3.566502ms |    423.251us |      3.431936ms 
- 100     |     11.027912ms |      4.701412ms |    420.808us |      5.905437ms 
+ 10      |      3.513014ms |      1.442383ms |    558.179us |      1.512109ms
+ 50      |      7.421929ms |      3.566502ms |    423.251us |      3.431936ms
+ 100     |     11.027912ms |      4.701412ms |    420.808us |      5.905437ms
  500     |      51.31504ms |     25.217248ms |     799.99us |     25.297463ms
  1000    |     96.370863ms |     46.482595ms |    1.00416ms |     48.883654ms
  5000    |      503.0236ms |    228.404845ms |   1.026406ms |    273.591873ms

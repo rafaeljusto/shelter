@@ -32,10 +32,11 @@ var (
 	configFilePath string // Path for the configuration file with the database connection information
 )
 
-// Define some scan important variables for the test enviroment, this values indicates if
-// a domain is going to be selected for scan or not, based on the last check, if has
-// errors or if the DNSSEC expiration date is near
+// Define some scan important variables for the test enviroment, this values indicates the
+// size of the channel, if a domain is going to be selected for scan or not, based on the
+// last check, if has errors or if the DNSSEC expiration date is near
 const (
+	domainsBufferSize        = 100
 	maxOKVerificationDays    = 7
 	maxErrorVerificationDays = 3
 	maxExpirationAlertDays   = 10
@@ -178,11 +179,10 @@ func runScan(domainDAO dao.DomainDAO) []*model.Domain {
 		Database: domainDAO.Database,
 	}
 
-	domainsToQueryChannel := make(chan dao.DomainResult, 100)
+	domainsToQueryChannel, err := scanInjector.Start(domainsBufferSize,
+		maxOKVerificationDays, maxErrorVerificationDays, maxExpirationAlertDays)
 
-	if err := scanInjector.Start(domainsToQueryChannel, maxOKVerificationDays,
-		maxErrorVerificationDays, maxExpirationAlertDays); err != nil {
-
+	if err != nil {
 		fatalln("Error retrieving domains for scan", err)
 	}
 
@@ -261,7 +261,7 @@ func newDomain() model.Domain {
 // many tests running and logging in the same file, like in a continuous deployment
 // scenario. Prints a simple message without ending the test
 func println(message string) {
-	message = fmt.Sprintf("Scan Injector integration test: %s", message)
+	message = fmt.Sprintf("ScanInjector integration test: %s", message)
 	log.Println(message)
 }
 
@@ -269,7 +269,7 @@ func println(message string) {
 // many tests running and logging in the same file, like in a continuous deployment
 // scenario. Prints an error message and ends the test
 func fatalln(message string, err error) {
-	message = fmt.Sprintf("Scan Injector integration test: %s", message)
+	message = fmt.Sprintf("ScanInjector integration test: %s", message)
 	if err != nil {
 		message = fmt.Sprintf("%s. Details: %s", message, err.Error())
 	}
