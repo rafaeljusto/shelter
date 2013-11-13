@@ -53,3 +53,10 @@ type DS struct {
 	LastCheckAt time.Time   // Time of the last configuration check
 	LastOKAt    time.Time   // Last time that the DNSSEC configuration was OK
 }
+
+// ChangeStatus is a easy way to change the status of a DS because it also updates the
+// last check date
+func (d *DS) ChangeStatus(status DSStatus) {
+	d.LastStatus = status
+	d.LastCheckAt = time.Now()
+}
