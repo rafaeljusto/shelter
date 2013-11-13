@@ -32,7 +32,7 @@ func (q QuerierDispatcher) Start(domainsToQueryChannel chan dao.DomainResult,
 		queriersChannels[index] = Querier{}.Start(queriers)
 	}
 
-	go func(queriersChannels []chan *model.Domain, queriers sync.WaitGroup) {
+	go func() {
 		index := 0
 
 		for {
@@ -60,8 +60,7 @@ func (q QuerierDispatcher) Start(domainsToQueryChannel chan dao.DomainResult,
 			// Send to the querier a domain
 			queriersChannels[index] <- domainResult.Domain
 		}
-
-	}(queriersChannels, queriers)
+	}()
 
 	return domainsToSave
 }
