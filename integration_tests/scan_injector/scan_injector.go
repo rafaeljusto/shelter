@@ -98,7 +98,7 @@ func domainWithDNSErrors(domainDAO dao.DomainDAO) {
 			time.ParseDuration("-" + strconv.Itoa(maxErrorVerificationDays*24) + "h")
 
 		domain.Nameservers[index].LastCheckAt = time.Now().Add(lessThreeDays)
-		domain.Nameservers[index].LastStatus = model.NameserverStatusFail
+		domain.Nameservers[index].LastStatus = model.NameserverStatusServerFailure
 	}
 
 	if err := domainDAO.Save(&domain); err != nil {

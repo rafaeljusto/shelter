@@ -13,11 +13,12 @@ const (
 	NameserverStatusNoAuthority              // Nameserver does not have authority for this domain
 	NameserverStatusUnknownDomainName        // Domain does not exists for this nameserver
 	NameserverStatusUnknownHost              // Could not resolve nameserver (no glue)
-	NameserverStatusFail                     // Nameserver configuration problem
+	NameserverStatusServerFailure            // Nameserver configuration problem
 	NameserverStatusQueryRefused             // DNS request rejected
 	NameserverStatusConnectionRefused        // Connection refused by firewall or nameserver
 	NameserverStatusCanonicalName            // Domain name is a link in the zone APEX
 	NameserverStatusNotSynchronized          // Nameservers of this domain have a different version of the zone files
+	NameserverStatusError                    // Generic error found in the nameserver
 )
 
 // NameserverStatus is a number that represents one of the possible nameserver status

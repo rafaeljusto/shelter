@@ -49,7 +49,7 @@ func TestNameserverChangeStatus(t *testing.T) {
 	timeMark := time.Now()
 
 	nameserver := Nameserver{
-		LastStatus:  NameserverStatusFail,
+		LastStatus:  NameserverStatusServerFailure,
 		LastCheckAt: timeMark,
 	}
 

@@ -9,6 +9,7 @@ import (
 	"log"
 	"net"
 	"net/mail"
+	"os"
 	"shelter/dao"
 	"shelter/database/mongodb"
 	"shelter/model"
@@ -302,8 +303,8 @@ func domainDAOPerformance(domainDAO dao.DomainDAO) {
 // of times to get the average time of the operation
 func domainDAOPerformanceReport(domainDAO dao.DomainDAO) {
 	// Report header
-	report := " #       | Total           | Insert          | Find            | Remove\n" +
-		"------------------------------------------------------------------\n"
+	report := " #       | Total            | Insert           | Find             | Remove\n" +
+		"------------------------------------------------------------------------------------\n"
 
 	// Report variables
 	averageTurns := 5
@@ -324,13 +325,33 @@ func domainDAOPerformanceReport(domainDAO dao.DomainDAO) {
 			removeDuration += removeDurationTmp
 		}
 
-		report += fmt.Sprintf("% -8d | % 15s | % 15s | % 15s | % 15s\n",
+		report += fmt.Sprintf("% -8d | % 16s | % 16s | % 16s | % 16s\n",
 			numberOfItems,
 			time.Duration(int64(totalDuration)/int64(averageTurns)).String(),
 			time.Duration(int64(insertDuration)/int64(averageTurns)).String(),
 			time.Duration(int64(queryDuration)/int64(averageTurns)).String(),
 			time.Duration(int64(removeDuration)/int64(averageTurns)).String(),
 		)
+	}
+
+	// If we found a report file in the current path, rename it so we don't lose the old
+	// data. We are going to use the modification date from the file. We also don't check
+	// the errors because we really don't care
+	if file, err := os.Open(reportFilePath); err == nil {
+		newFilename := reportFilePath + ".old-"
+
+		if fileStatus, err := file.Stat(); err == nil {
+			newFilename += fileStatus.ModTime().Format("20060102150405")
+
+		} else {
+			// Did not find the modification date, so lets use now
+			newFilename += time.Now().Format("20060102150405")
+		}
+
+		// We don't use defer because we want to rename it before the end of scope
+		file.Close()
+
+		os.Rename(reportFilePath, newFilename)
 	}
 
 	ioutil.WriteFile(reportFilePath, []byte(report), 0444)

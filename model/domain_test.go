@@ -23,7 +23,7 @@ func TestShouldBeScanned(t *testing.T) {
 	d := Domain{
 		Nameservers: []Nameserver{
 			{
-				LastStatus:  NameserverStatusFail,
+				LastStatus:  NameserverStatusServerFailure,
 				LastCheckAt: time.Now().Add(maxErrorVerificationDuration),
 			},
 			{
@@ -137,7 +137,7 @@ func TestAllNameserversOK(t *testing.T) {
 	d := Domain{
 		Nameservers: []Nameserver{
 			{
-				LastStatus: NameserverStatusFail,
+				LastStatus: NameserverStatusServerFailure,
 			},
 			{
 				LastStatus: NameserverStatusOK,
