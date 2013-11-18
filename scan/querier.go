@@ -66,23 +66,7 @@ func (q Querier) checkDNS(domain *model.Domain) {
 	dnsRequestMessage.RecursionDesired = false
 
 	for index, nameserver := range domain.Nameservers {
-		host := ""
-		if nameserver.NeedsGlue(domain.FQDN) {
-			// Nameserver with glue record. For now we are only checking IPv4 addresses, in the
-			// future it would be nice to have an algorithm using both addresses
-			host = nameserver.IPv4.String() + ":" + strconv.Itoa(dnsPort)
-
-		} else {
-			// Using cache to store host addresses when there's no glue
-			if addresses, err := querierCache.Get(nameserver.Host); err != nil || len(addresses) == 0 {
-				// Error ocurred to retrieve the information from cache. Let's query without using
-				// the cache
-				host = nameserver.Host + ":" + strconv.Itoa(dnsPort)
-			} else {
-				// Found information in cache, lets use it to speed up the scan
-				host = addresses[0].String() + ":" + strconv.Itoa(dnsPort)
-			}
-		}
+		host := getHost(domain.FQDN, nameserver)
 
 		// For now we ignore the RTT, in the future we can use this for some report
 		dnsResponseMessage, _, err := q.client.Exchange(&dnsRequestMessage, host)
@@ -195,23 +179,7 @@ func (q Querier) checkDNSSEC(domain *model.Domain) {
 	dnsRequestMessage.SetEdns0(4096, true) // TODO: UDP max size must be configurable
 
 	for _, nameserver := range domain.Nameservers {
-		host := ""
-		if nameserver.NeedsGlue(domain.FQDN) {
-			// Nameserver with glue record. For now we are only checking IPv4 addresses, in the
-			// future it would be nice to have an algorithm using both addresses
-			host = nameserver.IPv4.String() + ":" + strconv.Itoa(dnsPort)
-
-		} else {
-			// Using cache to store host addresses when there's no glue
-			if addresses, err := querierCache.Get(nameserver.Host); err != nil || len(addresses) == 0 {
-				// Error ocurred to retrieve the information from cache. Let's query without using
-				// the cache
-				host = nameserver.Host + ":" + strconv.Itoa(dnsPort)
-			} else {
-				// Found information in cache, lets use it to speed up the scan
-				host = addresses[0].String() + ":" + strconv.Itoa(dnsPort)
-			}
-		}
+		host := getHost(domain.FQDN, nameserver)
 
 		// For now we ignore the RTT, in the future we can use this for some report
 		dnsResponseMessage, _, err := q.client.Exchange(&dnsRequestMessage, host)
@@ -326,6 +294,27 @@ func (q Querier) checkDNSSEC(domain *model.Domain) {
 			domain.DSSet[index].ChangeStatus(model.DSStatusOK)
 		}
 	}
+}
+
+// Useful function to retrieve the proper host and port to send the request. The host can
+// change because of glue records needs or not. This function alsos resolve hostnames and
+// store the addresses in a cache
+func getHost(fqdn string, nameserver model.Nameserver) string {
+	if nameserver.NeedsGlue(fqdn) {
+		// Nameserver with glue record. For now we are only checking IPv4 addresses, in the
+		// future it would be nice to have an algorithm using both addresses
+		return nameserver.IPv4.String() + ":" + strconv.Itoa(dnsPort)
+	}
+
+	// Using cache to store host addresses when there's no glue
+	if addresses, err := querierCache.Get(nameserver.Host); err == nil || len(addresses) > 0 {
+		// Found information in cache, lets use it to speed up the scan
+		return addresses[0].String() + ":" + strconv.Itoa(dnsPort)
+	}
+
+	// Error ocurred to retrieve the information from cache. Let's query without using the
+	// cache
+	return nameserver.Host + ":" + strconv.Itoa(dnsPort)
 }
 
 // Useful function to retrieve all records of a specific type from the DNS response
