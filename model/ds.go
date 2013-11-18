@@ -32,7 +32,6 @@ const (
 	DSStatusNoKey                   // No DNSKEY was found with the keytag of the DS
 	DSStatusNoSEP                   // DNSKEY related to DS does not have the bit SEP on
 	DSStatusSignatureError          // Error while checking DNSKEY signatures
-	DSStatusNoDNSSEC                // Domain is not configured with DNSSEC
 	DSStatusDNSError                // DNS error (check nameserver status)
 )
 

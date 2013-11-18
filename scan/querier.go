@@ -7,6 +7,7 @@ import (
 	"shelter/model"
 	"strconv"
 	"sync"
+	"time"
 )
 
 const (
@@ -109,7 +110,7 @@ func (q Querier) checkDNS(domain *model.Domain) {
 		}
 
 		// Checking if we have CNAME in apex. This is not allowed according to RFC 1033, CNAME
-		// cannot exist with other records, and SOA record is mandatory in apex.
+		// cannot exist with other records, and SOA record is mandatory in apex
 
 		cnameError := false
 		for _, rr := range dnsResponseMessage.Answer {
@@ -129,18 +130,12 @@ func (q Querier) checkDNS(domain *model.Domain) {
 
 		if dnsResponseMessage.MsgHdr.Rcode == dns.RcodeSuccess {
 			var soaRR *dns.SOA
-			foundSOA := false
 
 			// Check if the SOA resource record exists in the response
-			for _, rr := range dnsResponseMessage.Answer {
-				if rr.Header().Rrtype == dns.TypeSOA {
-					soaRR, _ = rr.(*dns.SOA)
-					foundSOA = true
-					break
-				}
-			}
+			if rr := filterFirstRR(dnsResponseMessage.Answer, dns.TypeSOA); rr != nil {
+				soaRR, _ = rr.(*dns.SOA)
 
-			if !foundSOA {
+			} else {
 				domain.Nameservers[index].ChangeStatus(model.NameserverStatusUnknownDomainName)
 				continue
 			}
@@ -185,31 +180,169 @@ func (q Querier) checkDNS(domain *model.Domain) {
 }
 
 func (q Querier) checkDNSSEC(domain *model.Domain) {
-	// Check if the domain has DNSSEC
+	// Check if the domain has DNSSEC, this system will work with both kinds of domain. So
+	// when the domain don't have any DS record we assume that it does not have DNSSEC
+	// configured and check only the DNS configuration
 	if len(domain.DSSet) == 0 {
 		return
 	}
 
+	// We are going to request the DNSSEC keys to validate with the DS information that we
+	// have from the domain
 	var dnsRequestMessage dns.Msg
 	dnsRequestMessage.SetQuestion(domain.FQDN, dns.TypeDNSKEY)
 	dnsRequestMessage.RecursionDesired = false
+	dnsRequestMessage.SetEdns0(4096, true) // TODO: UDP max size must be configurable
 
 	for _, nameserver := range domain.Nameservers {
 		host := ""
 		if nameserver.NeedsGlue(domain.FQDN) {
-			host = nameserver.Host + ":" + strconv.Itoa(dnsPort)
-		} else {
+			// Nameserver with glue record. For now we are only checking IPv4 addresses, in the
+			// future it would be nice to have an algorithm using both addresses
 			host = nameserver.IPv4.String() + ":" + strconv.Itoa(dnsPort)
+
+		} else {
+			// Using cache to store host addresses when there's no glue
+			if addresses, err := querierCache.Get(nameserver.Host); err != nil || len(addresses) == 0 {
+				// Error ocurred to retrieve the information from cache. Let's query without using
+				// the cache
+				host = nameserver.Host + ":" + strconv.Itoa(dnsPort)
+			} else {
+				// Found information in cache, lets use it to speed up the scan
+				host = addresses[0].String() + ":" + strconv.Itoa(dnsPort)
+			}
 		}
 
-		_, _, err := q.client.Exchange(&dnsRequestMessage, host)
+		// For now we ignore the RTT, in the future we can use this for some report
+		dnsResponseMessage, _, err := q.client.Exchange(&dnsRequestMessage, host)
+
 		if err != nil {
-			for index, _ := range domain.DSSet {
-				domain.DSSet[index].ChangeStatus(model.DSStatusDNSError)
+			// We can have timeouts only for DNSSEC requests, because usually the response is
+			// bigger and firewalls are not configured for big UDP packages, or for DNS over TCP
+			if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
+				for index, _ := range domain.DSSet {
+					domain.DSSet[index].ChangeStatus(model.DSStatusTimeout)
+				}
+
+			} else {
+				// Other types of network errors are not a specific problem of DNSSEC
+				// configuration, so let's just set a status for the user to fix the DNS
+				// configuration to make the DNSSEC configuration check possible
+				for index, _ := range domain.DSSet {
+					domain.DSSet[index].ChangeStatus(model.DSStatusDNSError)
+				}
 			}
+
 			break
 		}
 
-		// TODO
+		if dnsResponseMessage.Rcode != dns.RcodeSuccess ||
+			!dnsResponseMessage.MsgHdr.Authoritative {
+			// Authority errors are not a specific problem of DNSSEC configuration, so let's
+			// just set a status for the user to fix the DNS configuration to make the DNSSEC
+			// configuration check possible
+			for index, _ := range domain.DSSet {
+				domain.DSSet[index].ChangeStatus(model.DSStatusDNSError)
+			}
+
+			break
+		}
+
+		// Get all DNSSEC public keys
+		dnskeys := filterRRs(dnsResponseMessage.Answer, dns.TypeDNSKEY)
+
+		// Get all signatures from the DNS response
+		rrsigs := filterRRs(dnsResponseMessage.Answer, dns.TypeRRSIG)
+
+		for index, ds := range domain.DSSet {
+			// Find the DNSSEC public key related to the DS
+			var selectedDNSKEY *dns.DNSKEY
+			for _, rr := range dnskeys {
+				dnskey, ok := rr.(*dns.DNSKEY)
+				if !ok {
+					continue
+				}
+
+				if dnskey.KeyTag() == ds.Keytag {
+					selectedDNSKEY = dnskey
+					break
+				}
+			}
+
+			// Find the signature of the DNSSEC key that signed the keyset
+			var selectedRRSIG *dns.RRSIG
+			for _, rr := range rrsigs {
+				rrsig, ok := rr.(*dns.RRSIG)
+				if !ok {
+					continue
+				}
+
+				if rrsig.KeyTag == ds.Keytag {
+					selectedRRSIG = rrsig
+					break
+				}
+			}
+
+			if selectedDNSKEY == nil {
+				domain.DSSet[index].ChangeStatus(model.DSStatusNoKey)
+				continue
+			}
+
+			// Check if the DNSSEC key related to the DS has the security entry point. Check
+			// RFCs 3755 and 4034
+			if (selectedDNSKEY.Flags & (1 << 15)) == 0 {
+				domain.DSSet[index].ChangeStatus(model.DSStatusNoSEP)
+				continue
+			}
+
+			if selectedRRSIG == nil {
+				domain.DSSet[index].ChangeStatus(model.DSStatusNoSignature)
+				continue
+			}
+
+			// We store the DS expiration date to alert clients whenever an expiration date is
+			// near. There's no status in DS to define a near expiration state, because this
+			// isn't a problem
+			domain.DSSet[index].ExpiresAt = time.Unix(int64(selectedRRSIG.Expiration), 0)
+
+			// Check signature expiration
+			if ds.ExpiresAt.Before(time.Now()) {
+				domain.DSSet[index].ChangeStatus(model.DSStatusExpiredSignature)
+				continue
+			}
+
+			// Check signature consistency
+			if err := selectedRRSIG.Verify(selectedDNSKEY, dnskeys); err != nil {
+				domain.DSSet[index].ChangeStatus(model.DSStatusSignatureError)
+				continue
+			}
+
+			domain.DSSet[index].ChangeStatus(model.DSStatusOK)
+		}
 	}
+}
+
+// Useful function to retrieve all records of a specific type from the DNS response
+// message. We assume that the resource record is an instance of the specific type based
+// on the Rrtype attribute
+func filterRRs(rrs []dns.RR, rrType uint16) []dns.RR {
+	var filtered []dns.RR
+	for _, rr := range rrs {
+		if rr.Header().Rrtype == rrType {
+			filtered = append(filtered, rr)
+		}
+	}
+	return filtered
+}
+
+// Useful function to return the first occurence of a resource record of a specific type.
+// This method is faster than filterRRs when we are interested in only one record (like
+// SOA)
+func filterFirstRR(rrs []dns.RR, rrType uint16) dns.RR {
+	for _, rr := range rrs {
+		if rr.Header().Rrtype == rrType {
+			return rr
+		}
+	}
+	return nil
 }
