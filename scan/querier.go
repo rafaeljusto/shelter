@@ -317,6 +317,12 @@ func (q Querier) checkDNSSEC(domain *model.Domain) {
 				continue
 			}
 
+			// Check DNSKEY hash is the same of the DS digest
+			if selectedDNSKEY.ToDS(int(ds.DigestType)).Digest != ds.Digest {
+				domain.DSSet[index].ChangeStatus(model.DSStatusNoKey)
+				continue
+			}
+
 			domain.DSSet[index].ChangeStatus(model.DSStatusOK)
 		}
 	}

@@ -23,6 +23,20 @@ const (
 // constant group above
 type DSAlgorithm uint8
 
+// List of possible digest types according to RFCs 3658, 4034, 4035
+const (
+	DSDigestTypeReserved DigestType = 0
+	DSDigestTypeSHA1     DigestType = 1 // Digest with 20 bytes
+	DSDigestTypeSHA256   DigestType = 2 // Digest with 32 bytes
+	DSDigestTypeGOST     DigestType = 3 // Digest with 32 bytes
+	DSDigestTypeSHA384   DigestType = 4 // Digest with 96 bytes
+)
+
+// DigestType is a number that represents one of the possible DS digest's types listed in
+// the constant group above. It is useful when generating a DS from a DNSKEY for
+// comparisson validation
+type DigestType uint8
+
 // List of possible DS status
 const (
 	DSStatusOK               = iota // DNSSEC configuration for this DS is OK
@@ -47,6 +61,7 @@ type DS struct {
 	Keytag      uint16      // DNSKEY's identification number
 	Algorithm   DSAlgorithm // DNSKEY's algorithm
 	Digest      string      // Hash of the DNSKEY content
+	DigestType  DigestType  // Hash type decided by user when generating the DS
 	ExpiresAt   time.Time   // DNSKEY's signature expiration date
 	LastStatus  DSStatus    // Result of the last configuration check
 	LastCheckAt time.Time   // Time of the last configuration check
