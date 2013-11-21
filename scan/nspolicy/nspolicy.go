@@ -9,6 +9,9 @@ import (
 )
 
 var (
+	// List of all nameserver policies that are going to be executed in the order defined
+	// here. The order is important because the policies depends on each other, assuming
+	// that something was already verified
 	nsPolicies = []func(DomainNSPolicy, *dns.Msg) model.NameserverStatus{
 		DomainNSPolicy.cnamePolicy,
 		DomainNSPolicy.rcodePolicy,
@@ -17,11 +20,17 @@ var (
 	}
 )
 
+// DomainNSPolicy store the domain object and the version of the DNS zone. This is
+// necessary because we need to check the DNS zone version on each nameserver and detect
+// if they are different
 type DomainNSPolicy struct {
-	domain     *model.Domain
-	soaVersion uint32 // Variable used to check if all nameservers have the same zone
+	domain     *model.Domain // Domain object is used for glue validations
+	soaVersion uint32        // Variable used to check if all nameservers have the same zone
 }
 
+// This function initialize a DomainNSPolicy object, it was created to force the
+// programmer to initialize the domain object, so we don't need to check if domain is nil
+// inside each method. Maybe there's a better approach (think about)
 func NewDomainNSPolicy(domain *model.Domain) DomainNSPolicy {
 	return DomainNSPolicy{
 		domain:     domain,
@@ -29,6 +38,10 @@ func NewDomainNSPolicy(domain *model.Domain) DomainNSPolicy {
 	}
 }
 
+// When there's a error while sending a nameserver request over the network, this method
+// is responsable for detecting any usual problems. There's also some unknown problems
+// that are going to be treated as DNS error, for now we are not logging the generic
+// error, but maybe is a good idea if occurs to often
 func (d DomainNSPolicy) CheckNetworkError(err error) model.NameserverStatus {
 	if err == nil {
 		return model.NameserverStatusOK
@@ -52,6 +65,8 @@ func (d DomainNSPolicy) CheckNetworkError(err error) model.NameserverStatus {
 	return model.NameserverStatusError
 }
 
+// Method responsable for running all nameserver policies. It will return the nameserver
+// status of the first error that occurred
 func (d DomainNSPolicy) Run(dnsResponseMessage *dns.Msg) model.NameserverStatus {
 	for _, policy := range nsPolicies {
 		if status := policy(d, dnsResponseMessage); status != model.NameserverStatusOK {
@@ -62,6 +77,10 @@ func (d DomainNSPolicy) Run(dnsResponseMessage *dns.Msg) model.NameserverStatus 
 	return model.NameserverStatusOK
 }
 
+// CNAME policy is responsable to check if there's no CNAME in the top level of the zone.
+// According to the RFC CNAME resource record cannot exist with another resource record
+// with the same name, as SOA resource record is mandatory in the top of the zone, CNAME
+// cannot exist in the apex
 func (d DomainNSPolicy) cnamePolicy(dnsResponseMessage *dns.Msg) model.NameserverStatus {
 	for _, rr := range dnsResponseMessage.Answer {
 		if rr.Header().Name == d.domain.FQDN && rr.Header().Rrtype == dns.TypeCNAME {
@@ -72,8 +91,14 @@ func (d DomainNSPolicy) cnamePolicy(dnsResponseMessage *dns.Msg) model.Nameserve
 	return model.NameserverStatusOK
 }
 
+// DNS response message has the return code that indicates if something went wrong, in
+// this method we check it before proceding with other analyzes
 func (d DomainNSPolicy) rcodePolicy(dnsResponseMessage *dns.Msg) model.NameserverStatus {
 	switch dnsResponseMessage.MsgHdr.Rcode {
+	case dns.RcodeSuccess:
+		// Everything is OK with the DNS response message. In Go every switch case has a
+		// automatic break, so we don't need to do nothing here
+
 	case dns.RcodeRefused:
 		return model.NameserverStatusQueryRefused
 
@@ -84,14 +109,13 @@ func (d DomainNSPolicy) rcodePolicy(dnsResponseMessage *dns.Msg) model.Nameserve
 		return model.NameserverStatusUnknownDomainName
 
 	default:
-		if dnsResponseMessage.MsgHdr.Rcode != dns.RcodeSuccess {
-			return model.NameserverStatusError
-		}
+		return model.NameserverStatusError
 	}
 
 	return model.NameserverStatusOK
 }
 
+// Check if the nameserver owns the domain or not
 func (d DomainNSPolicy) authorityPolicy(dnsResponseMessage *dns.Msg) model.NameserverStatus {
 	if !dnsResponseMessage.Authoritative {
 		return model.NameserverStatusNoAuthority
@@ -100,6 +124,7 @@ func (d DomainNSPolicy) authorityPolicy(dnsResponseMessage *dns.Msg) model.Names
 	return model.NameserverStatusOK
 }
 
+// Check if the zones between the nameservers have all the same version
 func (d DomainNSPolicy) versionPolicy(dnsResponseMessage *dns.Msg) model.NameserverStatus {
 	var soaRR *dns.SOA
 
