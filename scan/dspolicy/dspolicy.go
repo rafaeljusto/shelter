@@ -128,7 +128,7 @@ func (d DomainDSPolicy) checkDS(ds model.DS,
 
 	// Check if the DNSSEC key related to the DS has the security entry point. Check RFCs
 	// 3755 and 4034
-	if (selectedDNSKEY.Flags & (1 << 15)) == 0 {
+	if (selectedDNSKEY.Flags & dns.SEP) == 0 {
 		return model.DSStatusNoSEP, ds.ExpiresAt
 	}
 
