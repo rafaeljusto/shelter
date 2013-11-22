@@ -6,6 +6,68 @@ import (
 	"testing"
 )
 
+// myErr was created only to test possible network errors
+type myErr struct {
+	err     string
+	timeout bool
+}
+
+func (e myErr) Error() string {
+	return e.err
+}
+
+func (e myErr) Timeout() bool {
+	return e.timeout
+}
+
+func (e myErr) Temporary() bool {
+	return true
+}
+
+func TestNSNetworkError(t *testing.T) {
+	domain := &model.Domain{}
+	domainNSPolicy := NewDomainNSPolicy(domain)
+
+	err := myErr{
+		timeout: true,
+	}
+
+	if domainNSPolicy.CheckNetworkError(err) != model.NameserverStatusTimeout {
+		t.Error("Not detecting network timeout")
+	}
+
+	err = myErr{
+		err:     "lookup",
+		timeout: false,
+	}
+
+	if domainNSPolicy.CheckNetworkError(err) != model.NameserverStatusUnknownHost {
+		t.Error("Not detecting when it couldn't resolve the nameserver")
+	}
+
+	err = myErr{
+		err:     "connection refused",
+		timeout: false,
+	}
+
+	if domainNSPolicy.CheckNetworkError(err) != model.NameserverStatusConnectionRefused {
+		t.Error("Not detecting when the connection was refused")
+	}
+
+	err = myErr{
+		err:     "generic",
+		timeout: false,
+	}
+
+	if domainNSPolicy.CheckNetworkError(err) != model.NameserverStatusError {
+		t.Error("Not detecting a network generic error")
+	}
+
+	if domainNSPolicy.CheckNetworkError(nil) != model.NameserverStatusOK {
+		t.Error("Reporting error when everything was OK")
+	}
+}
+
 func TestCNAMEPolicy(t *testing.T) {
 	domain := &model.Domain{
 		FQDN: "test.com.br",
@@ -137,5 +199,55 @@ func TestAuthorityPolicy(t *testing.T) {
 		model.NameserverStatusOK {
 		t.Error("Not returning OK when the nameserver has authority " +
 			"in DNS response header")
+	}
+}
+
+func TestSOAPolicy(t *testing.T) {
+	domain := &model.Domain{}
+	domainNSPolicy := NewDomainNSPolicy(domain)
+
+	dnsResponseMessage := &dns.Msg{}
+
+	if domainNSPolicy.soaPolicy(dnsResponseMessage) !=
+		model.NameserverStatusUnknownDomainName {
+		t.Error("Not detecting when there's no SOA record")
+	}
+
+	dnsResponseMessage = &dns.Msg{
+		Answer: []dns.RR{
+			&dns.SOA{
+				Hdr: dns.RR_Header{
+					Rrtype: dns.TypeSOA,
+				},
+				Serial: 1,
+			},
+		},
+	}
+
+	if domainNSPolicy.soaPolicy(dnsResponseMessage) !=
+		model.NameserverStatusOK {
+		t.Error("Returning version problems only with one " +
+			"nameserver check")
+	}
+
+	if domainNSPolicy.soaPolicy(dnsResponseMessage) !=
+		model.NameserverStatusOK {
+		t.Error("Returning version problems when the version is OK")
+	}
+
+	dnsResponseMessage = &dns.Msg{
+		Answer: []dns.RR{
+			&dns.SOA{
+				Hdr: dns.RR_Header{
+					Rrtype: dns.TypeSOA,
+				},
+				Serial: 2,
+			},
+		},
+	}
+
+	if domainNSPolicy.soaPolicy(dnsResponseMessage) !=
+		model.NameserverStatusNotSynchronized {
+		t.Error("Not detecting different versions of the same zone file")
 	}
 }
