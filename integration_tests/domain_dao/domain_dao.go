@@ -534,7 +534,7 @@ func newDomains() []*model.Domain {
 			DSSet: []model.DS{
 				{
 					Keytag:    4321,
-					Algorithm: model.DSAlgorithmGOST,
+					Algorithm: model.DSAlgorithmECCGOST,
 					Digest:    "A790A11EA430A85DA77245F091891F73AA7404BB",
 				},
 			},

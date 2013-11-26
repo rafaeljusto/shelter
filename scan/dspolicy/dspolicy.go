@@ -146,13 +146,9 @@ func (d *DomainDSPolicy) checkDS(ds model.DS,
 	signatureExpiration := time.Unix(int64(selectedRRSIG.Expiration), 0)
 
 	// Check signature expiration
-	if signatureExpiration.Before(time.Now()) {
+	if !selectedRRSIG.ValidityPeriod() {
 		return model.DSStatusExpiredSignature, signatureExpiration
 	}
-
-	// Base64 decode don't works well with spaces inside signatures blobs, so we remove them
-	// before checking with the DNSKEYs
-	selectedRRSIG.Signature = strings.Replace(selectedRRSIG.Signature, " ", "", -1)
 
 	// Check signature consistency
 	if err := selectedRRSIG.Verify(selectedDNSKEY, dnskeys); err != nil {
@@ -199,6 +195,10 @@ func (d *DomainDSPolicy) selectRRSIG(rrsigs []dns.RR, keytag uint16) *dns.RRSIG 
 		if !ok {
 			continue
 		}
+
+		// The base64 decode decode don't works well with spaces inside signatures blobs, so
+		// we remove them before checking with the DNSKEYs
+		rrsig.Signature = strings.Replace(rrsig.Signature, " ", "", -1)
 
 		if rrsig.KeyTag == keytag {
 			selectedRRSIG = rrsig

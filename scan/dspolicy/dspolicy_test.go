@@ -4,7 +4,60 @@ import (
 	"github.com/miekg/dns"
 	"shelter/model"
 	"testing"
+	"time"
 )
+
+// myErr was created only to test possible network errors
+type myErr struct {
+	err     string
+	timeout bool
+}
+
+func (e myErr) Error() string {
+	return e.err
+}
+
+func (e myErr) Timeout() bool {
+	return e.timeout
+}
+
+func (e myErr) Temporary() bool {
+	return true
+}
+
+func TestNSNetworkError(t *testing.T) {
+	domain := &model.Domain{
+		DSSet: []model.DS{
+			{
+				Keytag:     6726,
+				Algorithm:  model.DSAlgorithmRSASHA1,
+				DigestType: model.DSDigestTypeSHA1,
+				Digest:     "56064EE6A01A9BAB7F347934D10E6AD9A4FD6DD0",
+			},
+		},
+	}
+
+	domainDSPolicy := NewDomainDSPolicy(domain)
+
+	err := myErr{
+		timeout: true,
+	}
+
+	if domainDSPolicy.CheckNetworkError(err) ||
+		domain.DSSet[0].LastStatus != model.DSStatusTimeout {
+		t.Error("Not detecting DNSSEC network timeout")
+	}
+
+	err = myErr{
+		err:     "lookup",
+		timeout: false,
+	}
+
+	if domainDSPolicy.CheckNetworkError(err) ||
+		domain.DSSet[0].LastStatus != model.DSStatusDNSError {
+		t.Error("Not detecting DNS network errors")
+	}
+}
 
 func TestDNSHeaderPolicy(t *testing.T) {
 	domain := &model.Domain{
@@ -67,13 +120,19 @@ func TestDNSHeaderPolicy(t *testing.T) {
 }
 
 func TestDNSSECPolicy(t *testing.T) {
+	dnskey, rrsig, err := generateKeyAndSignZone("test.br.")
+	if err != nil {
+		t.Fatal(err)
+	}
+	ds := dnskey.ToDS(int(model.DSDigestTypeSHA1))
+
 	domain := &model.Domain{
 		DSSet: []model.DS{
 			{
-				Keytag:     6726,
-				Algorithm:  model.DSAlgorithmRSASHA1,
+				Keytag:     dnskey.KeyTag(),
+				Algorithm:  convertKeyAlgorithm(dnskey.Algorithm),
 				DigestType: model.DSDigestTypeSHA1,
-				Digest:     "56064EE6A01A9BAB7F347934D10E6AD9A4FD6DD0",
+				Digest:     ds.Digest,
 			},
 		},
 	}
@@ -82,39 +141,356 @@ func TestDNSSECPolicy(t *testing.T) {
 
 	dnsResponseMessage := &dns.Msg{
 		Answer: []dns.RR{
-			&dns.DNSKEY{
-				Hdr: dns.RR_Header{
-					Name:   "com.br.",
-					Rrtype: dns.TypeDNSKEY,
-					Class:  dns.ClassINET,
-					Ttl:    21600,
-				},
-				Flags:     257,
-				Protocol:  3,
-				Algorithm: dns.RSASHA1NSEC3SHA1,
-				PublicKey: "AwEAAagYGg2mmhHIs7W65vXX2Q+/7T8C4exh0i6oXU+GP+m4CkEBe5s6 geOpb95WOujmN0/f03AHQ2SICBoifwWrkWpwGuGrQmBKh9TPJRzM9ccu YhCkIyKqjDEBYoZHs8sNusTHoqLjzBTLXPom0oI4zG6N3b9+qVeUOihU 3Q7te97D",
-			},
-			&dns.RRSIG{
-				Hdr: dns.RR_Header{
-					Name:   "com.br.",
-					Rrtype: dns.TypeRRSIG,
-					Class:  dns.ClassINET,
-					Ttl:    21600,
-				},
-				TypeCovered: dns.TypeDNSKEY,
-				Algorithm:   dns.RSASHA1NSEC3SHA1,
-				Labels:      2,
-				OrigTtl:     21600,
-				Expiration:  1385719200,
-				Inception:   1385114400,
-				KeyTag:      6726,
-				SignerName:  "com.br.",
-				Signature:   "KXUjzrq0VCctQ/qkc24quNca7kyrl0ZKkdIpcbzGLmgICE5gIDIDtP9+ Qwb/bemYWjxrQ6lCtPpgWn/KTCwZLgPdScSoD+Bj0RCkUgnfqXs6u3mn p3We+QAO+XhFbWIt3QbjYZauEA6BkFqPnhfIYOL/Thmnva/F59N6zs/E HFc=",
+			dnskey,
+			rrsig,
+		},
+	}
+
+	if !domainDSPolicy.dnssecPolicy(dnsResponseMessage) ||
+		domain.DSSet[0].LastStatus != model.DSStatusOK {
+		t.Error("Not accepting a valid DS")
+	}
+}
+
+func TestDNSSECPolicyMissingKey(t *testing.T) {
+	dnskey, _, err := generateKeyAndSignZone("test.br.")
+	if err != nil {
+		t.Fatal(err)
+	}
+	ds := dnskey.ToDS(int(model.DSDigestTypeSHA1))
+
+	domain := &model.Domain{
+		DSSet: []model.DS{
+			{
+				Keytag:     dnskey.KeyTag(),
+				Algorithm:  convertKeyAlgorithm(dnskey.Algorithm),
+				DigestType: model.DSDigestTypeSHA1,
+				Digest:     ds.Digest,
 			},
 		},
 	}
 
-	if !domainDSPolicy.dnssecPolicy(dnsResponseMessage) {
-		t.Error("Not accepting a valid DS")
+	domainDSPolicy := NewDomainDSPolicy(domain)
+
+	dnsResponseMessage := &dns.Msg{
+		Answer: []dns.RR{},
 	}
+
+	if domainDSPolicy.dnssecPolicy(dnsResponseMessage) ||
+		domain.DSSet[0].LastStatus != model.DSStatusNoKey {
+		t.Error("Not detecting missing key")
+	}
+}
+
+func TestDNSSECPolicyNoSEPKey(t *testing.T) {
+	dnskey, rrsig, err :=
+		generateKeyAndSignZoneWithNoSEPKey("test.br.")
+	if err != nil {
+		t.Fatal(err)
+	}
+	ds := dnskey.ToDS(int(model.DSDigestTypeSHA1))
+
+	domain := &model.Domain{
+		DSSet: []model.DS{
+			{
+				Keytag:     dnskey.KeyTag(),
+				Algorithm:  convertKeyAlgorithm(dnskey.Algorithm),
+				DigestType: model.DSDigestTypeSHA1,
+				Digest:     ds.Digest,
+			},
+		},
+	}
+
+	domainDSPolicy := NewDomainDSPolicy(domain)
+
+	dnsResponseMessage := &dns.Msg{
+		Answer: []dns.RR{
+			dnskey,
+			rrsig,
+		},
+	}
+
+	if domainDSPolicy.dnssecPolicy(dnsResponseMessage) ||
+		domain.DSSet[0].LastStatus != model.DSStatusNoSEP {
+		t.Error("Not detecting no SEP key")
+	}
+}
+
+func TestDNSSECPolicyMissingSignature(t *testing.T) {
+	dnskey, _, err := generateKeyAndSignZone("test.br.")
+	if err != nil {
+		t.Fatal(err)
+	}
+	ds := dnskey.ToDS(int(model.DSDigestTypeSHA1))
+
+	domain := &model.Domain{
+		DSSet: []model.DS{
+			{
+				Keytag:     dnskey.KeyTag(),
+				Algorithm:  convertKeyAlgorithm(dnskey.Algorithm),
+				DigestType: model.DSDigestTypeSHA1,
+				Digest:     ds.Digest,
+			},
+		},
+	}
+
+	domainDSPolicy := NewDomainDSPolicy(domain)
+
+	dnsResponseMessage := &dns.Msg{
+		Answer: []dns.RR{
+			dnskey,
+		},
+	}
+
+	if domainDSPolicy.dnssecPolicy(dnsResponseMessage) ||
+		domain.DSSet[0].LastStatus != model.DSStatusNoSignature {
+		t.Error("Not detecting missing signature")
+	}
+}
+
+func TestDNSSECPolicyExpiredSignature(t *testing.T) {
+	dnskey, rrsig, err := generateKeyAndSignZoneWithExpiredSignature("test.br.")
+	if err != nil {
+		t.Fatal(err)
+	}
+	ds := dnskey.ToDS(int(model.DSDigestTypeSHA1))
+
+	domain := &model.Domain{
+		DSSet: []model.DS{
+			{
+				Keytag:     dnskey.KeyTag(),
+				Algorithm:  convertKeyAlgorithm(dnskey.Algorithm),
+				DigestType: model.DSDigestTypeSHA1,
+				Digest:     ds.Digest,
+			},
+		},
+	}
+
+	domainDSPolicy := NewDomainDSPolicy(domain)
+
+	dnsResponseMessage := &dns.Msg{
+		Answer: []dns.RR{
+			dnskey,
+			rrsig,
+		},
+	}
+
+	if domainDSPolicy.dnssecPolicy(dnsResponseMessage) ||
+		domain.DSSet[0].LastStatus != model.DSStatusExpiredSignature {
+		t.Error("Not detecting expired signature")
+	}
+}
+
+func TestDNSSECPolicySignatureError(t *testing.T) {
+	dnskey, rrsig, err := generateKeyAndSignZone("test.br.")
+	if err != nil {
+		t.Fatal(err)
+	}
+	ds := dnskey.ToDS(int(model.DSDigestTypeSHA1))
+
+	// Changing signature timers turns it invalid
+	rrsig.Expiration = uint32(time.Now().Unix())
+
+	domain := &model.Domain{
+		DSSet: []model.DS{
+			{
+				Keytag:     dnskey.KeyTag(),
+				Algorithm:  convertKeyAlgorithm(dnskey.Algorithm),
+				DigestType: model.DSDigestTypeSHA1,
+				Digest:     ds.Digest,
+			},
+		},
+	}
+
+	domainDSPolicy := NewDomainDSPolicy(domain)
+
+	dnsResponseMessage := &dns.Msg{
+		Answer: []dns.RR{
+			dnskey,
+			rrsig,
+		},
+	}
+
+	if domainDSPolicy.dnssecPolicy(dnsResponseMessage) ||
+		domain.DSSet[0].LastStatus != model.DSStatusSignatureError {
+		t.Error("Not detecting signature validation errors")
+	}
+}
+
+func TestDNSSECPolicyWrongDSDigest(t *testing.T) {
+	dnskey, rrsig, err := generateKeyAndSignZone("test.br.")
+	if err != nil {
+		t.Fatal(err)
+	}
+	ds := dnskey.ToDS(int(model.DSDigestTypeSHA1))
+
+	domain := &model.Domain{
+		DSSet: []model.DS{
+			{
+				Keytag:     dnskey.KeyTag(),
+				Algorithm:  convertKeyAlgorithm(dnskey.Algorithm),
+				DigestType: model.DSDigestTypeSHA1,
+				Digest:     "A" + ds.Digest,
+			},
+		},
+	}
+
+	domainDSPolicy := NewDomainDSPolicy(domain)
+
+	dnsResponseMessage := &dns.Msg{
+		Answer: []dns.RR{
+			dnskey,
+			rrsig,
+		},
+	}
+
+	if domainDSPolicy.dnssecPolicy(dnsResponseMessage) ||
+		domain.DSSet[0].LastStatus != model.DSStatusNoKey {
+		t.Error("Not detecting DS digest inconsistency")
+	}
+}
+
+func generateKeyAndSignZone(zone string) (*dns.DNSKEY, *dns.RRSIG, error) {
+	dnskey := &dns.DNSKEY{
+		Hdr: dns.RR_Header{
+			Name:   zone,
+			Rrtype: dns.TypeDNSKEY,
+		},
+		Flags:     257,
+		Protocol:  3,
+		Algorithm: dns.RSASHA1NSEC3SHA1,
+	}
+
+	privateKey, err := dnskey.Generate(1024)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	rrsig := &dns.RRSIG{
+		Hdr: dns.RR_Header{
+			Name:   zone,
+			Rrtype: dns.TypeRRSIG,
+		},
+		TypeCovered: dns.TypeDNSKEY,
+		Algorithm:   dnskey.Algorithm,
+		Expiration:  uint32(time.Now().Add(10 * time.Second).Unix()),
+		Inception:   uint32(time.Now().Unix()),
+		KeyTag:      dnskey.KeyTag(),
+		SignerName:  zone,
+	}
+
+	if err := rrsig.Sign(privateKey, []dns.RR{dnskey}); err != nil {
+		return nil, nil, err
+	}
+
+	return dnskey, rrsig, nil
+}
+
+func generateKeyAndSignZoneWithNoSEPKey(zone string) (*dns.DNSKEY, *dns.RRSIG, error) {
+	dnskey := &dns.DNSKEY{
+		Hdr: dns.RR_Header{
+			Name:   zone,
+			Rrtype: dns.TypeDNSKEY,
+		},
+		Flags:     256,
+		Protocol:  3,
+		Algorithm: dns.RSASHA1NSEC3SHA1,
+	}
+
+	privateKey, err := dnskey.Generate(1024)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	rrsig := &dns.RRSIG{
+		Hdr: dns.RR_Header{
+			Name:   zone,
+			Rrtype: dns.TypeRRSIG,
+		},
+		TypeCovered: dns.TypeDNSKEY,
+		Algorithm:   dnskey.Algorithm,
+		Expiration:  uint32(time.Now().Add(10 * time.Second).Unix()),
+		Inception:   uint32(time.Now().Unix()),
+		KeyTag:      dnskey.KeyTag(),
+		SignerName:  zone,
+	}
+
+	if err := rrsig.Sign(privateKey, []dns.RR{dnskey}); err != nil {
+		return nil, nil, err
+	}
+
+	return dnskey, rrsig, nil
+}
+
+func generateKeyAndSignZoneWithExpiredSignature(zone string) (*dns.DNSKEY, *dns.RRSIG, error) {
+	dnskey := &dns.DNSKEY{
+		Hdr: dns.RR_Header{
+			Name:   zone,
+			Rrtype: dns.TypeDNSKEY,
+		},
+		Flags:     257,
+		Protocol:  3,
+		Algorithm: dns.RSASHA1NSEC3SHA1,
+	}
+
+	privateKey, err := dnskey.Generate(1024)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	rrsig := &dns.RRSIG{
+		Hdr: dns.RR_Header{
+			Name:   zone,
+			Rrtype: dns.TypeRRSIG,
+		},
+		TypeCovered: dns.TypeDNSKEY,
+		Algorithm:   dnskey.Algorithm,
+		Expiration:  uint32(time.Now().Add(-2 * time.Second).Unix()),
+		Inception:   uint32(time.Now().Add(-5 * time.Second).Unix()),
+		KeyTag:      dnskey.KeyTag(),
+		SignerName:  zone,
+	}
+
+	if err := rrsig.Sign(privateKey, []dns.RR{dnskey}); err != nil {
+		return nil, nil, err
+	}
+
+	return dnskey, rrsig, nil
+}
+
+func convertKeyAlgorithm(algorithm uint8) model.DSAlgorithm {
+	switch algorithm {
+	case dns.RSAMD5:
+		return model.DSAlgorithmRSAMD5
+	case dns.DH:
+		return model.DSAlgorithmDH
+	case dns.DSA:
+		return model.DSAlgorithmDSASHA1
+	case dns.ECC:
+		return model.DSAlgorithmECC
+	case dns.RSASHA1:
+		return model.DSAlgorithmRSASHA1
+	case dns.DSANSEC3SHA1:
+		return model.DSAlgorithmDSASHA1NSEC3
+	case dns.RSASHA1NSEC3SHA1:
+		return model.DSAlgorithmRSASHA1NSEC3
+	case dns.RSASHA256:
+		return model.DSAlgorithmRSASHA256
+	case dns.RSASHA512:
+		return model.DSAlgorithmRSASHA512
+	case dns.ECCGOST:
+		return model.DSAlgorithmECCGOST
+	case dns.ECDSAP256SHA256:
+		return model.DSAlgorithmECDSASHA256
+	case dns.ECDSAP384SHA384:
+		return model.DSAlgorithmECDSASHA384
+	case dns.INDIRECT:
+		return model.DSAlgorithmIndirect
+	case dns.PRIVATEDNS:
+		return model.DSAlgorithmPrivateDNS
+	case dns.PRIVATEOID:
+		return model.DSAlgorithmPrivateOID
+	}
+
+	return model.DSAlgorithmRSASHA1
 }

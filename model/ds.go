@@ -7,14 +7,19 @@ import (
 // List of possible DS algorithms (RFC 4034 - A.1, RFC 5155, RFC 5702, RFC 5933 and RFC
 // 6605). Only algorithms used for signing were listed here
 const (
+	DSAlgorithmRSAMD5       DSAlgorithm = 1   // RSA/MD5
+	DSAlgorithmDH           DSAlgorithm = 2   // DH
 	DSAlgorithmDSASHA1      DSAlgorithm = 3   // DSA/SHA-1 [DSA]
+	DSAlgorithmECC          DSAlgorithm = 4   // ECC
 	DSAlgorithmRSASHA1      DSAlgorithm = 5   // RSA/SHA-1 [RSASHA1]
+	DSAlgorithmDSASHA1NSEC3 DSAlgorithm = 6   // DSA/SHA1-NSEC3
 	DSAlgorithmRSASHA1NSEC3 DSAlgorithm = 7   // RSA/SHA1-NSEC3 [RSASHA1-NSEC3]
 	DSAlgorithmRSASHA256    DSAlgorithm = 8   // RSA/SHA-256 [RSASHA256]
 	DSAlgorithmRSASHA512    DSAlgorithm = 10  // RSA/SHA-512 [RSASHA512]
-	DSAlgorithmGOST         DSAlgorithm = 12  // GOST R 34.10-2001
+	DSAlgorithmECCGOST      DSAlgorithm = 12  // GOST R 34.10-2001
 	DSAlgorithmECDSASHA256  DSAlgorithm = 13  // ECDSA/SHA-256 - Elliptic Curve Digital Signature
 	DSAlgorithmECDSASHA384  DSAlgorithm = 14  // ECDSA/SHA-384 - Elliptic Curve Digital Signature
+	DSAlgorithmIndirect     DSAlgorithm = 252 // Indirect
 	DSAlgorithmPrivateDNS   DSAlgorithm = 253 // Private [PRIVATEDNS]
 	DSAlgorithmPrivateOID   DSAlgorithm = 254 // Private [PRIVATEOID]
 )
@@ -26,10 +31,11 @@ type DSAlgorithm uint8
 // List of possible digest types according to RFCs 3658, 4034, 4035
 const (
 	DSDigestTypeReserved DigestType = 0
-	DSDigestTypeSHA1     DigestType = 1 // Digest with 20 bytes
-	DSDigestTypeSHA256   DigestType = 2 // Digest with 32 bytes
-	DSDigestTypeGOST     DigestType = 3 // Digest with 32 bytes
-	DSDigestTypeSHA384   DigestType = 4 // Digest with 96 bytes
+	DSDigestTypeSHA1     DigestType = 1 // Digest with 20 bytes (RFC 4034)
+	DSDigestTypeSHA256   DigestType = 2 // Digest with 32 bytes (RFC 4509)
+	DSDigestTypeGOST94   DigestType = 3 // Digest with 32 bytes (RFC 5933)
+	DSDigestTypeSHA384   DigestType = 4 // Digest with 96 bytes (Experimental)
+	DSDigestTypeSHA512   DigestType = 5 // Digest with 128 bytes (Experimental)
 )
 
 // DigestType is a number that represents one of the possible DS digest's types listed in
