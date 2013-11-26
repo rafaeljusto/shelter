@@ -11,9 +11,12 @@ type QuerierDispatcher struct {
 }
 
 // This is the method that start the querier dispatcher and the queriers. It is
-// asynchronous and will ends after receiving the poison pill from the injector
+// asynchronous and will ends after receiving the poison pill from the injector. It
+// receives the domains to query sent by the injector, and three other parameters that
+// will control the scan query performance and allow packages to pass network firewall
+// rules
 func (q QuerierDispatcher) Start(domainsToQueryChannel chan *model.Domain,
-	domainsBufferSize, numberOfQueriers int) chan *model.Domain {
+	domainsBufferSize, numberOfQueriers int, udpMaxSize uint16) chan *model.Domain {
 
 	// Create the output channel used for each querier to add the result for the collector,
 	// the poison pill is the nil domain object
@@ -28,7 +31,7 @@ func (q QuerierDispatcher) Start(domainsToQueryChannel chan *model.Domain,
 
 	// Initialize each querier
 	for index, _ := range queriersChannels {
-		queriersChannels[index] = Querier{}.Start(queriers, domainsToSave)
+		queriersChannels[index] = Querier{}.Start(queriers, domainsToSave, udpMaxSize)
 	}
 
 	go func() {
