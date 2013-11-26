@@ -63,6 +63,7 @@ func main() {
 	domainWithNoDNSErrors()
 	domainWithNoDNSSECErrors()
 	domainDNSTimeout()
+	domainDNSUnknownHost()
 
 	println("SUCCESS!")
 }
@@ -225,6 +226,26 @@ func domainDNSTimeout() {
 	for _, domain := range domains {
 		if domain.Nameservers[0].LastStatus != model.NameserverStatusTimeout {
 			fatalln("Error checking a timeout domain", nil)
+		}
+	}
+}
+
+func domainDNSUnknownHost() {
+	domainsToQueryChannel := make(chan *model.Domain, domainsBufferSize)
+	domainsToQueryChannel <- &model.Domain{
+		FQDN: "br.",
+		Nameservers: []model.Nameserver{
+			{
+				Host: "br.br.",
+			},
+		},
+	}
+	domainsToQueryChannel <- nil // Poison pill
+
+	domains := runScan(domainsToQueryChannel)
+	for _, domain := range domains {
+		if domain.Nameservers[0].LastStatus != model.NameserverStatusUnknownHost {
+			fatalln("Error checking a unknown host", nil)
 		}
 	}
 }
