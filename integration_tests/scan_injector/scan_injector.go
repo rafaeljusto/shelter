@@ -51,7 +51,7 @@ type ScanInjectorTestConfigFile struct {
 }
 
 func init() {
-	flag.StringVar(&configFilePath, "config", "", "Configuration file for DomainDAO test")
+	flag.StringVar(&configFilePath, "config", "", "Configuration file for ScanInjector test")
 }
 
 func main() {
