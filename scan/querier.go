@@ -11,7 +11,12 @@ import (
 
 const (
 	querierDomainsQueueSize = 10 // Number of domains that can wait in the querier channel
-	dnsPort                 = 53 // DNS query port
+)
+
+var (
+	// DNS query port. It's not a constant because in test scenarios we change the DNS port
+	// to one that don't need root privilleges
+	DNSPort = 53
 )
 
 // Querier is responsable for sending the DNS queries to check if the namerservers are
@@ -122,16 +127,16 @@ func getHost(fqdn string, nameserver model.Nameserver) string {
 	if nameserver.NeedsGlue(fqdn) {
 		// Nameserver with glue record. For now we are only checking IPv4 addresses, in the
 		// future it would be nice to have an algorithm using both addresses
-		return nameserver.IPv4.String() + ":" + strconv.Itoa(dnsPort)
+		return nameserver.IPv4.String() + ":" + strconv.Itoa(DNSPort)
 	}
 
 	// Using cache to store host addresses when there's no glue
 	if addresses, err := querierCache.Get(nameserver.Host); err == nil || len(addresses) > 0 {
 		// Found information in cache, lets use it to speed up the scan
-		return addresses[0].String() + ":" + strconv.Itoa(dnsPort)
+		return addresses[0].String() + ":" + strconv.Itoa(DNSPort)
 	}
 
 	// Error ocurred to retrieve the information from cache. Let's query without using the
 	// cache
-	return nameserver.Host + ":" + strconv.Itoa(dnsPort)
+	return nameserver.Host + ":" + strconv.Itoa(DNSPort)
 }
