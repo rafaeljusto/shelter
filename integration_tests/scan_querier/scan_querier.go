@@ -62,6 +62,7 @@ func main() {
 	startDNSServer(configFile.Server.Port)
 	domainWithNoDNSErrors()
 	domainWithNoDNSSECErrors()
+	domainDNSTimeout()
 
 	println("SUCCESS!")
 }
@@ -206,6 +207,26 @@ func domainWithNoDNSSECErrors() {
 	}
 
 	dns.HandleRemove("br.")
+}
+
+func domainDNSTimeout() {
+	domainsToQueryChannel := make(chan *model.Domain, domainsBufferSize)
+	domainsToQueryChannel <- &model.Domain{
+		FQDN: "br.",
+		Nameservers: []model.Nameserver{
+			{
+				Host: "google.com.",
+			},
+		},
+	}
+	domainsToQueryChannel <- nil // Poison pill
+
+	domains := runScan(domainsToQueryChannel)
+	for _, domain := range domains {
+		if domain.Nameservers[0].LastStatus != model.NameserverStatusTimeout {
+			fatalln("Error checking a timeout domain", nil)
+		}
+	}
 }
 
 // Method responsable to configure and start scan injector for tests
