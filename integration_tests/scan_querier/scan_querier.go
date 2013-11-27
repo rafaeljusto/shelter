@@ -40,8 +40,8 @@ var (
 // size of the channel, the number of concurrently queriers and the UDP max package size
 // for firewall problems
 const (
-	domainsBufferSize = 10
-	numberOfQueriers  = 5
+	domainsBufferSize = 100
+	numberOfQueriers  = 400
 	udpMaxSize        = 4096
 )
 
@@ -83,7 +83,7 @@ func main() {
 	// Scan querier performance report is optional and only generated when the report file
 	// path parameter is given
 	if len(reportFilePath) > 0 {
-		scanQuerierPerformanceReport(configFile.Report.InputFile)
+		scanQuerierReport(configFile.Report.InputFile)
 	}
 
 	println("SUCCESS!")
@@ -107,25 +107,27 @@ func domainWithNoDNSErrors() {
 
 		dnsResponseMessage := &dns.Msg{
 			MsgHdr: dns.MsgHdr{
-				Id:               dnsRequestMessage.Id,
-				Response:         true,
-				Opcode:           dns.OpcodeQuery,
-				Authoritative:    true,
-				RecursionDesired: dnsRequestMessage.RecursionDesired,
-				CheckingDisabled: dnsRequestMessage.CheckingDisabled,
-				Rcode:            dns.RcodeSuccess,
+				Authoritative: true,
 			},
-			Question: dnsRequestMessage.Question,
 			Answer: []dns.RR{
 				&dns.SOA{
 					Hdr: dns.RR_Header{
 						Name:   "br.",
 						Rrtype: dns.TypeSOA,
+						Class:  dns.ClassINET,
+						Ttl:    86400,
 					},
-					Serial: 2013112600,
+					Ns:      "ns1.br.",
+					Mbox:    "rafael.justo.net.br.",
+					Serial:  2013112600,
+					Refresh: 86400,
+					Retry:   86400,
+					Expire:  86400,
+					Minttl:  900,
 				},
 			},
 		}
+		dnsResponseMessage.SetReply(dnsRequestMessage)
 
 		w.WriteMsg(dnsResponseMessage)
 	})
@@ -177,13 +179,7 @@ func domainWithNoDNSSECErrors() {
 		if dnsRequestMessage.Question[0].Qtype == dns.TypeSOA {
 			dnsResponseMessage = &dns.Msg{
 				MsgHdr: dns.MsgHdr{
-					Id:               dnsRequestMessage.Id,
-					Response:         true,
-					Opcode:           dns.OpcodeQuery,
-					Authoritative:    true,
-					RecursionDesired: dnsRequestMessage.RecursionDesired,
-					CheckingDisabled: dnsRequestMessage.CheckingDisabled,
-					Rcode:            dns.RcodeSuccess,
+					Authoritative: true,
 				},
 				Question: dnsRequestMessage.Question,
 				Answer: []dns.RR{
@@ -191,24 +187,27 @@ func domainWithNoDNSSECErrors() {
 						Hdr: dns.RR_Header{
 							Name:   "br.",
 							Rrtype: dns.TypeSOA,
+							Class:  dns.ClassINET,
+							Ttl:    86400,
 						},
-						Serial: 2013112600,
+						Ns:      "ns1.br.",
+						Mbox:    "rafael.justo.net.br.",
+						Serial:  2013112600,
+						Refresh: 86400,
+						Retry:   86400,
+						Expire:  86400,
+						Minttl:  900,
 					},
 				},
 			}
+			dnsResponseMessage.SetReply(dnsRequestMessage)
 
 			w.WriteMsg(dnsResponseMessage)
 
 		} else if dnsRequestMessage.Question[0].Qtype == dns.TypeDNSKEY {
 			dnsResponseMessage = &dns.Msg{
 				MsgHdr: dns.MsgHdr{
-					Id:               dnsRequestMessage.Id,
-					Response:         true,
-					Opcode:           dns.OpcodeQuery,
-					Authoritative:    true,
-					RecursionDesired: dnsRequestMessage.RecursionDesired,
-					CheckingDisabled: dnsRequestMessage.CheckingDisabled,
-					Rcode:            dns.RcodeSuccess,
+					Authoritative: true,
 				},
 				Question: dnsRequestMessage.Question,
 				Answer: []dns.RR{
@@ -216,7 +215,9 @@ func domainWithNoDNSSECErrors() {
 					rrsig,
 				},
 			}
+			dnsResponseMessage.SetReply(dnsRequestMessage)
 
+			w.WriteMsg(dnsResponseMessage)
 		}
 	})
 
@@ -271,8 +272,13 @@ func domainDNSUnknownHost() {
 	}
 }
 
-// Generates a report with the amount of time for the scan
-func scanQuerierPerformanceReport(inputFilePath string) {
+// Generates a report with the amount of time of a scan, it should be last last thing from
+// the test, because it changes the DNS test port to the original one for real tests
+func scanQuerierReport(inputFilePath string) {
+	// Move back to default port, because we are going to query the world for real to check
+	// querier performance
+	scan.DNSPort = 53
+
 	domains, err := readInputFile(inputFilePath)
 	if err != nil {
 		fatalln("Error while loading input data for report", err)
@@ -290,20 +296,39 @@ func scanQuerierPerformanceReport(inputFilePath string) {
 	results := runScan(domainsToQueryChannel)
 	totalDuration := time.Since(beginTimer)
 
-	report := " #       | Query\n" +
-		"---------------------------\n"
-	report += fmt.Sprintf("% -8d | %16s\n", len(results),
-		time.Duration(int64(totalDuration)).String())
+	report := " #       | Query            | QPS\n" +
+		"----------------------------------\n"
+	report += fmt.Sprintf("% -8d | %16s | %4d\n", len(results),
+		time.Duration(int64(totalDuration)).String(),
+		int64(len(results))/int64(totalDuration/time.Second))
+
+	// If we found a report file in the current path, rename it so we don't lose the old
+	// data. We are going to use the modification date from the file. We also don't check
+	// the errors because we really don't care
+	if file, err := os.Open(reportFilePath); err == nil {
+		newFilename := reportFilePath + ".old-"
+
+		if fileStatus, err := file.Stat(); err == nil {
+			newFilename += fileStatus.ModTime().Format("20060102150405")
+
+		} else {
+			// Did not find the modification date, so lets use now
+			newFilename += time.Now().Format("20060102150405")
+		}
+
+		// We don't use defer because we want to rename it before the end of scope
+		file.Close()
+
+		os.Rename(reportFilePath, newFilename)
+	}
 
 	ioutil.WriteFile(reportFilePath, []byte(report), 0444)
 }
 
 // Method responsable to configure and start scan injector for tests
 func runScan(domainsToQueryChannel chan *model.Domain) []*model.Domain {
-	var scanQuerierDispacther scan.QuerierDispatcher
-
-	domainsToSaveChannel := scanQuerierDispacther.Start(domainsToQueryChannel, domainsBufferSize,
-		numberOfQueriers, udpMaxSize)
+	domainsToSaveChannel := scan.QuerierDispatcher{}.Start(domainsToQueryChannel,
+		domainsBufferSize, numberOfQueriers, udpMaxSize)
 
 	var domains []*model.Domain
 
@@ -417,6 +442,9 @@ func startDNSServer(port int) {
 			fatalln("Error starting DNS test server", err)
 		}
 	}()
+
+	// Wait the DNS server to start before testing
+	time.Sleep(1 * time.Second)
 }
 
 // Function to read the configuration file
@@ -486,7 +514,7 @@ func readInputFile(inputFilePath string) ([]*model.Domain, error) {
 
 	// Read line by line
 	for scanner.Scan() {
-		inputParts := strings.Split(scanner.Text(), " ")
+		inputParts := strings.Fields(scanner.Text())
 		if len(inputParts) < 3 {
 			return nil, ErrInputFileInvalidFormat
 		}

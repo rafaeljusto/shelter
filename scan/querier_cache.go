@@ -25,7 +25,7 @@ type QuerierCache struct {
 
 // Method used to retrieve addresses of a given nameserver, if the address does not exist
 // in the local cache the system will lookup for the domain and will store the result
-func (q QuerierCache) Get(name string) ([]net.IP, error) {
+func (q *QuerierCache) Get(name string) ([]net.IP, error) {
 	q.hostsMutex.RLock()
 	addresses, found := q.hosts[name]
 	q.hostsMutex.RUnlock()

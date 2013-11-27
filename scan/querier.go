@@ -31,7 +31,7 @@ type Querier struct {
 // querier will put the domains for the collector save them in database. The last argument
 // is used for DNSSEC queries to notify the maximum UDP package size supported in the
 // network
-func (q Querier) Start(queriers sync.WaitGroup,
+func (q Querier) Start(queriers *sync.WaitGroup,
 	domainsToSave chan *model.Domain, udpMaxSize uint16) chan *model.Domain {
 	// Create the communication channel that we are going to listen to retrieve domains, we
 	// can store more than one domain in this channel because some queriers can slow down
@@ -128,13 +128,13 @@ func getHost(fqdn string, nameserver model.Nameserver) string {
 	if nameserver.NeedsGlue(fqdn) {
 		// Nameserver with glue record. For now we are only checking IPv4 addresses, in the
 		// future it would be nice to have an algorithm using both addresses
-		return nameserver.IPv4.String() + ":" + strconv.Itoa(DNSPort)
+		return "[" + nameserver.IPv4.String() + "]:" + strconv.Itoa(DNSPort)
 	}
 
 	// Using cache to store host addresses when there's no glue
 	if addresses, err := querierCache.Get(nameserver.Host); err == nil || len(addresses) > 0 {
 		// Found information in cache, lets use it to speed up the scan
-		return addresses[0].String() + ":" + strconv.Itoa(DNSPort)
+		return "[" + addresses[0].String() + "]:" + strconv.Itoa(DNSPort)
 	}
 
 	// Error ocurred to retrieve the information from cache. Let's query without using the
