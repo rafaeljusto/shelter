@@ -65,6 +65,12 @@ func (d *DomainDSPolicy) CheckNetworkError(err error) bool {
 // nameserver policies, it updates the DS records directly in the domain object pointer
 // and return true when the DS records are OK or false otherwise
 func (d *DomainDSPolicy) Run(dnsResponseMessage *dns.Msg) bool {
+	// Something went really wrong, because if we got here there was no network error and it
+	// should have a DNS response message, but as a safety check we don't allow to continue
+	if dnsResponseMessage == nil {
+		return false
+	}
+
 	for _, policy := range dsPolicies {
 		if !policy(d, dnsResponseMessage) {
 			return false

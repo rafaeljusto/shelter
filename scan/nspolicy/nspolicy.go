@@ -68,6 +68,12 @@ func (d *DomainNSPolicy) CheckNetworkError(err error) model.NameserverStatus {
 // Method responsable for running all nameserver policies. It will return the nameserver
 // status of the first error that occurred
 func (d *DomainNSPolicy) Run(dnsResponseMessage *dns.Msg) model.NameserverStatus {
+	// Something went really wrong, because if we got here there was no network error and it
+	// should have a DNS response message, but as a safety check we don't allow to continue
+	if dnsResponseMessage == nil {
+		return model.NameserverStatusError
+	}
+
 	for _, policy := range nsPolicies {
 		if status := policy(d, dnsResponseMessage); status != model.NameserverStatusOK {
 			return status

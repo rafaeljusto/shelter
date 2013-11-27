@@ -82,9 +82,10 @@ func (q Querier) checkNameserver(domain *model.Domain) {
 
 		if status := domainNSPolicy.CheckNetworkError(err); status != model.NameserverStatusOK {
 			domain.Nameservers[index].ChangeStatus(status)
-		}
 
-		domain.Nameservers[index].ChangeStatus(domainNSPolicy.Run(dnsResponseMessage))
+		} else {
+			domain.Nameservers[index].ChangeStatus(domainNSPolicy.Run(dnsResponseMessage))
+		}
 	}
 }
 

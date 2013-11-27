@@ -30,18 +30,18 @@ type DSAlgorithm uint8
 
 // List of possible digest types according to RFCs 3658, 4034, 4035
 const (
-	DSDigestTypeReserved DigestType = 0
-	DSDigestTypeSHA1     DigestType = 1 // Digest with 20 bytes (RFC 4034)
-	DSDigestTypeSHA256   DigestType = 2 // Digest with 32 bytes (RFC 4509)
-	DSDigestTypeGOST94   DigestType = 3 // Digest with 32 bytes (RFC 5933)
-	DSDigestTypeSHA384   DigestType = 4 // Digest with 96 bytes (Experimental)
-	DSDigestTypeSHA512   DigestType = 5 // Digest with 128 bytes (Experimental)
+	DSDigestTypeReserved DSDigestType = 0
+	DSDigestTypeSHA1     DSDigestType = 1 // Digest with 20 bytes (RFC 4034)
+	DSDigestTypeSHA256   DSDigestType = 2 // Digest with 32 bytes (RFC 4509)
+	DSDigestTypeGOST94   DSDigestType = 3 // Digest with 32 bytes (RFC 5933)
+	DSDigestTypeSHA384   DSDigestType = 4 // Digest with 96 bytes (Experimental)
+	DSDigestTypeSHA512   DSDigestType = 5 // Digest with 128 bytes (Experimental)
 )
 
-// DigestType is a number that represents one of the possible DS digest's types listed in
-// the constant group above. It is useful when generating a DS from a DNSKEY for
+// DSDigestType is a number that represents one of the possible DS digest's types listed
+// in the constant group above. It is useful when generating a DS from a DNSKEY for
 // comparisson validation
-type DigestType uint8
+type DSDigestType uint8
 
 // List of possible DS status
 const (
@@ -64,14 +64,14 @@ type DSStatus int
 // DNSSEC problems, the worst problem (using a priority algorithm) will be stored in the
 // DS
 type DS struct {
-	Keytag      uint16      // DNSKEY's identification number
-	Algorithm   DSAlgorithm // DNSKEY's algorithm
-	Digest      string      // Hash of the DNSKEY content
-	DigestType  DigestType  // Hash type decided by user when generating the DS
-	ExpiresAt   time.Time   // DNSKEY's signature expiration date
-	LastStatus  DSStatus    // Result of the last configuration check
-	LastCheckAt time.Time   // Time of the last configuration check
-	LastOKAt    time.Time   // Last time that the DNSSEC configuration was OK
+	Keytag      uint16       // DNSKEY's identification number
+	Algorithm   DSAlgorithm  // DNSKEY's algorithm
+	Digest      string       // Hash of the DNSKEY content
+	DigestType  DSDigestType // Hash type decided by user when generating the DS
+	ExpiresAt   time.Time    // DNSKEY's signature expiration date
+	LastStatus  DSStatus     // Result of the last configuration check
+	LastCheckAt time.Time    // Time of the last configuration check
+	LastOKAt    time.Time    // Last time that the DNSSEC configuration was OK
 }
 
 // ChangeStatus is a easy way to change the status of a DS because it also updates the
