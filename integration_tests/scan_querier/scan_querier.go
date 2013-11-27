@@ -33,6 +33,7 @@ var (
 var (
 	configFilePath string // Path for the configuration file with all the query parameters
 	inputFilePath  string // Path for the input file used for performance tests
+	reportFilePath string // Path to generate the scan querier performance report file
 )
 
 // Define some scan important variables for the test enviroment, this values indicates the
@@ -49,13 +50,14 @@ type ScanQuerierTestConfigFile struct {
 	Server struct {
 		Port int
 	}
-	PerformanceReport struct {
+	Report struct {
 		InputFile string
 	}
 }
 
 func init() {
 	flag.StringVar(&configFilePath, "config", "", "Configuration file for ScanQuerier test")
+	flag.StringVar(&reportFilePath, "report", "", "Report file for ScanQuerier performance")
 }
 
 func main() {
@@ -77,6 +79,12 @@ func main() {
 	domainWithNoDNSSECErrors()
 	domainDNSTimeout()
 	domainDNSUnknownHost()
+
+	// Scan querier performance report is optional and only generated when the report file
+	// path parameter is given
+	if len(reportFilePath) > 0 {
+		scanQuerierPerformanceReport(configFile.Report.InputFile)
+	}
 
 	println("SUCCESS!")
 }
@@ -263,6 +271,33 @@ func domainDNSUnknownHost() {
 	}
 }
 
+// Generates a report with the amount of time for the scan
+func scanQuerierPerformanceReport(inputFilePath string) {
+	domains, err := readInputFile(inputFilePath)
+	if err != nil {
+		fatalln("Error while loading input data for report", err)
+	}
+
+	domainsToQueryChannel := make(chan *model.Domain, domainsBufferSize)
+	go func() {
+		for _, domain := range domains {
+			domainsToQueryChannel <- domain
+		}
+		domainsToQueryChannel <- nil
+	}()
+
+	beginTimer := time.Now()
+	results := runScan(domainsToQueryChannel)
+	totalDuration := time.Since(beginTimer)
+
+	report := " #       | Query\n" +
+		"---------------------------\n"
+	report += fmt.Sprintf("% -8d | %16s\n", len(results),
+		time.Duration(int64(totalDuration)).String())
+
+	ioutil.WriteFile(reportFilePath, []byte(report), 0444)
+}
+
 // Method responsable to configure and start scan injector for tests
 func runScan(domainsToQueryChannel chan *model.Domain) []*model.Domain {
 	var scanQuerierDispacther scan.QuerierDispatcher
@@ -433,7 +468,7 @@ func readConfigFile() (ScanQuerierTestConfigFile, error) {
 // e.dns.br. AAAA 2001:12f8:1:0:0:0:0:10
 // f.dns.br. A    200.219.159.10
 //
-func readInputFile() ([]*model.Domain, error) {
+func readInputFile(inputFilePath string) ([]*model.Domain, error) {
 	// Input file path is necessary when we want to run a performance test, because in this
 	// file we have real DNS authoritative servers
 	if len(inputFilePath) == 0 {
