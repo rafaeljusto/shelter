@@ -40,10 +40,20 @@ func init() {
 // avoid making queries whitout necessity. We also control the number of queries per
 // second to avoid rate limit algorithms
 type hostCache struct {
-	addresses             []net.IP         // nameserver's addresses
-	queriesPerSecond      map[int64]uint64 // number of queries per second (epoch)
-	queriesPerSecondMutex sync.RWMutex     // Lock to allow concurrent access
-	timeouts              uint64           // counter that detects if this nameserver is down
+	addresses        []net.IP // nameserver's addresses
+	lastEpoch        int64    // last query epoch
+	queriesPerSecond uint64   // number of queries per second (epoch)
+	timeouts         uint64   // counter that detects if this nameserver is down
+}
+
+// Method to detect if the number of timeouts in a host was exceeded
+func (h hostCache) timeoutsPerHostExceeded() bool {
+	return h.timeouts > maxTimeoutsPerHost
+}
+
+// Mehtod to check if the number of queries per second on this host was exceeded
+func (h hostCache) queriesPerSecondExceeded() bool {
+	return time.Now().Unix() == h.lastEpoch && h.queriesPerSecond > maxQPSPerHost
 }
 
 // QuerierCache was created to make the name resolution faster. Many domains use ISP the
@@ -57,22 +67,18 @@ type QuerierCache struct {
 // in the local cache the system will lookup for the domain and will store the result
 func (q *QuerierCache) Get(name string) ([]net.IP, error) {
 	q.hostsMutex.RLock()
-	nameserver, found := q.hosts[name]
+	host, found := q.hosts[name]
 	q.hostsMutex.RUnlock()
 
 	if found {
-		nameserver.queriesPerSecondMutex.RLock()
-		qps := nameserver.queriesPerSecond[time.Now().Unix()]
-		nameserver.queriesPerSecondMutex.RUnlock()
-
-		if nameserver.timeouts > maxTimeoutsPerHost {
+		if host.timeoutsPerHostExceeded() {
 			return nil, HostTimeoutErr
 
-		} else if qps > maxQPSPerHost {
+		} else if host.queriesPerSecondExceeded() {
 			return nil, HostQPSExceededErr
 
 		} else {
-			return nameserver.addresses, nil
+			return host.addresses, nil
 		}
 	}
 
@@ -85,7 +91,8 @@ func (q *QuerierCache) Get(name string) ([]net.IP, error) {
 	q.hostsMutex.Lock()
 	q.hosts[name] = &hostCache{
 		addresses:        addresses,
-		queriesPerSecond: make(map[int64]uint64),
+		lastEpoch:        0,
+		queriesPerSecond: 0,
 		timeouts:         0,
 	}
 	q.hostsMutex.Unlock()
@@ -97,11 +104,11 @@ func (q *QuerierCache) Get(name string) ([]net.IP, error) {
 // timeouts we assume that every nameserver that use this host will get timeout status
 func (q *QuerierCache) Timeout(name string) {
 	q.hostsMutex.RLock()
-	nameserver, found := q.hosts[name]
+	host, found := q.hosts[name]
 	q.hostsMutex.RUnlock()
 
 	if found {
-		atomic.AddUint64(&nameserver.timeouts, 1)
+		atomic.AddUint64(&host.timeouts, 1)
 	}
 }
 
@@ -109,7 +116,7 @@ func (q *QuerierCache) Timeout(name string) {
 // maximum number of queries sent to a host, avoiding rate limit startegies
 func (q *QuerierCache) Query(name string) {
 	q.hostsMutex.RLock()
-	nameserver, found := q.hosts[name]
+	host, found := q.hosts[name]
 	q.hostsMutex.RUnlock()
 
 	if !found {
@@ -118,7 +125,12 @@ func (q *QuerierCache) Query(name string) {
 
 	now := time.Now().Unix()
 
-	nameserver.queriesPerSecondMutex.Lock()
-	nameserver.queriesPerSecond[now] += 1
-	nameserver.queriesPerSecondMutex.Unlock()
+	if now == host.lastEpoch {
+		atomic.AddUint64(&host.queriesPerSecond, 1)
+
+	} else if now > host.lastEpoch {
+		if atomic.CompareAndSwapInt64(&host.lastEpoch, host.lastEpoch, now) {
+			atomic.StoreUint64(&host.queriesPerSecond, 1)
+		}
+	}
 }
