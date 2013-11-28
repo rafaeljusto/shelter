@@ -40,9 +40,10 @@ func init() {
 // avoid making queries whitout necessity. We also control the number of queries per
 // second to avoid rate limit algorithms
 type hostCache struct {
-	addresses        []net.IP          // nameserver's addresses
-	queriesPerSecond map[int64]*uint64 // number of queries per second (epoch)
-	timeouts         uint64            // counter that detects if this nameserver is down
+	addresses             []net.IP         // nameserver's addresses
+	queriesPerSecond      map[int64]uint64 // number of queries per second (epoch)
+	queriesPerSecondMutex sync.RWMutex     // Lock to allow concurrent access
+	timeouts              uint64           // counter that detects if this nameserver is down
 }
 
 // QuerierCache was created to make the name resolution faster. Many domains use ISP the
@@ -60,12 +61,14 @@ func (q *QuerierCache) Get(name string) ([]net.IP, error) {
 	q.hostsMutex.RUnlock()
 
 	if found {
+		nameserver.queriesPerSecondMutex.RLock()
 		qps := nameserver.queriesPerSecond[time.Now().Unix()]
+		nameserver.queriesPerSecondMutex.RUnlock()
 
 		if nameserver.timeouts > maxTimeoutsPerHost {
 			return nil, HostTimeoutErr
 
-		} else if qps != nil && *qps > maxQPSPerHost {
+		} else if qps > maxQPSPerHost {
 			return nil, HostQPSExceededErr
 
 		} else {
@@ -82,7 +85,7 @@ func (q *QuerierCache) Get(name string) ([]net.IP, error) {
 	q.hostsMutex.Lock()
 	q.hosts[name] = &hostCache{
 		addresses:        addresses,
-		queriesPerSecond: make(map[int64]*uint64),
+		queriesPerSecond: make(map[int64]uint64),
 		timeouts:         0,
 	}
 	q.hostsMutex.Unlock()
@@ -114,15 +117,8 @@ func (q *QuerierCache) Query(name string) {
 	}
 
 	now := time.Now().Unix()
-	qps := nameserver.queriesPerSecond[now]
 
-	if qps == nil {
-		qps = new(uint64)
-
-		q.hostsMutex.Lock()
-		nameserver.queriesPerSecond[now] = qps
-		q.hostsMutex.Unlock()
-	}
-
-	atomic.AddUint64(qps, 1)
+	nameserver.queriesPerSecondMutex.Lock()
+	nameserver.queriesPerSecond[now] += 1
+	nameserver.queriesPerSecondMutex.Unlock()
 }

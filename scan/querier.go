@@ -81,7 +81,7 @@ func (q Querier) checkNameserver(domain *model.Domain) {
 			continue
 
 		} else if err == HostQPSExceededErr {
-			// TODO: How are we going to postpone an host query?
+			// TODO: How are we going to postpone a host query?
 			continue
 		}
 
@@ -131,7 +131,7 @@ func (q Querier) checkDS(domain *model.Domain, udpMaxSize uint16) {
 			continue
 
 		} else if err == HostQPSExceededErr {
-			// TODO: How are we going to postpone an host query?
+			// TODO: How are we going to postpone a host query?
 			continue
 		}
 
