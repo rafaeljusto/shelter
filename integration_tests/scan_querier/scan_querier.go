@@ -275,32 +275,65 @@ func domainDNSUnknownHost() {
 // Generates a report with the amount of time of a scan, it should be last last thing from
 // the test, because it changes the DNS test port to the original one for real tests
 func scanQuerierReport(inputFilePath string) {
-	// Move back to default port, because we are going to query the world for real to check
-	// querier performance
-	scan.DNSPort = 53
+	report := " #       | Query            | QPS\n" +
+		"----------------------------------\n"
+
+	// Report variables
+	scale := []int{10, 50, 100, 500, 1000, 5000,
+		10000, 50000, 100000, 500000, 1000000, 5000000}
 
 	domains, err := readInputFile(inputFilePath)
 	if err != nil {
 		fatalln("Error while loading input data for report", err)
 	}
 
-	domainsToQueryChannel := make(chan *model.Domain, domainsBufferSize)
-	go func() {
-		for _, domain := range domains {
-			domainsToQueryChannel <- domain
+	nameserverStatusCounter := 0
+	nameserversStatus := make(map[model.NameserverStatus]int)
+
+	dsStatusCounter := 0
+	dsSetStatus := make(map[model.DSStatus]int)
+
+	for _, numberOfItems := range scale {
+		resizedDomains := resizeReportInput(domains, numberOfItems)
+
+		println(fmt.Sprintf("Generating report - scale %d", numberOfItems))
+		totalDuration, queriesPerSecond, localNameserversStatus, localDSSetStatus :=
+			calculateScanQuerierDurations(resizedDomains)
+
+		report += fmt.Sprintf("% -8d | %16s | %4d\n",
+			numberOfItems,
+			time.Duration(int64(totalDuration)).String(),
+			queriesPerSecond,
+		)
+
+		for status, counter := range localNameserversStatus {
+			nameserversStatus[status] += counter
+			nameserverStatusCounter += counter
 		}
-		domainsToQueryChannel <- nil
-	}()
 
-	beginTimer := time.Now()
-	results := runScan(domainsToQueryChannel)
-	totalDuration := time.Since(beginTimer)
+		for status, counter := range localDSSetStatus {
+			dsSetStatus[status] += counter
+			dsStatusCounter += counter
+		}
+	}
 
-	report := " #       | Query            | QPS\n" +
-		"----------------------------------\n"
-	report += fmt.Sprintf("% -8d | %16s | %4d\n", len(results),
-		time.Duration(int64(totalDuration)).String(),
-		int64(len(results))/int64(totalDuration/time.Second))
+	report += "\nNameserver Status\n" +
+		"-----------------\n"
+	for status, counter := range nameserversStatus {
+		report += fmt.Sprintf("%16s: % 3.2f%%\n",
+			nameserverStatusToString(status),
+			(float64(counter*100) / float64(nameserverStatusCounter)),
+		)
+	}
+
+	report += "\nDS Status\n" +
+		"---------\n"
+	for status, counter := range dsSetStatus {
+		report += fmt.Sprintf("%16s: % 3.2f%%\n",
+			dsStatusToString(status),
+			(float64(counter*100) / float64(dsStatusCounter)),
+		)
+	}
 
 	// If we found a report file in the current path, rename it so we don't lose the old
 	// data. We are going to use the modification date from the file. We also don't check
@@ -323,6 +356,71 @@ func scanQuerierReport(inputFilePath string) {
 	}
 
 	ioutil.WriteFile(reportFilePath, []byte(report), 0444)
+}
+
+func calculateScanQuerierDurations(domains []*model.Domain) (totalDuration time.Duration,
+	queriesPerSecond int64, nameserversStatus map[model.NameserverStatus]int,
+	dsSetStatus map[model.DSStatus]int) {
+
+	// Move back to default port, because we are going to query the world for real to check
+	// querier performance
+	scan.DNSPort = 53
+
+	domainsToQueryChannel := make(chan *model.Domain, domainsBufferSize)
+	go func() {
+		for _, domain := range domains {
+			domainsToQueryChannel <- domain
+		}
+		domainsToQueryChannel <- nil
+	}()
+
+	beginTimer := time.Now()
+	results := runScan(domainsToQueryChannel)
+
+	totalDuration = time.Since(beginTimer)
+	queriesPerSecond = int64(len(results)) / int64(totalDuration/time.Second)
+
+	nameserversStatus = make(map[model.NameserverStatus]int)
+	dsSetStatus = make(map[model.DSStatus]int)
+
+	for _, domain := range results {
+		for _, nameserver := range domain.Nameservers {
+			nameserversStatus[nameserver.LastStatus] += 1
+		}
+
+		for _, ds := range domain.DSSet {
+			dsSetStatus[ds.LastStatus] += 1
+		}
+	}
+
+	return
+}
+
+func resizeReportInput(domains []*model.Domain, size int) []*model.Domain {
+	resizedDomains := make([]*model.Domain, len(domains))
+	copy(resizedDomains, domains)
+
+	if size < len(resizedDomains) {
+		return resizedDomains[:size]
+	}
+
+	for i := len(resizedDomains); i < size; i++ {
+		selectedDomain := resizedDomains[i%len(resizedDomains)]
+		newDomain := &model.Domain{
+			FQDN: selectedDomain.FQDN,
+		}
+
+		newDomain.Nameservers = make([]model.Nameserver,
+			len(selectedDomain.Nameservers))
+		copy(newDomain.Nameservers, selectedDomain.Nameservers)
+
+		newDomain.DSSet = make([]model.DS, len(selectedDomain.DSSet))
+		copy(newDomain.DSSet, selectedDomain.DSSet)
+
+		resizedDomains = append(resizedDomains, newDomain)
+	}
+
+	return resizedDomains
 }
 
 // Method responsable to configure and start scan injector for tests
@@ -425,6 +523,58 @@ func convertKeyAlgorithm(algorithm uint8) model.DSAlgorithm {
 	}
 
 	return model.DSAlgorithmRSASHA1
+}
+
+func nameserverStatusToString(status model.NameserverStatus) string {
+	switch status {
+	case model.NameserverStatusOK:
+		return "OK"
+	case model.NameserverStatusTimeout:
+		return "TIMEOUT"
+	case model.NameserverStatusNoAuthority:
+		return "NOAA"
+	case model.NameserverStatusUnknownDomainName:
+		return "UDN"
+	case model.NameserverStatusUnknownHost:
+		return "UH"
+	case model.NameserverStatusServerFailure:
+		return "SERVFAIL"
+	case model.NameserverStatusQueryRefused:
+		return "QREFUSED"
+	case model.NameserverStatusConnectionRefused:
+		return "CREFUSED"
+	case model.NameserverStatusCanonicalName:
+		return "CNAME"
+	case model.NameserverStatusNotSynchronized:
+		return "NOTSYNCH"
+	case model.NameserverStatusError:
+		return "ERROR"
+	}
+
+	return ""
+}
+
+func dsStatusToString(status model.DSStatus) string {
+	switch status {
+	case model.DSStatusOK:
+		return "OK"
+	case model.DSStatusTimeout:
+		return "TIMEOUT"
+	case model.DSStatusNoSignature:
+		return "NOSIG"
+	case model.DSStatusExpiredSignature:
+		return "EXPSIG"
+	case model.DSStatusNoKey:
+		return "NOKEY"
+	case model.DSStatusNoSEP:
+		return "NOSEP"
+	case model.DSStatusSignatureError:
+		return "SIGERR"
+	case model.DSStatusDNSError:
+		return "DNSERR"
+	}
+
+	return ""
 }
 
 func startDNSServer(port int) {
