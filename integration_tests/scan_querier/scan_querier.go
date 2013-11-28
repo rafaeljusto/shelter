@@ -275,7 +275,7 @@ func domainDNSUnknownHost() {
 // Generates a report with the amount of time of a scan, it should be last last thing from
 // the test, because it changes the DNS test port to the original one for real tests
 func scanQuerierReport(inputFilePath string) {
-	report := " #       | Query            | QPS\n" +
+	report := " #       | Total            | QPS\n" +
 		"----------------------------------\n"
 
 	// Report variables

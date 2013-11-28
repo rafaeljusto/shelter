@@ -48,3 +48,42 @@ the Ubuntu 12.10 (amd64) operational system.
  1000000 | 1m53.999031752s |   52.733993985s | 489.089955ms |  1m0.775947206s
  5000000 | 9m41.845527592s | 4m28.462709335s | 1.976624332s | 5m11.406193319s
 ```
+
+Now the network layer that is responsable for sending, receiveing and analyzing the DNS
+packages had the performance shown in the table bellow, where "#" represents the number of
+domains used in the round of checks and QPS is the number of requests per second that the
+system could process. For this results were used 400 concurrent queriers (go routines)
+each one with an input wait list that can store 100 domains. The hardware used was an
+Intel Core i7-2600 3.40GHz with 8GiB of memory, using the Ubuntu 12.10 (amd64) operational
+system. The input data (domains) was generated from the root zone.
+
+```
+ #       | Total            | QPS
+----------------------------------
+ 10      |     4.867428051s |    2
+ 50      |    10.573376628s |    5
+ 100     |     7.375709482s |   14
+ 500     |      9.60334264s |   55
+ 1000    |     8.682962307s |  125
+ 5000    |    10.913498722s |  500
+
+Nameserver Status
+-----------------
+            NOAA:  0.01%
+              OK:  84.69%
+        NOTSYNCH:  14.88%
+         TIMEOUT:  0.32%
+        QREFUSED:  0.02%
+        CREFUSED:  0.02%
+              UH:  0.02%
+           ERROR:  0.03%
+        SERVFAIL:  0.01%
+
+DS Status
+---------
+              OK:  95.90%
+         TIMEOUT:  2.91%
+           NOSIG:  0.46%
+          SIGERR:  0.54%
+           NOKEY:  0.20%
+```
