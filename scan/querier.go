@@ -75,12 +75,25 @@ func (q Querier) checkNameserver(domain *model.Domain) {
 	dnsRequestMessage.RecursionDesired = false
 
 	for index, nameserver := range domain.Nameservers {
-		host := getHost(domain.FQDN, nameserver)
+		host, err := getHost(domain.FQDN, nameserver)
+		if err == HostTimeoutErr {
+			domain.Nameservers[index].ChangeStatus(model.NameserverStatusTimeout)
+			continue
+
+		} else if err == HostQPSExceededErr {
+			// TODO: How are we going to postpone an host query?
+			continue
+		}
 
 		// For now we ignore the RTT, in the future we can use this for some report
 		dnsResponseMessage, _, err := q.client.Exchange(&dnsRequestMessage, host)
+		querierCache.Query(nameserver.Host)
 
 		if status := domainNSPolicy.CheckNetworkError(err); status != model.NameserverStatusOK {
+			if status == model.NameserverStatusTimeout {
+				querierCache.Timeout(nameserver.Host)
+			}
+
 			domain.Nameservers[index].ChangeStatus(status)
 
 		} else {
@@ -110,7 +123,17 @@ func (q Querier) checkDS(domain *model.Domain, udpMaxSize uint16) {
 	dnsRequestMessage.SetEdns0(udpMaxSize, true)
 
 	for _, nameserver := range domain.Nameservers {
-		host := getHost(domain.FQDN, nameserver)
+		host, err := getHost(domain.FQDN, nameserver)
+		if err == HostTimeoutErr {
+			for index, _ := range domain.DSSet {
+				domain.DSSet[index].ChangeStatus(model.DSStatusTimeout)
+			}
+			continue
+
+		} else if err == HostQPSExceededErr {
+			// TODO: How are we going to postpone an host query?
+			continue
+		}
 
 		// For now we ignore the RTT, in the future we can use this for some report
 		dnsResponseMessage, _, err := q.client.Exchange(&dnsRequestMessage, host)
@@ -124,20 +147,24 @@ func (q Querier) checkDS(domain *model.Domain, udpMaxSize uint16) {
 // Useful function to retrieve the proper host and port to send the request. The host can
 // change because of glue records needs or not. This function alsos resolve hostnames and
 // store the addresses in a cache
-func getHost(fqdn string, nameserver model.Nameserver) string {
+func getHost(fqdn string, nameserver model.Nameserver) (string, error) {
 	if nameserver.NeedsGlue(fqdn) {
 		// Nameserver with glue record. For now we are only checking IPv4 addresses, in the
 		// future it would be nice to have an algorithm using both addresses
-		return "[" + nameserver.IPv4.String() + "]:" + strconv.Itoa(DNSPort)
+		return "[" + nameserver.IPv4.String() + "]:" + strconv.Itoa(DNSPort), nil
 	}
 
 	// Using cache to store host addresses when there's no glue
 	if addresses, err := querierCache.Get(nameserver.Host); err == nil || len(addresses) > 0 {
 		// Found information in cache, lets use it to speed up the scan
-		return "[" + addresses[0].String() + "]:" + strconv.Itoa(DNSPort)
+		return "[" + addresses[0].String() + "]:" + strconv.Itoa(DNSPort), nil
+
+	} else if err == HostTimeoutErr || err == HostQPSExceededErr {
+		// Control errors were returned, we need to return them to take an action
+		return "", err
 	}
 
 	// Error ocurred to retrieve the information from cache. Let's query without using the
 	// cache
-	return nameserver.Host + ":" + strconv.Itoa(DNSPort)
+	return nameserver.Host + ":" + strconv.Itoa(DNSPort), nil
 }
