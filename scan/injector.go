@@ -10,20 +10,30 @@ import (
 // selecting the domains the injector will add to a channel, so that the querier can start
 // immediately
 type Injector struct {
-	Database *mgo.Database
+	Database                 *mgo.Database // Low level database connection
+	MaxOKVerificationDays    int           // Maximum number of days to verify a domain configured correctly with DNS/DNSSEC
+	MaxErrorVerificationDays int           // Maximum number of days to verify a domain with problems
+	MaxExpirationAlertDays   int           // Number of days to alert for DNSSEC signatures that are near from the expiration date
+}
+
+// Return a new Injector object with the necessary fields for the scan filled
+func NewInjector(database *mgo.Database, maxOKVerificationDays,
+	maxErrorVerificationDays, maxExpirationAlertDays int) *Injector {
+	return &Injector{
+		Database:                 database,
+		MaxOKVerificationDays:    maxOKVerificationDays,
+		MaxErrorVerificationDays: maxErrorVerificationDays,
+		MaxExpirationAlertDays:   maxExpirationAlertDays,
+	}
 }
 
 // Method that starts the injector job, retrieving the data from the database and adding
-// the same data into a channel for a querier start sending DNS requests. There are five
-// parameters to define the size of the channel to add domains to query, the maximum
-// number of days to verify a domain configured correctly with DNS/DNSSEC, the maximum
-// number of days to verify a domain with problems, the number of days to alert for DNSSEC
-// signatures that are near from the expiration date and finally a channel to report
-// errors while loading the data. This method is asynchronous and will finish sending a
-// poison pill (error or nil domain) to indicate to the querier that there are no more
-// domains
-func (i Injector) Start(domainsBufferSize, maxOKVerificationDays, maxErrorVerificationDays,
-	maxExpirationAlertDays int, errorsChannel chan error) chan *model.Domain {
+// the same data into a channel for a querier start sending DNS requests. There are two
+// parameters to define the size of the channel to add domains to query and a channel to
+// report errors while loading the data. This method is asynchronous and will finish
+// sending a poison pill (error or nil domain) to indicate to the querier that there are
+// no more domains
+func (i *Injector) Start(domainsBufferSize int, errorsChannel chan error) chan *model.Domain {
 
 	// Create the output channel where we are going to add the domains retrieved from the
 	// database for the querier
@@ -68,8 +78,8 @@ func (i Injector) Start(domainsBufferSize, maxOKVerificationDays, maxErrorVerifi
 
 			// The logic that decides if a domain is going to be a part of this scan or not is
 			// inside the domain object for better unit testing
-			if domainResult.Domain.ShouldBeScanned(maxOKVerificationDays,
-				maxErrorVerificationDays, maxExpirationAlertDays) {
+			if domainResult.Domain.ShouldBeScanned(i.MaxOKVerificationDays,
+				i.MaxErrorVerificationDays, i.MaxExpirationAlertDays) {
 				// Send to the querier
 				domainsToQueryChannel <- domainResult.Domain
 			}

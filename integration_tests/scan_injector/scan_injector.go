@@ -175,15 +175,11 @@ func domainWithNoErrors(domainDAO dao.DomainDAO) {
 
 // Method responsable to configure and start scan injector for tests
 func runScan(domainDAO dao.DomainDAO) []*model.Domain {
-	scanInjector := scan.Injector{
-		Database: domainDAO.Database,
-	}
+	scanInjector := scan.NewInjector(domainDAO.Database, maxOKVerificationDays,
+		maxErrorVerificationDays, maxExpirationAlertDays)
 
 	errorsChannel := make(chan error)
-
-	domainsToQueryChannel := scanInjector.Start(domainsBufferSize,
-		maxOKVerificationDays, maxErrorVerificationDays, maxExpirationAlertDays,
-		errorsChannel)
+	domainsToQueryChannel := scanInjector.Start(domainsBufferSize, errorsChannel)
 
 	var domains []*model.Domain
 
