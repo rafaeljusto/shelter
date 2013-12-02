@@ -51,8 +51,8 @@ func (q *QuerierDispatcher) Start(domainsToQueryChannel chan *model.Domain,
 
 	// Initialize each querier
 	for index, _ := range queriersChannels {
-		querier := NewQuerier(q.UDPMaxSize, q.DialTimeout, q.ReadTimeout, q.WriteTimeout)
-		queriersChannels[index] = querier.Start(&queriers, domainsToSave)
+		querier := newQuerier(q.UDPMaxSize, q.DialTimeout, q.ReadTimeout, q.WriteTimeout)
+		queriersChannels[index] = querier.start(&queriers, domainsToSave)
 	}
 
 	go func() {
