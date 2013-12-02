@@ -11,16 +11,19 @@ import (
 // immediately
 type Injector struct {
 	Database                 *mgo.Database // Low level database connection
+	DomainsBufferSize        int           // Size of the domains to query channel
 	MaxOKVerificationDays    int           // Maximum number of days to verify a domain configured correctly with DNS/DNSSEC
 	MaxErrorVerificationDays int           // Maximum number of days to verify a domain with problems
 	MaxExpirationAlertDays   int           // Number of days to alert for DNSSEC signatures that are near from the expiration date
 }
 
 // Return a new Injector object with the necessary fields for the scan filled
-func NewInjector(database *mgo.Database, maxOKVerificationDays,
+func NewInjector(database *mgo.Database, domainsBufferSize, maxOKVerificationDays,
 	maxErrorVerificationDays, maxExpirationAlertDays int) *Injector {
+
 	return &Injector{
 		Database:                 database,
+		DomainsBufferSize:        domainsBufferSize,
 		MaxOKVerificationDays:    maxOKVerificationDays,
 		MaxErrorVerificationDays: maxErrorVerificationDays,
 		MaxExpirationAlertDays:   maxExpirationAlertDays,
@@ -28,16 +31,15 @@ func NewInjector(database *mgo.Database, maxOKVerificationDays,
 }
 
 // Method that starts the injector job, retrieving the data from the database and adding
-// the same data into a channel for a querier start sending DNS requests. There are two
-// parameters to define the size of the channel to add domains to query and a channel to
-// report errors while loading the data. This method is asynchronous and will finish
-// sending a poison pill (error or nil domain) to indicate to the querier that there are
-// no more domains
-func (i *Injector) Start(domainsBufferSize int, errorsChannel chan error) chan *model.Domain {
+// the same data into a channel for a querier start sending DNS requests. There is only
+// one parameter to define a channel to report errors while loading the data. This method
+// is asynchronous and will finish sending a poison pill (error or nil domain) to indicate
+// to the querier that there are no more domains
+func (i *Injector) Start(errorsChannel chan error) chan *model.Domain {
 
 	// Create the output channel where we are going to add the domains retrieved from the
 	// database for the querier
-	domainsToQueryChannel := make(chan *model.Domain, domainsBufferSize)
+	domainsToQueryChannel := make(chan *model.Domain, i.DomainsBufferSize)
 
 	go func() {
 		// Initialize Domain DAO using injected database connection
