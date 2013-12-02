@@ -134,3 +134,11 @@ func (q *QuerierCache) Query(name string) {
 		}
 	}
 }
+
+// Clear cache. This method is for now used in integration test scenarios to get more
+// realistic results in performance reports
+func (q *QuerierCache) Clear() {
+	q.hostsMutex.Lock()
+	q.hosts = make(map[string]*hostCache)
+	q.hostsMutex.Unlock()
+}

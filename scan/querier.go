@@ -7,6 +7,7 @@ import (
 	"shelter/scan/nspolicy"
 	"strconv"
 	"sync"
+	"time"
 )
 
 const (
@@ -20,19 +21,32 @@ var (
 )
 
 // Querier is responsable for sending the DNS queries to check if the namerservers are
-// configured correctly with DNS/DNSSEC
+// configured correctly with DNS/DNSSEC.  The UDPMaxSize attribute is used for DNSSEC
+// queries to notify the maximum UDP package size supported in the network
 type Querier struct {
-	client dns.Client
+	client     dns.Client // Low level DNS client for network checks
+	UDPMaxSize uint16     // UDP max package size to pass over firewalls
+}
+
+// Return a new Querier object with the necessary fields for the scan filled
+func NewQuerier(udpMaxSize uint16, dialTimeout, readTimeout,
+	writeTimeout time.Duration) *Querier {
+
+	return &Querier{
+		client: dns.Client{
+			DialTimeout:  dialTimeout,
+			ReadTimeout:  readTimeout,
+			WriteTimeout: writeTimeout,
+		},
+		UDPMaxSize: udpMaxSize,
+	}
 }
 
 // Fire a querier that will process domains sent via channel until receives a poison pill
 // (nil domain), for go routines control this method receives a wait group, so that the
 // main thread can wait for everubody finishs. It also receives the channel where the
-// querier will put the domains for the collector save them in database. The last argument
-// is used for DNSSEC queries to notify the maximum UDP package size supported in the
-// network
-func (q Querier) Start(queriers *sync.WaitGroup,
-	domainsToSave chan *model.Domain, udpMaxSize uint16) chan *model.Domain {
+// querier will put the domains for the collector save them in database
+func (q *Querier) Start(queriers *sync.WaitGroup, domainsToSave chan *model.Domain) chan *model.Domain {
 	// Create the communication channel that we are going to listen to retrieve domains, we
 	// can store more than one domain in this channel because some queriers can slow down
 	// when checking domains with timeouts
@@ -54,7 +68,7 @@ func (q Querier) Start(queriers *sync.WaitGroup,
 			}
 
 			q.checkNameserver(domain)
-			q.checkDS(domain, udpMaxSize)
+			q.checkDS(domain, q.UDPMaxSize)
 
 			// Send to collector the domain with the new state
 			domainsToSave <- domain
@@ -66,7 +80,7 @@ func (q Querier) Start(queriers *sync.WaitGroup,
 
 // Verify the DNS configuration on the nameservers. This method will send a SOA request
 // for each nameserver and verify the results
-func (q Querier) checkNameserver(domain *model.Domain) {
+func (q *Querier) checkNameserver(domain *model.Domain) {
 	domainNSPolicy := nspolicy.NewDomainNSPolicy(domain)
 
 	// Build message to send the request
@@ -105,7 +119,7 @@ func (q Querier) checkNameserver(domain *model.Domain) {
 // Check the DS with the domain DNSSEC keys and signatures. You need also to inform the
 // UDP max package size supported to pass into firewalls. Many firewalls don't allow
 // fragmented UDP packages or UDP packages bigger than 512 bytes
-func (q Querier) checkDS(domain *model.Domain, udpMaxSize uint16) {
+func (q *Querier) checkDS(domain *model.Domain, udpMaxSize uint16) {
 	// Check if the domain has DNSSEC, this system will work with both kinds of domain. So
 	// when the domain don't have any DS record we assume that it does not have DNSSEC
 	// configured and check only the DNS configuration

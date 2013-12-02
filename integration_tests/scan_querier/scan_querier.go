@@ -37,12 +37,15 @@ var (
 )
 
 // Define some scan important variables for the test enviroment, this values indicates the
-// size of the channel, the number of concurrently queriers and the UDP max package size
-// for firewall problems
+// size of the channel, the number of concurrently queriers, the UDP max package size for
+// firewall problems and timeouts for the network layer
 const (
 	domainsBufferSize = 100
 	numberOfQueriers  = 400
 	udpMaxSize        = 4096
+	dialTimeout       = 1
+	readTimeout       = 1
+	writeTimeout      = 1
 )
 
 // ScanQuerierTestConfigFile is a structure to store the test configuration file data
@@ -425,8 +428,25 @@ func resizeReportInput(domains []*model.Domain, size int) []*model.Domain {
 
 // Method responsable to configure and start scan injector for tests
 func runScan(domainsToQueryChannel chan *model.Domain) []*model.Domain {
-	domainsToSaveChannel := scan.QuerierDispatcher{}.Start(domainsToQueryChannel,
-		domainsBufferSize, numberOfQueriers, udpMaxSize)
+	dialTimeout, err := time.ParseDuration(fmt.Sprintf("%ds", dialTimeout))
+	if err != nil {
+		return nil
+	}
+
+	readTimeout, err := time.ParseDuration(fmt.Sprintf("%ds", readTimeout))
+	if err != nil {
+		return nil
+	}
+
+	writeTimeout, err := time.ParseDuration(fmt.Sprintf("%ds", writeTimeout))
+	if err != nil {
+		return nil
+	}
+
+	querierDispatcher := scan.NewQuerierDispatcher(domainsBufferSize, udpMaxSize,
+		dialTimeout, readTimeout, writeTimeout)
+
+	domainsToSaveChannel := querierDispatcher.Start(domainsToQueryChannel, numberOfQueriers)
 
 	var domains []*model.Domain
 
