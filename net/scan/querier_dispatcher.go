@@ -43,7 +43,7 @@ func (q *QuerierDispatcher) Start(scanGroup *sync.WaitGroup,
 
 	// Create the output channel used for each querier to add the result for the collector,
 	// the poison pill is the nil domain object
-	domainsToSave := make(chan *model.Domain, q.DomainsBufferSize)
+	domainsToSaveChannel := make(chan *model.Domain, q.DomainsBufferSize)
 
 	// Allocate the number of queriers
 	queriersChannels := make([]chan *model.Domain, q.NumberOfQueriers)
@@ -55,7 +55,7 @@ func (q *QuerierDispatcher) Start(scanGroup *sync.WaitGroup,
 	// Initialize each querier
 	for index, _ := range queriersChannels {
 		querier := newQuerier(q.UDPMaxSize, q.DialTimeout, q.ReadTimeout, q.WriteTimeout)
-		queriersChannels[index] = querier.start(&queriers, domainsToSave)
+		queriersChannels[index] = querier.start(&queriers, domainsToSaveChannel)
 	}
 
 	// Add one more to the group of scan go routines
@@ -79,7 +79,7 @@ func (q *QuerierDispatcher) Start(scanGroup *sync.WaitGroup,
 				queriers.Wait()
 
 				// Send the poison pill to the collector
-				domainsToSave <- nil
+				domainsToSaveChannel <- nil
 
 				scanGroup.Done()
 				return
@@ -99,5 +99,5 @@ func (q *QuerierDispatcher) Start(scanGroup *sync.WaitGroup,
 		}
 	}()
 
-	return domainsToSave
+	return domainsToSaveChannel
 }

@@ -47,7 +47,8 @@ func newQuerier(udpMaxSize uint16, dialTimeout, readTimeout,
 // (nil domain), for go routines control this method receives a wait group, so that the
 // main thread can wait for everubody finishs. It also receives the channel where the
 // querier will put the domains for the collector save them in database
-func (q *querier) start(queriers *sync.WaitGroup, domainsToSave chan *model.Domain) chan *model.Domain {
+func (q *querier) start(queriers *sync.WaitGroup,
+	domainsToSaveChannel chan *model.Domain) chan *model.Domain {
 	// Create the communication channel that we are going to listen to retrieve domains, we
 	// can store more than one domain in this channel because some queriers can slow down
 	// when checking domains with timeouts
@@ -73,7 +74,7 @@ func (q *querier) start(queriers *sync.WaitGroup, domainsToSave chan *model.Doma
 			q.checkDS(domain, q.UDPMaxSize)
 
 			// Send to collector the domain with the new state
-			domainsToSave <- domain
+			domainsToSaveChannel <- domain
 		}
 	}()
 
