@@ -5,7 +5,7 @@ import (
 	"net"
 	"regexp"
 	"shelter/model"
-	"shelter/scan/dnsutils"
+	"shelter/net/scan/dnsutils"
 )
 
 var (

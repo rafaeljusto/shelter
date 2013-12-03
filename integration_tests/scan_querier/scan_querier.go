@@ -12,7 +12,7 @@ import (
 	"net"
 	"os"
 	"shelter/model"
-	"shelter/scan"
+	"shelter/net/scan"
 	"strconv"
 	"strings"
 	"sync"

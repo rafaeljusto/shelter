@@ -3,8 +3,8 @@ package scan
 import (
 	"github.com/miekg/dns"
 	"shelter/model"
-	"shelter/scan/dspolicy"
-	"shelter/scan/nspolicy"
+	"shelter/net/scan/dspolicy"
+	"shelter/net/scan/nspolicy"
 	"strconv"
 	"sync"
 	"time"

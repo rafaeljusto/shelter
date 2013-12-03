@@ -12,7 +12,7 @@ import (
 	"shelter/dao"
 	"shelter/database/mongodb"
 	"shelter/model"
-	"shelter/scan"
+	"shelter/net/scan"
 	"strconv"
 	"sync"
 	"time"
