@@ -50,4 +50,8 @@ func (n Nameserver) NeedsGlue(fqdn string) bool {
 func (n *Nameserver) ChangeStatus(status NameserverStatus) {
 	n.LastStatus = status
 	n.LastCheckAt = time.Now()
+
+	if status == NameserverStatusOK {
+		n.LastOKAt = n.LastCheckAt
+	}
 }

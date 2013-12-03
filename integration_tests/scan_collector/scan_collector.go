@@ -73,7 +73,120 @@ func main() {
 	// test there was an error and the data wasn't removed from the database
 	domainDAO.RemoveAll()
 
+	domainWithErrors(database)
+	domainWithNoErrors(database)
+
 	println("SUCCESS!")
+}
+
+func domainWithErrors(database *mgo.Database) {
+	domainsToSave := make(chan *model.Domain, domainsBufferSize)
+	domainsToSave <- &model.Domain{
+		FQDN: "br.",
+		Nameservers: []model.Nameserver{
+			{
+				Host:       "ns1.br",
+				IPv4:       net.ParseIP("127.0.0.1"),
+				LastStatus: model.NameserverStatusTimeout,
+			},
+		},
+		DSSet: []model.DS{
+			{
+				Keytag:     1234,
+				Algorithm:  model.DSAlgorithmRSASHA1NSEC3,
+				DigestType: model.DSDigestTypeSHA1,
+				Digest:     "EAA0978F38879DB70A53F9FF1ACF21D046A98B5C",
+				LastStatus: model.DSStatusExpiredSignature,
+			},
+		},
+	}
+	domainsToSave <- nil
+
+	runScan(database, domainsToSave)
+
+	domainDAO := dao.DomainDAO{
+		Database: database,
+	}
+
+	domain, err := domainDAO.FindByFQDN("br.")
+	if err != nil {
+		fatalln("Error loading domain with problems", err)
+	}
+
+	if len(domain.Nameservers) == 0 {
+		fatalln("Error saving nameservers", nil)
+	}
+
+	if domain.Nameservers[0].LastStatus != model.NameserverStatusTimeout {
+		fatalln("Error setting status in the nameserver", nil)
+	}
+
+	if len(domain.DSSet) == 0 {
+		fatalln("Error saving the DS set", nil)
+	}
+
+	if domain.DSSet[0].LastStatus != model.DSStatusExpiredSignature {
+		fatalln("Error setting status in the DS", nil)
+	}
+
+	if err := domainDAO.RemoveByFQDN("br."); err != nil {
+		fatalln("Error removing test domain", err)
+	}
+}
+
+func domainWithNoErrors(database *mgo.Database) {
+	domainsToSave := make(chan *model.Domain, domainsBufferSize)
+	domainsToSave <- &model.Domain{
+		FQDN: "br.",
+		Nameservers: []model.Nameserver{
+			{
+				Host:       "ns1.br",
+				IPv4:       net.ParseIP("127.0.0.1"),
+				LastStatus: model.NameserverStatusOK,
+			},
+		},
+		DSSet: []model.DS{
+			{
+				Keytag:     1234,
+				Algorithm:  model.DSAlgorithmRSASHA1NSEC3,
+				DigestType: model.DSDigestTypeSHA1,
+				Digest:     "EAA0978F38879DB70A53F9FF1ACF21D046A98B5C",
+				LastStatus: model.DSStatusOK,
+			},
+		},
+	}
+	domainsToSave <- nil
+
+	runScan(database, domainsToSave)
+
+	domainDAO := dao.DomainDAO{
+		Database: database,
+	}
+
+	domain, err := domainDAO.FindByFQDN("br.")
+	if err != nil {
+		fatalln("Error loading domain with problems", err)
+	}
+
+	if len(domain.Nameservers) == 0 {
+		fatalln("Error saving nameservers", nil)
+	}
+
+	if domain.Nameservers[0].LastStatus != model.NameserverStatusOK {
+		fatalln("Error setting status in the nameserver", nil)
+	}
+
+	if len(domain.DSSet) == 0 {
+		fatalln("Error saving the DS set", nil)
+	}
+
+	if domain.DSSet[0].LastStatus != model.DSStatusOK {
+		fatalln("Error setting status in the DS", nil)
+	}
+
+	if err := domainDAO.RemoveByFQDN("br."); err != nil {
+		fatalln("Error removing test domain", err)
+	}
 }
 
 // Method responsable to configure and start scan injector for tests

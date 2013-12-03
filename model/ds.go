@@ -79,4 +79,8 @@ type DS struct {
 func (d *DS) ChangeStatus(status DSStatus) {
 	d.LastStatus = status
 	d.LastCheckAt = time.Now()
+
+	if status == DSStatusOK {
+		d.LastOKAt = d.LastCheckAt
+	}
 }

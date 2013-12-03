@@ -79,6 +79,7 @@ func main() {
 	}
 
 	startDNSServer(configFile.Server.Port)
+
 	domainWithNoDNSErrors()
 	domainWithNoDNSSECErrors()
 	domainDNSTimeout()
