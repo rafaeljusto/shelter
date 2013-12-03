@@ -53,7 +53,8 @@ func (q *querier) start(queriers *sync.WaitGroup, domainsToSave chan *model.Doma
 	// when checking domains with timeouts
 	querierChannel := make(chan *model.Domain, querierDomainsQueueSize)
 
-	// Add one more in the group of queriers
+	// Add one more in the group of queriers. This go routine don't need to be in the group
+	// of the scan go routines because it is controlled by the querier dispatcher
 	queriers.Add(1)
 
 	go func() {

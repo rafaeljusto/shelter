@@ -15,6 +15,7 @@ import (
 	"shelter/scan"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -443,10 +444,20 @@ func runScan(domainsToQueryChannel chan *model.Domain) []*model.Domain {
 		return nil
 	}
 
-	querierDispatcher := scan.NewQuerierDispatcher(domainsBufferSize, udpMaxSize,
-		dialTimeout, readTimeout, writeTimeout)
+	querierDispatcher := scan.NewQuerierDispatcher(
+		numberOfQueriers,
+		domainsBufferSize,
+		udpMaxSize,
+		dialTimeout,
+		readTimeout,
+		writeTimeout,
+	)
 
-	domainsToSaveChannel := querierDispatcher.Start(domainsToQueryChannel, numberOfQueriers)
+	// Go routines group control created, but not used for this tests, as we are simulating
+	// a collector receiver
+	var scanGroup sync.WaitGroup
+
+	domainsToSaveChannel := querierDispatcher.Start(&scanGroup, domainsToQueryChannel)
 
 	var domains []*model.Domain
 

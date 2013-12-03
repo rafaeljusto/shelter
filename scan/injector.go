@@ -4,6 +4,7 @@ import (
 	"labix.org/v2/mgo"
 	"shelter/dao"
 	"shelter/model"
+	"sync"
 )
 
 // Injector is responsable for selecting all domains that are going to be checked. While
@@ -31,15 +32,19 @@ func NewInjector(database *mgo.Database, domainsBufferSize, maxOKVerificationDay
 }
 
 // Method that starts the injector job, retrieving the data from the database and adding
-// the same data into a channel for a querier start sending DNS requests. There is only
-// one parameter to define a channel to report errors while loading the data. This method
+// the same data into a channel for a querier start sending DNS requests. There are two
+// parameters, one to control the scan go routines and sinalize to the main thread the
+// end, and other to define a channel to report errors while loading the data. This method
 // is asynchronous and will finish sending a poison pill (error or nil domain) to indicate
 // to the querier that there are no more domains
-func (i *Injector) Start(errorsChannel chan error) chan *model.Domain {
+func (i *Injector) Start(scanGroup *sync.WaitGroup, errorsChannel chan error) chan *model.Domain {
 
 	// Create the output channel where we are going to add the domains retrieved from the
 	// database for the querier
 	domainsToQueryChannel := make(chan *model.Domain, i.DomainsBufferSize)
+
+	// Add one more to the group of scan go routines
+	scanGroup.Add(1)
 
 	go func() {
 		// Initialize Domain DAO using injected database connection
@@ -56,6 +61,7 @@ func (i *Injector) Start(errorsChannel chan error) chan *model.Domain {
 		if err != nil {
 			errorsChannel <- err
 			domainsToQueryChannel <- nil
+			scanGroup.Done()
 			return
 		}
 
@@ -75,6 +81,7 @@ func (i *Injector) Start(errorsChannel chan error) chan *model.Domain {
 			// the poison pill to alert the querier
 			if domainResult.Error != nil || domainResult.Domain == nil {
 				domainsToQueryChannel <- nil
+				scanGroup.Done()
 				return
 			}
 

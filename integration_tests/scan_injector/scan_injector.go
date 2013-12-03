@@ -14,6 +14,7 @@ import (
 	"shelter/model"
 	"shelter/scan"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -178,8 +179,12 @@ func runScan(domainDAO dao.DomainDAO) []*model.Domain {
 	scanInjector := scan.NewInjector(domainDAO.Database, domainsBufferSize,
 		maxOKVerificationDays, maxErrorVerificationDays, maxExpirationAlertDays)
 
+	// Go routines group control created, but not used for this tests, as we are simulating
+	// a querier receiver
+	var scanGroup sync.WaitGroup
+
 	errorsChannel := make(chan error)
-	domainsToQueryChannel := scanInjector.Start(errorsChannel)
+	domainsToQueryChannel := scanInjector.Start(&scanGroup, errorsChannel)
 
 	var domains []*model.Domain
 
