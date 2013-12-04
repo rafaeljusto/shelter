@@ -371,6 +371,11 @@ func calculateScanQuerierDurations(domains []*model.Domain) (totalDuration time.
 	// querier performance
 	scan.DNSPort = 53
 
+	// As we are using the same domains repeatedly we should be careful about how many
+	// requests we send to only one host to avoid abuses. This value should be beteween 5
+	// and 10
+	scan.MaxQPSPerHost = 5
+
 	domainsToQueryChannel := make(chan *model.Domain, domainsBufferSize)
 	go func() {
 		for _, domain := range domains {
