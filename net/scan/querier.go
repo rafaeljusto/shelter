@@ -154,6 +154,7 @@ func (q *querier) checkDS(domain *model.Domain, udpMaxSize uint16) {
 
 		// For now we ignore the RTT, in the future we can use this for some report
 		dnsResponseMessage, _, err := q.client.Exchange(&dnsRequestMessage, host)
+		querierCache.Query(nameserver.Host)
 
 		if !domainDSPolicy.CheckNetworkError(err) || !domainDSPolicy.Run(dnsResponseMessage) {
 			break
