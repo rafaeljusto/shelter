@@ -10,6 +10,9 @@ import (
 	"sync"
 )
 
+// Function responsable for running the domain scan system, checking the configuration of
+// each domain in the database according to an algorithm. This method is synchronous and
+// will return only after the scan proccess is done
 func ScanDomains() {
 	scanLogPath := fmt.Sprintf("%s/%s",
 		config.ShelterConfig.Log.BasePath,
@@ -66,10 +69,21 @@ func ScanDomains() {
 		for {
 			select {
 			case err := <-errorsChannel:
-				logger.Println(err)
+				// Detect the poison pill to finish the error listener go routine. This poison
+				// pill should be sent after all parts of the scan are done and we are sure that
+				// we don't have any error to log anymore
+				if err == nil {
+					return
+				} else {
+					logger.Println(err)
+				}
 			}
 		}
 	}()
 
+	// Wait for all parts of the scan to finish their job
 	scanGroup.Wait()
+
+	// Finish the error listener sending a poison pill
+	errorsChannel <- nil
 }

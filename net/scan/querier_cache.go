@@ -13,8 +13,9 @@ const (
 	// host as timeout without checking it
 	maxTimeoutsPerHost = 500
 
-	// Maximum number of queries per second that a host will receive
-	maxQPSPerHost = uint64(500)
+	// Maximum number of queries per second that a host will receive. This value should be
+	// less than 10, because of the rate limits in the authoritative nameservers
+	maxQPSPerHost = uint64(5)
 )
 
 var (
