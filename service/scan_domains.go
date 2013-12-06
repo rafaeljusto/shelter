@@ -25,6 +25,7 @@ func ScanDomains() {
 		log.Println(err)
 		return
 	}
+	defer scanLog.Close()
 
 	logger := log.New(scanLog, "", log.LstdFlags)
 
