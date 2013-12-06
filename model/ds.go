@@ -84,3 +84,27 @@ func (d *DS) ChangeStatus(status DSStatus) {
 		d.LastOKAt = d.LastCheckAt
 	}
 }
+
+// Convert the DS status enum to text for printing in reports or debugging
+func DSStatusToString(status DSStatus) string {
+	switch status {
+	case DSStatusOK:
+		return "OK"
+	case DSStatusTimeout:
+		return "TIMEOUT"
+	case DSStatusNoSignature:
+		return "NOSIG"
+	case DSStatusExpiredSignature:
+		return "EXPSIG"
+	case DSStatusNoKey:
+		return "NOKEY"
+	case DSStatusNoSEP:
+		return "NOSEP"
+	case DSStatusSignatureError:
+		return "SIGERR"
+	case DSStatusDNSError:
+		return "DNSERR"
+	}
+
+	return ""
+}

@@ -7,6 +7,14 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net"
+	"net/mail"
+	"shelter/config"
+	"shelter/dao"
+	"shelter/database/mongodb"
+	"shelter/model"
+	"shelter/service"
+	"time"
 )
 
 // List of possible errors in this test. There can be also other errors from low level
@@ -20,7 +28,29 @@ var (
 	configFilePath string // Path for the configuration file with all the query parameters
 )
 
+// Define some scan important variables for the test enviroment. This should go to
+// configuration files laster
+const (
+	domainsBufferSize        = 100
+	errorsBufferSize         = 100
+	maxOKVerificationDays    = 7
+	maxErrorVerificationDays = 3
+	maxExpirationAlertDays   = 10
+	numberOfQueriers         = 400
+	udpMaxSize               = 4096
+	dialTimeout              = 10
+	readTimeout              = 10
+	writeTimeout             = 10
+	saveAtOnce               = 100
+	logBasePath              = "."
+	logFilename              = "scan.log"
+)
+
 type ScanTestConfigFile struct {
+	Database struct {
+		URI  string
+		Name string
+	}
 }
 
 func init() {
@@ -30,7 +60,7 @@ func init() {
 func main() {
 	flag.Parse()
 
-	_, err := readConfigFile()
+	configFile, err := readAndLoadConfigFile()
 	if err == ErrConfigFileUndefined {
 		fmt.Println(err.Error())
 		fmt.Println("Usage:")
@@ -41,11 +71,94 @@ func main() {
 		fatalln("Error reading configuration file", err)
 	}
 
+	database, err := mongodb.Open(configFile.Database.URI, configFile.Database.Name)
+	if err != nil {
+		fatalln("Error connecting the database", err)
+	}
+
+	domainDAO := dao.DomainDAO{
+		Database: database,
+	}
+
+	// Remove all data before starting the test. This is necessary because maybe in the last
+	// test there was an error and the data wasn't removed from the database
+	domainDAO.RemoveAll()
+
+	domainWithNoErrors(domainDAO)
+
 	println("SUCCESS!")
 }
 
+func domainWithNoErrors(domainDAO dao.DomainDAO) {
+	domain := newDomain()
+	lastCheckAt := time.Now().Add(-72 * time.Hour)
+	lastOKAt := lastCheckAt.Add(-24 * time.Hour)
+
+	// Set all nameservers with error and the last check equal of the error check interval,
+	// this will force the domain to be checked
+	for index, _ := range domain.Nameservers {
+		domain.Nameservers[index].LastCheckAt = lastCheckAt
+		domain.Nameservers[index].LastOKAt = lastOKAt
+		domain.Nameservers[index].LastStatus = model.NameserverStatusServerFailure
+	}
+
+	// Set all DS records with error and the last check equal of the error check interval,
+	// this will force the domain to be checked
+	for index, _ := range domain.DSSet {
+		domain.DSSet[index].LastCheckAt = lastCheckAt
+		domain.DSSet[index].LastOKAt = lastOKAt
+		domain.DSSet[index].LastStatus = model.DSStatusTimeout
+	}
+
+	if err := domainDAO.Save(&domain); err != nil {
+		fatalln("Error saving domain for scan scenario", err)
+	}
+
+	service.ScanDomains()
+
+	domain, err := domainDAO.FindByFQDN(domain.FQDN)
+	if err != nil {
+		fatalln("Didn't find scanned domain", err)
+	}
+
+	for _, nameserver := range domain.Nameservers {
+		if nameserver.LastStatus != model.NameserverStatusOK {
+			fatalln(fmt.Sprintf("Fail to validate a supposedly well configured nameserver '%s'. Found status: %s",
+				nameserver.Host, model.NameserverStatusToString(nameserver.LastStatus)), err)
+		}
+
+		if nameserver.LastCheckAt.Before(lastCheckAt) ||
+			nameserver.LastCheckAt.Equal(lastCheckAt) {
+			fatalln(fmt.Sprintf("Last check date was not updated in nameserver '%s'",
+				nameserver.Host), nil)
+		}
+
+		if nameserver.LastOKAt.Before(lastOKAt) || nameserver.LastOKAt.Equal(lastOKAt) {
+			fatalln(fmt.Sprintf("Last OK date was not updated in nameserver '%s'",
+				nameserver.Host), nil)
+		}
+	}
+
+	for _, ds := range domain.DSSet {
+		if ds.LastStatus != model.DSStatusOK {
+			fatalln(fmt.Sprintf("Fail to validate a supposedly well configured DS %d. "+
+				"Found status: %s", ds.Keytag, model.DSStatusToString(ds.LastStatus)), err)
+		}
+
+		if ds.LastCheckAt.Before(lastCheckAt) || ds.LastCheckAt.Equal(lastCheckAt) {
+			fatalln(fmt.Sprintf("Last check date was not updated in DS %d",
+				ds.Keytag), nil)
+		}
+
+		if ds.LastOKAt.Before(lastOKAt) || ds.LastOKAt.Equal(lastOKAt) {
+			fatalln(fmt.Sprintf("Last OK date was not updated in DS %d",
+				ds.Keytag), nil)
+		}
+	}
+}
+
 // Function to read the configuration file
-func readConfigFile() (ScanTestConfigFile, error) {
+func readAndLoadConfigFile() (ScanTestConfigFile, error) {
 	var configFile ScanTestConfigFile
 
 	// Config file path is a mandatory program parameter
@@ -62,7 +175,71 @@ func readConfigFile() (ScanTestConfigFile, error) {
 		return configFile, err
 	}
 
+	config.ShelterConfig.Database.Name = configFile.Database.Name
+	config.ShelterConfig.Database.URI = configFile.Database.URI
+	config.ShelterConfig.Log.BasePath = logBasePath
+	config.ShelterConfig.Log.ScanFilename = logFilename
+	config.ShelterConfig.Scan.DomainsBufferSize = domainsBufferSize
+	config.ShelterConfig.Scan.ErrorsBufferSize = errorsBufferSize
+	config.ShelterConfig.Scan.NumberOfQueriers = numberOfQueriers
+	config.ShelterConfig.Scan.SaveAtOnce = saveAtOnce
+	config.ShelterConfig.Scan.Timeouts.DialSeconds = dialTimeout
+	config.ShelterConfig.Scan.Timeouts.ReadSeconds = readTimeout
+	config.ShelterConfig.Scan.Timeouts.WriteSeconds = writeTimeout
+	config.ShelterConfig.Scan.UDPMaxSize = udpMaxSize
+	config.ShelterConfig.Scan.VerificationIntervals.MaxErrorDays = maxErrorVerificationDays
+	config.ShelterConfig.Scan.VerificationIntervals.MaxExpirationAlertDays = maxExpirationAlertDays
+	config.ShelterConfig.Scan.VerificationIntervals.MaxOKDays = maxOKVerificationDays
+
 	return configFile, nil
+}
+
+// Function to mock a domain object
+func newDomain() model.Domain {
+	var domain model.Domain
+	domain.FQDN = "br."
+
+	domain.Nameservers = []model.Nameserver{
+		{
+			Host: "a.dns.br.",
+			IPv4: net.ParseIP("200.160.0.10"),
+			IPv6: net.ParseIP("2001:12ff::10"),
+		},
+		{
+			Host: "b.dns.br.",
+			IPv4: net.ParseIP("200.189.41.10"),
+		},
+		{
+			Host: "c.dns.br.",
+			IPv4: net.ParseIP("200.192.233.10"),
+		},
+		{
+			Host: "e.dns.br.",
+			IPv4: net.ParseIP("200.229.248.10"),
+			IPv6: net.ParseIP("2001:12f8:1::10"),
+		},
+		{
+			Host: "f.dns.br.",
+			IPv4: net.ParseIP("200.219.159.10"),
+		},
+	}
+
+	// Caution! The .br DNSKEY will change periodically, so this test will fail sometime
+	// beucase of this, when this occurs we need to update the DS information for the new
+	// .br key
+	domain.DSSet = []model.DS{
+		{
+			Keytag:     41674,
+			Algorithm:  model.DSAlgorithmRSASHA1,
+			DigestType: model.DSDigestTypeSHA1,
+			Digest:     "EAA0978F38879DB70A53F9FF1ACF21D046A98B5C",
+		},
+	}
+
+	owner, _ := mail.ParseAddress("test@rafael.net.br")
+	domain.Owners = []*mail.Address{owner}
+
+	return domain
 }
 
 // Function only to add the test name before the log message. This is useful when you have

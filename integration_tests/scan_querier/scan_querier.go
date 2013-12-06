@@ -326,7 +326,7 @@ func scanQuerierReport(inputFilePath string) {
 		"-----------------\n"
 	for status, counter := range nameserversStatus {
 		report += fmt.Sprintf("%16s: % 3.2f%%\n",
-			nameserverStatusToString(status),
+			model.NameserverStatusToString(status),
 			(float64(counter*100) / float64(nameserverStatusCounter)),
 		)
 	}
@@ -335,7 +335,7 @@ func scanQuerierReport(inputFilePath string) {
 		"---------\n"
 	for status, counter := range dsSetStatus {
 		report += fmt.Sprintf("%16s: % 3.2f%%\n",
-			dsStatusToString(status),
+			model.DSStatusToString(status),
 			(float64(counter*100) / float64(dsStatusCounter)),
 		)
 	}
@@ -560,58 +560,6 @@ func convertKeyAlgorithm(algorithm uint8) model.DSAlgorithm {
 	}
 
 	return model.DSAlgorithmRSASHA1
-}
-
-func nameserverStatusToString(status model.NameserverStatus) string {
-	switch status {
-	case model.NameserverStatusOK:
-		return "OK"
-	case model.NameserverStatusTimeout:
-		return "TIMEOUT"
-	case model.NameserverStatusNoAuthority:
-		return "NOAA"
-	case model.NameserverStatusUnknownDomainName:
-		return "UDN"
-	case model.NameserverStatusUnknownHost:
-		return "UH"
-	case model.NameserverStatusServerFailure:
-		return "SERVFAIL"
-	case model.NameserverStatusQueryRefused:
-		return "QREFUSED"
-	case model.NameserverStatusConnectionRefused:
-		return "CREFUSED"
-	case model.NameserverStatusCanonicalName:
-		return "CNAME"
-	case model.NameserverStatusNotSynchronized:
-		return "NOTSYNCH"
-	case model.NameserverStatusError:
-		return "ERROR"
-	}
-
-	return ""
-}
-
-func dsStatusToString(status model.DSStatus) string {
-	switch status {
-	case model.DSStatusOK:
-		return "OK"
-	case model.DSStatusTimeout:
-		return "TIMEOUT"
-	case model.DSStatusNoSignature:
-		return "NOSIG"
-	case model.DSStatusExpiredSignature:
-		return "EXPSIG"
-	case model.DSStatusNoKey:
-		return "NOKEY"
-	case model.DSStatusNoSEP:
-		return "NOSEP"
-	case model.DSStatusSignatureError:
-		return "SIGERR"
-	case model.DSStatusDNSError:
-		return "DNSERR"
-	}
-
-	return ""
 }
 
 func startDNSServer(port int) {

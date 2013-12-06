@@ -8,6 +8,7 @@ import (
 	"shelter/database/mongodb"
 	"shelter/net/scan"
 	"sync"
+	"time"
 )
 
 // Function responsable for running the domain scan system, checking the configuration of
@@ -19,7 +20,7 @@ func ScanDomains() {
 		config.ShelterConfig.Log.ScanFilename,
 	)
 
-	scanLog, err := os.Open(scanLogPath)
+	scanLog, err := os.Create(scanLogPath)
 	if err != nil {
 		log.Println(err)
 		return
@@ -49,9 +50,9 @@ func ScanDomains() {
 		config.ShelterConfig.Scan.NumberOfQueriers,
 		config.ShelterConfig.Scan.DomainsBufferSize,
 		config.ShelterConfig.Scan.UDPMaxSize,
-		config.ShelterConfig.Scan.Timeouts.DialSeconds,
-		config.ShelterConfig.Scan.Timeouts.ReadSeconds,
-		config.ShelterConfig.Scan.Timeouts.WriteSeconds,
+		config.ShelterConfig.Scan.Timeouts.DialSeconds*time.Second,
+		config.ShelterConfig.Scan.Timeouts.ReadSeconds*time.Second,
+		config.ShelterConfig.Scan.Timeouts.WriteSeconds*time.Second,
 	)
 
 	collector := scan.NewCollector(
