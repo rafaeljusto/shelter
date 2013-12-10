@@ -83,9 +83,9 @@ Bellow is the same test but for the root zone file.
 
 Nameserver Status
 -----------------
+              OK:  92.45%
               UH:  0.16%
         QREFUSED:  0.05%
-              OK:  92.45%
         NOTSYNCH:  5.11%
         SERVFAIL:  0.11%
             NOAA:  0.05%
