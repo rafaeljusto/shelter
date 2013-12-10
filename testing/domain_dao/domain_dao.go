@@ -1,31 +1,20 @@
 package main
 
 import (
-	"encoding/json"
-	"errors"
 	"flag"
 	"fmt"
-	"io/ioutil"
-	"log"
 	"net"
 	"net/mail"
-	"os"
 	"shelter/dao"
 	"shelter/database/mongodb"
 	"shelter/model"
+	"shelter/testing/utils"
 	"time"
 )
 
 // This test objective is to verify the domain data persistence. The strategy is to insert
 // and search for the information. Check for insert/update consistency (updates don't
 // create a new element) and if the object id is set on creation
-
-// List of possible errors in this test. There can be also other errors from low level
-// structures
-var (
-	// Config file path is a mandatory parameter
-	ErrConfigFileUndefined = errors.New("Config file path undefined")
-)
 
 var (
 	configFilePath string // Path for the configuration file with the database connection information
@@ -45,6 +34,7 @@ type DomainDAOTestConfigFile struct {
 }
 
 func init() {
+	utils.TestName = "DomainDAO"
 	flag.StringVar(&configFilePath, "config", "", "Configuration file for DomainDAO test")
 	flag.BoolVar(&report, "report", false, "Report flag for DomainDAO performance")
 }
@@ -52,20 +42,22 @@ func init() {
 func main() {
 	flag.Parse()
 
-	config, err := readConfigFile()
-	if err == ErrConfigFileUndefined {
+	var config DomainDAOTestConfigFile
+	err := utils.ReadConfigFile(configFilePath, config)
+
+	if err == utils.ErrConfigFileUndefined {
 		fmt.Println(err.Error())
 		fmt.Println("Usage:")
 		flag.PrintDefaults()
 		return
 
 	} else if err != nil {
-		fatalln("Error reading configuration file", err)
+		utils.Fatalln("Error reading configuration file", err)
 	}
 
 	database, err := mongodb.Open(config.Database.URI, config.Database.Name)
 	if err != nil {
-		fatalln("Error connecting the database", err)
+		utils.Fatalln("Error connecting the database", err)
 	}
 
 	domainDAO := dao.DomainDAO{
@@ -89,7 +81,7 @@ func main() {
 		domainDAOPerformanceReport(config.Report.ReportFile, domainDAO)
 	}
 
-	println("SUCCESS!")
+	utils.Println("SUCCESS!")
 }
 
 // Test all phases of the domain life cycle
@@ -98,39 +90,39 @@ func domainLifeCycle(domainDAO dao.DomainDAO) {
 
 	// Create domain
 	if err := domainDAO.Save(&domain); err != nil {
-		fatalln("Couldn't save domain in database", err)
+		utils.Fatalln("Couldn't save domain in database", err)
 	}
 
 	// Search and compare created domain
 	if domainRetrieved, err := domainDAO.FindByFQDN(domain.FQDN); err != nil {
-		fatalln("Couldn't find created domain in database", err)
+		utils.Fatalln("Couldn't find created domain in database", err)
 
 	} else if !compareDomains(domain, domainRetrieved) {
-		fatalln("Domain created in being persisted wrongly", nil)
+		utils.Fatalln("Domain created in being persisted wrongly", nil)
 	}
 
 	// Update domain
 	domain.Owners = []*mail.Address{}
 	if err := domainDAO.Save(&domain); err != nil {
-		fatalln("Couldn't save domain in database", err)
+		utils.Fatalln("Couldn't save domain in database", err)
 	}
 
 	// Search and compare updated domain
 	if domainRetrieved, err := domainDAO.FindByFQDN(domain.FQDN); err != nil {
-		fatalln("Couldn't find updated domain in database", err)
+		utils.Fatalln("Couldn't find updated domain in database", err)
 
 	} else if !compareDomains(domain, domainRetrieved) {
-		fatalln("Domain updated in being persisted wrongly", nil)
+		utils.Fatalln("Domain updated in being persisted wrongly", nil)
 	}
 
 	// Remove domain
 	if err := domainDAO.RemoveByFQDN(domain.FQDN); err != nil {
-		fatalln("Error while trying to remove a domain", err)
+		utils.Fatalln("Error while trying to remove a domain", err)
 	}
 
 	// Check removal
 	if _, err := domainDAO.FindByFQDN(domain.FQDN); err == nil {
-		fatalln("Domain was not removed from database", nil)
+		utils.Fatalln("Domain was not removed from database", nil)
 	}
 }
 
@@ -143,7 +135,7 @@ func domainsLifeCycle(domainDAO dao.DomainDAO) {
 
 	for _, domainResult := range domainResults {
 		if domainResult.Error != nil {
-			fatalln(fmt.Sprintf("Couldn't save domain %s in database",
+			utils.Fatalln(fmt.Sprintf("Couldn't save domain %s in database",
 				domainResult.Domain.FQDN), domainResult.Error)
 		}
 	}
@@ -151,10 +143,10 @@ func domainsLifeCycle(domainDAO dao.DomainDAO) {
 	for _, domain := range domains {
 		// Search and compare created domains
 		if domainRetrieved, err := domainDAO.FindByFQDN(domain.FQDN); err != nil {
-			fatalln(fmt.Sprintf("Couldn't find created domain %s in database", domain.FQDN), err)
+			utils.Fatalln(fmt.Sprintf("Couldn't find created domain %s in database", domain.FQDN), err)
 
 		} else if !compareDomains(*domain, domainRetrieved) {
-			fatalln(fmt.Sprintf("Domain %s created in being persisted wrongly", domain.FQDN), nil)
+			utils.Fatalln(fmt.Sprintf("Domain %s created in being persisted wrongly", domain.FQDN), nil)
 		}
 	}
 
@@ -167,7 +159,7 @@ func domainsLifeCycle(domainDAO dao.DomainDAO) {
 
 	for _, domainResult := range domainResults {
 		if domainResult.Error != nil {
-			fatalln(fmt.Sprintf("Couldn't update domain %s in database",
+			utils.Fatalln(fmt.Sprintf("Couldn't update domain %s in database",
 				domainResult.Domain.FQDN), domainResult.Error)
 		}
 	}
@@ -175,24 +167,24 @@ func domainsLifeCycle(domainDAO dao.DomainDAO) {
 	for _, domain := range domains {
 		// Search and compare updated domains
 		if domainRetrieved, err := domainDAO.FindByFQDN(domain.FQDN); err != nil {
-			fatalln(fmt.Sprintf("Couldn't find updated domain %s in database", domain.FQDN), err)
+			utils.Fatalln(fmt.Sprintf("Couldn't find updated domain %s in database", domain.FQDN), err)
 
 		} else if !compareDomains(*domain, domainRetrieved) {
-			fatalln(fmt.Sprintf("Domain %s updated in being persisted wrongly", domain.FQDN), nil)
+			utils.Fatalln(fmt.Sprintf("Domain %s updated in being persisted wrongly", domain.FQDN), nil)
 		}
 	}
 
 	// Check if find all really return all domains
 	allDomainsChannel, err := domainDAO.FindAll()
 	if err != nil {
-		fatalln("Error while retrieving all domains from database", err)
+		utils.Fatalln("Error while retrieving all domains from database", err)
 	}
 
 	var allDomains []model.Domain
 	for {
 		domainRetrieved := <-allDomainsChannel
 		if domainRetrieved.Error != nil {
-			fatalln("Error while retrieving all domains from database", err)
+			utils.Fatalln("Error while retrieving all domains from database", err)
 		} else if domainRetrieved.Domain == nil {
 			break
 		}
@@ -201,7 +193,7 @@ func domainsLifeCycle(domainDAO dao.DomainDAO) {
 	}
 
 	if len(allDomains) != len(domains) {
-		fatalln(fmt.Sprintf("FindAll method is not returning all domains we expected %d but got %d",
+		utils.Fatalln(fmt.Sprintf("FindAll method is not returning all domains we expected %d but got %d",
 			len(domains), len(allDomains)), nil)
 	}
 
@@ -210,7 +202,7 @@ func domainsLifeCycle(domainDAO dao.DomainDAO) {
 
 	for _, domainResult := range domainResults {
 		if domainResult.Error != nil {
-			fatalln(fmt.Sprintf("Error while trying to remove domain %s from database",
+			utils.Fatalln(fmt.Sprintf("Error while trying to remove domain %s from database",
 				domainResult.Domain.FQDN), domainResult.Error)
 		}
 	}
@@ -218,7 +210,7 @@ func domainsLifeCycle(domainDAO dao.DomainDAO) {
 	for _, domain := range domains {
 		// Check removals
 		if _, err := domainDAO.FindByFQDN(domain.FQDN); err == nil {
-			fatalln(fmt.Sprintf("Domain %s was not removed from database", domain.FQDN), nil)
+			utils.Fatalln(fmt.Sprintf("Domain %s was not removed from database", domain.FQDN), nil)
 		}
 	}
 
@@ -227,25 +219,25 @@ func domainsLifeCycle(domainDAO dao.DomainDAO) {
 	domainResults = domainDAO.SaveMany(domains)
 	for _, domainResult := range domainResults {
 		if domainResult.Error != nil {
-			fatalln(fmt.Sprintf("Couldn't save domain %s in database",
+			utils.Fatalln(fmt.Sprintf("Couldn't save domain %s in database",
 				domainResult.Domain.FQDN), domainResult.Error)
 		}
 	}
 
 	if err := domainDAO.RemoveAll(); err != nil {
-		fatalln("Couldn't remove all domains", err)
+		utils.Fatalln("Couldn't remove all domains", err)
 	}
 
 	allDomainsChannel, err = domainDAO.FindAll()
 	if err != nil {
-		fatalln("Error while retrieving all domains from database", err)
+		utils.Fatalln("Error while retrieving all domains from database", err)
 	}
 
 	allDomains = []model.Domain{}
 	for {
 		domainRetrieved := <-allDomainsChannel
 		if domainRetrieved.Error != nil {
-			fatalln("Error while retrieving all domains from database", err)
+			utils.Fatalln("Error while retrieving all domains from database", err)
 		} else if domainRetrieved.Domain == nil {
 			break
 		}
@@ -254,7 +246,7 @@ func domainsLifeCycle(domainDAO dao.DomainDAO) {
 	}
 
 	if len(allDomains) > 0 {
-		fatalln("RemoveAll method is not removing the domains from the database", nil)
+		utils.Fatalln("RemoveAll method is not removing the domains from the database", nil)
 	}
 }
 
@@ -264,19 +256,19 @@ func domainUniqueFQDN(domainDAO dao.DomainDAO) {
 
 	// Create domain
 	if err := domainDAO.Save(&domain1); err != nil {
-		fatalln("Couldn't save domain in database", err)
+		utils.Fatalln("Couldn't save domain in database", err)
 	}
 
 	domain2 := newDomain()
 
 	// Create another domain with the same FQDN
 	if err := domainDAO.Save(&domain2); err == nil {
-		fatalln("Allowing more than one object with the same FQDN", nil)
+		utils.Fatalln("Allowing more than one object with the same FQDN", nil)
 	}
 
 	// Remove domain
 	if err := domainDAO.RemoveByFQDN(domain1.FQDN); err != nil {
-		fatalln("Error while trying to remove a domain", err)
+		utils.Fatalln("Error while trying to remove a domain", err)
 	}
 }
 
@@ -291,13 +283,13 @@ func domainDAOPerformance(domainDAO dao.DomainDAO) {
 		calculateDomainDAODurations(domainDAO, numberOfItems)
 
 	if totalDuration.Seconds() > durationTolerance {
-		fatalln(fmt.Sprintf("Domain DAO operations are too slow (total: %s, insert: %s, query: %s, remove: %s)",
+		utils.Fatalln(fmt.Sprintf("Domain DAO operations are too slow (total: %s, insert: %s, query: %s, remove: %s)",
 			totalDuration.String(), insertDuration.String(), queryDuration.String(), removeDuration.String()), nil)
 	} else {
 		// For now we are not printing the results to make a claner output when everything is
 		// fine. For getting the time marks of domain dao you can use the argument -report
 		//
-		//println(fmt.Sprintf("Domain DAO operations took %s (insert: %s, query: %s, remove: %s)",
+		//utils.Println(fmt.Sprintf("Domain DAO operations took %s (insert: %s, query: %s, remove: %s)",
 		//	totalDuration.String(), insertDuration.String(), queryDuration.String(), removeDuration.String()))
 	}
 }
@@ -319,7 +311,7 @@ func domainDAOPerformanceReport(reportFile string, domainDAO dao.DomainDAO) {
 		var totalDuration, insertDuration, queryDuration, removeDuration time.Duration
 
 		for i := 0; i < averageTurns; i++ {
-			println(fmt.Sprintf("Generating report - scale %d - turn %d", numberOfItems, i+1))
+			utils.Println(fmt.Sprintf("Generating report - scale %d - turn %d", numberOfItems, i+1))
 			totalDurationTmp, insertDurationTmp, queryDurationTmp, removeDurationTmp :=
 				calculateDomainDAODurations(domainDAO, numberOfItems)
 
@@ -338,27 +330,7 @@ func domainDAOPerformanceReport(reportFile string, domainDAO dao.DomainDAO) {
 		)
 	}
 
-	// If we found a report file in the current path, rename it so we don't lose the old
-	// data. We are going to use the modification date from the file. We also don't check
-	// the errors because we really don't care
-	if file, err := os.Open(reportFile); err == nil {
-		newFilename := reportFile + ".old-"
-
-		if fileStatus, err := file.Stat(); err == nil {
-			newFilename += fileStatus.ModTime().Format("20060102150405")
-
-		} else {
-			// Did not find the modification date, so lets use now
-			newFilename += time.Now().Format("20060102150405")
-		}
-
-		// We don't use defer because we want to rename it before the end of scope
-		file.Close()
-
-		os.Rename(reportFile, newFilename)
-	}
-
-	ioutil.WriteFile(reportFile, []byte(report), 0444)
+	utils.WriteReport(reportFile, report)
 }
 
 func calculateDomainDAODurations(domainDAO dao.DomainDAO, numberOfItems int) (totalDuration, insertDuration,
@@ -384,13 +356,13 @@ func calculateDomainDAODurations(domainDAO dao.DomainDAO, numberOfItems int) (to
 	for _, domainResult := range domainResults {
 		if domainResult.Error != nil {
 			errorInDomainsCreation = true
-			errorln(fmt.Sprintf("Couldn't save domain %s in database during the performance test",
+			utils.Errorln(fmt.Sprintf("Couldn't save domain %s in database during the performance test",
 				domainResult.Domain.FQDN), domainResult.Error)
 		}
 	}
 
 	if errorInDomainsCreation {
-		fatalln("Due to errors in domain creation, the performance test will be aborted", nil)
+		utils.Fatalln("Due to errors in domain creation, the performance test will be aborted", nil)
 	}
 
 	insertDuration = time.Since(sectionTimer)
@@ -403,17 +375,17 @@ func calculateDomainDAODurations(domainDAO dao.DomainDAO, numberOfItems int) (to
 	fqdn3 := fmt.Sprintf("test%d.com.br", queryRanges*3)
 
 	if _, err := domainDAO.FindByFQDN(fqdn1); err != nil {
-		fatalln(fmt.Sprintf("Couldn't find domain %s in database during "+
+		utils.Fatalln(fmt.Sprintf("Couldn't find domain %s in database during "+
 			"the performance test", fqdn1), err)
 	}
 
 	if _, err := domainDAO.FindByFQDN(fqdn2); err != nil {
-		fatalln(fmt.Sprintf("Couldn't find domain %s in database during "+
+		utils.Fatalln(fmt.Sprintf("Couldn't find domain %s in database during "+
 			"the performance test", fqdn2), err)
 	}
 
 	if _, err := domainDAO.FindByFQDN(fqdn3); err != nil {
-		fatalln(fmt.Sprintf("Couldn't find domain %s in database during "+
+		utils.Fatalln(fmt.Sprintf("Couldn't find domain %s in database during "+
 			"the performance test", fqdn3), err)
 	}
 
@@ -427,40 +399,19 @@ func calculateDomainDAODurations(domainDAO dao.DomainDAO, numberOfItems int) (to
 	for _, domainResult := range domainResults {
 		if domainResult.Error != nil {
 			errorInDomainsRemoval = true
-			errorln(fmt.Sprintf("Error while trying to remove a domain %s during the performance test",
+			utils.Errorln(fmt.Sprintf("Error while trying to remove a domain %s during the performance test",
 				domainResult.Domain.FQDN), domainResult.Error)
 		}
 	}
 
 	if errorInDomainsRemoval {
-		fatalln("Due to errors in domain removal, the performance test will be aborted", nil)
+		utils.Fatalln("Due to errors in domain removal, the performance test will be aborted", nil)
 	}
 
 	removeDuration = time.Since(sectionTimer)
 	totalDuration = time.Since(beginTimer)
 
 	return
-}
-
-// Function to read the configuration file
-func readConfigFile() (DomainDAOTestConfigFile, error) {
-	var configFile DomainDAOTestConfigFile
-
-	// Config file path is a mandatory program parameter
-	if len(configFilePath) == 0 {
-		return configFile, ErrConfigFileUndefined
-	}
-
-	confBytes, err := ioutil.ReadFile(configFilePath)
-	if err != nil {
-		return configFile, err
-	}
-
-	if err := json.Unmarshal(confBytes, &configFile); err != nil {
-		return configFile, err
-	}
-
-	return configFile, nil
 }
 
 // Function to mock a domain object
@@ -592,36 +543,4 @@ func compareDomains(d1, d2 model.Domain) bool {
 	}
 
 	return true
-}
-
-// Function only to add the test name before the log message. This is useful when you have
-// many tests running and logging in the same file, like in a continuous deployment
-// scenario. Prints a simple message without ending the test
-func println(message string) {
-	message = fmt.Sprintf("DomainDAO integration test: %s", message)
-	log.Println(message)
-}
-
-// Function only to add the test name before the log message. This is useful when you have
-// many tests running and logging in the same file, like in a continuous deployment
-// scenario. Prints an error message without ending the test
-func errorln(message string, err error) {
-	message = fmt.Sprintf("DomainDAO integration test: %s", message)
-	if err != nil {
-		message = fmt.Sprintf("%s. Details: %s", message, err.Error())
-	}
-
-	log.Println(message)
-}
-
-// Function only to add the test name before the log message. This is useful when you have
-// many tests running and logging in the same file, like in a continuous deployment
-// scenario. Prints an error message and ends the test
-func fatalln(message string, err error) {
-	message = fmt.Sprintf("DomainDAO integration test: %s", message)
-	if err != nil {
-		message = fmt.Sprintf("%s. Details: %s", message, err.Error())
-	}
-
-	log.Fatalln(message)
 }

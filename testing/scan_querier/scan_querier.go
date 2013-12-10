@@ -2,18 +2,16 @@ package main
 
 import (
 	"bufio"
-	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
 	"github.com/miekg/dns"
-	"io/ioutil"
-	"log"
 	"net"
 	"os"
 	"runtime"
 	"shelter/model"
 	"shelter/net/scan"
+	"shelter/testing/utils"
 	"strconv"
 	"strings"
 	"sync"
@@ -23,8 +21,6 @@ import (
 // List of possible errors in this test. There can be also other errors from low level
 // structures
 var (
-	// Config file path is a mandatory parameter
-	ErrConfigFileUndefined = errors.New("Config file path undefined")
 	// Input path is mandatory for performance tests
 	ErrInputFileUndefined = errors.New("Input file path undefined")
 	// Syntax error while parsing the input file. Check the format of the file in
@@ -78,6 +74,7 @@ type ScanQuerierTestConfigFile struct {
 }
 
 func init() {
+	utils.TestName = "ScanQuerier"
 	flag.StringVar(&configFilePath, "config", "", "Configuration file for ScanQuerier test")
 	flag.BoolVar(&report, "report", false, "Report flag for ScanQuerier performance")
 	flag.BoolVar(&inputReport, "inputReport", false, "Input report flag for ScanQuerier performance")
@@ -86,15 +83,17 @@ func init() {
 func main() {
 	flag.Parse()
 
-	config, err := readConfigFile()
-	if err == ErrConfigFileUndefined {
+	var config ScanQuerierTestConfigFile
+	err := utils.ReadConfigFile(configFilePath, &config)
+
+	if err == utils.ErrConfigFileUndefined {
 		fmt.Println(err.Error())
 		fmt.Println("Usage:")
 		flag.PrintDefaults()
 		return
 
 	} else if err != nil {
-		fatalln("Error reading configuration file", err)
+		utils.Fatalln("Error reading configuration file", err)
 	}
 
 	startDNSServer(config.Server.Port, config.Scan.UDPMaxSize)
@@ -114,7 +113,7 @@ func main() {
 		inputScanReport(config)
 	}
 
-	println("SUCCESS!")
+	utils.Println("SUCCESS!")
 }
 
 func domainWithNoDNSErrors(config ScanQuerierTestConfigFile) {
@@ -164,7 +163,7 @@ func domainWithNoDNSErrors(config ScanQuerierTestConfigFile) {
 	for _, domain := range domains {
 		if domain.FQDN != "br." ||
 			domain.Nameservers[0].LastStatus != model.NameserverStatusOK {
-			fatalln("Error checking a well configured DNS domain", nil)
+			utils.Fatalln("Error checking a well configured DNS domain", nil)
 		}
 	}
 
@@ -174,7 +173,7 @@ func domainWithNoDNSErrors(config ScanQuerierTestConfigFile) {
 func domainWithNoDNSSECErrors(config ScanQuerierTestConfigFile) {
 	dnskey, rrsig, err := generateKeyAndSignZone("br.")
 	if err != nil {
-		fatalln("Error creating DNSSEC keys and signatures", err)
+		utils.Fatalln("Error creating DNSSEC keys and signatures", err)
 	}
 	ds := dnskey.ToDS(int(model.DSDigestTypeSHA1))
 
@@ -253,7 +252,7 @@ func domainWithNoDNSSECErrors(config ScanQuerierTestConfigFile) {
 	for _, domain := range domains {
 		if domain.FQDN != "br." ||
 			domain.DSSet[0].LastStatus != model.DSStatusOK {
-			fatalln("Error checking a well configured DNSSEC domain", nil)
+			utils.Fatalln("Error checking a well configured DNSSEC domain", nil)
 		}
 	}
 
@@ -275,7 +274,7 @@ func domainDNSTimeout(config ScanQuerierTestConfigFile) {
 	domains := runScan(config, domainsToQueryChannel)
 	for _, domain := range domains {
 		if domain.Nameservers[0].LastStatus != model.NameserverStatusTimeout {
-			fatalln("Error checking a timeout domain", nil)
+			utils.Fatalln("Error checking a timeout domain", nil)
 		}
 	}
 }
@@ -295,7 +294,7 @@ func domainDNSUnknownHost(config ScanQuerierTestConfigFile) {
 	domains := runScan(config, domainsToQueryChannel)
 	for _, domain := range domains {
 		if domain.Nameservers[0].LastStatus != model.NameserverStatusUnknownHost {
-			fatalln("Error checking a unknown host", nil)
+			utils.Fatalln("Error checking a unknown host", nil)
 		}
 	}
 }
@@ -313,7 +312,7 @@ func scanQuerierReport(config ScanQuerierTestConfigFile) {
 
 	dnskey, rrsig, err := generateKeyAndSignZone(fqdn)
 	if err != nil {
-		fatalln("Error creating DNSSEC keys and signatures", err)
+		utils.Fatalln("Error creating DNSSEC keys and signatures", err)
 	}
 	ds := dnskey.ToDS(int(model.DSDigestTypeSHA1))
 
@@ -407,27 +406,7 @@ func scanQuerierReport(config ScanQuerierTestConfigFile) {
 		)
 	}
 
-	// If we found a report file in the current path, rename it so we don't lose the old
-	// data. We are going to use the modification date from the file. We also don't check
-	// the errors because we really don't care
-	if file, err := os.Open(config.Report.ReportFile); err == nil {
-		newFilename := config.Report.ReportFile + ".old-"
-
-		if fileStatus, err := file.Stat(); err == nil {
-			newFilename += fileStatus.ModTime().Format("20060102150405")
-
-		} else {
-			// Did not find the modification date, so lets use now
-			newFilename += time.Now().Format("20060102150405")
-		}
-
-		// We don't use defer because we want to rename it before the end of scope
-		file.Close()
-
-		os.Rename(config.Report.ReportFile, newFilename)
-	}
-
-	ioutil.WriteFile(config.Report.ReportFile, []byte(report), 0444)
+	utils.WriteReport(config.Report.ReportFile, report)
 }
 
 // Generates a report with the result of a scan in the root zone file, it should be last
@@ -448,7 +427,7 @@ func inputScanReport(config ScanQuerierTestConfigFile) {
 
 	domains, err := readInputFile(config.Report.InputFile)
 	if err != nil {
-		fatalln("Error while loading input data for report", err)
+		utils.Fatalln("Error while loading input data for report", err)
 	}
 
 	nameserverStatusCounter := 0
@@ -494,27 +473,7 @@ func inputScanReport(config ScanQuerierTestConfigFile) {
 		)
 	}
 
-	// If we found a report file in the current path, rename it so we don't lose the old
-	// data. We are going to use the modification date from the file. We also don't check
-	// the errors because we really don't care
-	if file, err := os.Open(config.Report.OutputFile); err == nil {
-		newFilename := config.Report.OutputFile + ".old-"
-
-		if fileStatus, err := file.Stat(); err == nil {
-			newFilename += fileStatus.ModTime().Format("20060102150405")
-
-		} else {
-			// Did not find the modification date, so lets use now
-			newFilename += time.Now().Format("20060102150405")
-		}
-
-		// We don't use defer because we want to rename it before the end of scope
-		file.Close()
-
-		os.Rename(config.Report.OutputFile, newFilename)
-	}
-
-	ioutil.WriteFile(config.Report.OutputFile, []byte(report), 0444)
+	utils.WriteReport(config.Report.OutputFile, report)
 }
 
 func calculateScanQuerierDurations(config ScanQuerierTestConfigFile,
@@ -690,33 +649,12 @@ func startDNSServer(port int, udpMaxSize uint16) {
 
 	go func() {
 		if err := server.ListenAndServe(); err != nil {
-			fatalln("Error starting DNS test server", err)
+			utils.Fatalln("Error starting DNS test server", err)
 		}
 	}()
 
 	// Wait the DNS server to start before testing
 	time.Sleep(1 * time.Second)
-}
-
-// Function to read the configuration file
-func readConfigFile() (ScanQuerierTestConfigFile, error) {
-	var configFile ScanQuerierTestConfigFile
-
-	// Config file path is a mandatory program parameter
-	if len(configFilePath) == 0 {
-		return configFile, ErrConfigFileUndefined
-	}
-
-	confBytes, err := ioutil.ReadFile(configFilePath)
-	if err != nil {
-		return configFile, err
-	}
-
-	if err := json.Unmarshal(confBytes, &configFile); err != nil {
-		return configFile, err
-	}
-
-	return configFile, nil
 }
 
 // Function to read input data file for performance tests. The file must use the following
@@ -854,24 +792,4 @@ func readInputFile(inputFilePath string) ([]*model.Domain, error) {
 	}
 
 	return domains, nil
-}
-
-// Function only to add the test name before the log message. This is useful when you have
-// many tests running and logging in the same file, like in a continuous deployment
-// scenario. Prints a simple message without ending the test
-func println(message string) {
-	message = fmt.Sprintf("ScanQuerier integration test: %s", message)
-	log.Println(message)
-}
-
-// Function only to add the test name before the log message. This is useful when you have
-// many tests running and logging in the same file, like in a continuous deployment
-// scenario. Prints an error message and ends the test
-func fatalln(message string, err error) {
-	message = fmt.Sprintf("ScanQuerier integration test: %s", message)
-	if err != nil {
-		message = fmt.Sprintf("%s. Details: %s", message, err.Error())
-	}
-
-	log.Fatalln(message)
 }

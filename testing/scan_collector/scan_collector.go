@@ -1,27 +1,17 @@
 package main
 
 import (
-	"encoding/json"
-	"errors"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"labix.org/v2/mgo"
-	"log"
 	"net"
 	"net/mail"
 	"shelter/dao"
 	"shelter/database/mongodb"
 	"shelter/model"
 	"shelter/net/scan"
+	"shelter/testing/utils"
 	"sync"
-)
-
-// List of possible errors in this test. There can be also other errors from low level
-// structures
-var (
-	// Config file path is a mandatory parameter
-	ErrConfigFileUndefined = errors.New("Config file path undefined")
 )
 
 var (
@@ -42,26 +32,29 @@ type ScanCollectorTestConfigFile struct {
 }
 
 func init() {
+	utils.TestName = "ScanCollector"
 	flag.StringVar(&configFilePath, "config", "", "Configuration file for ScanInjector test")
 }
 
 func main() {
 	flag.Parse()
 
-	config, err := readConfigFile()
-	if err == ErrConfigFileUndefined {
+	var config ScanCollectorTestConfigFile
+	err := utils.ReadConfigFile(configFilePath, &config)
+
+	if err == utils.ErrConfigFileUndefined {
 		fmt.Println(err.Error())
 		fmt.Println("Usage:")
 		flag.PrintDefaults()
 		return
 
 	} else if err != nil {
-		fatalln("Error reading configuration file", err)
+		utils.Fatalln("Error reading configuration file", err)
 	}
 
 	database, err := mongodb.Open(config.Database.URI, config.Database.Name)
 	if err != nil {
-		fatalln("Error connecting the database", err)
+		utils.Fatalln("Error connecting the database", err)
 	}
 
 	domainDAO := dao.DomainDAO{
@@ -75,7 +68,7 @@ func main() {
 	domainWithErrors(config, database)
 	domainWithNoErrors(config, database)
 
-	println("SUCCESS!")
+	utils.Println("SUCCESS!")
 }
 
 func domainWithErrors(config ScanCollectorTestConfigFile, database *mgo.Database) {
@@ -109,27 +102,27 @@ func domainWithErrors(config ScanCollectorTestConfigFile, database *mgo.Database
 
 	domain, err := domainDAO.FindByFQDN("br.")
 	if err != nil {
-		fatalln("Error loading domain with problems", err)
+		utils.Fatalln("Error loading domain with problems", err)
 	}
 
 	if len(domain.Nameservers) == 0 {
-		fatalln("Error saving nameservers", nil)
+		utils.Fatalln("Error saving nameservers", nil)
 	}
 
 	if domain.Nameservers[0].LastStatus != model.NameserverStatusTimeout {
-		fatalln("Error setting status in the nameserver", nil)
+		utils.Fatalln("Error setting status in the nameserver", nil)
 	}
 
 	if len(domain.DSSet) == 0 {
-		fatalln("Error saving the DS set", nil)
+		utils.Fatalln("Error saving the DS set", nil)
 	}
 
 	if domain.DSSet[0].LastStatus != model.DSStatusExpiredSignature {
-		fatalln("Error setting status in the DS", nil)
+		utils.Fatalln("Error setting status in the DS", nil)
 	}
 
 	if err := domainDAO.RemoveByFQDN("br."); err != nil {
-		fatalln("Error removing test domain", err)
+		utils.Fatalln("Error removing test domain", err)
 	}
 }
 
@@ -164,27 +157,27 @@ func domainWithNoErrors(config ScanCollectorTestConfigFile, database *mgo.Databa
 
 	domain, err := domainDAO.FindByFQDN("br.")
 	if err != nil {
-		fatalln("Error loading domain with problems", err)
+		utils.Fatalln("Error loading domain with problems", err)
 	}
 
 	if len(domain.Nameservers) == 0 {
-		fatalln("Error saving nameservers", nil)
+		utils.Fatalln("Error saving nameservers", nil)
 	}
 
 	if domain.Nameservers[0].LastStatus != model.NameserverStatusOK {
-		fatalln("Error setting status in the nameserver", nil)
+		utils.Fatalln("Error setting status in the nameserver", nil)
 	}
 
 	if len(domain.DSSet) == 0 {
-		fatalln("Error saving the DS set", nil)
+		utils.Fatalln("Error saving the DS set", nil)
 	}
 
 	if domain.DSSet[0].LastStatus != model.DSStatusOK {
-		fatalln("Error setting status in the DS", nil)
+		utils.Fatalln("Error setting status in the DS", nil)
 	}
 
 	if err := domainDAO.RemoveByFQDN("br."); err != nil {
-		fatalln("Error removing test domain", err)
+		utils.Fatalln("Error removing test domain", err)
 	}
 }
 
@@ -202,32 +195,11 @@ func runScan(config ScanCollectorTestConfigFile,
 	go func() {
 		select {
 		case err := <-errorsChannel:
-			fatalln("Error saving domain", err)
+			utils.Fatalln("Error saving domain", err)
 		}
 	}()
 
 	scanGroup.Wait()
-}
-
-// Function to read the configuration file
-func readConfigFile() (ScanCollectorTestConfigFile, error) {
-	var configFile ScanCollectorTestConfigFile
-
-	// Config file path is a mandatory program parameter
-	if len(configFilePath) == 0 {
-		return configFile, ErrConfigFileUndefined
-	}
-
-	confBytes, err := ioutil.ReadFile(configFilePath)
-	if err != nil {
-		return configFile, err
-	}
-
-	if err := json.Unmarshal(confBytes, &configFile); err != nil {
-		return configFile, err
-	}
-
-	return configFile, nil
 }
 
 // Function to mock a domain object
@@ -259,24 +231,4 @@ func newDomain() model.Domain {
 	domain.Owners = []*mail.Address{owner}
 
 	return domain
-}
-
-// Function only to add the test name before the log message. This is useful when you have
-// many tests running and logging in the same file, like in a continuous deployment
-// scenario. Prints a simple message without ending the test
-func println(message string) {
-	message = fmt.Sprintf("ScanCollector integration test: %s", message)
-	log.Println(message)
-}
-
-// Function only to add the test name before the log message. This is useful when you have
-// many tests running and logging in the same file, like in a continuous deployment
-// scenario. Prints an error message and ends the test
-func fatalln(message string, err error) {
-	message = fmt.Sprintf("ScanCollector integration test: %s", message)
-	if err != nil {
-		message = fmt.Sprintf("%s. Details: %s", message, err.Error())
-	}
-
-	log.Fatalln(message)
 }

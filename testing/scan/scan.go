@@ -1,12 +1,8 @@
 package main
 
 import (
-	"encoding/json"
-	"errors"
 	"flag"
 	"fmt"
-	"io/ioutil"
-	"log"
 	"net"
 	"net/mail"
 	"shelter/config"
@@ -14,14 +10,8 @@ import (
 	"shelter/database/mongodb"
 	"shelter/model"
 	"shelter/service"
+	"shelter/testing/utils"
 	"time"
-)
-
-// List of possible errors in this test. There can be also other errors from low level
-// structures
-var (
-	// Config file path is a mandatory parameter
-	ErrConfigFileUndefined = errors.New("Config file path undefined")
 )
 
 var (
@@ -29,26 +19,29 @@ var (
 )
 
 func init() {
+	utils.TestName = "Scan"
 	flag.StringVar(&configFilePath, "config", "", "Configuration file for ScanQuerier test")
 }
 
 func main() {
 	flag.Parse()
 
-	if err := readAndLoadConfigFile(); err == ErrConfigFileUndefined {
+	err := utils.ReadConfigFile(configFilePath, &config.ShelterConfig)
+
+	if err == utils.ErrConfigFileUndefined {
 		fmt.Println(err.Error())
 		fmt.Println("Usage:")
 		flag.PrintDefaults()
 		return
 
 	} else if err != nil {
-		fatalln("Error reading configuration file", err)
+		utils.Fatalln("Error reading configuration file", err)
 	}
 
 	database, err := mongodb.Open(config.ShelterConfig.Database.URI,
 		config.ShelterConfig.Database.Name)
 	if err != nil {
-		fatalln("Error connecting the database", err)
+		utils.Fatalln("Error connecting the database", err)
 	}
 
 	domainDAO := dao.DomainDAO{
@@ -61,7 +54,7 @@ func main() {
 
 	domainWithNoErrors(domainDAO)
 
-	println("SUCCESS!")
+	utils.Println("SUCCESS!")
 }
 
 func domainWithNoErrors(domainDAO dao.DomainDAO) {
@@ -86,69 +79,50 @@ func domainWithNoErrors(domainDAO dao.DomainDAO) {
 	}
 
 	if err := domainDAO.Save(&domain); err != nil {
-		fatalln("Error saving domain for scan scenario", err)
+		utils.Fatalln("Error saving domain for scan scenario", err)
 	}
 
 	service.ScanDomains()
 
 	domain, err := domainDAO.FindByFQDN(domain.FQDN)
 	if err != nil {
-		fatalln("Didn't find scanned domain", err)
+		utils.Fatalln("Didn't find scanned domain", err)
 	}
 
 	for _, nameserver := range domain.Nameservers {
 		if nameserver.LastStatus != model.NameserverStatusOK {
-			fatalln(fmt.Sprintf("Fail to validate a supposedly well configured nameserver '%s'. Found status: %s",
+			utils.Fatalln(fmt.Sprintf("Fail to validate a supposedly well configured nameserver '%s'. Found status: %s",
 				nameserver.Host, model.NameserverStatusToString(nameserver.LastStatus)), err)
 		}
 
 		if nameserver.LastCheckAt.Before(lastCheckAt) ||
 			nameserver.LastCheckAt.Equal(lastCheckAt) {
-			fatalln(fmt.Sprintf("Last check date was not updated in nameserver '%s'",
+			utils.Fatalln(fmt.Sprintf("Last check date was not updated in nameserver '%s'",
 				nameserver.Host), nil)
 		}
 
 		if nameserver.LastOKAt.Before(lastOKAt) || nameserver.LastOKAt.Equal(lastOKAt) {
-			fatalln(fmt.Sprintf("Last OK date was not updated in nameserver '%s'",
+			utils.Fatalln(fmt.Sprintf("Last OK date was not updated in nameserver '%s'",
 				nameserver.Host), nil)
 		}
 	}
 
 	for _, ds := range domain.DSSet {
 		if ds.LastStatus != model.DSStatusOK {
-			fatalln(fmt.Sprintf("Fail to validate a supposedly well configured DS %d. "+
+			utils.Fatalln(fmt.Sprintf("Fail to validate a supposedly well configured DS %d. "+
 				"Found status: %s", ds.Keytag, model.DSStatusToString(ds.LastStatus)), err)
 		}
 
 		if ds.LastCheckAt.Before(lastCheckAt) || ds.LastCheckAt.Equal(lastCheckAt) {
-			fatalln(fmt.Sprintf("Last check date was not updated in DS %d",
+			utils.Fatalln(fmt.Sprintf("Last check date was not updated in DS %d",
 				ds.Keytag), nil)
 		}
 
 		if ds.LastOKAt.Before(lastOKAt) || ds.LastOKAt.Equal(lastOKAt) {
-			fatalln(fmt.Sprintf("Last OK date was not updated in DS %d",
+			utils.Fatalln(fmt.Sprintf("Last OK date was not updated in DS %d",
 				ds.Keytag), nil)
 		}
 	}
-}
-
-// Function to read the configuration file
-func readAndLoadConfigFile() error {
-	// Config file path is a mandatory program parameter
-	if len(configFilePath) == 0 {
-		return ErrConfigFileUndefined
-	}
-
-	confBytes, err := ioutil.ReadFile(configFilePath)
-	if err != nil {
-		return err
-	}
-
-	if err := json.Unmarshal(confBytes, &config.ShelterConfig); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 // Function to mock a domain object
@@ -197,24 +171,4 @@ func newDomain() model.Domain {
 	domain.Owners = []*mail.Address{owner}
 
 	return domain
-}
-
-// Function only to add the test name before the log message. This is useful when you have
-// many tests running and logging in the same file, like in a continuous deployment
-// scenario. Prints a simple message without ending the test
-func println(message string) {
-	message = fmt.Sprintf("Scan integration test: %s", message)
-	log.Println(message)
-}
-
-// Function only to add the test name before the log message. This is useful when you have
-// many tests running and logging in the same file, like in a continuous deployment
-// scenario. Prints an error message and ends the test
-func fatalln(message string, err error) {
-	message = fmt.Sprintf("Scan integration test: %s", message)
-	if err != nil {
-		message = fmt.Sprintf("%s. Details: %s", message, err.Error())
-	}
-
-	log.Fatalln(message)
 }

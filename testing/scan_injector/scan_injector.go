@@ -1,18 +1,15 @@
 package main
 
 import (
-	"encoding/json"
-	"errors"
 	"flag"
 	"fmt"
-	"io/ioutil"
-	"log"
 	"net"
 	"net/mail"
 	"shelter/dao"
 	"shelter/database/mongodb"
 	"shelter/model"
 	"shelter/net/scan"
+	"shelter/testing/utils"
 	"strconv"
 	"sync"
 	"time"
@@ -21,13 +18,6 @@ import (
 // This test objective is to verify the domain selection rules in the injector scanner
 // component. As the injector depends on a database scenario, all this checks are going to
 // be made in an integration test enviroment
-
-// List of possible errors in this test. There can be also other errors from low level
-// structures
-var (
-	// Config file path is a mandatory parameter
-	ErrConfigFileUndefined = errors.New("Config file path undefined")
-)
 
 var (
 	configFilePath string // Path for the configuration file with the database connection information
@@ -54,26 +44,29 @@ type ScanInjectorTestConfigFile struct {
 }
 
 func init() {
+	utils.TestName = "ScanInjector"
 	flag.StringVar(&configFilePath, "config", "", "Configuration file for ScanInjector test")
 }
 
 func main() {
 	flag.Parse()
 
-	config, err := readConfigFile()
-	if err == ErrConfigFileUndefined {
+	var config ScanInjectorTestConfigFile
+	err := utils.ReadConfigFile(configFilePath, &config)
+
+	if err == utils.ErrConfigFileUndefined {
 		fmt.Println(err.Error())
 		fmt.Println("Usage:")
 		flag.PrintDefaults()
 		return
 
 	} else if err != nil {
-		fatalln("Error reading configuration file", err)
+		utils.Fatalln("Error reading configuration file", err)
 	}
 
 	database, err := mongodb.Open(config.Database.URI, config.Database.Name)
 	if err != nil {
-		fatalln("Error connecting the database", err)
+		utils.Fatalln("Error connecting the database", err)
 	}
 
 	domainDAO := dao.DomainDAO{
@@ -88,7 +81,7 @@ func main() {
 	domainWithDNSSECErrors(config, domainDAO)
 	domainWithNoErrors(config, domainDAO)
 
-	println("SUCCESS!")
+	utils.Println("SUCCESS!")
 }
 
 func domainWithDNSErrors(config ScanInjectorTestConfigFile, domainDAO dao.DomainDAO) {
@@ -105,16 +98,16 @@ func domainWithDNSErrors(config ScanInjectorTestConfigFile, domainDAO dao.Domain
 	}
 
 	if err := domainDAO.Save(&domain); err != nil {
-		fatalln("Error saving domain for scan scenario", err)
+		utils.Fatalln("Error saving domain for scan scenario", err)
 	}
 
 	if domains := runScan(config, domainDAO); len(domains) != 1 {
-		fatalln(fmt.Sprintf("Couldn't load a domain with DNS errors for scan. "+
+		utils.Fatalln(fmt.Sprintf("Couldn't load a domain with DNS errors for scan. "+
 			"Expected 1 got %d", len(domains)), nil)
 	}
 
 	if err := domainDAO.RemoveByFQDN(domain.FQDN); err != nil {
-		fatalln("Error removing domain", err)
+		utils.Fatalln("Error removing domain", err)
 	}
 }
 
@@ -132,16 +125,16 @@ func domainWithDNSSECErrors(config ScanInjectorTestConfigFile, domainDAO dao.Dom
 	}
 
 	if err := domainDAO.Save(&domain); err != nil {
-		fatalln("Error saving domain for scan scenario", err)
+		utils.Fatalln("Error saving domain for scan scenario", err)
 	}
 
 	if domains := runScan(config, domainDAO); len(domains) != 1 {
-		fatalln(fmt.Sprintf("Couldn't load a domain with DNSSEC errors for scan. "+
+		utils.Fatalln(fmt.Sprintf("Couldn't load a domain with DNSSEC errors for scan. "+
 			"Expected 1 got %d", len(domains)), nil)
 	}
 
 	if err := domainDAO.RemoveByFQDN(domain.FQDN); err != nil {
-		fatalln("Error removing domain", err)
+		utils.Fatalln("Error removing domain", err)
 	}
 }
 
@@ -163,16 +156,16 @@ func domainWithNoErrors(config ScanInjectorTestConfigFile, domainDAO dao.DomainD
 	}
 
 	if err := domainDAO.Save(&domain); err != nil {
-		fatalln("Error saving domain for scan scenario", err)
+		utils.Fatalln("Error saving domain for scan scenario", err)
 	}
 
 	if domains := runScan(config, domainDAO); len(domains) > 0 {
-		fatalln(fmt.Sprintf("Selected a domain configured correctly for the scan. "+
+		utils.Fatalln(fmt.Sprintf("Selected a domain configured correctly for the scan. "+
 			"Expected 0 got %d", len(domains)), nil)
 	}
 
 	if err := domainDAO.RemoveByFQDN(domain.FQDN); err != nil {
-		fatalln("Error removing domain", err)
+		utils.Fatalln("Error removing domain", err)
 	}
 }
 
@@ -209,7 +202,7 @@ func runScan(config ScanInjectorTestConfigFile, domainDAO dao.DomainDAO) []*mode
 			}
 
 		case err := <-errorsChannel:
-			fatalln("Error selecting domain", err)
+			utils.Fatalln("Error selecting domain", err)
 		}
 
 		if exit {
@@ -218,27 +211,6 @@ func runScan(config ScanInjectorTestConfigFile, domainDAO dao.DomainDAO) []*mode
 	}
 
 	return domains
-}
-
-// Function to read the configuration file
-func readConfigFile() (ScanInjectorTestConfigFile, error) {
-	var configFile ScanInjectorTestConfigFile
-
-	// Config file path is a mandatory program parameter
-	if len(configFilePath) == 0 {
-		return configFile, ErrConfigFileUndefined
-	}
-
-	confBytes, err := ioutil.ReadFile(configFilePath)
-	if err != nil {
-		return configFile, err
-	}
-
-	if err := json.Unmarshal(confBytes, &configFile); err != nil {
-		return configFile, err
-	}
-
-	return configFile, nil
 }
 
 // Function to mock a domain object
@@ -270,24 +242,4 @@ func newDomain() model.Domain {
 	domain.Owners = []*mail.Address{owner}
 
 	return domain
-}
-
-// Function only to add the test name before the log message. This is useful when you have
-// many tests running and logging in the same file, like in a continuous deployment
-// scenario. Prints a simple message without ending the test
-func println(message string) {
-	message = fmt.Sprintf("ScanInjector integration test: %s", message)
-	log.Println(message)
-}
-
-// Function only to add the test name before the log message. This is useful when you have
-// many tests running and logging in the same file, like in a continuous deployment
-// scenario. Prints an error message and ends the test
-func fatalln(message string, err error) {
-	message = fmt.Sprintf("ScanInjector integration test: %s", message)
-	if err != nil {
-		message = fmt.Sprintf("%s. Details: %s", message, err.Error())
-	}
-
-	log.Fatalln(message)
 }
