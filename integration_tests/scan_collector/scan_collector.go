@@ -28,17 +28,16 @@ var (
 	configFilePath string // Path for the config file with the connection information
 )
 
-// Define some important parameter for the test enviroment
-const (
-	domainsBufferSize = 100 // Size of the communication channels between the querier and the collector
-	saveAtOnce        = 100 // Number of domains to acumulate before saving all togheter
-)
-
 // ScanCollectorTestConfigFile is a structure to store the test configuration file data
 type ScanCollectorTestConfigFile struct {
 	Database struct {
 		URI  string
 		Name string
+	}
+
+	Scan struct {
+		DomainsBufferSize int // Size of the channels between the querier and the collector
+		SaveAtOnce        int // Number of domains to acumulate before saving all togheter
 	}
 }
 
@@ -49,7 +48,7 @@ func init() {
 func main() {
 	flag.Parse()
 
-	configFile, err := readConfigFile()
+	config, err := readConfigFile()
 	if err == ErrConfigFileUndefined {
 		fmt.Println(err.Error())
 		fmt.Println("Usage:")
@@ -60,7 +59,7 @@ func main() {
 		fatalln("Error reading configuration file", err)
 	}
 
-	database, err := mongodb.Open(configFile.Database.URI, configFile.Database.Name)
+	database, err := mongodb.Open(config.Database.URI, config.Database.Name)
 	if err != nil {
 		fatalln("Error connecting the database", err)
 	}
@@ -73,14 +72,14 @@ func main() {
 	// test there was an error and the data wasn't removed from the database
 	domainDAO.RemoveAll()
 
-	domainWithErrors(database)
-	domainWithNoErrors(database)
+	domainWithErrors(config, database)
+	domainWithNoErrors(config, database)
 
 	println("SUCCESS!")
 }
 
-func domainWithErrors(database *mgo.Database) {
-	domainsToSave := make(chan *model.Domain, domainsBufferSize)
+func domainWithErrors(config ScanCollectorTestConfigFile, database *mgo.Database) {
+	domainsToSave := make(chan *model.Domain, config.Scan.DomainsBufferSize)
 	domainsToSave <- &model.Domain{
 		FQDN: "br.",
 		Nameservers: []model.Nameserver{
@@ -102,7 +101,7 @@ func domainWithErrors(database *mgo.Database) {
 	}
 	domainsToSave <- nil
 
-	runScan(database, domainsToSave)
+	runScan(config, database, domainsToSave)
 
 	domainDAO := dao.DomainDAO{
 		Database: database,
@@ -134,8 +133,8 @@ func domainWithErrors(database *mgo.Database) {
 	}
 }
 
-func domainWithNoErrors(database *mgo.Database) {
-	domainsToSave := make(chan *model.Domain, domainsBufferSize)
+func domainWithNoErrors(config ScanCollectorTestConfigFile, database *mgo.Database) {
+	domainsToSave := make(chan *model.Domain, config.Scan.DomainsBufferSize)
 	domainsToSave <- &model.Domain{
 		FQDN: "br.",
 		Nameservers: []model.Nameserver{
@@ -157,7 +156,7 @@ func domainWithNoErrors(database *mgo.Database) {
 	}
 	domainsToSave <- nil
 
-	runScan(database, domainsToSave)
+	runScan(config, database, domainsToSave)
 
 	domainDAO := dao.DomainDAO{
 		Database: database,
@@ -190,8 +189,11 @@ func domainWithNoErrors(database *mgo.Database) {
 }
 
 // Method responsable to configure and start scan injector for tests
-func runScan(database *mgo.Database, domainsToSave chan *model.Domain) {
-	scanCollector := scan.NewCollector(database, saveAtOnce)
+func runScan(config ScanCollectorTestConfigFile,
+	database *mgo.Database,
+	domainsToSave chan *model.Domain) {
+
+	scanCollector := scan.NewCollector(database, config.Scan.SaveAtOnce)
 
 	var scanGroup sync.WaitGroup
 	errorsChannel := make(chan error)

@@ -29,7 +29,7 @@ var (
 
 var (
 	configFilePath string // Path for the configuration file with the database connection information
-	reportFilePath string // Path to generate the domain dao performance report file
+	report         bool   // Flag to generate the domain dao performance report file
 )
 
 // DomainDAOTestConfigFile is a structure to store the test configuration file data
@@ -38,17 +38,21 @@ type DomainDAOTestConfigFile struct {
 		URI  string
 		Name string
 	}
+
+	Report struct {
+		ReportFile string
+	}
 }
 
 func init() {
 	flag.StringVar(&configFilePath, "config", "", "Configuration file for DomainDAO test")
-	flag.StringVar(&reportFilePath, "report", "", "Report file for DomainDAO performance")
+	flag.BoolVar(&report, "report", false, "Report flag for DomainDAO performance")
 }
 
 func main() {
 	flag.Parse()
 
-	configFile, err := readConfigFile()
+	config, err := readConfigFile()
 	if err == ErrConfigFileUndefined {
 		fmt.Println(err.Error())
 		fmt.Println("Usage:")
@@ -59,7 +63,7 @@ func main() {
 		fatalln("Error reading configuration file", err)
 	}
 
-	database, err := mongodb.Open(configFile.Database.URI, configFile.Database.Name)
+	database, err := mongodb.Open(config.Database.URI, config.Database.Name)
 	if err != nil {
 		fatalln("Error connecting the database", err)
 	}
@@ -81,8 +85,8 @@ func main() {
 
 	// Domain DAO performance report is optional and only generated when the report file
 	// path parameter is given
-	if len(reportFilePath) > 0 {
-		domainDAOPerformanceReport(domainDAO)
+	if report {
+		domainDAOPerformanceReport(config.Report.ReportFile, domainDAO)
 	}
 
 	println("SUCCESS!")
@@ -301,7 +305,7 @@ func domainDAOPerformance(domainDAO dao.DomainDAO) {
 // Generates a report with the amount of time for each operation in the domain DAO. For
 // more realistic values it does the same operation for the same amount of data X number
 // of times to get the average time of the operation
-func domainDAOPerformanceReport(domainDAO dao.DomainDAO) {
+func domainDAOPerformanceReport(reportFile string, domainDAO dao.DomainDAO) {
 	// Report header
 	report := " #       | Total            | Insert           | Find             | Remove\n" +
 		"------------------------------------------------------------------------------------\n"
@@ -337,8 +341,8 @@ func domainDAOPerformanceReport(domainDAO dao.DomainDAO) {
 	// If we found a report file in the current path, rename it so we don't lose the old
 	// data. We are going to use the modification date from the file. We also don't check
 	// the errors because we really don't care
-	if file, err := os.Open(reportFilePath); err == nil {
-		newFilename := reportFilePath + ".old-"
+	if file, err := os.Open(reportFile); err == nil {
+		newFilename := reportFile + ".old-"
 
 		if fileStatus, err := file.Stat(); err == nil {
 			newFilename += fileStatus.ModTime().Format("20060102150405")
@@ -351,10 +355,10 @@ func domainDAOPerformanceReport(domainDAO dao.DomainDAO) {
 		// We don't use defer because we want to rename it before the end of scope
 		file.Close()
 
-		os.Rename(reportFilePath, newFilename)
+		os.Rename(reportFile, newFilename)
 	}
 
-	ioutil.WriteFile(reportFilePath, []byte(report), 0444)
+	ioutil.WriteFile(reportFile, []byte(report), 0444)
 }
 
 func calculateDomainDAODurations(domainDAO dao.DomainDAO, numberOfItems int) (totalDuration, insertDuration,

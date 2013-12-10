@@ -55,35 +55,49 @@ domains used in the round of checks and QPS is the number of requests per second
 system could process. For this results were used 400 concurrent queriers (go routines)
 each one with an input wait list that can store 100 domains. The hardware used was an
 Intel Core i7-2600 3.40GHz with 8GiB of memory, using the Ubuntu 12.10 (amd64) operational
-system. The input data (domains) was generated from the root zone.
+system. All the requests were sent to a local DNS server.
 
 ```
- #       | Total            | QPS
-----------------------------------
- 10      |     4.867428051s |    2
- 50      |    10.573376628s |    5
- 100     |     7.375709482s |   14
- 500     |      9.60334264s |   55
- 1000    |     8.682962307s |  125
- 5000    |    10.913498722s |  500
+ #       | Total            | QPS  | Memory (MB)
+-----------------------------------------------------
+ 10      |       2.817312ms |   10 |           1.08
+ 50      |      14.766817ms |   50 |           1.24
+ 100     |      25.443762ms |  100 |           1.91
+ 500     |     1.059420731s |  500 |           4.31
+ 1000    |     1.054760148s | 1000 |           4.31
+ 5000    |     2.060903121s | 2500 |           8.07
+ 10000   |     5.402801345s | 2000 |           9.50
+ 50000   |    25.349122233s | 2000 |          24.69
+ 100000  |    49.294494104s | 2040 |          50.19
+ 500000  |   4m1.158914516s | 2074 |         390.90
+ 1000000 |  8m16.682795099s | 2016 |         488.53
+ 5000000 | 42m22.573865695s | 1966 |        4182.01
+```
+
+Bellow is the same test but for the root zone file.
+
+```
+ #       | Total            | QPS  | Memory (MB)
+---------------------------------------------------
+ 341     |     7.154577009s |   48 |          12.18
 
 Nameserver Status
 -----------------
-            NOAA:  0.01%
-              OK:  84.69%
-        NOTSYNCH:  14.88%
-         TIMEOUT:  0.32%
-        QREFUSED:  0.02%
-        CREFUSED:  0.02%
-              UH:  0.02%
-           ERROR:  0.03%
-        SERVFAIL:  0.01%
+              UH:  0.16%
+        QREFUSED:  0.05%
+              OK:  92.45%
+        NOTSYNCH:  5.11%
+        SERVFAIL:  0.11%
+            NOAA:  0.05%
+         TIMEOUT:  1.63%
+        CREFUSED:  0.16%
+           ERROR:  0.27%
 
 DS Status
 ---------
-              OK:  95.90%
-         TIMEOUT:  2.91%
-           NOSIG:  0.46%
-          SIGERR:  0.54%
-           NOKEY:  0.20%
+              OK:  82.50%
+          SIGERR:  4.50%
+           NOSIG:  5.50%
+         TIMEOUT:  5.50%
+           NOKEY:  2.00%
 ```

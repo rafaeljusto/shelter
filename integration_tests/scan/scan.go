@@ -28,31 +28,6 @@ var (
 	configFilePath string // Path for the configuration file with all the query parameters
 )
 
-// Define some scan important variables for the test enviroment. This should go to
-// configuration files laster
-const (
-	domainsBufferSize        = 100
-	errorsBufferSize         = 100
-	maxOKVerificationDays    = 7
-	maxErrorVerificationDays = 3
-	maxExpirationAlertDays   = 10
-	numberOfQueriers         = 400
-	udpMaxSize               = 4096
-	dialTimeout              = 10
-	readTimeout              = 10
-	writeTimeout             = 10
-	saveAtOnce               = 100
-	logBasePath              = "."
-	logFilename              = "scan.log"
-)
-
-type ScanTestConfigFile struct {
-	Database struct {
-		URI  string
-		Name string
-	}
-}
-
 func init() {
 	flag.StringVar(&configFilePath, "config", "", "Configuration file for ScanQuerier test")
 }
@@ -60,8 +35,7 @@ func init() {
 func main() {
 	flag.Parse()
 
-	configFile, err := readAndLoadConfigFile()
-	if err == ErrConfigFileUndefined {
+	if err := readAndLoadConfigFile(); err == ErrConfigFileUndefined {
 		fmt.Println(err.Error())
 		fmt.Println("Usage:")
 		flag.PrintDefaults()
@@ -71,7 +45,8 @@ func main() {
 		fatalln("Error reading configuration file", err)
 	}
 
-	database, err := mongodb.Open(configFile.Database.URI, configFile.Database.Name)
+	database, err := mongodb.Open(config.ShelterConfig.Database.URI,
+		config.ShelterConfig.Database.Name)
 	if err != nil {
 		fatalln("Error connecting the database", err)
 	}
@@ -158,40 +133,22 @@ func domainWithNoErrors(domainDAO dao.DomainDAO) {
 }
 
 // Function to read the configuration file
-func readAndLoadConfigFile() (ScanTestConfigFile, error) {
-	var configFile ScanTestConfigFile
-
+func readAndLoadConfigFile() error {
 	// Config file path is a mandatory program parameter
 	if len(configFilePath) == 0 {
-		return configFile, ErrConfigFileUndefined
+		return ErrConfigFileUndefined
 	}
 
 	confBytes, err := ioutil.ReadFile(configFilePath)
 	if err != nil {
-		return configFile, err
+		return err
 	}
 
-	if err := json.Unmarshal(confBytes, &configFile); err != nil {
-		return configFile, err
+	if err := json.Unmarshal(confBytes, &config.ShelterConfig); err != nil {
+		return err
 	}
 
-	config.ShelterConfig.Database.Name = configFile.Database.Name
-	config.ShelterConfig.Database.URI = configFile.Database.URI
-	config.ShelterConfig.Log.BasePath = logBasePath
-	config.ShelterConfig.Log.ScanFilename = logFilename
-	config.ShelterConfig.Scan.DomainsBufferSize = domainsBufferSize
-	config.ShelterConfig.Scan.ErrorsBufferSize = errorsBufferSize
-	config.ShelterConfig.Scan.NumberOfQueriers = numberOfQueriers
-	config.ShelterConfig.Scan.SaveAtOnce = saveAtOnce
-	config.ShelterConfig.Scan.Timeouts.DialSeconds = dialTimeout
-	config.ShelterConfig.Scan.Timeouts.ReadSeconds = readTimeout
-	config.ShelterConfig.Scan.Timeouts.WriteSeconds = writeTimeout
-	config.ShelterConfig.Scan.UDPMaxSize = udpMaxSize
-	config.ShelterConfig.Scan.VerificationIntervals.MaxErrorDays = maxErrorVerificationDays
-	config.ShelterConfig.Scan.VerificationIntervals.MaxExpirationAlertDays = maxExpirationAlertDays
-	config.ShelterConfig.Scan.VerificationIntervals.MaxOKDays = maxOKVerificationDays
-
-	return configFile, nil
+	return nil
 }
 
 // Function to mock a domain object

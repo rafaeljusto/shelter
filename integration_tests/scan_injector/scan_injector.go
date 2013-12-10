@@ -33,21 +33,23 @@ var (
 	configFilePath string // Path for the configuration file with the database connection information
 )
 
-// Define some scan important variables for the test enviroment, this values indicates the
-// size of the channel, if a domain is going to be selected for scan or not, based on the
-// last check, if has errors or if the DNSSEC expiration date is near
-const (
-	domainsBufferSize        = 100
-	maxOKVerificationDays    = 7
-	maxErrorVerificationDays = 3
-	maxExpirationAlertDays   = 10
-)
-
 // ScanInjectorTestConfigFile is a structure to store the test configuration file data
 type ScanInjectorTestConfigFile struct {
 	Database struct {
 		URI  string
 		Name string
+	}
+
+	// Indicates if a domain is going to be selected for scan or not, based on the last check,
+	// if has errors or if the DNSSEC expiration date is near
+	Scan struct {
+		DomainsBufferSize int // Size of the channel
+
+		VerificationIntervals struct {
+			MaxOKDays              int
+			MaxErrorDays           int
+			MaxExpirationAlertDays int
+		}
 	}
 }
 
@@ -58,7 +60,7 @@ func init() {
 func main() {
 	flag.Parse()
 
-	configFile, err := readConfigFile()
+	config, err := readConfigFile()
 	if err == ErrConfigFileUndefined {
 		fmt.Println(err.Error())
 		fmt.Println("Usage:")
@@ -69,7 +71,7 @@ func main() {
 		fatalln("Error reading configuration file", err)
 	}
 
-	database, err := mongodb.Open(configFile.Database.URI, configFile.Database.Name)
+	database, err := mongodb.Open(config.Database.URI, config.Database.Name)
 	if err != nil {
 		fatalln("Error connecting the database", err)
 	}
@@ -82,21 +84,21 @@ func main() {
 	// test there was an error and the data wasn't removed from the database
 	domainDAO.RemoveAll()
 
-	domainWithDNSErrors(domainDAO)
-	domainWithDNSSECErrors(domainDAO)
-	domainWithNoErrors(domainDAO)
+	domainWithDNSErrors(config, domainDAO)
+	domainWithDNSSECErrors(config, domainDAO)
+	domainWithNoErrors(config, domainDAO)
 
 	println("SUCCESS!")
 }
 
-func domainWithDNSErrors(domainDAO dao.DomainDAO) {
+func domainWithDNSErrors(config ScanInjectorTestConfigFile, domainDAO dao.DomainDAO) {
 	domain := newDomain()
 
 	// Set all nameservers with error and the last check equal of the error check interval,
 	// this will force the domain to be checked
 	for index, _ := range domain.Nameservers {
-		lessThreeDays, _ :=
-			time.ParseDuration("-" + strconv.Itoa(maxErrorVerificationDays*24) + "h")
+		maxErrorHours := config.Scan.VerificationIntervals.MaxErrorDays * 24
+		lessThreeDays, _ := time.ParseDuration("-" + strconv.Itoa(maxErrorHours) + "h")
 
 		domain.Nameservers[index].LastCheckAt = time.Now().Add(lessThreeDays)
 		domain.Nameservers[index].LastStatus = model.NameserverStatusServerFailure
@@ -106,7 +108,7 @@ func domainWithDNSErrors(domainDAO dao.DomainDAO) {
 		fatalln("Error saving domain for scan scenario", err)
 	}
 
-	if domains := runScan(domainDAO); len(domains) != 1 {
+	if domains := runScan(config, domainDAO); len(domains) != 1 {
 		fatalln(fmt.Sprintf("Couldn't load a domain with DNS errors for scan. "+
 			"Expected 1 got %d", len(domains)), nil)
 	}
@@ -116,14 +118,14 @@ func domainWithDNSErrors(domainDAO dao.DomainDAO) {
 	}
 }
 
-func domainWithDNSSECErrors(domainDAO dao.DomainDAO) {
+func domainWithDNSSECErrors(config ScanInjectorTestConfigFile, domainDAO dao.DomainDAO) {
 	domain := newDomain()
 
 	// Set all DS records with error and the last check equal of the error check interval,
 	// this will force the domain to be checked
 	for index, _ := range domain.DSSet {
-		lessThreeDays, _ :=
-			time.ParseDuration("-" + strconv.Itoa(maxErrorVerificationDays*24) + "h")
+		maxErrorHours := config.Scan.VerificationIntervals.MaxErrorDays * 24
+		lessThreeDays, _ := time.ParseDuration("-" + strconv.Itoa(maxErrorHours) + "h")
 
 		domain.DSSet[index].LastCheckAt = time.Now().Add(lessThreeDays)
 		domain.DSSet[index].LastStatus = model.DSStatusTimeout
@@ -133,7 +135,7 @@ func domainWithDNSSECErrors(domainDAO dao.DomainDAO) {
 		fatalln("Error saving domain for scan scenario", err)
 	}
 
-	if domains := runScan(domainDAO); len(domains) != 1 {
+	if domains := runScan(config, domainDAO); len(domains) != 1 {
 		fatalln(fmt.Sprintf("Couldn't load a domain with DNSSEC errors for scan. "+
 			"Expected 1 got %d", len(domains)), nil)
 	}
@@ -143,7 +145,7 @@ func domainWithDNSSECErrors(domainDAO dao.DomainDAO) {
 	}
 }
 
-func domainWithNoErrors(domainDAO dao.DomainDAO) {
+func domainWithNoErrors(config ScanInjectorTestConfigFile, domainDAO dao.DomainDAO) {
 	domain := newDomain()
 
 	// Set all nameservers as configured correctly and the last check as now, this domain is
@@ -164,7 +166,7 @@ func domainWithNoErrors(domainDAO dao.DomainDAO) {
 		fatalln("Error saving domain for scan scenario", err)
 	}
 
-	if domains := runScan(domainDAO); len(domains) > 0 {
+	if domains := runScan(config, domainDAO); len(domains) > 0 {
 		fatalln(fmt.Sprintf("Selected a domain configured correctly for the scan. "+
 			"Expected 0 got %d", len(domains)), nil)
 	}
@@ -175,9 +177,14 @@ func domainWithNoErrors(domainDAO dao.DomainDAO) {
 }
 
 // Method responsable to configure and start scan injector for tests
-func runScan(domainDAO dao.DomainDAO) []*model.Domain {
-	scanInjector := scan.NewInjector(domainDAO.Database, domainsBufferSize,
-		maxOKVerificationDays, maxErrorVerificationDays, maxExpirationAlertDays)
+func runScan(config ScanInjectorTestConfigFile, domainDAO dao.DomainDAO) []*model.Domain {
+	scanInjector := scan.NewInjector(
+		domainDAO.Database,
+		config.Scan.DomainsBufferSize,
+		config.Scan.VerificationIntervals.MaxOKDays,
+		config.Scan.VerificationIntervals.MaxErrorDays,
+		config.Scan.VerificationIntervals.MaxExpirationAlertDays,
+	)
 
 	// Go routines group control created, but not used for this tests, as we are simulating
 	// a querier receiver
