@@ -37,6 +37,19 @@ type Config struct {
 		}
 	}
 
+	RESTServer struct {
+		TLS struct {
+			CertificatePath string
+			PrivateKeyPath  string
+		}
+
+		Listeners []struct {
+			IP   string
+			Port int
+			TLS  bool
+		}
+	}
+
 	Log struct {
 		BasePath     string
 		ScanFilename string
