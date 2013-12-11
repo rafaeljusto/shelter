@@ -12,14 +12,14 @@ const (
 	// Maximum number of timeouts in a host before we start setting every query from this
 	// host as timeout without checking it
 	maxTimeoutsPerHost = 500
-
-	// Maximum number of queries per second that a host will receive
-	maxQPSPerHost = uint64(500)
 )
 
 var (
 	// Global variable used by all queriers (go routines) to access the cache
 	querierCache QuerierCache
+
+	// Maximum number of queries per second that a host will receive
+	MaxQPSPerHost = uint64(500)
 
 	// Error to identify a nameserver that had too many timeouts and is probably down
 	HostTimeoutErr = errors.New("Nameserver down after too many timeouts detected")
@@ -53,7 +53,7 @@ func (h hostCache) timeoutsPerHostExceeded() bool {
 
 // Mehtod to check if the number of queries per second on this host was exceeded
 func (h hostCache) queriesPerSecondExceeded() bool {
-	return time.Now().Unix() == h.lastEpoch && h.queriesPerSecond > maxQPSPerHost
+	return time.Now().Unix() == h.lastEpoch && h.queriesPerSecond > MaxQPSPerHost
 }
 
 // QuerierCache was created to make the name resolution faster. Many domains use ISP the

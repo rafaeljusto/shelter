@@ -4,7 +4,7 @@ import (
 	"github.com/miekg/dns"
 	"net"
 	"shelter/model"
-	"shelter/scan/dnsutils"
+	"shelter/net/scan/dnsutils"
 	"strings"
 	"time"
 )

@@ -19,11 +19,18 @@ type QuerierDispatcher struct {
 	DialTimeout       time.Duration // Timeout while connecting to a server
 	ReadTimeout       time.Duration // Timeout while waiting for a response
 	WriteTimeout      time.Duration // Timeout to write a query to the DNS server
+	ConnectionRetries int           // Number of retries before setting timeout
 }
 
 // Return a new QuerierDispatcher object with the necessary fields for the scan filled
-func NewQuerierDispatcher(numberOfQueriers, domainsBufferSize int, udpMaxSize uint16,
-	dialTimeout, readTimeout, writeTimeout time.Duration) *QuerierDispatcher {
+func NewQuerierDispatcher(
+	numberOfQueriers,
+	domainsBufferSize int,
+	udpMaxSize uint16,
+	dialTimeout, readTimeout, writeTimeout time.Duration,
+	connectionRetries int,
+) *QuerierDispatcher {
+
 	return &QuerierDispatcher{
 		NumberOfQueriers:  numberOfQueriers,
 		DomainsBufferSize: domainsBufferSize,
@@ -31,6 +38,7 @@ func NewQuerierDispatcher(numberOfQueriers, domainsBufferSize int, udpMaxSize ui
 		DialTimeout:       dialTimeout,
 		ReadTimeout:       readTimeout,
 		WriteTimeout:      writeTimeout,
+		ConnectionRetries: connectionRetries,
 	}
 }
 
@@ -43,7 +51,7 @@ func (q *QuerierDispatcher) Start(scanGroup *sync.WaitGroup,
 
 	// Create the output channel used for each querier to add the result for the collector,
 	// the poison pill is the nil domain object
-	domainsToSave := make(chan *model.Domain, q.DomainsBufferSize)
+	domainsToSaveChannel := make(chan *model.Domain, q.DomainsBufferSize)
 
 	// Allocate the number of queriers
 	queriersChannels := make([]chan *model.Domain, q.NumberOfQueriers)
@@ -54,8 +62,15 @@ func (q *QuerierDispatcher) Start(scanGroup *sync.WaitGroup,
 
 	// Initialize each querier
 	for index, _ := range queriersChannels {
-		querier := newQuerier(q.UDPMaxSize, q.DialTimeout, q.ReadTimeout, q.WriteTimeout)
-		queriersChannels[index] = querier.start(&queriers, domainsToSave)
+		querier := newQuerier(
+			q.UDPMaxSize,
+			q.DialTimeout,
+			q.ReadTimeout,
+			q.WriteTimeout,
+			q.ConnectionRetries,
+		)
+
+		queriersChannels[index] = querier.start(&queriers, domainsToSaveChannel)
 	}
 
 	// Add one more to the group of scan go routines
@@ -79,7 +94,7 @@ func (q *QuerierDispatcher) Start(scanGroup *sync.WaitGroup,
 				queriers.Wait()
 
 				// Send the poison pill to the collector
-				domainsToSave <- nil
+				domainsToSaveChannel <- nil
 
 				scanGroup.Done()
 				return
@@ -99,5 +114,5 @@ func (q *QuerierDispatcher) Start(scanGroup *sync.WaitGroup,
 		}
 	}()
 
-	return domainsToSave
+	return domainsToSaveChannel
 }

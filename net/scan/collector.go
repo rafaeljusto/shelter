@@ -30,7 +30,7 @@ func NewCollector(database *mgo.Database, saveAtOnce int) *Collector {
 // was created to be asynchronous and finish after receiving a poison pill from querier
 // dispatcher
 func (c *Collector) Start(scanGroup *sync.WaitGroup,
-	domainsToSave chan *model.Domain, errorsChannel chan error) {
+	domainsToSaveChannel chan *model.Domain, errorsChannel chan error) {
 
 	// Add one more to the group of scan go routines
 	scanGroup.Add(1)
@@ -51,7 +51,7 @@ func (c *Collector) Start(scanGroup *sync.WaitGroup,
 
 			var domains []*model.Domain
 			for i := 0; i < c.SaveAtOnce; i++ {
-				domain := <-domainsToSave
+				domain := <-domainsToSaveChannel
 
 				// Detect poison pill. We don't return from function here because we can still
 				// have some domains to save in the domains array

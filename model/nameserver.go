@@ -55,3 +55,33 @@ func (n *Nameserver) ChangeStatus(status NameserverStatus) {
 		n.LastOKAt = n.LastCheckAt
 	}
 }
+
+// Convert the nameserver status enum to text for printing in reports or debugging
+func NameserverStatusToString(status NameserverStatus) string {
+	switch status {
+	case NameserverStatusOK:
+		return "OK"
+	case NameserverStatusTimeout:
+		return "TIMEOUT"
+	case NameserverStatusNoAuthority:
+		return "NOAA"
+	case NameserverStatusUnknownDomainName:
+		return "UDN"
+	case NameserverStatusUnknownHost:
+		return "UH"
+	case NameserverStatusServerFailure:
+		return "SERVFAIL"
+	case NameserverStatusQueryRefused:
+		return "QREFUSED"
+	case NameserverStatusConnectionRefused:
+		return "CREFUSED"
+	case NameserverStatusCanonicalName:
+		return "CNAME"
+	case NameserverStatusNotSynchronized:
+		return "NOTSYNCH"
+	case NameserverStatusError:
+		return "ERROR"
+	}
+
+	return ""
+}
