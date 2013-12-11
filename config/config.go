@@ -22,6 +22,7 @@ type Config struct {
 		ErrorsBufferSize  int
 		UDPMaxSize        uint16
 		SaveAtOnce        int
+		ConnectionRetries int
 
 		Timeouts struct {
 			DialSeconds  time.Duration

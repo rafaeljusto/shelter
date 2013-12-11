@@ -2,6 +2,7 @@ package scan
 
 import (
 	"github.com/miekg/dns"
+	"net"
 	"shelter/model"
 	"shelter/net/scan/dspolicy"
 	"shelter/net/scan/nspolicy"
@@ -14,6 +15,14 @@ const (
 	querierDomainsQueueSize = 10 // Number of domains that can wait in the querier channel
 )
 
+const (
+	QuerierResultContinue = iota
+	QuerierResultStop
+	QuerierResultDontSave
+)
+
+type QuerierResult int
+
 var (
 	// DNS query port. It's not a constant because in test scenarios we change the DNS port
 	// to one that don't need root privilleges
@@ -25,13 +34,14 @@ var (
 // queries to notify the maximum UDP package size supported in the network. This object is
 // private for this package and should only be accessed by the querier dispatcher
 type querier struct {
-	client     dns.Client // Low level DNS client for network checks
-	UDPMaxSize uint16     // UDP max package size to pass over firewalls
+	client            dns.Client // Low level DNS client for network checks
+	UDPMaxSize        uint16     // UDP max package size to pass over firewalls
+	ConnectionRetries int        // Number of retries before setting timeout
 }
 
 // Return a new Querier object with the necessary fields for the scan filled
 func newQuerier(udpMaxSize uint16, dialTimeout, readTimeout,
-	writeTimeout time.Duration) *querier {
+	writeTimeout time.Duration, connectionRetries int) *querier {
 
 	return &querier{
 		client: dns.Client{
@@ -39,8 +49,16 @@ func newQuerier(udpMaxSize uint16, dialTimeout, readTimeout,
 			ReadTimeout:  readTimeout,
 			WriteTimeout: writeTimeout,
 		},
-		UDPMaxSize: udpMaxSize,
+		UDPMaxSize:        udpMaxSize,
+		ConnectionRetries: connectionRetries,
 	}
+}
+
+// Structure to store domains that will be postponed because of to many queries sent to
+// onbly one host
+type postponedDomain struct {
+	domain *model.Domain // Domain postponed
+	index  int           // Host index that exceeded QPS
 }
 
 // Fire a querier that will process domains sent via channel until receives a poison pill
@@ -59,31 +77,74 @@ func (q *querier) start(queriers *sync.WaitGroup,
 	queriers.Add(1)
 
 	go func() {
+		var postponedDomains []postponedDomain
+
 		for {
 			// Retrieve the domain from the channel
 			domain := <-querierChannel
 
 			// Detect the poison pill from the dispatcher
 			if domain == nil {
+
+				// Check domains that were postponed due to QPS limits for the nameservers. We
+				// don't use the foreach feature beacause, according to tests, we cannot push a
+				// new value into the slice while we iterate over it
+				for i := 0; i < len(postponedDomains); i++ {
+					postponed := postponedDomains[i]
+
+					// We also send the list to the method so it can postpone the domain again and
+					// again and again...
+					querierResult := q.checkPostponedDomains(postponedDomains, postponed)
+
+					if querierResult != QuerierResultDontSave {
+						domainsToSaveChannel <- postponed.domain
+					}
+				}
+
 				// Tell everyone that we are done!
 				queriers.Done()
 				return
 			}
 
-			q.checkNameserver(domain)
-			q.checkDS(domain, q.UDPMaxSize)
+			querierResult := q.checkDomain(domain, postponedDomains)
 
 			// Send to collector the domain with the new state
-			domainsToSaveChannel <- domain
+			if querierResult != QuerierResultDontSave {
+				domainsToSaveChannel <- domain
+			}
 		}
 	}()
 
 	return querierChannel
 }
 
+// Main function to check a domain DNS/DNSSEC configuration
+func (q *querier) checkDomain(domain *model.Domain,
+	postponedDomains []postponedDomain) QuerierResult {
+
+	var querierResult QuerierResult
+
+	for index, _ := range domain.Nameservers {
+		querierResult = q.checkNameserver(domain, index, postponedDomains)
+		if querierResult != QuerierResultContinue {
+			break
+		}
+
+		querierResult = q.checkDS(domain, index, q.UDPMaxSize, postponedDomains)
+		if querierResult != QuerierResultContinue {
+			break
+		}
+	}
+
+	return querierResult
+}
+
 // Verify the DNS configuration on the nameservers. This method will send a SOA request
 // for each nameserver and verify the results
-func (q *querier) checkNameserver(domain *model.Domain) {
+func (q *querier) checkNameserver(domain *model.Domain,
+	index int, postponedDomains []postponedDomain) QuerierResult {
+
+	nameserver := domain.Nameservers[index]
 	domainNSPolicy := nspolicy.NewDomainNSPolicy(domain)
 
 	// Build message to send the request
@@ -91,45 +152,51 @@ func (q *querier) checkNameserver(domain *model.Domain) {
 	dnsRequestMessage.SetQuestion(domain.FQDN, dns.TypeSOA)
 	dnsRequestMessage.RecursionDesired = false
 
-	for index, nameserver := range domain.Nameservers {
-		host, err := getHost(domain.FQDN, nameserver)
-		if err == HostTimeoutErr {
-			domain.Nameservers[index].ChangeStatus(model.NameserverStatusTimeout)
-			continue
+	host, err := getHost(domain.FQDN, nameserver)
+	if err == HostTimeoutErr {
+		domain.Nameservers[index].ChangeStatus(model.NameserverStatusTimeout)
+		return QuerierResultContinue
 
-		} else if err == HostQPSExceededErr {
-			// TODO: How are we going to postpone a host query?
-			continue
-		}
-
-		// For now we ignore the RTT, in the future we can use this for some report
-		dnsResponseMessage, _, err := q.client.Exchange(&dnsRequestMessage, host)
-		querierCache.Query(nameserver.Host)
-
-		if status := domainNSPolicy.CheckNetworkError(err); status != model.NameserverStatusOK {
-			if status == model.NameserverStatusTimeout {
-				querierCache.Timeout(nameserver.Host)
-			}
-
-			domain.Nameservers[index].ChangeStatus(status)
-
-		} else {
-			domain.Nameservers[index].ChangeStatus(domainNSPolicy.Run(dnsResponseMessage))
-		}
+	} else if err == HostQPSExceededErr {
+		postponedDomains = append(postponedDomains, postponedDomain{
+			domain: domain,
+			index:  index,
+		})
+		return QuerierResultDontSave
 	}
+
+	// For now we ignore the RTT, in the future we can use this for some report
+	dnsResponseMessage, _, err := q.client.Exchange(&dnsRequestMessage, host)
+	querierCache.Query(nameserver.Host)
+
+	if status := domainNSPolicy.CheckNetworkError(err); status != model.NameserverStatusOK {
+		if status == model.NameserverStatusTimeout {
+			querierCache.Timeout(nameserver.Host)
+		}
+
+		domain.Nameservers[index].ChangeStatus(status)
+
+	} else {
+		domain.Nameservers[index].ChangeStatus(domainNSPolicy.Run(dnsResponseMessage))
+	}
+
+	return QuerierResultContinue
 }
 
 // Check the DS with the domain DNSSEC keys and signatures. You need also to inform the
 // UDP max package size supported to pass into firewalls. Many firewalls don't allow
 // fragmented UDP packages or UDP packages bigger than 512 bytes
-func (q *querier) checkDS(domain *model.Domain, udpMaxSize uint16) {
+func (q *querier) checkDS(domain *model.Domain, index int, udpMaxSize uint16,
+	postponedDomains []postponedDomain) QuerierResult {
+
 	// Check if the domain has DNSSEC, this system will work with both kinds of domain. So
 	// when the domain don't have any DS record we assume that it does not have DNSSEC
 	// configured and check only the DNS configuration
 	if len(domain.DSSet) == 0 {
-		return
+		return QuerierResultContinue
 	}
 
+	nameserver := domain.Nameservers[index]
 	domainDSPolicy := dspolicy.NewDomainDSPolicy(domain)
 
 	// We are going to request the DNSSEC keys to validate with the DS information that we
@@ -139,27 +206,76 @@ func (q *querier) checkDS(domain *model.Domain, udpMaxSize uint16) {
 	dnsRequestMessage.RecursionDesired = false
 	dnsRequestMessage.SetEdns0(udpMaxSize, true)
 
-	for _, nameserver := range domain.Nameservers {
-		host, err := getHost(domain.FQDN, nameserver)
-		if err == HostTimeoutErr {
-			for index, _ := range domain.DSSet {
-				domain.DSSet[index].ChangeStatus(model.DSStatusTimeout)
-			}
-			continue
-
-		} else if err == HostQPSExceededErr {
-			// TODO: How are we going to postpone a host query?
-			continue
+	host, err := getHost(domain.FQDN, nameserver)
+	if err == HostTimeoutErr {
+		for index, _ := range domain.DSSet {
+			domain.DSSet[index].ChangeStatus(model.DSStatusTimeout)
 		}
+		return QuerierResultStop
 
+	} else if err == HostQPSExceededErr {
+		postponedDomains = append(postponedDomains, postponedDomain{
+			domain: domain,
+			index:  index,
+		})
+		return QuerierResultDontSave
+	}
+
+	// For now we ignore the RTT, in the future we can use this for some report
+	dnsResponseMessage, _, err := q.client.Exchange(&dnsRequestMessage, host)
+	querierCache.Query(nameserver.Host)
+
+	if !domainDSPolicy.CheckNetworkError(err) || !domainDSPolicy.Run(dnsResponseMessage) {
+		return QuerierResultStop
+	}
+
+	return QuerierResultContinue
+}
+
+// Try to check the postponed domains. Maybe we should have some protection here
+// to avoid an almost forever loop when we have a lot of domains with the same
+// nameserver
+func (q *querier) checkPostponedDomains(postponedDomains []postponedDomain,
+	postponed postponedDomain) QuerierResult {
+
+	// We only need to check one nameserver that exceeded the QPS, so we are
+	// directly calling the checkNameserver method instead of the checkDomain method
+	querierResult := q.checkNameserver(
+		postponed.domain,
+		postponed.index,
+		postponedDomains,
+	)
+
+	// If there's any error occurs in nameserver check we don't need to check the DS
+	// set for the same nameserver
+	if querierResult == QuerierResultContinue {
+		querierResult = q.checkDS(
+			postponed.domain,
+			postponed.index,
+			q.UDPMaxSize,
+			postponedDomains,
+		)
+	}
+
+	return querierResult
+}
+
+func (q *querier) sendDNSRequest(host string, dnsRequestMessage *dns.Msg) (dnsResponseMessage *dns.Msg, err error) {
+
+	for i := 0; i < q.ConnectionRetries; i++ {
 		// For now we ignore the RTT, in the future we can use this for some report
-		dnsResponseMessage, _, err := q.client.Exchange(&dnsRequestMessage, host)
-		querierCache.Query(nameserver.Host)
+		dnsResponseMessage, _, err = q.client.Exchange(dnsRequestMessage, host)
 
-		if !domainDSPolicy.CheckNetworkError(err) || !domainDSPolicy.Run(dnsResponseMessage) {
+		// Check if there was a timeout in the connection, if so try again a couple of times
+		// just to make it sure that we didn't lose any UDP package
+		if err == nil {
+			break
+		} else if netErr, ok := err.(net.Error); !ok || !netErr.Timeout() {
 			break
 		}
 	}
+
+	return
 }
 
 // Useful function to retrieve the proper host and port to send the request. The host can

@@ -54,6 +54,7 @@ func ScanDomains() {
 		config.ShelterConfig.Scan.Timeouts.DialSeconds*time.Second,
 		config.ShelterConfig.Scan.Timeouts.ReadSeconds*time.Second,
 		config.ShelterConfig.Scan.Timeouts.WriteSeconds*time.Second,
+		config.ShelterConfig.Scan.ConnectionRetries,
 	)
 
 	collector := scan.NewCollector(

@@ -19,11 +19,18 @@ type QuerierDispatcher struct {
 	DialTimeout       time.Duration // Timeout while connecting to a server
 	ReadTimeout       time.Duration // Timeout while waiting for a response
 	WriteTimeout      time.Duration // Timeout to write a query to the DNS server
+	ConnectionRetries int           // Number of retries before setting timeout
 }
 
 // Return a new QuerierDispatcher object with the necessary fields for the scan filled
-func NewQuerierDispatcher(numberOfQueriers, domainsBufferSize int, udpMaxSize uint16,
-	dialTimeout, readTimeout, writeTimeout time.Duration) *QuerierDispatcher {
+func NewQuerierDispatcher(
+	numberOfQueriers,
+	domainsBufferSize int,
+	udpMaxSize uint16,
+	dialTimeout, readTimeout, writeTimeout time.Duration,
+	connectionRetries int,
+) *QuerierDispatcher {
+
 	return &QuerierDispatcher{
 		NumberOfQueriers:  numberOfQueriers,
 		DomainsBufferSize: domainsBufferSize,
@@ -31,6 +38,7 @@ func NewQuerierDispatcher(numberOfQueriers, domainsBufferSize int, udpMaxSize ui
 		DialTimeout:       dialTimeout,
 		ReadTimeout:       readTimeout,
 		WriteTimeout:      writeTimeout,
+		ConnectionRetries: connectionRetries,
 	}
 }
 
@@ -54,7 +62,14 @@ func (q *QuerierDispatcher) Start(scanGroup *sync.WaitGroup,
 
 	// Initialize each querier
 	for index, _ := range queriersChannels {
-		querier := newQuerier(q.UDPMaxSize, q.DialTimeout, q.ReadTimeout, q.WriteTimeout)
+		querier := newQuerier(
+			q.UDPMaxSize,
+			q.DialTimeout,
+			q.ReadTimeout,
+			q.WriteTimeout,
+			q.ConnectionRetries,
+		)
+
 		queriersChannels[index] = querier.start(&queriers, domainsToSaveChannel)
 	}
 

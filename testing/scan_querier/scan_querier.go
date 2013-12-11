@@ -58,6 +58,7 @@ type ScanQuerierTestConfigFile struct {
 		NumberOfQueriers  int    // Number of concurrently queriers
 		DomainsBufferSize int    // Size of the channel
 		UDPMaxSize        uint16 // UDP max package size for firewall problems
+		ConnectionRetries int    // Number of retries before setting timeout
 
 		Timeouts struct {
 			DialSeconds  time.Duration
@@ -532,6 +533,7 @@ func runScan(config ScanQuerierTestConfigFile,
 		dialTimeout,
 		readTimeout,
 		writeTimeout,
+		config.Scan.ConnectionRetries,
 	)
 
 	// Go routines group control created, but not used for this tests, as we are simulating
