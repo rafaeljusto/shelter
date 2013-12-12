@@ -64,4 +64,9 @@ func TestFilterFirstRR(t *testing.T) {
 	} else if dnskey.Header().Name != "teste1.com.br." {
 		t.Error("Not returning the first RR of the given type")
 	}
+
+	filteredRR = FilterFirstRR(rrs, dns.TypeNS)
+	if filteredRR != nil {
+		t.Error("Found a RR that shouldn't exist")
+	}
 }

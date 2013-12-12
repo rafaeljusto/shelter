@@ -26,7 +26,7 @@ func (e myErr) Temporary() bool {
 	return true
 }
 
-func TestNSNetworkError(t *testing.T) {
+func TestDSNetworkError(t *testing.T) {
 	domain := &model.Domain{
 		DSSet: []model.DS{
 			{
@@ -34,11 +34,17 @@ func TestNSNetworkError(t *testing.T) {
 				Algorithm:  model.DSAlgorithmRSASHA1,
 				DigestType: model.DSDigestTypeSHA1,
 				Digest:     "56064EE6A01A9BAB7F347934D10E6AD9A4FD6DD0",
+				LastStatus: model.DSStatusOK,
 			},
 		},
 	}
 
 	domainDSPolicy := NewDomainDSPolicy(domain)
+
+	if !domainDSPolicy.CheckNetworkError(nil) ||
+		domain.DSSet[0].LastStatus != model.DSStatusOK {
+		t.Error("Not detecting DNSSEC network without problem")
+	}
 
 	err := myErr{
 		timeout: true,
