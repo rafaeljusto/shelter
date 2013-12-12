@@ -38,6 +38,8 @@ type Config struct {
 	}
 
 	RESTServer struct {
+		LanguageConfigPath string
+
 		TLS struct {
 			CertificatePath string
 			PrivateKeyPath  string

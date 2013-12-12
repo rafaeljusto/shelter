@@ -5,10 +5,15 @@ import (
 	"net"
 	"net/http"
 	"shelter/config"
+	"shelter/net/http/rest/language"
 	"strconv"
 )
 
 func Start() error {
+	if err := language.LoadConfig(config.ShelterConfig.RESTServer.LanguageConfigPath); err != nil {
+		return err
+	}
+
 	listeners := make([]net.Listener, 0, len(config.ShelterConfig.RESTServer.Listeners))
 
 	for _, v := range config.ShelterConfig.RESTServer.Listeners {
@@ -43,7 +48,7 @@ func Start() error {
 	}
 
 	for _, v := range listeners {
-		go http.Serve(v, nil)
+		go http.Serve(v, mux)
 	}
 
 	return nil
