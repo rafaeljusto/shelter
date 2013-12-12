@@ -6,6 +6,7 @@ import (
 	"labix.org/v2/mgo/bson"
 	"shelter/database/mongodb"
 	"shelter/model"
+	"time"
 )
 
 // List of possible errors that can occur in this DAO. There can be also other errors from
@@ -51,10 +52,17 @@ func (dao DomainDAO) Save(domain *model.Domain) error {
 	}
 
 	// When creating a new domain object, the id will be probably nil (or kind of new
-	// according to bson.ObjectId), so we musr initialize it
+	// according to bson.ObjectId), so we must initialize it
 	if len(domain.Id.Hex()) == 0 {
 		domain.Id = bson.NewObjectId()
 	}
+
+	// Every time we modified a domain object we increase the revision counter to identify
+	// changes in high level structures
+	domain.Revision += 1
+
+	// Store the last time that the object was modified
+	domain.LastModifiedAt = time.Now().UTC()
 
 	// Upsert try to update the collection entry if exists, if not, it creates a new
 	// entry. For all the domain objects we are going to use the collection "domain"

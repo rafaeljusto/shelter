@@ -15,7 +15,7 @@ var (
 )
 
 // Create this type to make it easy to reference a Shelter REST server handler
-type shelterRESTHandler func(http.ResponseWriter, *http.Request, *ShelterRESTContext)
+type shelterRESTHandler func(*http.Request, *ShelterRESTContext)
 
 // shelterRESTMux is responsable for storing all routes. Beyond of searching the best
 // route for each request, the mux will do all initial HTTP checks before calling the
@@ -77,7 +77,12 @@ func (mux shelterRESTMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	context := newShelterRESTContext()
+	context, err := newShelterRESTContext()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		// TODO: Log!
+		return
+	}
 
 	// We first check the language header, because if it's acceptable the next messages are
 	// going to be returned in the language choosen by the user
@@ -104,7 +109,7 @@ func (mux shelterRESTMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	//   Content-Type
 	//   Authorization
 
-	selectedHandler(w, r, &context)
+	selectedHandler(r, &context)
 
 	if len(context.responseMessage) > 0 {
 		w.Header().Add("Content-Type", "application/vnd.shelter+json")
@@ -121,6 +126,10 @@ func (mux shelterRESTMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Accept-Language", language.ShelterRESTLanguagePacks.Names())
 	w.Header().Add("Accept-Charset", "utf-8")
 	w.Header().Add("Date", time.Now().UTC().Format(time.RFC1123))
+
+	for key, value := range context.httpHeader {
+		w.Header().Add(key, value)
+	}
 
 	w.WriteHeader(context.responseHttpStatus)
 
