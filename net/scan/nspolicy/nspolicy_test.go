@@ -68,6 +68,56 @@ func TestNSNetworkError(t *testing.T) {
 	}
 }
 
+func TestRunPolicies(t *testing.T) {
+	domain := &model.Domain{
+		FQDN: "test.com.br",
+	}
+
+	domainNSPolicy := NewDomainNSPolicy(domain)
+
+	if domainNSPolicy.Run(nil) != model.NameserverStatusError {
+		t.Error("Allowed an empty message in nameserver policies")
+	}
+
+	dnsResponseMessage := &dns.Msg{
+		MsgHdr: dns.MsgHdr{
+			Authoritative: true,
+			Rcode:         dns.RcodeSuccess,
+		},
+		Answer: []dns.RR{
+			&dns.SOA{
+				Hdr: dns.RR_Header{
+					Name:   "test.com.br",
+					Rrtype: dns.TypeSOA,
+				},
+			},
+		},
+	}
+
+	if domainNSPolicy.Run(dnsResponseMessage) != model.NameserverStatusOK {
+		t.Error("Not running NS policies and checking a valid nameserver")
+	}
+
+	dnsResponseMessage = &dns.Msg{
+		MsgHdr: dns.MsgHdr{
+			Authoritative: false,
+			Rcode:         dns.RcodeSuccess,
+		},
+		Answer: []dns.RR{
+			&dns.SOA{
+				Hdr: dns.RR_Header{
+					Name:   "test.com.br",
+					Rrtype: dns.TypeSOA,
+				},
+			},
+		},
+	}
+
+	if domainNSPolicy.Run(dnsResponseMessage) == model.NameserverStatusOK {
+		t.Error("Not running all nameserver policies and not exiting when a invalid policy is detected")
+	}
+}
+
 func TestCNAMEPolicy(t *testing.T) {
 	domain := &model.Domain{
 		FQDN: "test.com.br",

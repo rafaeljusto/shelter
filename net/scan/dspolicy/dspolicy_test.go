@@ -66,6 +66,61 @@ func TestDSNetworkError(t *testing.T) {
 	}
 }
 
+func TestRunPolicies(t *testing.T) {
+	dnskey, rrsig, err := utils.GenerateKeyAndSignZone("test.br.")
+	if err != nil {
+		t.Fatal(err)
+	}
+	ds := dnskey.ToDS(int(model.DSDigestTypeSHA1))
+
+	domain := &model.Domain{
+		DSSet: []model.DS{
+			{
+				Keytag:     dnskey.KeyTag(),
+				Algorithm:  utils.ConvertKeyAlgorithm(dnskey.Algorithm),
+				DigestType: model.DSDigestTypeSHA1,
+				Digest:     ds.Digest,
+			},
+		},
+	}
+
+	domainDSPolicy := NewDomainDSPolicy(domain)
+
+	if domainDSPolicy.Run(nil) {
+		t.Error("Allowed an empty message in DS policies")
+	}
+
+	dnsResponseMessage := &dns.Msg{
+		MsgHdr: dns.MsgHdr{
+			Rcode:         dns.RcodeSuccess,
+			Authoritative: true,
+		},
+		Answer: []dns.RR{
+			dnskey,
+			rrsig,
+		},
+	}
+
+	if !domainDSPolicy.Run(dnsResponseMessage) {
+		t.Error("Not running DS policies and checking a valid DS")
+	}
+
+	dnsResponseMessage = &dns.Msg{
+		MsgHdr: dns.MsgHdr{
+			Rcode:         dns.RcodeSuccess,
+			Authoritative: false,
+		},
+		Answer: []dns.RR{
+			dnskey,
+			rrsig,
+		},
+	}
+
+	if domainDSPolicy.Run(dnsResponseMessage) {
+		t.Error("Not running all DS policies and not exiting when a invalid policy is detected")
+	}
+}
+
 func TestDNSHeaderPolicy(t *testing.T) {
 	domain := &model.Domain{
 		DSSet: []model.DS{
@@ -166,6 +221,11 @@ func TestDNSSECPolicyMissingKey(t *testing.T) {
 	}
 	ds := dnskey.ToDS(int(model.DSDigestTypeSHA1))
 
+	otherDNSKEY, otherRRSIG, err := utils.GenerateKeyAndSignZone("test.br.")
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	domain := &model.Domain{
 		DSSet: []model.DS{
 			{
@@ -180,7 +240,10 @@ func TestDNSSECPolicyMissingKey(t *testing.T) {
 	domainDSPolicy := NewDomainDSPolicy(domain)
 
 	dnsResponseMessage := &dns.Msg{
-		Answer: []dns.RR{},
+		Answer: []dns.RR{
+			otherDNSKEY,
+			otherRRSIG,
+		},
 	}
 
 	if domainDSPolicy.dnssecPolicy(dnsResponseMessage) ||
@@ -230,6 +293,11 @@ func TestDNSSECPolicyMissingSignature(t *testing.T) {
 	}
 	ds := dnskey.ToDS(int(model.DSDigestTypeSHA1))
 
+	otherDNSKEY, otherRRSIG, err := utils.GenerateKeyAndSignZone("test.br.")
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	domain := &model.Domain{
 		DSSet: []model.DS{
 			{
@@ -245,6 +313,8 @@ func TestDNSSECPolicyMissingSignature(t *testing.T) {
 
 	dnsResponseMessage := &dns.Msg{
 		Answer: []dns.RR{
+			otherDNSKEY,
+			otherRRSIG,
 			dnskey,
 		},
 	}
@@ -354,5 +424,73 @@ func TestDNSSECPolicyWrongDSDigest(t *testing.T) {
 	if domainDSPolicy.dnssecPolicy(dnsResponseMessage) ||
 		domain.DSSet[0].LastStatus != model.DSStatusNoKey {
 		t.Error("Not detecting DS digest inconsistency")
+	}
+}
+
+func TestSelectDNSKEY(t *testing.T) {
+	dnskey, rrsig, err := utils.GenerateKeyAndSignZone("test.br.")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	otherDNSKEY, otherRRSIG, err := utils.GenerateKeyAndSignZone("test.br.")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	domainDSPolicy := NewDomainDSPolicy(new(model.Domain))
+
+	dnskeys := []dns.RR{
+		rrsig,
+		dnskey,
+		otherDNSKEY,
+	}
+
+	if domainDSPolicy.selectDNSKEY(dnskeys, dnskey.KeyTag()) == nil {
+		t.Error("Not selecting a DNSKEY that exists")
+	}
+
+	dnskeys = []dns.RR{
+		rrsig,
+		otherDNSKEY,
+		otherRRSIG,
+	}
+
+	if domainDSPolicy.selectDNSKEY(dnskeys, dnskey.KeyTag()) != nil {
+		t.Error("Selecting a DNSKEY that don't exists")
+	}
+}
+
+func TestSelectRRSIG(t *testing.T) {
+	dnskey, rrsig, err := utils.GenerateKeyAndSignZone("test.br.")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	otherDNSKEY, otherRRSIG, err := utils.GenerateKeyAndSignZone("test.br.")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	domainDSPolicy := NewDomainDSPolicy(new(model.Domain))
+
+	rrsigs := []dns.RR{
+		dnskey,
+		rrsig,
+		otherDNSKEY,
+	}
+
+	if domainDSPolicy.selectRRSIG(rrsigs, dnskey.KeyTag()) == nil {
+		t.Error("Not selecting a RRSIG that exists")
+	}
+
+	rrsigs = []dns.RR{
+		dnskey,
+		otherDNSKEY,
+		otherRRSIG,
+	}
+
+	if domainDSPolicy.selectRRSIG(rrsigs, dnskey.KeyTag()) != nil {
+		t.Error("Selecting a RRSIG that don't exists")
 	}
 }
