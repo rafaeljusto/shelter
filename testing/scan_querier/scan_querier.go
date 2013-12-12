@@ -167,8 +167,6 @@ func domainWithNoDNSErrors(config ScanQuerierTestConfigFile) {
 			utils.Fatalln("Error checking a well configured DNS domain", nil)
 		}
 	}
-
-	dns.HandleRemove("br.")
 }
 
 func domainWithNoDNSSECErrors(config ScanQuerierTestConfigFile) {
@@ -256,8 +254,6 @@ func domainWithNoDNSSECErrors(config ScanQuerierTestConfigFile) {
 			utils.Fatalln("Error checking a well configured DNSSEC domain", nil)
 		}
 	}
-
-	dns.HandleRemove("br.")
 }
 
 func domainDNSTimeout(config ScanQuerierTestConfigFile) {

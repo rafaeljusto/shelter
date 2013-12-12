@@ -3,7 +3,10 @@ package rest
 import (
 	"crypto/md5"
 	"fmt"
+	"log"
 	"net/http"
+	"os"
+	"shelter/config"
 	"shelter/net/http/rest/language"
 	"strings"
 	"time"
@@ -22,6 +25,7 @@ type shelterRESTHandler func(*http.Request, *ShelterRESTContext)
 // handler
 type shelterRESTMux struct {
 	routes map[string]shelterRESTHandler // Map of all available routes
+	logger *log.Logger                   // REST server log
 }
 
 // Function created only to register the handlers more easily in the mux
@@ -29,39 +33,52 @@ func HandleFunc(route string, handler shelterRESTHandler) {
 	mux.routes[route] = handler
 }
 
-// Supported HTTP headers in request:
-//   Method
-//   Date
-//   Content-type
-//   Content-Length
-//   Content-MD5
-//   Accept
-//   Accept-Charset
-//   Accept-Language
-//   Authorization
-//   If-Modified-Since
-//   If-Match
-//   If-None-Match
-
-// Supported HTTP headers in response:
-//   Content-Encoding
-//   Content-Language
-//   Content-Length
-//   Content-MD5
-//   Content-Type
-//   Date
-//   ETag
-//   Last-Modified
-//   Status
-//   Accept-Language
-//   Accept
-
+// Main function of the REST server
 func (mux shelterRESTMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	handler := mux.findRoute(r.URL.Path)
+	if handler == nil {
+		w.WriteHeader(http.StatusServiceUnavailable)
+		return
+	}
+
+	context, err := newShelterRESTContext()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		mux.logger.Println("Error creating context. Details:", err)
+		return
+	}
+
+	if !mux.checkHTTPHeaders(w, r, &context) {
+		return
+	}
+
+	handler(r, &context)
+	mux.writeResponse(w, context)
+}
+
+// Open REST server log file to print errors that can occur while managing the requests
+func (mux *shelterRESTMux) initializeLogger() {
+	restLogPath := fmt.Sprintf("%s/%s",
+		config.ShelterConfig.Log.BasePath,
+		config.ShelterConfig.Log.RESTFilename,
+	)
+
+	restLog, err := os.Create(restLogPath)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	mux.logger = log.New(restLog, "", log.LstdFlags)
+}
+
+// Find the best handler for the given URI. The best handler is the most specific one
+func (mux shelterRESTMux) findRoute(uri string) shelterRESTHandler {
 	var selectedRoute string
 	var selectedHandler shelterRESTHandler
 
 	for route, handler := range mux.routes {
-		if !strings.HasPrefix(r.URL.Path, route) {
+		if !strings.HasPrefix(uri, route) {
 			continue
 		}
 
@@ -72,36 +89,31 @@ func (mux shelterRESTMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if len(selectedRoute) == 0 {
-		w.WriteHeader(http.StatusServiceUnavailable)
-		return
-	}
+	return selectedHandler
+}
 
-	context, err := newShelterRESTContext()
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		// TODO: Log!
-		return
-	}
+// Verify HTTP headers and fill context with user preferences
+func (mux shelterRESTMux) checkHTTPHeaders(w http.ResponseWriter,
+	r *http.Request, context *ShelterRESTContext) bool {
 
 	// We first check the language header, because if it's acceptable the next messages are
 	// going to be returned in the language choosen by the user
-	if !checkHTTPAcceptLanguage(r, &context) {
+	if !checkHTTPAcceptLanguage(r, context) {
 		w.WriteHeader(http.StatusNotAcceptable)
 		fmt.Fprintf(w, context.Language.Messages["accept-language-error"])
-		return
+		return false
 	}
 
 	if !checkHTTPAccept(r) {
 		w.WriteHeader(http.StatusNotAcceptable)
 		fmt.Fprintf(w, context.Language.Messages["accept-error"])
-		return
+		return false
 	}
 
 	if !checkHTTPAcceptCharset(r) {
 		w.WriteHeader(http.StatusNotAcceptable)
 		fmt.Fprintf(w, context.Language.Messages["accept-charset-error"])
-		return
+		return false
 	}
 
 	// TODO Check:
@@ -109,8 +121,11 @@ func (mux shelterRESTMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	//   Content-Type
 	//   Authorization
 
-	selectedHandler(r, &context)
+	return true
+}
 
+// Write response with the defaults HTTP response headers
+func (mux shelterRESTMux) writeResponse(w http.ResponseWriter, context ShelterRESTContext) {
 	if len(context.responseMessage) > 0 {
 		w.Header().Add("Content-Type", "application/vnd.shelter+json")
 		w.Header().Add("Content-Encoding", "utf-8")

@@ -47,6 +47,10 @@ func Start() error {
 
 	}
 
+	// We need a better solution to initialize the REST server log, because if we forget to
+	// call this method the logger will be nil and on error the main method would panic
+	mux.initializeLogger()
+
 	for _, v := range listeners {
 		go http.Serve(v, mux)
 	}

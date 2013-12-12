@@ -73,7 +73,6 @@ func main() {
 	domainLifeCycle(domainDAO)
 	domainsLifeCycle(domainDAO)
 	domainUniqueFQDN(domainDAO)
-	domainDAOPerformance(domainDAO)
 
 	// Domain DAO performance report is optional and only generated when the report file
 	// path parameter is given
@@ -272,31 +271,11 @@ func domainUniqueFQDN(domainDAO dao.DomainDAO) {
 	}
 }
 
-// Check if the DAO operations are optimezed for big volume of data. After some results,
-// with indexes we get 80% better performance, another good improvements was to create and
-// remove many objects at once using go routines
-func domainDAOPerformance(domainDAO dao.DomainDAO) {
-	numberOfItems := 40000
-	durationTolerance := 5.0 // seconds
-
-	totalDuration, insertDuration, queryDuration, removeDuration :=
-		calculateDomainDAODurations(domainDAO, numberOfItems)
-
-	if totalDuration.Seconds() > durationTolerance {
-		utils.Fatalln(fmt.Sprintf("Domain DAO operations are too slow (total: %s, insert: %s, query: %s, remove: %s)",
-			totalDuration.String(), insertDuration.String(), queryDuration.String(), removeDuration.String()), nil)
-	} else {
-		// For now we are not printing the results to make a claner output when everything is
-		// fine. For getting the time marks of domain dao you can use the argument -report
-		//
-		//utils.Println(fmt.Sprintf("Domain DAO operations took %s (insert: %s, query: %s, remove: %s)",
-		//	totalDuration.String(), insertDuration.String(), queryDuration.String(), removeDuration.String()))
-	}
-}
-
 // Generates a report with the amount of time for each operation in the domain DAO. For
 // more realistic values it does the same operation for the same amount of data X number
-// of times to get the average time of the operation
+// of times to get the average time of the operation. After some results, with indexes we
+// get 80% better performance, another good improvements was to create and remove many
+// objects at once using go routines
 func domainDAOPerformanceReport(reportFile string, domainDAO dao.DomainDAO) {
 	// Report header
 	report := " #       | Total            | Insert           | Find             | Remove\n" +

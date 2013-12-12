@@ -101,3 +101,32 @@ DS Status
          TIMEOUT:  5.50%
            NOKEY:  2.00%
 ```
+
+REST
+====
+
+Supported HTTP headers in request:
+*  Method
+*  Date
+*  Content-type
+*  Content-Length
+*  Content-MD5
+*  Accept
+*  Accept-Charset
+*  Accept-Language
+*  Authorization
+*  If-Modified-Since
+*  If-Unmodified-Since
+
+Supported HTTP headers in response:
+*  Status
+*  Content-Encoding
+*  Content-Language
+*  Content-Length
+*  Content-MD5
+*  Content-Type
+*  Accept-Language
+*  Accept
+*  Date
+*  ETag
+*  Last-Modified

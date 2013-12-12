@@ -55,6 +55,7 @@ type Config struct {
 	Log struct {
 		BasePath     string
 		ScanFilename string
+		RESTFilename string
 	}
 }
 

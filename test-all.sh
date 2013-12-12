@@ -19,7 +19,7 @@ fi
 # Integration tests
 echo "\n[[ INTEGRATION TESTS ]]\n"
 
-cd $GOPATH/src/shelter && find . -type f -wholename './testing/*.go' | grep -v 'utils' | sort -u | awk -F '/' '{ print $0 " -config=\"" substr($0, 1, length($0)-3) ".conf\"" }' | xargs -I@ sh -c "go run @"
+cd $GOPATH/src/shelter && find . -type f -wholename './testing/*.go' | grep -v 'utils' | sort -u | awk -F '/' '{ print $0 " -config=\"" substr($0, 1, length($0)-3) ".conf\"" }' | xargs -I@ sh -c "go run -race @"
 return_code=$?
 rm -f scan.log
 

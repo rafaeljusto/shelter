@@ -5,6 +5,7 @@ import (
 	"shelter/dao"
 	"shelter/net/http/rest"
 	"shelter/net/http/rest/language"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -29,11 +30,6 @@ func handleDomain(r *http.Request, context *ShelterRESTContext) {
 }
 
 func retrieveDomain(r *http.Request, context *ShelterRESTContext) {
-	// TODO Check:
-	//   If-Modified-Since
-	//   If-Match
-	//   If-None-Match
-
 	fqdn := getFQDNFromURI(r.URL.Path)
 	if len(fqdn) == 0 {
 		context.ResponseMessage(http.StatusBadRequest, "invalid-uri")
@@ -48,6 +44,32 @@ func retrieveDomain(r *http.Request, context *ShelterRESTContext) {
 	if err != nil {
 		context.Response(http.StatusNotFound)
 		return
+	}
+
+	if len(r.Header.Get("If-Modified-Since")) > 0 {
+		ifModifiedSince, err := time.Parse(time.RFC1123, r.Header.Get("If-Modified-Since"))
+		if err != nil {
+			context.ResponseMessage(http.StatusBadRequest, "invalid-header-date")
+			return
+		}
+
+		if domain.LastModifiedAt.Before(ifModifiedSince) || domain.LastModifiedAt.Equal(ifModifiedSince) {
+			context.Response(http.StatusNotModified)
+			return
+		}
+	}
+
+	if len(r.Header.Get("If-Unmodified-Since")) > 0 {
+		ifUnmodifiedSince, err := time.Parse(time.RFC1123, r.Header.Get("If-Unmodified-Since"))
+		if err != nil {
+			context.ResponseMessage(http.StatusBadRequest, "invalid-header-date")
+			return
+		}
+
+		if domain.LastModifiedAt.After(ifModifiedSince) {
+			context.Response(http.StatusPreconditionFailed)
+			return
+		}
 	}
 
 	context.AddHeader("ETag", fmt.Sprintf("%d", domain.Revision))
