@@ -17,7 +17,7 @@ var (
 )
 
 // Domain stores all the necessary information for validating the DNS and DNSSEC. It also
-// stores information to alert the domain's owners about the problems.
+// stores information to alert the domain's owners about the problems
 type Domain struct {
 	Id             bson.ObjectId   `bson:"_id"` // Database identification
 	Revision       int             // Version of the object
