@@ -1,8 +1,11 @@
 package rest
 
 import (
+	"bytes"
 	"encoding/json"
+	"io/ioutil"
 	"labix.org/v2/mgo"
+	"net/http"
 	"shelter/config"
 	"shelter/database/mongodb"
 	"shelter/net/http/rest/language"
@@ -14,15 +17,25 @@ import (
 type ShelterRESTContext struct {
 	Database           *mgo.Database          // MongoDB Database
 	Language           *language.LanguagePack // Language choosen by the user
+	requestContent     []byte                 // Request body
 	responseHttpStatus int                    // Response HTTP status
 	responseMessage    []byte                 // Response HTTP message
 	httpHeader         map[string]string      // Extra headers to be sent in the response
 }
 
-// Initialize a new context. By default use system choosen language pack
-func newShelterRESTContext() (ShelterRESTContext, error) {
+// Initialize a new context. By default use system choosen language pack. We also store
+// the bytes from the request body because we can read only once from the buffer reader
+// and we need to check it for some HTTP header verifications. We don't return a pointer
+// of the context because we want to control the destruction of the object and don't leave
+// it to the garbage collector
+func newShelterRESTContext(r *http.Request) (ShelterRESTContext, error) {
 	context := ShelterRESTContext{
 		Language: language.ShelterRESTLanguagePack,
+	}
+
+	var err error
+	if context.requestContent, err = ioutil.ReadAll(r.Body); err != nil {
+		return context, err
 	}
 
 	database, err := mongodb.Open(
@@ -36,6 +49,12 @@ func newShelterRESTContext() (ShelterRESTContext, error) {
 
 	context.Database = database
 	return context, nil
+}
+
+// Transform the content body, that is in JSON format into an object
+func (s *ShelterRESTContext) RequestJSON(object interface{}) error {
+	decoder := json.NewDecoder(bytes.NewBuffer(s.requestContent))
+	return decoder.Decode(object)
 }
 
 // Store only the HTTP status, for no content responses
@@ -62,6 +81,8 @@ func (s *ShelterRESTContext) JSONResponse(httpStatus int, object interface{}) er
 	return nil
 }
 
+// Add a custom HTTP header. Used for some types of response where you need to set ETag or
+// LastModified fields
 func (s *ShelterRESTContext) AddHeader(key, value string) {
 	// Avoid adding headers that are automatically generated at the end of the request. We
 	// don't allow header overwrite because in the low level MIMEHeader the HTTP header

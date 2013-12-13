@@ -1,9 +1,15 @@
 package rest
 
 import (
+	"crypto/md5"
+	"encoding/base64"
 	"net/http"
 	"shelter/net/http/rest/language"
 	"strings"
+)
+
+const (
+	supportedContentType = "application/vnd.shelter+json"
 )
 
 func checkHTTPAccept(r *http.Request) bool {
@@ -23,7 +29,7 @@ func checkHTTPAccept(r *http.Request) bool {
 			acceptPart = acceptPart[0:idx]
 		}
 
-		if acceptPart == "*" || acceptPart == "application/vnd.shelter+json" {
+		if acceptPart == "*" || acceptPart == supportedContentType {
 			return true
 		}
 	}
@@ -87,4 +93,37 @@ func checkHTTPAcceptCharset(r *http.Request) bool {
 	}
 
 	return false
+}
+
+func checkContentType(r *http.Request) bool {
+	contentType := r.Header.Get("Content-Type")
+	contentType = strings.TrimSpace(contentType)
+	contentType = strings.ToLower(contentType)
+
+	if len(contentType) == 0 {
+		return true
+	}
+
+	// For now we are ignoring version
+	if idx := strings.Index(contentType, ";"); idx > 0 {
+		contentType = contentType[0:idx]
+	}
+
+	return contentType == supportedContentType
+}
+
+func checkHTTPContentMD5(r *http.Request, context *ShelterRESTContext) bool {
+	contentMD5 := r.Header.Get("Content-MD5")
+	contentMD5 = strings.TrimSpace(contentMD5)
+
+	if len(contentMD5) == 0 {
+		return true
+	}
+
+	hash := md5.New()
+	hash.Write(context.requestContent)
+	hashBytes := hash.Sum(nil)
+	hashBase64 := base64.StdEncoding.EncodeToString(hashBytes)
+
+	return hashBase64 == contentMD5
 }

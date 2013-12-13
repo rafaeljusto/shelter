@@ -2,6 +2,7 @@ package rest
 
 import (
 	"crypto/md5"
+	"encoding/base64"
 	"fmt"
 	"log"
 	"net/http"
@@ -41,7 +42,7 @@ func (mux shelterRESTMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	context, err := newShelterRESTContext()
+	context, err := newShelterRESTContext(r)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		mux.logger.Println("Error creating context. Details:", err)
@@ -116,10 +117,19 @@ func (mux shelterRESTMux) checkHTTPHeaders(w http.ResponseWriter,
 		return false
 	}
 
-	// TODO Check:
-	//   Content-MD5
-	//   Content-Type
-	//   Authorization
+	if !checkContentType(r) {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, context.Language.Messages["invalid-content-type"])
+		return false
+	}
+
+	if !checkHTTPContentMD5(r, context) {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, context.Language.Messages["invalid-content-md5"])
+		return false
+	}
+
+	// TODO Check authorization!
 
 	return true
 }
@@ -134,10 +144,12 @@ func (mux shelterRESTMux) writeResponse(w http.ResponseWriter, context ShelterRE
 
 		hash := md5.New()
 		hash.Write(context.responseMessage)
-		w.Header().Add("Content-MD5", fmt.Sprintf("%x", hash.Sum(nil)))
+		hashBytes := hash.Sum(nil)
+		hashBase64 := base64.StdEncoding.EncodeToString(hashBytes)
+		w.Header().Add("Content-MD5", hashBase64)
 	}
 
-	w.Header().Add("Accept", "application/vnd.shelter+json")
+	w.Header().Add("Accept", supportedContentType)
 	w.Header().Add("Accept-Language", language.ShelterRESTLanguagePacks.Names())
 	w.Header().Add("Accept-Charset", "utf-8")
 	w.Header().Add("Date", time.Now().UTC().Format(time.RFC1123))
