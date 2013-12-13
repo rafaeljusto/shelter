@@ -10,6 +10,7 @@ installation
 Shelter project depends on the following packages:
 * labix.org/v2/mgo
 * github.com/miekg/dns
+* code.google.com/p/go.net/idna
 
 All the above packages can be installed using the command:
 

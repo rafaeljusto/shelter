@@ -2,6 +2,7 @@ package protocol
 
 import (
 	"shelter/model"
+	"time"
 )
 
 // DS object used in the protocol to determinate what the user can update

@@ -1,5 +1,9 @@
 package protocol
 
+import (
+	"time"
+)
+
 // Nameserver object used in the protocol to determinate what the user can update
 type NameserverRequest struct {
 	Host string `json:"host,omitempty"` // Nameserver's name
