@@ -1,12 +1,12 @@
 package rest
 
 import (
+	"fmt"
 	"net/http"
 	"shelter/dao"
 	"shelter/net/http/rest"
-	"shelter/net/http/rest/language"
 	"shelter/net/http/rest/protocol"
-	"strconv"
+	"shelter/net/http/rest/transcoder"
 	"strings"
 	"time"
 )
@@ -15,7 +15,7 @@ func init() {
 	rest.HandleFunc("/domain/", handleDomain)
 }
 
-func handleDomain(r *http.Request, context *ShelterRESTContext) {
+func handleDomain(r *http.Request, context *rest.ShelterRESTContext) {
 	if r.Method == "GET" {
 		retrieveDomain(r, context)
 
@@ -30,10 +30,10 @@ func handleDomain(r *http.Request, context *ShelterRESTContext) {
 	}
 }
 
-func retrieveDomain(r *http.Request, context *ShelterRESTContext) {
+func retrieveDomain(r *http.Request, context *rest.ShelterRESTContext) {
 	fqdn := getFQDNFromURI(r.URL.Path)
 	if len(fqdn) == 0 {
-		context.ResponseMessage(http.StatusBadRequest, "invalid-uri")
+		context.MessageResponse(http.StatusBadRequest, "invalid-uri")
 		return
 	}
 
@@ -50,7 +50,7 @@ func retrieveDomain(r *http.Request, context *ShelterRESTContext) {
 	if len(r.Header.Get("If-Modified-Since")) > 0 {
 		ifModifiedSince, err := time.Parse(time.RFC1123, r.Header.Get("If-Modified-Since"))
 		if err != nil {
-			context.ResponseMessage(http.StatusBadRequest, "invalid-header-date")
+			context.MessageResponse(http.StatusBadRequest, "invalid-header-date")
 			return
 		}
 
@@ -63,11 +63,11 @@ func retrieveDomain(r *http.Request, context *ShelterRESTContext) {
 	if len(r.Header.Get("If-Unmodified-Since")) > 0 {
 		ifUnmodifiedSince, err := time.Parse(time.RFC1123, r.Header.Get("If-Unmodified-Since"))
 		if err != nil {
-			context.ResponseMessage(http.StatusBadRequest, "invalid-header-date")
+			context.MessageResponse(http.StatusBadRequest, "invalid-header-date")
 			return
 		}
 
-		if domain.LastModifiedAt.After(ifModifiedSince) {
+		if domain.LastModifiedAt.After(ifUnmodifiedSince) {
 			context.Response(http.StatusPreconditionFailed)
 			return
 		}
@@ -75,19 +75,19 @@ func retrieveDomain(r *http.Request, context *ShelterRESTContext) {
 
 	context.AddHeader("ETag", fmt.Sprintf("%d", domain.Revision))
 	context.AddHeader("Last-Modified", domain.LastModifiedAt.Format(time.RFC1123))
-	context.ResponseJSON(http.StatusOK, domain)
+	context.JSONResponse(http.StatusOK, domain)
 }
 
-func createUpdateDomain(r *http.Request, context *ShelterRESTContext) {
+func createUpdateDomain(r *http.Request, context *rest.ShelterRESTContext) {
 	fqdn := getFQDNFromURI(r.URL.Path)
 	if len(fqdn) == 0 {
-		context.ResponseMessage(http.StatusBadRequest, "invalid-uri")
+		context.MessageResponse(http.StatusBadRequest, "invalid-uri")
 		return
 	}
 
 	var domainRequest protocol.DomainRequest
-	if err := context.RequestJSON(&domainRequest); err != nil {
-		context.ResponseMessage(http.StatusBadRequest, "invalid-json-content")
+	if err := context.JSONRequest(&domainRequest); err != nil {
+		context.MessageResponse(http.StatusBadRequest, "invalid-json-content")
 		return
 	}
 
@@ -102,9 +102,9 @@ func createUpdateDomain(r *http.Request, context *ShelterRESTContext) {
 	// We need to load the domain from the database and merge it with the changes from the
 	// user, if the domain does not exist yet thats alright because we will create it
 	domain, _ := domainDAO.FindByFQDN(fqdn)
-	domain, err = transcoder.Merge(domain, domainRequest)
 
-	if err != nil {
+	var err error
+	if domain, err = transcoder.Merge(domain, domainRequest); err != nil {
 		// TODO: Log!
 		context.Response(http.StatusInternalServerError)
 		return
@@ -127,7 +127,7 @@ func createUpdateDomain(r *http.Request, context *ShelterRESTContext) {
 	}
 }
 
-func removeDomain(r *http.Request, context *ShelterRESTContext) {
+func removeDomain(r *http.Request, context *rest.ShelterRESTContext) {
 
 }
 

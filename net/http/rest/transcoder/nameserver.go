@@ -1,12 +1,20 @@
 package transcoder
 
 import (
+	"errors"
 	"net"
 	"shelter/model"
 	"shelter/net/http/rest/protocol"
 )
 
-// Convert a list of nameserver requests object into a list of nameserver model objects.
+// List of possible errors that can occur when calling methods from this object. Other
+// erros can also occurs from low level layers
+var (
+	// Error returned when trying to convert an invalid IP address
+	ErrInvalidIP = errors.New("IP address is not in a valid format")
+)
+
+// Convert a list of nameserver requests objects into a list of nameserver model objects.
 // Useful when merging domain object from the network with a domain object from the
 // database. It can return errors related to the conversion of IP addresses and
 // normalization of nameserver's hostname
@@ -21,7 +29,7 @@ func toNameserversModel(nameserversRequest []protocol.NameserverRequest) ([]mode
 		nameservers = append(nameservers, nameserver)
 	}
 
-	return nameservers
+	return nameservers, nil
 }
 
 // Convert a nameserver request object into a nameserver model object. It can return
@@ -37,17 +45,17 @@ func toNameserverModel(nameserverRequest protocol.NameserverRequest) (model.Name
 	nameserver.Host = host
 
 	if len(nameserverRequest.IPv4) > 0 {
-		ipv4, err := net.ParseIP(nameserverRequest.IPv4)
-		if err != nil {
-			return nameserver, err
+		ipv4 := net.ParseIP(nameserverRequest.IPv4)
+		if ipv4 == nil {
+			return nameserver, ErrInvalidIP
 		}
 		nameserver.IPv4 = ipv4
 	}
 
 	if len(nameserverRequest.IPv6) > 0 {
-		ipv6, err := net.ParseIP(nameserverRequest.IPv6)
-		if err != nil {
-			return nameserver, err
+		ipv6 := net.ParseIP(nameserverRequest.IPv6)
+		if ipv6 == nil {
+			return nameserver, ErrInvalidIP
 		}
 		nameserver.IPv6 = ipv6
 	}

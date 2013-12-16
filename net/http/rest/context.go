@@ -52,7 +52,7 @@ func newShelterRESTContext(r *http.Request) (ShelterRESTContext, error) {
 }
 
 // Transform the content body, that is in JSON format into an object
-func (s *ShelterRESTContext) RequestJSON(object interface{}) error {
+func (s *ShelterRESTContext) JSONRequest(object interface{}) error {
 	decoder := json.NewDecoder(bytes.NewBuffer(s.requestContent))
 	return decoder.Decode(object)
 }
