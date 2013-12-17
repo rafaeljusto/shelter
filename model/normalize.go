@@ -13,7 +13,10 @@ func NormalizeDomainName(domainName string) (string, error) {
 	domainName = strings.ToLower(domainName)
 	domainName = strings.TrimSpace(domainName)
 
-	if !strings.HasSuffix(domainName, ".") {
+	// We will not add the dot for empty domain name so that become root zone ("."), because
+	// maybe the user forgot to inform the domain name and we don't want to make it easy for
+	// him to pass in the validation verifications
+	if len(domainName) > 0 && !strings.HasSuffix(domainName, ".") {
 		domainName += "."
 	}
 

@@ -6,7 +6,6 @@ import (
 	"shelter/dao"
 	"shelter/net/http/rest"
 	"shelter/net/http/rest/protocol"
-	"shelter/net/http/rest/transcoder"
 	"strings"
 	"time"
 )
@@ -104,7 +103,7 @@ func createUpdateDomain(r *http.Request, context *rest.ShelterRESTContext) {
 	domain, _ := domainDAO.FindByFQDN(fqdn)
 
 	var err error
-	if domain, err = transcoder.Merge(domain, domainRequest); err != nil {
+	if domain, err = protocol.Merge(domain, domainRequest); err != nil {
 		// TODO: Log!
 		context.Response(http.StatusInternalServerError)
 		return

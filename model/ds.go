@@ -108,3 +108,48 @@ func DSStatusToString(status DSStatus) string {
 
 	return ""
 }
+
+// When converting from user input a number to a DS algorithm, we need to check if this
+// number is one of the supported algorithms from the system, so we use this function to
+// check it. It will be probably called in the protocol layer
+func IsValidDSAlgorithm(algorithm uint8) bool {
+	switch algorithm {
+	case uint8(DSAlgorithmRSAMD5),
+		uint8(DSAlgorithmDH),
+		uint8(DSAlgorithmDSASHA1),
+		uint8(DSAlgorithmECC),
+		uint8(DSAlgorithmRSASHA1),
+		uint8(DSAlgorithmDSASHA1NSEC3),
+		uint8(DSAlgorithmRSASHA1NSEC3),
+		uint8(DSAlgorithmRSASHA256),
+		uint8(DSAlgorithmRSASHA512),
+		uint8(DSAlgorithmECCGOST),
+		uint8(DSAlgorithmECDSASHA256),
+		uint8(DSAlgorithmECDSASHA384),
+		uint8(DSAlgorithmIndirect),
+		uint8(DSAlgorithmPrivateDNS),
+		uint8(DSAlgorithmPrivateOID):
+		return true
+
+	default:
+		return false
+	}
+}
+
+// When converting from user input a number to a DS digest type, we need to check if this
+// number is one of the supported digest types from the system, so we use this function to
+// check it. It will be probably called in the protocol layer
+func IsValidDSDigestType(digestType uint8) bool {
+	switch digestType {
+	case uint8(DSDigestTypeReserved),
+		uint8(DSDigestTypeSHA1),
+		uint8(DSDigestTypeSHA256),
+		uint8(DSDigestTypeGOST94),
+		uint8(DSDigestTypeSHA384),
+		uint8(DSDigestTypeSHA512):
+		return true
+
+	default:
+		return false
+	}
+}

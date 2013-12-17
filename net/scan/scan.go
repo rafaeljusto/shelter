@@ -1,4 +1,4 @@
-package service
+package scan
 
 import (
 	"fmt"
@@ -6,7 +6,6 @@ import (
 	"os"
 	"shelter/config"
 	"shelter/database/mongodb"
-	"shelter/net/scan"
 	"sync"
 	"time"
 )
@@ -39,7 +38,7 @@ func ScanDomains() {
 		return
 	}
 
-	injector := scan.NewInjector(
+	injector := NewInjector(
 		database,
 		config.ShelterConfig.Scan.DomainsBufferSize,
 		config.ShelterConfig.Scan.VerificationIntervals.MaxOKDays,
@@ -47,7 +46,7 @@ func ScanDomains() {
 		config.ShelterConfig.Scan.VerificationIntervals.MaxExpirationAlertDays,
 	)
 
-	querierDispatcher := scan.NewQuerierDispatcher(
+	querierDispatcher := NewQuerierDispatcher(
 		config.ShelterConfig.Scan.NumberOfQueriers,
 		config.ShelterConfig.Scan.DomainsBufferSize,
 		config.ShelterConfig.Scan.UDPMaxSize,
@@ -57,7 +56,7 @@ func ScanDomains() {
 		config.ShelterConfig.Scan.ConnectionRetries,
 	)
 
-	collector := scan.NewCollector(
+	collector := NewCollector(
 		database,
 		config.ShelterConfig.Scan.SaveAtOnce,
 	)

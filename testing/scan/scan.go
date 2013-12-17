@@ -9,7 +9,7 @@ import (
 	"shelter/dao"
 	"shelter/database/mongodb"
 	"shelter/model"
-	"shelter/service"
+	"shelter/net/scan"
 	"shelter/testing/utils"
 	"time"
 )
@@ -82,7 +82,7 @@ func domainWithNoErrors(domainDAO dao.DomainDAO) {
 		utils.Fatalln("Error saving domain for scan scenario", err)
 	}
 
-	service.ScanDomains()
+	scan.ScanDomains()
 
 	domain, err := domainDAO.FindByFQDN(domain.FQDN)
 	if err != nil {

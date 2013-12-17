@@ -61,3 +61,23 @@ func TestDSStatusToString(t *testing.T) {
 		t.Error("Unknown DS status associated to some existing status")
 	}
 }
+
+func TestValidDSAlgorithm(t *testing.T) {
+	if !IsValidDSAlgorithm(1) || !IsValidDSAlgorithm(8) || !IsValidDSAlgorithm(254) {
+		t.Error("Not accepting valid DS algorithms")
+	}
+
+	if IsValidDSAlgorithm(0) || IsValidDSAlgorithm(255) {
+		t.Error("Accepting invalid DS algorithms")
+	}
+}
+
+func TestValidDSDigestType(t *testing.T) {
+	if !IsValidDSDigestType(0) || !IsValidDSDigestType(3) || !IsValidDSDigestType(5) {
+		t.Error("Not accepting valid DS digest type")
+	}
+
+	if IsValidDSDigestType(6) {
+		t.Error("Accepting invalid digest type")
+	}
+}

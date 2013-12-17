@@ -15,4 +15,15 @@ func TestNormalizeDomainName(t *testing.T) {
 	if normalizedDomainName != "ns1.xn--bcher-kva.example.com." {
 		t.Error("Not normalizing correctly the domain name")
 	}
+
+	domainName = ""
+	normalizedDomainName, err = NormalizeDomainName(domainName)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if normalizedDomainName != "" {
+		t.Error("Not normalizing correctly empty domain name")
+	}
 }
