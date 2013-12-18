@@ -74,7 +74,7 @@ func retrieveDomain(r *http.Request, context *rest.ShelterRESTContext) {
 
 	context.AddHeader("ETag", fmt.Sprintf("%d", domain.Revision))
 	context.AddHeader("Last-Modified", domain.LastModifiedAt.Format(time.RFC1123))
-	context.JSONResponse(http.StatusOK, domain)
+	context.JSONResponse(http.StatusOK, protocol.ToDomainResponse(domain))
 }
 
 func createUpdateDomain(r *http.Request, context *rest.ShelterRESTContext) {
@@ -108,6 +108,9 @@ func createUpdateDomain(r *http.Request, context *rest.ShelterRESTContext) {
 		context.Response(http.StatusInternalServerError)
 		return
 	}
+
+	// TODO: Check ETag related headers
+	// TODO: Validate object information
 
 	if err := domainDAO.Save(&domain); err != nil {
 		// TODO: Log!

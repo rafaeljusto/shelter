@@ -1,8 +1,11 @@
 package protocol
 
 import (
+	"net"
+	"shelter/model"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestToNameserversModel(t *testing.T) {
@@ -96,5 +99,72 @@ func TestToNameserverModel(t *testing.T) {
 	nameserver, err = toNameserverModel(nameserverRequest)
 	if err == nil {
 		t.Error("Accepting an invalid FQDN for IDNA")
+	}
+}
+
+func TestToNameserversResponse(t *testing.T) {
+	now := time.Now()
+
+	nameservers := []model.Nameserver{
+		{
+			Host:        "ns1.example.com.br.",
+			IPv4:        net.ParseIP("127.0.0.1"),
+			IPv6:        net.ParseIP("::1"),
+			LastStatus:  model.NameserverStatusOK,
+			LastCheckAt: now,
+			LastOKAt:    now,
+		},
+		{
+			Host:        "ns2.example.com.br.",
+			IPv4:        net.ParseIP("127.0.0.2"),
+			IPv6:        net.ParseIP("::2"),
+			LastStatus:  model.NameserverStatusError,
+			LastCheckAt: now,
+		},
+	}
+
+	nameserversResponse := toNameserversResponse(nameservers)
+
+	if len(nameserversResponse) != 2 {
+		t.Error("Fail to convert multiple nameservers")
+	}
+}
+
+func TestToNameserverResponse(t *testing.T) {
+	now := time.Now()
+
+	nameserver := model.Nameserver{
+		Host:        "ns1.example.com.br.",
+		IPv4:        net.ParseIP("127.0.0.1"),
+		IPv6:        net.ParseIP("::1"),
+		LastStatus:  model.NameserverStatusOK,
+		LastCheckAt: now,
+		LastOKAt:    now,
+	}
+
+	nameserverResponse := toNameserverResponse(nameserver)
+
+	if nameserverResponse.Host != "ns1.example.com.br." {
+		t.Error("Fail to convert host")
+	}
+
+	if nameserverResponse.IPv4 != "127.0.0.1" {
+		t.Error("Fail to convert IPv4")
+	}
+
+	if nameserverResponse.IPv6 != "::1" {
+		t.Error("Fail to convert IPv6")
+	}
+
+	if nameserverResponse.LastStatus !=
+		model.NameserverStatusToString(model.NameserverStatusOK) {
+
+		t.Error("Fail to convert last status")
+	}
+
+	if nameserverResponse.LastCheckAt.Unix() != now.Unix() ||
+		nameserverResponse.LastOKAt.Unix() != now.Unix() {
+
+		t.Error("Fail to convert dates")
 	}
 }

@@ -27,3 +27,10 @@ func TestNormalizeDomainName(t *testing.T) {
 		t.Error("Not normalizing correctly empty domain name")
 	}
 }
+
+func TestNormalizeDSDigest(t *testing.T) {
+	digest := "  B7C0BDE8F3C90E573B9 56B14A14CAF5001A3E841  "
+	if NormalizeDSDigest(digest) != "b7c0bde8f3c90e573b9 56b14a14caf5001a3e841" {
+		t.Error("Not normalizing correctly the DS digest")
+	}
+}

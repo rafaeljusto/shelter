@@ -26,3 +26,13 @@ func NormalizeDomainName(domainName string) (string, error) {
 	domainName, err = idna.ToASCII(domainName)
 	return domainName, err
 }
+
+// We will store the digest always in lower case. According to RFC 4034 (section 5.3):
+// "Digest MUST be represented as a sequence of case-insensitive hexadecimal digits.
+// Whitespace is allowed within the hexadecimal text.", so there's no problem changing the
+// letter case
+func NormalizeDSDigest(digest string) string {
+	digest = strings.ToLower(digest)
+	digest = strings.TrimSpace(digest)
+	return digest
+}

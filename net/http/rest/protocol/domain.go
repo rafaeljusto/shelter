@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/mail"
 	"shelter/model"
+	"strings"
 )
 
 // List of possible errors that can occur when calling methods from this object. Other
@@ -106,8 +107,25 @@ func Merge(domain model.Domain, domainRequest DomainRequest) (model.Domain, erro
 	return domain, nil
 }
 
+// Convert the domain system object to a limited information user format
 func ToDomainResponse(domain model.Domain) DomainResponse {
-	// TODO
+	var owners []string
+	for _, owner := range domain.Owners {
+		// E-mail to string conversion formats the address as a valid RFC 5322 address. If the
+		// address's name contains non-ASCII characters the name will be rendered according to
+		// RFC 2047. We are going to remove the "<" and ">" from the e-mail address for better
+		// look
+		email := owner.String()
+		email = strings.TrimLeft(email, "<")
+		email = strings.TrimRight(email, ">")
 
-	return DomainResponse{}
+		owners = append(owners, email)
+	}
+
+	return DomainResponse{
+		FQDN:        domain.FQDN,
+		Nameservers: toNameserversResponse(domain.Nameservers),
+		DSSet:       toDSSetResponse(domain.DSSet),
+		Owners:      owners,
+	}
 }

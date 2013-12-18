@@ -57,7 +57,7 @@ func toDSSetModel(dsSetRequest []DSRequest) ([]model.DS, error) {
 func toDSModel(dsRequest DSRequest) (model.DS, error) {
 	ds := model.DS{
 		Keytag: dsRequest.Keytag,
-		Digest: dsRequest.Digest, // TODO: Normalize digest? (lowercase or uppercase)
+		Digest: model.NormalizeDSDigest(dsRequest.Digest),
 	}
 
 	if !model.IsValidDSAlgorithm(dsRequest.Algorithm) {
@@ -73,4 +73,29 @@ func toDSModel(dsRequest DSRequest) (model.DS, error) {
 	ds.DigestType = model.DSDigestType(dsRequest.DigestType)
 
 	return ds, nil
+}
+
+// Convert a list of DS of the system into a format with limited information to return it
+// to the user. This is only a easy way to call toDSResponse for each object in the list
+func toDSSetResponse(dsSet []model.DS) []DSResponse {
+	var dsSetResponse []DSResponse
+	for _, ds := range dsSet {
+		dsSetResponse = append(dsSetResponse, toDSResponse(ds))
+	}
+	return dsSetResponse
+}
+
+// Convert a DS of the system into a format with limited information to return it to the
+// user
+func toDSResponse(ds model.DS) DSResponse {
+	return DSResponse{
+		Keytag:      ds.Keytag,
+		Algorithm:   uint8(ds.Algorithm),
+		Digest:      ds.Digest,
+		DigestType:  uint8(ds.DigestType),
+		ExpiresAt:   ds.ExpiresAt,
+		LastStatus:  model.DSStatusToString(ds.LastStatus),
+		LastCheckAt: ds.LastCheckAt,
+		LastOKAt:    ds.LastOKAt,
+	}
 }

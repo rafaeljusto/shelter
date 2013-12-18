@@ -80,3 +80,37 @@ func toNameserverModel(nameserverRequest NameserverRequest) (model.Nameserver, e
 
 	return nameserver, nil
 }
+
+// Convert a list of nameservers of the system into a format with limited information to
+// return it to the user. This is only a easy way to call toNameserverResponse for each
+// object in the list
+func toNameserversResponse(nameservers []model.Nameserver) []NameserverResponse {
+	var nameserversResponse []NameserverResponse
+	for _, nameserver := range nameservers {
+		nameserversResponse = append(nameserversResponse, toNameserverResponse(nameserver))
+	}
+	return nameserversResponse
+}
+
+// Convert a nameserver of the system into a format with limited information to return it
+// to the user
+func toNameserverResponse(nameserver model.Nameserver) NameserverResponse {
+	ipv4 := ""
+	if len(nameserver.IPv4) > 0 {
+		ipv4 = nameserver.IPv4.String()
+	}
+
+	ipv6 := ""
+	if len(nameserver.IPv6) > 0 {
+		ipv6 = nameserver.IPv6.String()
+	}
+
+	return NameserverResponse{
+		Host:        nameserver.Host,
+		IPv4:        ipv4,
+		IPv6:        ipv6,
+		LastStatus:  model.NameserverStatusToString(nameserver.LastStatus),
+		LastCheckAt: nameserver.LastCheckAt,
+		LastOKAt:    nameserver.LastOKAt,
+	}
+}
