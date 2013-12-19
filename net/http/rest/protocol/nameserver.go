@@ -32,24 +32,6 @@ type NameserverResponse struct {
 	LastOKAt    time.Time `json:"lastOKAt,omitempty"`    // Last time that the DNS configuration was OK
 }
 
-// Convert a list of nameserver requests objects into a list of nameserver model objects.
-// Useful when merging domain object from the network with a domain object from the
-// database. It can return errors related to the conversion of IP addresses and
-// normalization of nameserver's hostname
-func toNameserversModel(nameserversRequest []NameserverRequest) ([]model.Nameserver, error) {
-	var nameservers []model.Nameserver
-	for _, nameserverRequest := range nameserversRequest {
-		nameserver, err := nameserverRequest.toNameserverModel()
-		if err != nil {
-			return nil, err
-		}
-
-		nameservers = append(nameservers, nameserver)
-	}
-
-	return nameservers, nil
-}
-
 // Convert a nameserver request object into a nameserver model object. It can return
 // errors related to the conversion of IP addresses and normalization of nameserver's
 // hostname
@@ -81,15 +63,22 @@ func (n *NameserverRequest) toNameserverModel() (model.Nameserver, error) {
 	return nameserver, nil
 }
 
-// Convert a list of nameservers of the system into a format with limited information to
-// return it to the user. This is only a easy way to call toNameserverResponse for each
-// object in the list
-func toNameserversResponse(nameservers []model.Nameserver) []NameserverResponse {
-	var nameserversResponse []NameserverResponse
-	for _, nameserver := range nameservers {
-		nameserversResponse = append(nameserversResponse, toNameserverResponse(nameserver))
+// Convert a list of nameserver requests objects into a list of nameserver model objects.
+// Useful when merging domain object from the network with a domain object from the
+// database. It can return errors related to the conversion of IP addresses and
+// normalization of nameserver's hostname
+func toNameserversModel(nameserversRequest []NameserverRequest) ([]model.Nameserver, error) {
+	var nameservers []model.Nameserver
+	for _, nameserverRequest := range nameserversRequest {
+		nameserver, err := nameserverRequest.toNameserverModel()
+		if err != nil {
+			return nil, err
+		}
+
+		nameservers = append(nameservers, nameserver)
 	}
-	return nameserversResponse
+
+	return nameservers, nil
 }
 
 // Convert a nameserver of the system into a format with limited information to return it
@@ -113,4 +102,15 @@ func toNameserverResponse(nameserver model.Nameserver) NameserverResponse {
 		LastCheckAt: nameserver.LastCheckAt,
 		LastOKAt:    nameserver.LastOKAt,
 	}
+}
+
+// Convert a list of nameservers of the system into a format with limited information to
+// return it to the user. This is only a easy way to call toNameserverResponse for each
+// object in the list
+func toNameserversResponse(nameservers []model.Nameserver) []NameserverResponse {
+	var nameserversResponse []NameserverResponse
+	for _, nameserver := range nameservers {
+		nameserversResponse = append(nameserversResponse, toNameserverResponse(nameserver))
+	}
+	return nameserversResponse
 }

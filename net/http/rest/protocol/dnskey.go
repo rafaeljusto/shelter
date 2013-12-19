@@ -28,23 +28,6 @@ type DNSKEYRequest struct {
 	PublicKey string `json:"publicKey,omitempty"` // Base64 enconded string of the public key
 }
 
-// Convert a list of DNSKEY requests objects into a list of DS model objects. Useful when
-// merging domain object from the network with a domain object from the database. It can
-// return errors related to the generation of the DS objects
-func dnskeysRequestsToDSSetModel(fqdn string, dnskeysRequests []DNSKEYRequest) ([]model.DS, error) {
-	var dsSet []model.DS
-	for _, dnskeyRequest := range dnskeysRequests {
-		ds, err := dnskeyRequest.toDSModel(fqdn)
-		if err != nil {
-			return nil, err
-		}
-
-		dsSet = append(dsSet, ds)
-	}
-
-	return dsSet, nil
-}
-
 // Convert a DNSKEY request object into a DS model object. It can return errors related to
 // the generation of the DS objects
 func (d *DNSKEYRequest) toDSModel(fqdn string) (model.DS, error) {
@@ -75,4 +58,21 @@ func (d *DNSKEYRequest) toDSModel(fqdn string) (model.DS, error) {
 	}
 
 	return dsRequest.toDSModel()
+}
+
+// Convert a list of DNSKEY requests objects into a list of DS model objects. Useful when
+// merging domain object from the network with a domain object from the database. It can
+// return errors related to the generation of the DS objects
+func dnskeysRequestsToDSSetModel(fqdn string, dnskeysRequests []DNSKEYRequest) ([]model.DS, error) {
+	var dsSet []model.DS
+	for _, dnskeyRequest := range dnskeysRequests {
+		ds, err := dnskeyRequest.toDSModel(fqdn)
+		if err != nil {
+			return nil, err
+		}
+
+		dsSet = append(dsSet, ds)
+	}
+
+	return dsSet, nil
 }

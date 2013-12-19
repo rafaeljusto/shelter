@@ -35,23 +35,6 @@ type DSResponse struct {
 	LastOKAt    time.Time `json:"lastOKAt,omitempty"`    // Last time that the DNSSEC configuration was OK
 }
 
-// Convert a list of DS requests objects into a list of DS model objects. Useful when
-// merging domain object from the network with a domain object from the database. It can
-// return errors related to the conversion of the algorithm, when it is out of range
-func toDSSetModel(dsSetRequest []DSRequest) ([]model.DS, error) {
-	var dsSet []model.DS
-	for _, dsRequest := range dsSetRequest {
-		ds, err := dsRequest.toDSModel()
-		if err != nil {
-			return nil, err
-		}
-
-		dsSet = append(dsSet, ds)
-	}
-
-	return dsSet, nil
-}
-
 // Convert a DS request object into a DS model object. It can return errors related to the
 // conversion of the algorithm, when it is out of range
 func (d *DSRequest) toDSModel() (model.DS, error) {
@@ -75,14 +58,21 @@ func (d *DSRequest) toDSModel() (model.DS, error) {
 	return ds, nil
 }
 
-// Convert a list of DS of the system into a format with limited information to return it
-// to the user. This is only a easy way to call toDSResponse for each object in the list
-func toDSSetResponse(dsSet []model.DS) []DSResponse {
-	var dsSetResponse []DSResponse
-	for _, ds := range dsSet {
-		dsSetResponse = append(dsSetResponse, toDSResponse(ds))
+// Convert a list of DS requests objects into a list of DS model objects. Useful when
+// merging domain object from the network with a domain object from the database. It can
+// return errors related to the conversion of the algorithm, when it is out of range
+func toDSSetModel(dsSetRequest []DSRequest) ([]model.DS, error) {
+	var dsSet []model.DS
+	for _, dsRequest := range dsSetRequest {
+		ds, err := dsRequest.toDSModel()
+		if err != nil {
+			return nil, err
+		}
+
+		dsSet = append(dsSet, ds)
 	}
-	return dsSetResponse
+
+	return dsSet, nil
 }
 
 // Convert a DS of the system into a format with limited information to return it to the
@@ -98,4 +88,14 @@ func toDSResponse(ds model.DS) DSResponse {
 		LastCheckAt: ds.LastCheckAt,
 		LastOKAt:    ds.LastOKAt,
 	}
+}
+
+// Convert a list of DS of the system into a format with limited information to return it
+// to the user. This is only a easy way to call toDSResponse for each object in the list
+func toDSSetResponse(dsSet []model.DS) []DSResponse {
+	var dsSetResponse []DSResponse
+	for _, ds := range dsSet {
+		dsSetResponse = append(dsSetResponse, toDSResponse(ds))
+	}
+	return dsSetResponse
 }

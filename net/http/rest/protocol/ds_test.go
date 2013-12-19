@@ -6,48 +6,6 @@ import (
 	"time"
 )
 
-func TestToDSSetModel(t *testing.T) {
-	dsSetRequest := []DSRequest{
-		{
-			Keytag:     41674,
-			Algorithm:  5,
-			Digest:     "EAA0978F38879DB70A53F9FF1ACF21D046A98B5C",
-			DigestType: 1,
-		},
-		{
-			Keytag:     45966,
-			Algorithm:  7,
-			Digest:     "B7C0BDE8F3C90E573B956B14A14CAF5001A3E841",
-			DigestType: 1,
-		},
-	}
-
-	_, err := toDSSetModel(dsSetRequest)
-	if err != nil {
-		t.Error(err)
-	}
-
-	dsSetRequest = []DSRequest{
-		{
-			Keytag:     41674,
-			Algorithm:  5,
-			Digest:     "EAA0978F38879DB70A53F9FF1ACF21D046A98B5C",
-			DigestType: 1,
-		},
-		{
-			Keytag:     45966,
-			Algorithm:  0,
-			Digest:     "B7C0BDE8F3C90E573B956B14A14CAF5001A3E841",
-			DigestType: 1,
-		},
-	}
-
-	_, err = toDSSetModel(dsSetRequest)
-	if err == nil {
-		t.Error("Not verifying errors in DS set conversion")
-	}
-}
-
 func TestToDSModel(t *testing.T) {
 	dsRequest := DSRequest{
 		Keytag:     41674,
@@ -102,32 +60,45 @@ func TestToDSModel(t *testing.T) {
 	}
 }
 
-func TestToDSSetResponse(t *testing.T) {
-	now := time.Now()
-
-	dsSet := []model.DS{
+func TestToDSSetModel(t *testing.T) {
+	dsSetRequest := []DSRequest{
 		{
-			Keytag:      41674,
-			Algorithm:   model.DSAlgorithmRSASHA1,
-			Digest:      "eaa0978f38879db70a53f9ff1acf21d046a98b5c",
-			DigestType:  model.DSDigestTypeSHA1,
-			LastStatus:  model.DSStatusOK,
-			LastCheckAt: now,
-			LastOKAt:    now,
+			Keytag:     41674,
+			Algorithm:  5,
+			Digest:     "EAA0978F38879DB70A53F9FF1ACF21D046A98B5C",
+			DigestType: 1,
 		},
 		{
-			Keytag:      45966,
-			Algorithm:   model.DSAlgorithmRSASHA1NSEC3,
-			Digest:      "b7c0bde8f3c90e573b956b14a14caf5001a3e841",
-			DigestType:  model.DSDigestTypeSHA1,
-			LastStatus:  model.DSStatusTimeout,
-			LastCheckAt: now,
+			Keytag:     45966,
+			Algorithm:  7,
+			Digest:     "B7C0BDE8F3C90E573B956B14A14CAF5001A3E841",
+			DigestType: 1,
 		},
 	}
 
-	dsSetResponse := toDSSetResponse(dsSet)
-	if len(dsSetResponse) != 2 {
-		t.Error("Fail to convert a DS set")
+	_, err := toDSSetModel(dsSetRequest)
+	if err != nil {
+		t.Error(err)
+	}
+
+	dsSetRequest = []DSRequest{
+		{
+			Keytag:     41674,
+			Algorithm:  5,
+			Digest:     "EAA0978F38879DB70A53F9FF1ACF21D046A98B5C",
+			DigestType: 1,
+		},
+		{
+			Keytag:     45966,
+			Algorithm:  0,
+			Digest:     "B7C0BDE8F3C90E573B956B14A14CAF5001A3E841",
+			DigestType: 1,
+		},
+	}
+
+	_, err = toDSSetModel(dsSetRequest)
+	if err == nil {
+		t.Error("Not verifying errors in DS set conversion")
 	}
 }
 
@@ -170,5 +141,34 @@ func TestToDSResponse(t *testing.T) {
 		dsResponse.LastOKAt.Unix() != now.Unix() {
 
 		t.Error("Fail to convert dates")
+	}
+}
+
+func TestToDSSetResponse(t *testing.T) {
+	now := time.Now()
+
+	dsSet := []model.DS{
+		{
+			Keytag:      41674,
+			Algorithm:   model.DSAlgorithmRSASHA1,
+			Digest:      "eaa0978f38879db70a53f9ff1acf21d046a98b5c",
+			DigestType:  model.DSDigestTypeSHA1,
+			LastStatus:  model.DSStatusOK,
+			LastCheckAt: now,
+			LastOKAt:    now,
+		},
+		{
+			Keytag:      45966,
+			Algorithm:   model.DSAlgorithmRSASHA1NSEC3,
+			Digest:      "b7c0bde8f3c90e573b956b14a14caf5001a3e841",
+			DigestType:  model.DSDigestTypeSHA1,
+			LastStatus:  model.DSStatusTimeout,
+			LastCheckAt: now,
+		},
+	}
+
+	dsSetResponse := toDSSetResponse(dsSet)
+	if len(dsSetResponse) != 2 {
+		t.Error("Fail to convert a DS set")
 	}
 }
