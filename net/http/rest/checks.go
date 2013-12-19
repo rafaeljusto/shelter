@@ -6,10 +6,12 @@ import (
 	"net/http"
 	"shelter/net/http/rest/language"
 	"strings"
+	"time"
 )
 
 const (
 	supportedContentType = "application/vnd.shelter+json"
+	timeFrameDuration    = "10m"
 )
 
 func checkHTTPAccept(r *http.Request) bool {
@@ -126,4 +128,25 @@ func checkHTTPContentMD5(r *http.Request, context *ShelterRESTContext) bool {
 	hashBase64 := base64.StdEncoding.EncodeToString(hashBytes)
 
 	return hashBase64 == contentMD5
+}
+
+func checkDate(r *http.Request) bool {
+	dateStr := r.Header.Get("Date")
+	dateStr = strings.TrimSpace(dateStr)
+
+	if len(dateStr) == 0 {
+		return true
+	}
+
+	date, err := time.Parse(time.RFC1123, dateStr)
+	if err != nil {
+		return false
+	}
+
+	// Check if the date is inside the time frame, avoiding reply attack
+	now := time.Now().UTC()
+	duration, _ := time.ParseDuration(timeFrameDuration)
+	frameInception := now.Add(duration * -1)
+	frameExpiration := now.Add(duration)
+	return !date.UTC().Before(frameInception) && !date.UTC().After(frameExpiration)
 }

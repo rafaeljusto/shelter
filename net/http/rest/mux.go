@@ -129,6 +129,12 @@ func (mux shelterRESTMux) checkHTTPHeaders(w http.ResponseWriter,
 		return false
 	}
 
+	if !checkDate(r) {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, context.Language.Messages["invalid-date"])
+		return false
+	}
+
 	// TODO Check authorization!
 
 	return true
