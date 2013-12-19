@@ -1,6 +1,7 @@
 package model
 
 import (
+	"strings"
 	"testing"
 )
 
@@ -25,6 +26,27 @@ func TestNormalizeDomainName(t *testing.T) {
 
 	if normalizedDomainName != "" {
 		t.Error("Not normalizing correctly empty domain name")
+	}
+
+	domainName = strings.Repeat("x", 65536) + "\uff00" // int32 overflow
+	normalizedDomainName, err = NormalizeDomainName(domainName)
+
+	if err == nil {
+		t.Error("Accepting an invalid IDNA name")
+	}
+
+	domainName = "-.br"
+	normalizedDomainName, err = NormalizeDomainName(domainName)
+
+	if err == nil {
+		t.Error("Accepting an invalid FQDN taht starts with hyphen")
+	}
+
+	domainName = "example.-"
+	normalizedDomainName, err = NormalizeDomainName(domainName)
+
+	if err == nil {
+		t.Error("Accepting an invalid FQDN that ends with only one letter")
 	}
 }
 

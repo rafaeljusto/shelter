@@ -2,7 +2,21 @@ package model
 
 import (
 	"code.google.com/p/go.net/idna"
+	"errors"
+	"regexp"
 	"strings"
+)
+
+var (
+	// RFC 1034 and RFC 1123
+	isFQDN = regexp.MustCompile(`^(([[:alnum:]](([[:alnum:]]|\-){0,61}[[:alnum:]])?\.)*[[:alnum:]](([[:alnum:]]|\-){0,61}[[:alnum:]])?)?(\.)?$`)
+)
+
+// List of possible errors that can occur when calling methods from this object. Other
+// erros can also occurs from low level layers
+var (
+	// Error returned when the FQDN is not valid
+	ErrInvalidFQDN = errors.New("FQDN is not valid according to RFCs 1034 and 1123")
 )
 
 // Normalize the domain name to have always the same mask. The following rules applied
@@ -24,7 +38,16 @@ func NormalizeDomainName(domainName string) (string, error) {
 	// accents according to IDNA rules
 	var err error
 	domainName, err = idna.ToASCII(domainName)
-	return domainName, err
+	if err != nil {
+		return domainName, err
+	}
+
+	// Check FQDN format
+	if !isFQDN.MatchString(domainName) {
+		return domainName, ErrInvalidFQDN
+	}
+
+	return domainName, nil
 }
 
 // We will store the digest always in lower case. According to RFC 4034 (section 5.3):
