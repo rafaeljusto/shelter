@@ -6,6 +6,7 @@ import (
 	"shelter/dao"
 	"shelter/net/http/rest"
 	"shelter/net/http/rest/protocol"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -109,8 +110,40 @@ func createUpdateDomain(r *http.Request, context *rest.ShelterRESTContext) {
 		return
 	}
 
-	// TODO: Check ETag related headers
-	// TODO: Validate object information
+	ifMatch := r.Header.Get("If-Match")
+	if len(ifMatch) > 0 {
+		ifMatch = strings.TrimSpace(ifMatch)
+		ifMatchParts := strings.Split(ifMatch, ",")
+
+		match := false
+		for _, ifMatchPart := range ifMatchParts {
+			ifMatchPart = strings.TrimSpace(ifMatchPart)
+
+			// If "*" is given and no current entity exists, the server MUST NOT perform the
+			// requested method, and MUST return a 412 (Precondition Failed) response
+			if ifMatchPart == "*" {
+				match = (domain.Revision > 0)
+				break
+			}
+
+			etag, err := strconv.Atoi(ifMatchPart)
+			if err != nil {
+				context.MessageResponse(http.StatusBadRequest, "invalid-if-match")
+				return
+			}
+
+			if etag == domain.Revision {
+				match = true
+				break
+			}
+		}
+
+		// RFC 2616 - 14.24 - If none of the entity tags match the server MUST NOT perform the
+		// requested method, and MUST return a 412 (Precondition Failed) response
+		if !match {
+			context.MessageResponse(http.StatusPreconditionFailed, "if-match-failed")
+		}
+	}
 
 	if err := domainDAO.Save(&domain); err != nil {
 		// TODO: Log!

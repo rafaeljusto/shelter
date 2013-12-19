@@ -107,27 +107,28 @@ REST
 ====
 
 Supported HTTP headers in request:
-*  Method
-*  Date
-*  Content-type
-*  Content-Length
-*  Content-MD5
-*  Accept
-*  Accept-Charset
-*  Accept-Language
-*  Authorization
-*  If-Modified-Since
-*  If-Unmodified-Since
+*  Method (PUT, GET, DELETE)
+*  Date (PUT, GET, DELETE)
+*  Content-type (PUT, GET, DELETE)
+*  Content-Length (PUT, GET, DELETE)
+*  Content-MD5 (PUT, GET, DELETE)
+*  Accept (PUT, GET, DELETE)
+*  Accept-Charset (PUT, GET, DELETE)
+*  Accept-Language (PUT, GET, DELETE)
+*  Authorization (PUT, GET, DELETE)
+*  If-Modified-Since (GET)
+*  If-Unmodified-Since (GET)
+*  If-Match (PUT)
 
 Supported HTTP headers in response:
-*  Status
-*  Content-Encoding
-*  Content-Language
-*  Content-Length
-*  Content-MD5
-*  Content-Type
-*  Accept-Language
-*  Accept
-*  Date
-*  ETag
-*  Last-Modified
+*  Status (PUT, GET, DELETE)
+*  Content-Encoding (GET)
+*  Content-Language (GET)
+*  Content-Length (GET)
+*  Content-MD5 (GET)
+*  Content-Type (GET)
+*  Accept-Language (PUT, GET, DELETE)
+*  Accept (PUT, GET, DELETE)
+*  Date (PUT, GET, DELETE)
+*  ETag (GET)
+*  Last-Modified (GET)
