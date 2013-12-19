@@ -41,7 +41,7 @@ type DSResponse struct {
 func toDSSetModel(dsSetRequest []DSRequest) ([]model.DS, error) {
 	var dsSet []model.DS
 	for _, dsRequest := range dsSetRequest {
-		ds, err := toDSModel(dsRequest)
+		ds, err := dsRequest.toDSModel()
 		if err != nil {
 			return nil, err
 		}
@@ -54,23 +54,23 @@ func toDSSetModel(dsSetRequest []DSRequest) ([]model.DS, error) {
 
 // Convert a DS request object into a DS model object. It can return errors related to the
 // conversion of the algorithm, when it is out of range
-func toDSModel(dsRequest DSRequest) (model.DS, error) {
+func (d *DSRequest) toDSModel() (model.DS, error) {
 	ds := model.DS{
-		Keytag: dsRequest.Keytag,
-		Digest: model.NormalizeDSDigest(dsRequest.Digest),
+		Keytag: d.Keytag,
+		Digest: model.NormalizeDSDigest(d.Digest),
 	}
 
-	if !model.IsValidDSAlgorithm(dsRequest.Algorithm) {
+	if !model.IsValidDSAlgorithm(d.Algorithm) {
 		return ds, ErrInvalidDSAlgorithm
 	}
 
-	ds.Algorithm = model.DSAlgorithm(dsRequest.Algorithm)
+	ds.Algorithm = model.DSAlgorithm(d.Algorithm)
 
-	if !model.IsValidDSDigestType(dsRequest.DigestType) {
+	if !model.IsValidDSDigestType(d.DigestType) {
 		return ds, ErrInvalidDSDigestType
 	}
 
-	ds.DigestType = model.DSDigestType(dsRequest.DigestType)
+	ds.DigestType = model.DSDigestType(d.DigestType)
 
 	return ds, nil
 }

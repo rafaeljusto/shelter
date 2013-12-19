@@ -51,7 +51,7 @@ func TestToNameserverModel(t *testing.T) {
 		IPv6: "::1",
 	}
 
-	nameserver, err := toNameserverModel(nameserverRequest)
+	nameserver, err := nameserverRequest.toNameserverModel()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -74,7 +74,7 @@ func TestToNameserverModel(t *testing.T) {
 		IPv6: "::1",
 	}
 
-	nameserver, err = toNameserverModel(nameserverRequest)
+	nameserver, err = nameserverRequest.toNameserverModel()
 	if err == nil {
 		t.Error("Accepting an invalid IPv4")
 	}
@@ -85,7 +85,7 @@ func TestToNameserverModel(t *testing.T) {
 		IPv6: ":::1",
 	}
 
-	nameserver, err = toNameserverModel(nameserverRequest)
+	nameserver, err = nameserverRequest.toNameserverModel()
 	if err == nil {
 		t.Error("Accepting an invalid IPv6")
 	}
@@ -96,7 +96,7 @@ func TestToNameserverModel(t *testing.T) {
 		IPv6: "::1",
 	}
 
-	nameserver, err = toNameserverModel(nameserverRequest)
+	nameserver, err = nameserverRequest.toNameserverModel()
 	if err == nil {
 		t.Error("Accepting an invalid FQDN for IDNA")
 	}

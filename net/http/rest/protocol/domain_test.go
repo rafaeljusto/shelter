@@ -36,6 +36,18 @@ func TestMerge(t *testing.T) {
 				DigestType: 1,
 			},
 		},
+		DNSKEYS: []DNSKEYRequest{
+			{
+				Flags:     257,
+				Algorithm: uint8(5),
+				PublicKey: "AwEAAblaEaapG4inrQASY3HzwXwBaRSy5mkj7mZ30F+huI7zL8g0U7dv 7ufnSEQUlsC57OHoTBza+TQIv/mgQed8Fy4XGCGzYiHSYVYvGO9iWG3O 0voBYy/zv0z7ANfrA7Z3lY51CI6m/qoZUcDlNM0yTcJgilaKwUkLBHMA p9NJPuKVt8A7OHab00r2RDEVjiLWIIuTbz74gCXOVfAmvW07c8c=",
+			},
+			{
+				Flags:     256,
+				Algorithm: uint8(5),
+				PublicKey: "AwEAAfFQjspE7NgjAPclHrlyVFPRUHrU1p1U6POUXDpuIg8grg/s0lG1 8sjMkpxIvecIePLJw24gx48Ta9g0JJzPy35oGX5rYVJAu9BPqdUEuwIN ScTy3fPUhubvXP2fbyS6LeKNX/ZenihCD4HrViZehJmsKKv5fX8qx+RL 7NXCAAM1Xdet13cqR3LduW6wBzMiaQ==",
+			},
+		},
 		Owners: []string{
 			"example1@example.com.br",
 			"example2@example.com.br",
@@ -82,8 +94,8 @@ func TestMerge(t *testing.T) {
 		t.Error("Fail to merge nameservers correctly")
 	}
 
-	if len(domain.DSSet) != 2 ||
-		domain.DSSet[0].DigestType != 1 ||
+	if len(domain.DSSet) != 4 ||
+		domain.DSSet[0].DigestType != model.DSDigestTypeSHA1 ||
 		domain.DSSet[0].LastStatus != model.DSStatusTimeout {
 
 		t.Error("Fail to merge DS set correctly")
@@ -161,6 +173,27 @@ func TestMerge(t *testing.T) {
 
 	domainRequest = DomainRequest{
 		FQDN: "example.com.br",
+		DNSKEYS: []DNSKEYRequest{
+			{
+				Flags:     257,
+				Algorithm: uint8(5),
+				PublicKey: "AwEAAblaEaapG4inrQASY3HzwXwBaRSy5mkj7mZ30F+huI7zL8g0U7dv 7ufnSEQUlsC57OHoTBza+TQIv/mgQed8Fy4XGCGzYiHSYVYvGO9iWG3O 0voBYy/zv0z7ANfrA7Z3lY51CI6m/qoZUcDlNM0yTcJgilaKwUkLBHMA p9NJPuKVt8A7OHab00r2RDEVjiLWIIuTbz74gCXOVfAmvW07c8c=",
+			},
+			{
+				Flags:     256,
+				Algorithm: uint8(5),
+				PublicKey: strings.Repeat("x", 65536) + "\uff00",
+			},
+		},
+	}
+
+	domain, err = Merge(model.Domain{}, domainRequest)
+	if err == nil {
+		t.Error("Not detecting when there's an error in the DNSKEYs")
+	}
+
+	domainRequest = DomainRequest{
+		FQDN: "example.com.br",
 		Owners: []string{
 			"wrongemail.com.br",
 		},
@@ -214,7 +247,6 @@ func TestToDomainResponse(t *testing.T) {
 		t.Error("Fail to convert the DS set")
 	}
 
-	println(domainResponse.Owners[0])
 	if len(domainResponse.Owners) != 1 ||
 		domainResponse.Owners[0] != "example@example.com.br." {
 

@@ -56,7 +56,7 @@ func TestToDSModel(t *testing.T) {
 		DigestType: 1,
 	}
 
-	ds, err := toDSModel(dsRequest)
+	ds, err := dsRequest.toDSModel()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -84,7 +84,7 @@ func TestToDSModel(t *testing.T) {
 		DigestType: 1,
 	}
 
-	ds, err = toDSModel(dsRequest)
+	ds, err = dsRequest.toDSModel()
 	if err == nil {
 		t.Error("Allowing an invalid DS algorithm")
 	}
@@ -96,7 +96,7 @@ func TestToDSModel(t *testing.T) {
 		DigestType: 6,
 	}
 
-	ds, err = toDSModel(dsRequest)
+	ds, err = dsRequest.toDSModel()
 	if err == nil {
 		t.Error("Allowing an invalid DS digest type")
 	}

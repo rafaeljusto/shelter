@@ -19,6 +19,7 @@ type DomainRequest struct {
 	FQDN        string              `json:"-"`                     // Actual domain name
 	Nameservers []NameserverRequest `json:"nameservers,omitempty"` // Nameservers that asnwer with authority for this domain
 	DSSet       []DSRequest         `json:"dsset,omitempty"`       // Records for the DNS tree chain of trust
+	DNSKEYS     []DNSKEYRequest     `json:"dnskeys,omitempty"`     // Records that can be converted into DS records
 	Owners      []string            `json:"owners,omitempty"`      // E-mails that will be alerted on any problem
 }
 
@@ -76,6 +77,12 @@ func Merge(domain model.Domain, domainRequest DomainRequest) (model.Domain, erro
 	if err != nil {
 		return domain, err
 	}
+
+	dnskeysDSSet, err := dnskeysRequestsToDSSetModel(domain.FQDN, domainRequest.DNSKEYS)
+	if err != nil {
+		return domain, err
+	}
+	dsSet = append(dsSet, dnskeysDSSet...)
 
 	for index, userDS := range dsSet {
 		for _, ds := range domain.DSSet {

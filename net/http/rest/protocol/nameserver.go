@@ -39,7 +39,7 @@ type NameserverResponse struct {
 func toNameserversModel(nameserversRequest []NameserverRequest) ([]model.Nameserver, error) {
 	var nameservers []model.Nameserver
 	for _, nameserverRequest := range nameserversRequest {
-		nameserver, err := toNameserverModel(nameserverRequest)
+		nameserver, err := nameserverRequest.toNameserverModel()
 		if err != nil {
 			return nil, err
 		}
@@ -53,25 +53,25 @@ func toNameserversModel(nameserversRequest []NameserverRequest) ([]model.Nameser
 // Convert a nameserver request object into a nameserver model object. It can return
 // errors related to the conversion of IP addresses and normalization of nameserver's
 // hostname
-func toNameserverModel(nameserverRequest NameserverRequest) (model.Nameserver, error) {
+func (n *NameserverRequest) toNameserverModel() (model.Nameserver, error) {
 	var nameserver model.Nameserver
 
-	host, err := model.NormalizeDomainName(nameserverRequest.Host)
+	host, err := model.NormalizeDomainName(n.Host)
 	if err != nil {
 		return nameserver, err
 	}
 	nameserver.Host = host
 
-	if len(nameserverRequest.IPv4) > 0 {
-		ipv4 := net.ParseIP(nameserverRequest.IPv4)
+	if len(n.IPv4) > 0 {
+		ipv4 := net.ParseIP(n.IPv4)
 		if ipv4 == nil {
 			return nameserver, ErrInvalidIP
 		}
 		nameserver.IPv4 = ipv4
 	}
 
-	if len(nameserverRequest.IPv6) > 0 {
-		ipv6 := net.ParseIP(nameserverRequest.IPv6)
+	if len(n.IPv6) > 0 {
+		ipv6 := net.ParseIP(n.IPv6)
 		if ipv6 == nil {
 			return nameserver, ErrInvalidIP
 		}
