@@ -116,9 +116,9 @@ Supported HTTP headers in request:
 *  Accept-Charset (PUT, GET, DELETE)
 *  Accept-Language (PUT, GET, DELETE)
 *  Authorization (PUT, GET, DELETE)
-*  If-Modified-Since (GET)
-*  If-Unmodified-Since (GET)
-*  If-Match (PUT)
+*  If-Modified-Since (PUT, GET)
+*  If-Unmodified-Since (PUT, GET)
+*  If-Match (PUT, GET)
 
 Supported HTTP headers in response:
 *  Status (PUT, GET, DELETE)
@@ -130,5 +130,5 @@ Supported HTTP headers in response:
 *  Accept-Language (PUT, GET, DELETE)
 *  Accept (PUT, GET, DELETE)
 *  Date (PUT, GET, DELETE)
-*  ETag (GET)
-*  Last-Modified (GET)
+*  ETag (PUT, GET)
+*  Last-Modified (PUT, GET)

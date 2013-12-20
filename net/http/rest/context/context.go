@@ -1,4 +1,4 @@
-package rest
+package context
 
 import (
 	"bytes"
@@ -17,10 +17,10 @@ import (
 type ShelterRESTContext struct {
 	Database           *mgo.Database          // MongoDB Database
 	Language           *language.LanguagePack // Language choosen by the user
-	requestContent     []byte                 // Request body
-	responseHttpStatus int                    // Response HTTP status
-	responseMessage    []byte                 // Response HTTP message
-	httpHeader         map[string]string      // Extra headers to be sent in the response
+	RequestContent     []byte                 // Request body
+	ResponseHttpStatus int                    // Response HTTP status
+	ResponseContent    []byte                 // Response body
+	HTTPHeader         map[string]string      // Extra headers to be sent in the response
 }
 
 // Initialize a new context. By default use system choosen language pack. We also store
@@ -28,13 +28,13 @@ type ShelterRESTContext struct {
 // and we need to check it for some HTTP header verifications. We don't return a pointer
 // of the context because we want to control the destruction of the object and don't leave
 // it to the garbage collector
-func newShelterRESTContext(r *http.Request) (ShelterRESTContext, error) {
+func NewShelterRESTContext(r *http.Request) (ShelterRESTContext, error) {
 	context := ShelterRESTContext{
 		Language: language.ShelterRESTLanguagePack,
 	}
 
 	var err error
-	if context.requestContent, err = ioutil.ReadAll(r.Body); err != nil {
+	if context.RequestContent, err = ioutil.ReadAll(r.Body); err != nil {
 		return context, err
 	}
 
@@ -53,19 +53,19 @@ func newShelterRESTContext(r *http.Request) (ShelterRESTContext, error) {
 
 // Transform the content body, that is in JSON format into an object
 func (s *ShelterRESTContext) JSONRequest(object interface{}) error {
-	decoder := json.NewDecoder(bytes.NewBuffer(s.requestContent))
+	decoder := json.NewDecoder(bytes.NewBuffer(s.RequestContent))
 	return decoder.Decode(object)
 }
 
 // Store only the HTTP status, for no content responses
 func (s *ShelterRESTContext) Response(httpStatus int) {
-	s.responseHttpStatus = httpStatus
+	s.ResponseHttpStatus = httpStatus
 }
 
 // Store a message response, translating the message id to the proper language message
 func (s *ShelterRESTContext) MessageResponse(httpStatus int, messageId string) {
-	s.responseHttpStatus = httpStatus
-	s.responseMessage = []byte(s.Language.Messages[messageId])
+	s.ResponseHttpStatus = httpStatus
+	s.ResponseContent = []byte(s.Language.Messages[messageId])
 }
 
 // Store a object in json format for the response
@@ -76,8 +76,8 @@ func (s *ShelterRESTContext) JSONResponse(httpStatus int, object interface{}) er
 		return err
 	}
 
-	s.responseHttpStatus = httpStatus
-	s.responseMessage = content
+	s.ResponseHttpStatus = httpStatus
+	s.ResponseContent = content
 	return nil
 }
 
@@ -100,5 +100,5 @@ func (s *ShelterRESTContext) AddHeader(key, value string) {
 		return
 	}
 
-	s.httpHeader[key] = value
+	s.HTTPHeader[key] = value
 }

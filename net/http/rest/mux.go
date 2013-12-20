@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"os"
 	"shelter/config"
+	"shelter/net/http/rest/check"
+	"shelter/net/http/rest/context"
 	"shelter/net/http/rest/language"
 	"strings"
 	"time"
@@ -19,7 +21,7 @@ var (
 )
 
 // Create this type to make it easy to reference a Shelter REST server handler
-type shelterRESTHandler func(*http.Request, *ShelterRESTContext)
+type shelterRESTHandler func(*http.Request, *context.ShelterRESTContext)
 
 // shelterRESTMux is responsable for storing all routes. Beyond of searching the best
 // route for each request, the mux will do all initial HTTP checks before calling the
@@ -42,7 +44,7 @@ func (mux shelterRESTMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	context, err := newShelterRESTContext(r)
+	context, err := context.NewShelterRESTContext(r)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		mux.logger.Println("Error creating context. Details:", err)
@@ -95,43 +97,50 @@ func (mux shelterRESTMux) findRoute(uri string) shelterRESTHandler {
 
 // Verify HTTP headers and fill context with user preferences
 func (mux shelterRESTMux) checkHTTPHeaders(w http.ResponseWriter,
-	r *http.Request, context *ShelterRESTContext) bool {
+	r *http.Request, context *context.ShelterRESTContext) bool {
 
 	// We first check the language header, because if it's acceptable the next messages are
 	// going to be returned in the language choosen by the user
-	if !checkHTTPAcceptLanguage(r, context) {
+	if !check.HTTPAcceptLanguage(r, context) {
 		w.WriteHeader(http.StatusNotAcceptable)
 		fmt.Fprintf(w, context.Language.Messages["accept-language-error"])
 		return false
 	}
 
-	if !checkHTTPAccept(r) {
+	if !check.HTTPAccept(r) {
 		w.WriteHeader(http.StatusNotAcceptable)
 		fmt.Fprintf(w, context.Language.Messages["accept-error"])
 		return false
 	}
 
-	if !checkHTTPAcceptCharset(r) {
+	if !check.HTTPAcceptCharset(r) {
 		w.WriteHeader(http.StatusNotAcceptable)
 		fmt.Fprintf(w, context.Language.Messages["accept-charset-error"])
 		return false
 	}
 
-	if !checkContentType(r) {
+	if !check.ContentType(r) {
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintf(w, context.Language.Messages["invalid-content-type"])
 		return false
 	}
 
-	if !checkHTTPContentMD5(r, context) {
+	if !check.HTTPContentMD5(r, context) {
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintf(w, context.Language.Messages["invalid-content-md5"])
 		return false
 	}
 
-	if !checkDate(r) {
+	timeFrameOK, err := check.Date(r)
+
+	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintf(w, context.Language.Messages["invalid-date"])
+		return false
+
+	} else if !timeFrameOK {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, context.Language.Messages["invalid-date-time-frame"])
 		return false
 	}
 
@@ -141,32 +150,34 @@ func (mux shelterRESTMux) checkHTTPHeaders(w http.ResponseWriter,
 }
 
 // Write response with the defaults HTTP response headers
-func (mux shelterRESTMux) writeResponse(w http.ResponseWriter, context ShelterRESTContext) {
-	if len(context.responseMessage) > 0 {
+func (mux shelterRESTMux) writeResponse(w http.ResponseWriter,
+	context context.ShelterRESTContext) {
+
+	if len(context.ResponseContent) > 0 {
 		w.Header().Add("Content-Type", "application/vnd.shelter+json")
 		w.Header().Add("Content-Encoding", "utf-8")
 		w.Header().Add("Content-Language", context.Language.Name())
-		w.Header().Add("Content-Length", fmt.Sprintf("%d", len(context.responseMessage)))
+		w.Header().Add("Content-Length", fmt.Sprintf("%d", len(context.ResponseContent)))
 
 		hash := md5.New()
-		hash.Write(context.responseMessage)
+		hash.Write(context.ResponseContent)
 		hashBytes := hash.Sum(nil)
 		hashBase64 := base64.StdEncoding.EncodeToString(hashBytes)
 		w.Header().Add("Content-MD5", hashBase64)
 	}
 
-	w.Header().Add("Accept", supportedContentType)
+	w.Header().Add("Accept", check.SupportedContentType)
 	w.Header().Add("Accept-Language", language.ShelterRESTLanguagePacks.Names())
 	w.Header().Add("Accept-Charset", "utf-8")
 	w.Header().Add("Date", time.Now().UTC().Format(time.RFC1123))
 
-	for key, value := range context.httpHeader {
+	for key, value := range context.HTTPHeader {
 		w.Header().Add(key, value)
 	}
 
-	w.WriteHeader(context.responseHttpStatus)
+	w.WriteHeader(context.ResponseHttpStatus)
 
-	if len(context.responseMessage) > 0 {
-		w.Write(context.responseMessage)
+	if len(context.ResponseContent) > 0 {
+		w.Write(context.ResponseContent)
 	}
 }

@@ -5,8 +5,9 @@ import (
 	"net/http"
 	"shelter/dao"
 	"shelter/net/http/rest"
+	"shelter/net/http/rest/check"
+	"shelter/net/http/rest/context"
 	"shelter/net/http/rest/protocol"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -15,7 +16,7 @@ func init() {
 	rest.HandleFunc("/domain/", handleDomain)
 }
 
-func handleDomain(r *http.Request, context *rest.ShelterRESTContext) {
+func handleDomain(r *http.Request, context *context.ShelterRESTContext) {
 	if r.Method == "GET" {
 		retrieveDomain(r, context)
 
@@ -30,7 +31,7 @@ func handleDomain(r *http.Request, context *rest.ShelterRESTContext) {
 	}
 }
 
-func retrieveDomain(r *http.Request, context *rest.ShelterRESTContext) {
+func retrieveDomain(r *http.Request, context *context.ShelterRESTContext) {
 	fqdn := getFQDNFromURI(r.URL.Path)
 	if len(fqdn) == 0 {
 		context.MessageResponse(http.StatusBadRequest, "invalid-uri")
@@ -47,30 +48,42 @@ func retrieveDomain(r *http.Request, context *rest.ShelterRESTContext) {
 		return
 	}
 
-	if len(r.Header.Get("If-Modified-Since")) > 0 {
-		ifModifiedSince, err := time.Parse(time.RFC1123, r.Header.Get("If-Modified-Since"))
-		if err != nil {
-			context.MessageResponse(http.StatusBadRequest, "invalid-header-date")
-			return
-		}
+	modifiedSince, err := check.IfModifiedSince(r, domain.LastModifiedAt)
+	if err != nil {
+		context.MessageResponse(http.StatusBadRequest, "invalid-header-date")
+		return
 
-		if domain.LastModifiedAt.Before(ifModifiedSince) || domain.LastModifiedAt.Equal(ifModifiedSince) {
-			context.Response(http.StatusNotModified)
-			return
-		}
+	} else if !modifiedSince {
+		// If the requested variant has not been modified since the time specified in this
+		// field, an entity will not be returned from the server; instead, a 304 (not
+		// modified) response will be returned without any message-body
+		context.Response(http.StatusNotModified)
+		return
 	}
 
-	if len(r.Header.Get("If-Unmodified-Since")) > 0 {
-		ifUnmodifiedSince, err := time.Parse(time.RFC1123, r.Header.Get("If-Unmodified-Since"))
-		if err != nil {
-			context.MessageResponse(http.StatusBadRequest, "invalid-header-date")
-			return
-		}
+	unmodifiedSince, err := check.IfUnmodifiedSince(r, domain.LastModifiedAt)
+	if err != nil {
+		context.MessageResponse(http.StatusBadRequest, "invalid-header-date")
+		return
 
-		if domain.LastModifiedAt.After(ifUnmodifiedSince) {
-			context.Response(http.StatusPreconditionFailed)
-			return
-		}
+	} else if !unmodifiedSince {
+		// If the requested variant has been modified since the specified time, the server
+		// MUST NOT perform the requested operation, and MUST return a 412 (Precondition
+		// Failed)
+		context.Response(http.StatusPreconditionFailed)
+		return
+	}
+
+	match, err := check.IfMatch(r, domain.Revision)
+	if err != nil {
+		context.MessageResponse(http.StatusBadRequest, "invalid-if-match")
+		return
+
+	} else if !match {
+		// If "*" is given and no current entity exists or if none of the entity tags match
+		// the server MUST NOT perform the requested method, and MUST return a 412
+		// (Precondition Failed) response
+		context.MessageResponse(http.StatusPreconditionFailed, "if-match-failed")
 	}
 
 	context.AddHeader("ETag", fmt.Sprintf("%d", domain.Revision))
@@ -78,7 +91,7 @@ func retrieveDomain(r *http.Request, context *rest.ShelterRESTContext) {
 	context.JSONResponse(http.StatusOK, protocol.ToDomainResponse(domain))
 }
 
-func createUpdateDomain(r *http.Request, context *rest.ShelterRESTContext) {
+func createUpdateDomain(r *http.Request, context *context.ShelterRESTContext) {
 	fqdn := getFQDNFromURI(r.URL.Path)
 	if len(fqdn) == 0 {
 		context.MessageResponse(http.StatusBadRequest, "invalid-uri")
@@ -103,46 +116,48 @@ func createUpdateDomain(r *http.Request, context *rest.ShelterRESTContext) {
 	// user, if the domain does not exist yet thats alright because we will create it
 	domain, _ := domainDAO.FindByFQDN(fqdn)
 
-	var err error
+	modifiedSince, err := check.IfModifiedSince(r, domain.LastModifiedAt)
+	if err != nil {
+		context.MessageResponse(http.StatusBadRequest, "invalid-header-date")
+		return
+
+	} else if !modifiedSince {
+		// If the requested variant has not been modified since the time specified in this
+		// field, an entity will not be returned from the server; instead, a 304 (not
+		// modified) response will be returned without any message-body
+		context.Response(http.StatusNotModified)
+		return
+	}
+
+	unmodifiedSince, err := check.IfUnmodifiedSince(r, domain.LastModifiedAt)
+	if err != nil {
+		context.MessageResponse(http.StatusBadRequest, "invalid-header-date")
+		return
+
+	} else if !unmodifiedSince {
+		// If the requested variant has been modified since the specified time, the server
+		// MUST NOT perform the requested operation, and MUST return a 412 (Precondition
+		// Failed)
+		context.Response(http.StatusPreconditionFailed)
+		return
+	}
+
 	if domain, err = protocol.Merge(domain, domainRequest); err != nil {
 		// TODO: Log!
 		context.Response(http.StatusInternalServerError)
 		return
 	}
 
-	ifMatch := r.Header.Get("If-Match")
-	if len(ifMatch) > 0 {
-		ifMatch = strings.TrimSpace(ifMatch)
-		ifMatchParts := strings.Split(ifMatch, ",")
+	match, err := check.IfMatch(r, domain.Revision)
+	if err != nil {
+		context.MessageResponse(http.StatusBadRequest, "invalid-if-match")
+		return
 
-		match := false
-		for _, ifMatchPart := range ifMatchParts {
-			ifMatchPart = strings.TrimSpace(ifMatchPart)
-
-			// If "*" is given and no current entity exists, the server MUST NOT perform the
-			// requested method, and MUST return a 412 (Precondition Failed) response
-			if ifMatchPart == "*" {
-				match = (domain.Revision > 0)
-				break
-			}
-
-			etag, err := strconv.Atoi(ifMatchPart)
-			if err != nil {
-				context.MessageResponse(http.StatusBadRequest, "invalid-if-match")
-				return
-			}
-
-			if etag == domain.Revision {
-				match = true
-				break
-			}
-		}
-
-		// RFC 2616 - 14.24 - If none of the entity tags match the server MUST NOT perform the
-		// requested method, and MUST return a 412 (Precondition Failed) response
-		if !match {
-			context.MessageResponse(http.StatusPreconditionFailed, "if-match-failed")
-		}
+	} else if !match {
+		// If "*" is given and no current entity exists or if none of the entity tags match
+		// the server MUST NOT perform the requested method, and MUST return a 412
+		// (Precondition Failed) response
+		context.MessageResponse(http.StatusPreconditionFailed, "if-match-failed")
 	}
 
 	if err := domainDAO.Save(&domain); err != nil {
@@ -168,7 +183,7 @@ func createUpdateDomain(r *http.Request, context *rest.ShelterRESTContext) {
 	}
 }
 
-func removeDomain(r *http.Request, context *rest.ShelterRESTContext) {
+func removeDomain(r *http.Request, context *context.ShelterRESTContext) {
 
 }
 

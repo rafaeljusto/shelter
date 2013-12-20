@@ -1,20 +1,22 @@
-package rest
+package check
 
 import (
 	"crypto/md5"
 	"encoding/base64"
 	"net/http"
+	"shelter/net/http/rest/context"
 	"shelter/net/http/rest/language"
+	"strconv"
 	"strings"
 	"time"
 )
 
 const (
-	supportedContentType = "application/vnd.shelter+json"
+	SupportedContentType = "application/vnd.shelter+json"
 	timeFrameDuration    = "10m"
 )
 
-func checkHTTPAccept(r *http.Request) bool {
+func HTTPAccept(r *http.Request) bool {
 	accept := r.Header.Get("Accept")
 	accept = strings.TrimSpace(accept)
 	accept = strings.ToLower(accept)
@@ -31,7 +33,7 @@ func checkHTTPAccept(r *http.Request) bool {
 			acceptPart = acceptPart[0:idx]
 		}
 
-		if acceptPart == "*" || acceptPart == supportedContentType {
+		if acceptPart == "*" || acceptPart == SupportedContentType {
 			return true
 		}
 	}
@@ -41,7 +43,7 @@ func checkHTTPAccept(r *http.Request) bool {
 
 // The accept language check beyond verifying if the language exists in out system, set
 // the first language found in the context
-func checkHTTPAcceptLanguage(r *http.Request, context *ShelterRESTContext) bool {
+func HTTPAcceptLanguage(r *http.Request, context *context.ShelterRESTContext) bool {
 	acceptLanguage := r.Header.Get("Accept-Language")
 	acceptLanguage = strings.TrimSpace(acceptLanguage)
 	acceptLanguage = strings.ToLower(acceptLanguage)
@@ -72,7 +74,7 @@ func checkHTTPAcceptLanguage(r *http.Request, context *ShelterRESTContext) bool 
 	return false
 }
 
-func checkHTTPAcceptCharset(r *http.Request) bool {
+func HTTPAcceptCharset(r *http.Request) bool {
 	acceptCharset := r.Header.Get("Accept-Charset")
 	acceptCharset = strings.TrimSpace(acceptCharset)
 	acceptCharset = strings.ToLower(acceptCharset)
@@ -97,7 +99,7 @@ func checkHTTPAcceptCharset(r *http.Request) bool {
 	return false
 }
 
-func checkContentType(r *http.Request) bool {
+func ContentType(r *http.Request) bool {
 	contentType := r.Header.Get("Content-Type")
 	contentType = strings.TrimSpace(contentType)
 	contentType = strings.ToLower(contentType)
@@ -111,10 +113,10 @@ func checkContentType(r *http.Request) bool {
 		contentType = contentType[0:idx]
 	}
 
-	return contentType == supportedContentType
+	return contentType == SupportedContentType
 }
 
-func checkHTTPContentMD5(r *http.Request, context *ShelterRESTContext) bool {
+func HTTPContentMD5(r *http.Request, context *context.ShelterRESTContext) bool {
 	contentMD5 := r.Header.Get("Content-MD5")
 	contentMD5 = strings.TrimSpace(contentMD5)
 
@@ -123,24 +125,24 @@ func checkHTTPContentMD5(r *http.Request, context *ShelterRESTContext) bool {
 	}
 
 	hash := md5.New()
-	hash.Write(context.requestContent)
+	hash.Write(context.RequestContent)
 	hashBytes := hash.Sum(nil)
 	hashBase64 := base64.StdEncoding.EncodeToString(hashBytes)
 
 	return hashBase64 == contentMD5
 }
 
-func checkDate(r *http.Request) bool {
+func Date(r *http.Request) (bool, error) {
 	dateStr := r.Header.Get("Date")
 	dateStr = strings.TrimSpace(dateStr)
 
 	if len(dateStr) == 0 {
-		return true
+		return true, nil
 	}
 
 	date, err := time.Parse(time.RFC1123, dateStr)
 	if err != nil {
-		return false
+		return false, err
 	}
 
 	// Check if the date is inside the time frame, avoiding reply attack
@@ -148,5 +150,79 @@ func checkDate(r *http.Request) bool {
 	duration, _ := time.ParseDuration(timeFrameDuration)
 	frameInception := now.Add(duration * -1)
 	frameExpiration := now.Add(duration)
-	return !date.UTC().Before(frameInception) && !date.UTC().After(frameExpiration)
+	return !date.UTC().Before(frameInception) && !date.UTC().After(frameExpiration), nil
+}
+
+func IfModifiedSince(r *http.Request, lastModifiedAt time.Time) (bool, error) {
+	ifModifiedSinceStr := r.Header.Get("If-Modified-Since")
+	ifModifiedSinceStr = strings.TrimSpace(ifModifiedSinceStr)
+
+	if len(ifModifiedSinceStr) == 0 {
+		return true, nil
+	}
+
+	ifModifiedSince, err := time.Parse(time.RFC1123, ifModifiedSinceStr)
+	if err != nil {
+		return true, err
+	}
+
+	if lastModifiedAt.Before(ifModifiedSince) || lastModifiedAt.Equal(ifModifiedSince) {
+		return false, nil
+	}
+
+	return true, nil
+}
+
+func IfUnmodifiedSince(r *http.Request, lastModifiedAt time.Time) (bool, error) {
+	ifUnmodifiedSinceStr := r.Header.Get("If-Unmodified-Since")
+	ifUnmodifiedSinceStr = strings.TrimSpace(ifUnmodifiedSinceStr)
+
+	if len(ifUnmodifiedSinceStr) == 0 {
+		return true, nil
+	}
+
+	ifUnmodifiedSince, err := time.Parse(time.RFC1123, ifUnmodifiedSinceStr)
+	if err != nil {
+		return true, err
+	}
+
+	if lastModifiedAt.After(ifUnmodifiedSince) {
+		return false, nil
+	}
+
+	return true, nil
+}
+
+func IfMatch(r *http.Request, revision int) (bool, error) {
+	ifMatch := r.Header.Get("If-Match")
+	ifMatch = strings.TrimSpace(ifMatch)
+
+	if len(ifMatch) == 0 {
+		return true, nil
+	}
+
+	ifMatchParts := strings.Split(ifMatch, ",")
+
+	for _, ifMatchPart := range ifMatchParts {
+		ifMatchPart = strings.TrimSpace(ifMatchPart)
+
+		// If "*" is given and no current entity exists, the server MUST NOT perform the
+		// requested method, and MUST return a 412 (Precondition Failed) response
+		if ifMatchPart == "*" {
+			return (revision > 0), nil
+		}
+
+		etag, err := strconv.Atoi(ifMatchPart)
+		if err != nil {
+			return false, err
+		}
+
+		if etag == revision {
+			return true, nil
+		}
+	}
+
+	// RFC 2616 - 14.24 - If none of the entity tags match the server MUST NOT perform the
+	// requested method, and MUST return a 412 (Precondition Failed) response
+	return false, nil
 }
