@@ -73,6 +73,7 @@ func main() {
 	domainLifeCycle(domainDAO)
 	domainsLifeCycle(domainDAO)
 	domainUniqueFQDN(domainDAO)
+	domainConcurrency(domainDAO)
 
 	// Domain DAO performance report is optional and only generated when the report file
 	// path parameter is given
@@ -268,6 +269,35 @@ func domainUniqueFQDN(domainDAO dao.DomainDAO) {
 	// Remove domain
 	if err := domainDAO.RemoveByFQDN(domain1.FQDN); err != nil {
 		utils.Fatalln("Error while trying to remove a domain", err)
+	}
+}
+
+// Check if the revision field avoid data concurrency. Is better to fail than to store the
+// wrong state
+func domainConcurrency(domainDAO dao.DomainDAO) {
+	domain := newDomain()
+
+	// Create domain
+	if err := domainDAO.Save(&domain); err != nil {
+		utils.Fatalln("Couldn't save domain in database", err)
+	}
+
+	domain1, err := domainDAO.FindByFQDN(domain.FQDN)
+	if err != nil {
+		utils.Fatalln("Couldn't find created domain in database", err)
+	}
+
+	domain2, err := domainDAO.FindByFQDN(domain.FQDN)
+	if err != nil {
+		utils.Fatalln("Couldn't find created domain in database", err)
+	}
+
+	if err := domainDAO.Save(&domain1); err != nil {
+		utils.Fatalln("Couldn't save domain in database", err)
+	}
+
+	if err := domainDAO.Save(&domain2); err == nil {
+		utils.Fatalln("Not controlling domain concurrency", nil)
 	}
 }
 

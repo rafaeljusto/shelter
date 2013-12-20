@@ -64,9 +64,13 @@ func (dao DomainDAO) Save(domain *model.Domain) error {
 	// Store the last time that the object was modified
 	domain.LastModifiedAt = time.Now().UTC()
 
-	// Upsert try to update the collection entry if exists, if not, it creates a new
-	// entry. For all the domain objects we are going to use the collection "domain"
-	_, err := dao.Database.C(domainDAOCollection).UpsertId(domain.Id, domain)
+	// Upsert try to update the collection entry if exists, if not, it creates a new entry.
+	// For all the domain objects we are going to use the collection "domain". We also avoid
+	// concurency adding the revision as a paremeter for updating the entry
+	_, err := dao.Database.C(domainDAOCollection).Upsert(bson.M{
+		"_id":      domain.Id,
+		"revision": domain.Revision - 1,
+	}, domain)
 
 	return err
 }

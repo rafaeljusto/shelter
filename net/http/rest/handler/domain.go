@@ -146,8 +146,14 @@ func createUpdateDomain(r *http.Request, context *rest.ShelterRESTContext) {
 	}
 
 	if err := domainDAO.Save(&domain); err != nil {
-		// TODO: Log!
-		context.Response(http.StatusInternalServerError)
+		if strings.Index(err.Error(), "duplicate key error index") != -1 {
+			context.MessageResponse(http.StatusConflict, "conflict")
+
+		} else {
+			// TODO: Log!
+			context.Response(http.StatusInternalServerError)
+		}
+
 		return
 	}
 
