@@ -2,18 +2,18 @@ package rest
 
 import (
 	"crypto/tls"
+	"fmt"
 	"net"
 	"net/http"
 	"shelter/config"
 	"shelter/net/http/rest/language"
+	"shelter/net/http/rest/log"
 	"strconv"
 )
 
-func Start() error {
-	if err := language.LoadConfig(config.ShelterConfig.RESTServer.LanguageConfigPath); err != nil {
-		return err
-	}
-
+// Function created to run the listeners before dropping privileges in the main binary, so
+// that we can listen in low ports without keeping the program as a super user
+func Listen() error {
 	listeners := make([]net.Listener, 0, len(config.ShelterConfig.RESTServer.Listeners))
 
 	for _, v := range config.ShelterConfig.RESTServer.Listeners {
@@ -44,12 +44,25 @@ func Start() error {
 
 			listeners = append(listeners, ln)
 		}
-
 	}
 
-	// We need a better solution to initialize the REST server log, because if we forget to
-	// call this method the logger will be nil and on error the main method would panic
-	mux.initializeLogger()
+	return nil
+}
+
+func Start(listeners []net.Listener) error {
+	// Initialize language configuration file
+	if err := language.LoadConfig(config.ShelterConfig.RESTServer.LanguageConfigPath); err != nil {
+		return err
+	}
+
+	// Initialize REST server log
+	restLogPath := fmt.Sprintf("%s/%s",
+		config.ShelterConfig.Log.BasePath,
+		config.ShelterConfig.Log.RESTFilename,
+	)
+	if err := log.SetOutput(restLogPath); err != nil {
+		return err
+	}
 
 	for _, v := range listeners {
 		go http.Serve(v, mux)

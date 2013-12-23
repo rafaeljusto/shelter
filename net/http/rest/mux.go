@@ -4,13 +4,11 @@ import (
 	"crypto/md5"
 	"encoding/base64"
 	"fmt"
-	"log"
 	"net/http"
-	"os"
-	"shelter/config"
 	"shelter/net/http/rest/check"
 	"shelter/net/http/rest/context"
 	"shelter/net/http/rest/language"
+	"shelter/net/http/rest/log"
 	"strings"
 	"time"
 )
@@ -28,7 +26,6 @@ type shelterRESTHandler func(*http.Request, *context.ShelterRESTContext)
 // handler
 type shelterRESTMux struct {
 	routes map[string]shelterRESTHandler // Map of all available routes
-	logger *log.Logger                   // REST server log
 }
 
 // Function created only to register the handlers more easily in the mux
@@ -47,7 +44,7 @@ func (mux shelterRESTMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	context, err := context.NewShelterRESTContext(r)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		mux.logger.Println("Error creating context. Details:", err)
+		log.Println("Error creating context. Details:", err)
 		return
 	}
 
@@ -57,22 +54,6 @@ func (mux shelterRESTMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	handler(r, &context)
 	mux.writeResponse(w, context)
-}
-
-// Open REST server log file to print errors that can occur while managing the requests
-func (mux *shelterRESTMux) initializeLogger() {
-	restLogPath := fmt.Sprintf("%s/%s",
-		config.ShelterConfig.Log.BasePath,
-		config.ShelterConfig.Log.RESTFilename,
-	)
-
-	restLog, err := os.Create(restLogPath)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	mux.logger = log.New(restLog, "", log.LstdFlags)
 }
 
 // Find the best handler for the given URI. The best handler is the most specific one
@@ -135,7 +116,7 @@ func (mux shelterRESTMux) checkHTTPHeaders(w http.ResponseWriter,
 
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, context.Language.Messages["invalid-date"])
+		fmt.Fprintf(w, context.Language.Messages["invalid-header-date"])
 		return false
 
 	} else if !timeFrameOK {
@@ -144,7 +125,10 @@ func (mux shelterRESTMux) checkHTTPHeaders(w http.ResponseWriter,
 		return false
 	}
 
-	// TODO Check authorization!
+	if !check.Authorization(r) {
+		w.WriteHeader(http.StatusUnauthorized)
+		return false
+	}
 
 	return true
 }

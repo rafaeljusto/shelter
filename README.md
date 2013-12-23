@@ -119,6 +119,7 @@ Supported HTTP headers in request:
 *  If-Modified-Since (PUT, GET)
 *  If-Unmodified-Since (PUT, GET)
 *  If-Match (PUT, GET)
+*  If-None-Match (PUT, GET)
 
 Supported HTTP headers in response:
 *  Status (PUT, GET, DELETE)

@@ -7,6 +7,7 @@ import (
 	"shelter/net/http/rest"
 	"shelter/net/http/rest/check"
 	"shelter/net/http/rest/context"
+	"shelter/net/http/rest/log"
 	"shelter/net/http/rest/protocol"
 	"strings"
 	"time"
@@ -84,6 +85,22 @@ func retrieveDomain(r *http.Request, context *context.ShelterRESTContext) {
 		// the server MUST NOT perform the requested method, and MUST return a 412
 		// (Precondition Failed) response
 		context.MessageResponse(http.StatusPreconditionFailed, "if-match-failed")
+		return
+	}
+
+	noneMatch, err := check.IfNoneMatch(r, domain.Revision)
+	if err != nil {
+		context.MessageResponse(http.StatusBadRequest, "invalid-if-none-match")
+		return
+
+	} else if !noneMatch {
+		// Instead, if the request method was GET or HEAD, the server SHOULD respond with a
+		// 304 (Not Modified) response, including the cache-related header fields
+		// (particularly ETag) of one of the entities that matched. For all other request
+		// methods, the server MUST respond with a status of 412 (Precondition Failed)
+		context.AddHeader("ETag", fmt.Sprintf("%d", domain.Revision))
+		context.MessageResponse(http.StatusNotModified, "if-match-none-failed")
+		return
 	}
 
 	context.AddHeader("ETag", fmt.Sprintf("%d", domain.Revision))
@@ -143,7 +160,8 @@ func createUpdateDomain(r *http.Request, context *context.ShelterRESTContext) {
 	}
 
 	if domain, err = protocol.Merge(domain, domainRequest); err != nil {
-		// TODO: Log!
+		log.Println("Error while merging domain objects for create or "+
+			"update operation. Details:", err)
 		context.Response(http.StatusInternalServerError)
 		return
 	}
@@ -158,6 +176,21 @@ func createUpdateDomain(r *http.Request, context *context.ShelterRESTContext) {
 		// the server MUST NOT perform the requested method, and MUST return a 412
 		// (Precondition Failed) response
 		context.MessageResponse(http.StatusPreconditionFailed, "if-match-failed")
+		return
+	}
+
+	noneMatch, err := check.IfNoneMatch(r, domain.Revision)
+	if err != nil {
+		context.MessageResponse(http.StatusBadRequest, "invalid-if-none-match")
+		return
+
+	} else if !noneMatch {
+		// Instead, if the request method was GET or HEAD, the server SHOULD respond with a
+		// 304 (Not Modified) response, including the cache-related header fields
+		// (particularly ETag) of one of the entities that matched. For all other request
+		// methods, the server MUST respond with a status of 412 (Precondition Failed)
+		context.MessageResponse(http.StatusPreconditionFailed, "if-match-none-failed")
+		return
 	}
 
 	if err := domainDAO.Save(&domain); err != nil {
@@ -165,7 +198,8 @@ func createUpdateDomain(r *http.Request, context *context.ShelterRESTContext) {
 			context.MessageResponse(http.StatusConflict, "conflict")
 
 		} else {
-			// TODO: Log!
+			log.Println("Error while saving domain objects for create or "+
+				"update operation. Details:", err)
 			context.Response(http.StatusInternalServerError)
 		}
 

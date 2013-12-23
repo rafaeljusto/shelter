@@ -2,10 +2,9 @@ package scan
 
 import (
 	"fmt"
-	"log"
-	"os"
 	"shelter/config"
 	"shelter/database/mongodb"
+	"shelter/net/scan/log"
 	"sync"
 	"time"
 )
@@ -19,14 +18,11 @@ func ScanDomains() {
 		config.ShelterConfig.Log.ScanFilename,
 	)
 
-	scanLog, err := os.Create(scanLogPath)
-	if err != nil {
+	if err := log.SetOutput(scanLogPath); err != nil {
 		log.Println(err)
 		return
 	}
-	defer scanLog.Close()
-
-	logger := log.New(scanLog, "", log.LstdFlags)
+	defer log.Close()
 
 	database, err := mongodb.Open(
 		config.ShelterConfig.Database.URI,
@@ -34,7 +30,7 @@ func ScanDomains() {
 	)
 
 	if err != nil {
-		logger.Println(err)
+		log.Println("Error while initializing database. Details:", err)
 		return
 	}
 
@@ -77,7 +73,7 @@ func ScanDomains() {
 				if err == nil {
 					return
 				} else {
-					logger.Println(err)
+					log.Println("Error detected while executing the scan. Details:", err)
 				}
 			}
 		}

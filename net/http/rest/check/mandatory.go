@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"shelter/net/http/rest/context"
 	"shelter/net/http/rest/language"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -153,76 +152,69 @@ func Date(r *http.Request) (bool, error) {
 	return !date.UTC().Before(frameInception) && !date.UTC().After(frameExpiration), nil
 }
 
-func IfModifiedSince(r *http.Request, lastModifiedAt time.Time) (bool, error) {
-	ifModifiedSinceStr := r.Header.Get("If-Modified-Since")
-	ifModifiedSinceStr = strings.TrimSpace(ifModifiedSinceStr)
+func Authorization(r *http.Request, context *context.ShelterRESTContext) bool {
+	// http://docs.aws.amazon.com/AmazonS3/latest/dev/RESTAuthentication.html#ConstructingTheAuthenticationHeader
 
-	if len(ifModifiedSinceStr) == 0 {
-		return true, nil
-	}
+	// StringToSign = HTTP-Verb + "\n" +
+	// 	Content-MD5 + "\n" + // RFC1864
+	// 	Content-Type + "\n" +
+	// 	Date + "\n" +
+	// 	AccessKeyID + "\n" +
+	// 	Path + "\n" +
+	// 	CanonicalizedQueryString;
 
-	ifModifiedSince, err := time.Parse(time.RFC1123, ifModifiedSinceStr)
-	if err != nil {
-		return true, err
-	}
+	stringToSign := r.Method
 
-	if lastModifiedAt.Before(ifModifiedSince) || lastModifiedAt.Equal(ifModifiedSince) {
-		return false, nil
-	}
+	contentMD5 := ""
+	contentType := ""
 
-	return true, nil
-}
+	if r.ContentLength > 0 {
+		contentMD5 = r.Header.Get("Content-MD5")
+		contentMD5 = strings.TrimSpace(contentMD5)
 
-func IfUnmodifiedSince(r *http.Request, lastModifiedAt time.Time) (bool, error) {
-	ifUnmodifiedSinceStr := r.Header.Get("If-Unmodified-Since")
-	ifUnmodifiedSinceStr = strings.TrimSpace(ifUnmodifiedSinceStr)
-
-	if len(ifUnmodifiedSinceStr) == 0 {
-		return true, nil
-	}
-
-	ifUnmodifiedSince, err := time.Parse(time.RFC1123, ifUnmodifiedSinceStr)
-	if err != nil {
-		return true, err
-	}
-
-	if lastModifiedAt.After(ifUnmodifiedSince) {
-		return false, nil
-	}
-
-	return true, nil
-}
-
-func IfMatch(r *http.Request, revision int) (bool, error) {
-	ifMatch := r.Header.Get("If-Match")
-	ifMatch = strings.TrimSpace(ifMatch)
-
-	if len(ifMatch) == 0 {
-		return true, nil
-	}
-
-	ifMatchParts := strings.Split(ifMatch, ",")
-
-	for _, ifMatchPart := range ifMatchParts {
-		ifMatchPart = strings.TrimSpace(ifMatchPart)
-
-		// If "*" is given and no current entity exists, the server MUST NOT perform the
-		// requested method, and MUST return a 412 (Precondition Failed) response
-		if ifMatchPart == "*" {
-			return (revision > 0), nil
+		if len(contentMD5) == 0 {
+			// TODO: Error?
 		}
 
-		etag, err := strconv.Atoi(ifMatchPart)
-		if err != nil {
-			return false, err
+		contentType = r.Header.Get("Content-Type")
+		contentType = strings.TrimSpace(contentType)
+		contentType = strings.ToLower(contentType)
+
+		if len(contentType) == 0 {
+			// TODO: Error?
 		}
 
-		if etag == revision {
-			return true, nil
+		// For now we are ignoring version
+		if idx := strings.Index(contentType, ";"); idx > 0 {
+			contentType = contentType[0:idx]
+		}
+
+		stringToSign = fmt.Sprintf("%s\n%s", stringToSign, contentMD5)
+		stringToSign = fmt.Sprintf("%s\n%s", stringToSign, contentType)
+	}
+
+	dateStr := r.Header.Get("Date")
+	dateStr = strings.TrimSpace(dateStr)
+
+	if len(dateStr) == 0 {
+		// TODO: Error?
+	}
+
+	stringToSign = fmt.Sprintf("%s\n%s", stringToSign, dateStr)
+	stringToSign = fmt.Sprintf("%s\n%s", stringToSign, secretId)
+	stringToSign = fmt.Sprintf("%s\n%s", stringToSign, r.URL.Path)
+
+	var queryString []string
+	for k, v := range r.URL.Query() {
+		for _, vm := range v { // multiple values
+			keyAndValue := fmt.Sprintf("%s=%s", k, vm)
+			queryString = append(queryString, keyAndValue)
 		}
 	}
 
-	// RFC 2616 - 14.24 - If none of the entity tags match the server MUST NOT perform the
-	// requested method, and MUST return a 412 (Precondition Failed) response
-	return false, nil
+	sort.Strings(queryString)
+	sortedQueryString := strings.Join(queryString, "&")
+	stringToSign = fmt.Sprintf("%s\n%s", stringToSign, sortedQueryString)
+
+	// TODO
 }
