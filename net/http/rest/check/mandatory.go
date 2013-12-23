@@ -3,9 +3,11 @@ package check
 import (
 	"crypto/md5"
 	"encoding/base64"
+	"fmt"
 	"net/http"
 	"shelter/net/http/rest/context"
 	"shelter/net/http/rest/language"
+	"sort"
 	"strings"
 	"time"
 )
@@ -152,7 +154,7 @@ func Date(r *http.Request) (bool, error) {
 	return !date.UTC().Before(frameInception) && !date.UTC().After(frameExpiration), nil
 }
 
-func Authorization(r *http.Request, context *context.ShelterRESTContext) bool {
+func Authorization(r *http.Request) bool {
 	// http://docs.aws.amazon.com/AmazonS3/latest/dev/RESTAuthentication.html#ConstructingTheAuthenticationHeader
 
 	// StringToSign = HTTP-Verb + "\n" +
@@ -201,7 +203,7 @@ func Authorization(r *http.Request, context *context.ShelterRESTContext) bool {
 	}
 
 	stringToSign = fmt.Sprintf("%s\n%s", stringToSign, dateStr)
-	stringToSign = fmt.Sprintf("%s\n%s", stringToSign, secretId)
+	stringToSign = fmt.Sprintf("%s\n%s", stringToSign, "secretId")
 	stringToSign = fmt.Sprintf("%s\n%s", stringToSign, r.URL.Path)
 
 	var queryString []string
@@ -217,4 +219,6 @@ func Authorization(r *http.Request, context *context.ShelterRESTContext) bool {
 	stringToSign = fmt.Sprintf("%s\n%s", stringToSign, sortedQueryString)
 
 	// TODO
+
+	return true
 }
