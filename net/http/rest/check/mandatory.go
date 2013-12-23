@@ -13,10 +13,17 @@ import (
 )
 
 const (
+	// Variable defining the supported content type for the system. For now we only support JSON, but
+	// the idea is to support in a near future XML
 	SupportedContentType = "application/vnd.shelter+json"
-	timeFrameDuration    = "10m"
+
+	// Date HTTP header field must be near the current time, otherwise we must assume that is a reply
+	// attack. The variable bellow stores the tollerance for the date HTTP header field
+	timeFrameDuration = "10m"
 )
 
+// This method check the content type that the user support for answers. If the user doesn't support
+// the system content types we should return an HTTP error code
 func HTTPAccept(r *http.Request) bool {
 	accept := r.Header.Get("Accept")
 	accept = strings.TrimSpace(accept)
@@ -75,6 +82,8 @@ func HTTPAcceptLanguage(r *http.Request, context *context.ShelterRESTContext) bo
 	return false
 }
 
+// Accept Charset HTTP header field is verified in this method. For now we only support UTF-8
+// namesepace, there're no intentions to addopt ISO-8859-1
 func HTTPAcceptCharset(r *http.Request) bool {
 	acceptCharset := r.Header.Get("Accept-Charset")
 	acceptCharset = strings.TrimSpace(acceptCharset)
@@ -100,7 +109,9 @@ func HTTPAcceptCharset(r *http.Request) bool {
 	return false
 }
 
-func ContentType(r *http.Request) bool {
+// Check the user current content type format. For now we only accept JSON content respecting the
+// Shelter protocol, but in a near future we plan to accept XML too
+func HTTPContentType(r *http.Request) bool {
 	contentType := r.Header.Get("Content-Type")
 	contentType = strings.TrimSpace(contentType)
 	contentType = strings.ToLower(contentType)
@@ -117,6 +128,8 @@ func ContentType(r *http.Request) bool {
 	return contentType == SupportedContentType
 }
 
+// To garantee that the content was not modified during the network phase or is incomplete, we check
+// the hash of the content and compare with the HTTP header field
 func HTTPContentMD5(r *http.Request, context *context.ShelterRESTContext) bool {
 	contentMD5 := r.Header.Get("Content-MD5")
 	contentMD5 = strings.TrimSpace(contentMD5)
@@ -133,7 +146,10 @@ func HTTPContentMD5(r *http.Request, context *context.ShelterRESTContext) bool {
 	return hashBase64 == contentMD5
 }
 
-func Date(r *http.Request) (bool, error) {
+// HTTPDate method is responsable for checking the time frame of the request, avoiding reply
+// attacks, that's when an attacker use the same request again in a different moment to corrupt the
+// data
+func HTTPDate(r *http.Request) (bool, error) {
 	dateStr := r.Header.Get("Date")
 	dateStr = strings.TrimSpace(dateStr)
 
@@ -154,9 +170,12 @@ func Date(r *http.Request) (bool, error) {
 	return !date.UTC().Before(frameInception) && !date.UTC().After(frameExpiration), nil
 }
 
-func Authorization(r *http.Request) bool {
-	// http://docs.aws.amazon.com/AmazonS3/latest/dev/RESTAuthentication.html#ConstructingTheAuthenticationHeader
-
+// HTTPAuthorization garantees that the user was the only that really sent the information. Using a
+// group of information of the request and a shared secret the server can recreate the authorization
+// data and compare it with the header field. We are using the same approach that Amazon company
+// used in their Cloud API. More information can be found in
+// http://docs.aws.amazon.com/AmazonS3/latest/dev/RESTAuthentication.html#ConstructingTheAuthenticationHeader
+func HTTPAuthorization(r *http.Request) bool {
 	// StringToSign = HTTP-Verb + "\n" +
 	// 	Content-MD5 + "\n" + // RFC1864
 	// 	Content-Type + "\n" +

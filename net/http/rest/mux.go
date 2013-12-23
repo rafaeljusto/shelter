@@ -100,7 +100,7 @@ func (mux shelterRESTMux) checkHTTPHeaders(w http.ResponseWriter,
 		return false
 	}
 
-	if !check.ContentType(r) {
+	if !check.HTTPContentType(r) {
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintf(w, context.Language.Messages["invalid-content-type"])
 		return false
@@ -112,7 +112,7 @@ func (mux shelterRESTMux) checkHTTPHeaders(w http.ResponseWriter,
 		return false
 	}
 
-	timeFrameOK, err := check.Date(r)
+	timeFrameOK, err := check.HTTPDate(r)
 
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -125,7 +125,7 @@ func (mux shelterRESTMux) checkHTTPHeaders(w http.ResponseWriter,
 		return false
 	}
 
-	if !check.Authorization(r) {
+	if !check.HTTPAuthorization(r) {
 		w.WriteHeader(http.StatusUnauthorized)
 		return false
 	}
