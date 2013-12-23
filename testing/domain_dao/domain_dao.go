@@ -43,7 +43,7 @@ func main() {
 	flag.Parse()
 
 	var config DomainDAOTestConfigFile
-	err := utils.ReadConfigFile(configFilePath, config)
+	err := utils.ReadConfigFile(configFilePath, &config)
 
 	if err == utils.ErrConfigFileUndefined {
 		fmt.Println(err.Error())
