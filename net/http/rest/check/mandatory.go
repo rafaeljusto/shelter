@@ -3,11 +3,10 @@ package check
 import (
 	"crypto/md5"
 	"encoding/base64"
-	"fmt"
+	"errors"
 	"net/http"
 	"shelter/net/http/rest/context"
 	"shelter/net/http/rest/language"
-	"sort"
 	"strings"
 	"time"
 )
@@ -17,9 +16,20 @@ const (
 	// the idea is to support in a near future XML
 	SupportedContentType = "application/vnd.shelter+json"
 
+	// Variable used to determinate the namespace in Authorization HTTP header. The format
+	// is "<namespace> <secretId>:<secret>"
+	SupportedNamespace = "shelter"
+
 	// Date HTTP header field must be near the current time, otherwise we must assume that is a reply
 	// attack. The variable bellow stores the tollerance for the date HTTP header field
 	timeFrameDuration = "10m"
+)
+
+// List of possible errors that can occur when calling functions from this file. Other
+// erros can also occurs from low level layers
+var (
+	ErrHTTPAuthorizationNotFound = errors.New("Missing HTTP Authorization header")
+	ErrInvalidHTTPAuthorization  = errors.New("Invalid HTTP Authorization header")
 )
 
 // This method check the content type that the user support for answers. If the user doesn't support
@@ -112,10 +122,7 @@ func HTTPAcceptCharset(r *http.Request) bool {
 // Check the user current content type format. For now we only accept JSON content respecting the
 // Shelter protocol, but in a near future we plan to accept XML too
 func HTTPContentType(r *http.Request) bool {
-	contentType := r.Header.Get("Content-Type")
-	contentType = strings.TrimSpace(contentType)
-	contentType = strings.ToLower(contentType)
-
+	contentType := getHTTPContentType(r)
 	if len(contentType) == 0 {
 		return true
 	}
@@ -131,9 +138,7 @@ func HTTPContentType(r *http.Request) bool {
 // To garantee that the content was not modified during the network phase or is incomplete, we check
 // the hash of the content and compare with the HTTP header field
 func HTTPContentMD5(r *http.Request, context *context.ShelterRESTContext) bool {
-	contentMD5 := r.Header.Get("Content-MD5")
-	contentMD5 = strings.TrimSpace(contentMD5)
-
+	contentMD5 := getHTTPContentMD5(r)
 	if len(contentMD5) == 0 {
 		return true
 	}
@@ -150,9 +155,7 @@ func HTTPContentMD5(r *http.Request, context *context.ShelterRESTContext) bool {
 // attacks, that's when an attacker use the same request again in a different moment to corrupt the
 // data
 func HTTPDate(r *http.Request) (bool, error) {
-	dateStr := r.Header.Get("Date")
-	dateStr = strings.TrimSpace(dateStr)
-
+	dateStr := getHTTPDate(r)
 	if len(dateStr) == 0 {
 		return true, nil
 	}
@@ -175,69 +178,43 @@ func HTTPDate(r *http.Request) (bool, error) {
 // data and compare it with the header field. We are using the same approach that Amazon company
 // used in their Cloud API. More information can be found in
 // http://docs.aws.amazon.com/AmazonS3/latest/dev/RESTAuthentication.html#ConstructingTheAuthenticationHeader
-func HTTPAuthorization(r *http.Request) bool {
-	// StringToSign = HTTP-Verb + "\n" +
-	// 	Content-MD5 + "\n" + // RFC1864
-	// 	Content-Type + "\n" +
-	// 	Date + "\n" +
-	// 	AccessKeyID + "\n" +
-	// 	Path + "\n" +
-	// 	CanonicalizedQueryString;
+func HTTPAuthorization(r *http.Request, secretFinder func(string) (string, error)) (bool, error) {
+	authorization := r.Header.Get("Autorization")
+	authorization = strings.TrimSpace(authorization)
 
-	stringToSign := r.Method
-
-	contentMD5 := ""
-	contentType := ""
-
-	if r.ContentLength > 0 {
-		contentMD5 = r.Header.Get("Content-MD5")
-		contentMD5 = strings.TrimSpace(contentMD5)
-
-		if len(contentMD5) == 0 {
-			// TODO: Error?
-		}
-
-		contentType = r.Header.Get("Content-Type")
-		contentType = strings.TrimSpace(contentType)
-		contentType = strings.ToLower(contentType)
-
-		if len(contentType) == 0 {
-			// TODO: Error?
-		}
-
-		// For now we are ignoring version
-		if idx := strings.Index(contentType, ";"); idx > 0 {
-			contentType = contentType[0:idx]
-		}
-
-		stringToSign = fmt.Sprintf("%s\n%s", stringToSign, contentMD5)
-		stringToSign = fmt.Sprintf("%s\n%s", stringToSign, contentType)
+	// Authorization header is mandatory in all requests
+	if len(authorization) == 0 {
+		return false, ErrHTTPAuthorizationNotFound
 	}
 
-	dateStr := r.Header.Get("Date")
-	dateStr = strings.TrimSpace(dateStr)
-
-	if len(dateStr) == 0 {
-		// TODO: Error?
+	// The authorization should always follow the format: "<namespace> <secretId>:<secret>"
+	authorizationParts := strings.Split(authorization, " ")
+	if len(authorizationParts) != 2 {
+		return false, ErrInvalidHTTPAuthorization
 	}
 
-	stringToSign = fmt.Sprintf("%s\n%s", stringToSign, dateStr)
-	stringToSign = fmt.Sprintf("%s\n%s", stringToSign, "secretId")
-	stringToSign = fmt.Sprintf("%s\n%s", stringToSign, r.URL.Path)
+	namespace := authorizationParts[0]
+	namespace = strings.TrimSpace(namespace)
+	namespace = strings.ToLower(namespace)
 
-	var queryString []string
-	for k, v := range r.URL.Query() {
-		for _, vm := range v { // multiple values
-			keyAndValue := fmt.Sprintf("%s=%s", k, vm)
-			queryString = append(queryString, keyAndValue)
-		}
+	if namespace != SupportedNamespace {
+		return false, ErrInvalidHTTPAuthorization
 	}
 
-	sort.Strings(queryString)
-	sortedQueryString := strings.Join(queryString, "&")
-	stringToSign = fmt.Sprintf("%s\n%s", stringToSign, sortedQueryString)
+	secretId := authorizationParts[1]
+	secretId = strings.TrimSpace(secretId)
+	secretId = strings.ToLower(secretId)
 
-	// TODO
+	stringToSign, err := buildStringToSign(r, secretId)
+	if err != nil {
+		return false, err
+	}
 
-	return true
+	secret, err := secretFinder(secretId)
+	if err != nil {
+		return false, err
+	}
+
+	signature := generateSignature(stringToSign, secret)
+	return signature == authorization, nil
 }

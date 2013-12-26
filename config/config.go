@@ -50,6 +50,8 @@ type Config struct {
 			Port int
 			TLS  bool
 		}
+
+		Secrets map[string]string
 	}
 
 	Log struct {

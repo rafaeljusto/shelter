@@ -3,8 +3,10 @@ package rest
 import (
 	"crypto/md5"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"net/http"
+	"shelter/config"
 	"shelter/net/http/rest/check"
 	"shelter/net/http/rest/context"
 	"shelter/net/http/rest/language"
@@ -16,6 +18,12 @@ import (
 // Main router used by the Shelter REST system to manage the requests
 var (
 	mux shelterRESTMux
+)
+
+// List of possible errors that can occur when calling functions from this file. Other
+// erros can also occurs from low level layers
+var (
+	ErrSecretNotFound = errors.New("Secret related to Authorization's secret id not found")
 )
 
 // Create this type to make it easy to reference a Shelter REST server handler
@@ -125,7 +133,51 @@ func (mux shelterRESTMux) checkHTTPHeaders(w http.ResponseWriter,
 		return false
 	}
 
-	if !check.HTTPAuthorization(r) {
+	authorized, err := check.HTTPAuthorization(r, func(secretId string) (string, error) {
+		secret, ok := config.ShelterConfig.RESTServer.Secrets[secretId]
+
+		if !ok {
+			return "", ErrSecretNotFound
+		}
+
+		// In the near future the secret will be encrypted in the configuration file and the
+		// decrypt process can generate problems
+		return secret, nil
+	})
+
+	if err != nil {
+		if err == check.ErrHTTPContentTypeNotFound {
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprintf(w, context.Language.Messages["content-type-missing"])
+
+		} else if err == check.ErrHTTPContentMD5NotFound {
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprintf(w, context.Language.Messages["content-md5-missing"])
+
+		} else if err == check.ErrHTTPDateNotFound {
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprintf(w, context.Language.Messages["date-missing"])
+
+		} else if err == check.ErrHTTPAuthorizationNotFound {
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprintf(w, context.Language.Messages["authorization-missing"])
+
+		} else if err == check.ErrInvalidHTTPAuthorization {
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprintf(w, context.Language.Messages["invalid-authorization"])
+
+		} else if err == ErrSecretNotFound {
+			w.WriteHeader(http.StatusBadRequest)
+			fmt.Fprintf(w, context.Language.Messages["secret-not-found"])
+
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+			log.Println("Error checking authorization. Details:", err)
+		}
+
+		return false
+
+	} else if !authorized {
 		w.WriteHeader(http.StatusUnauthorized)
 		return false
 	}
