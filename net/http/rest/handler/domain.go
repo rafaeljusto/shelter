@@ -287,7 +287,7 @@ func removeDomain(r *http.Request, context *context.ShelterRESTContext) {
 		return
 	}
 
-	if err := domainDAO.Remove(domain); err != nil {
+	if err := domainDAO.Remove(&domain); err != nil {
 		log.Println("Error while removing domain object. Details:", err)
 		context.Response(http.StatusInternalServerError)
 		return
