@@ -165,8 +165,7 @@ func (q *querier) checkNameserver(domain *model.Domain,
 		return QuerierResultDontSave
 	}
 
-	// For now we ignore the RTT, in the future we can use this for some report
-	dnsResponseMessage, _, err := q.client.Exchange(&dnsRequestMessage, host)
+	dnsResponseMessage, err := q.sendDNSRequest(host, &dnsRequestMessage)
 	querierCache.Query(nameserver.Host)
 
 	if status := domainNSPolicy.CheckNetworkError(err); status != model.NameserverStatusOK {
@@ -221,8 +220,7 @@ func (q *querier) checkDS(domain *model.Domain, index int, udpMaxSize uint16,
 		return QuerierResultDontSave
 	}
 
-	// For now we ignore the RTT, in the future we can use this for some report
-	dnsResponseMessage, _, err := q.client.Exchange(&dnsRequestMessage, host)
+	dnsResponseMessage, err := q.sendDNSRequest(host, &dnsRequestMessage)
 	querierCache.Query(nameserver.Host)
 
 	if !domainDSPolicy.CheckNetworkError(err) || !domainDSPolicy.Run(dnsResponseMessage) {
@@ -261,7 +259,6 @@ func (q *querier) checkPostponedDomains(postponedDomains []postponedDomain,
 }
 
 func (q *querier) sendDNSRequest(host string, dnsRequestMessage *dns.Msg) (dnsResponseMessage *dns.Msg, err error) {
-
 	for i := 0; i < q.ConnectionRetries; i++ {
 		// For now we ignore the RTT, in the future we can use this for some report
 		dnsResponseMessage, _, err = q.client.Exchange(dnsRequestMessage, host)
@@ -270,8 +267,36 @@ func (q *querier) sendDNSRequest(host string, dnsRequestMessage *dns.Msg) (dnsRe
 		// just to make it sure that we didn't lose any UDP package
 		if err == nil {
 			break
+
 		} else if netErr, ok := err.(net.Error); !ok || !netErr.Timeout() {
 			break
+		}
+	}
+
+	// Message truncated, let's retry using TCP connection. TCP connection will also get the
+	// same retries chances of the UDP connection for timeouts because the UDP connection
+	// proved in some point that the server is alive
+	if err == nil && dnsResponseMessage.Truncated {
+		q.client.Net = "tcp"
+
+		// Move back the Net value to empty so that the next package sent by this querier is
+		// via UDP connection
+		defer func() {
+			q.client.Net = ""
+		}()
+
+		for i := 0; i < q.ConnectionRetries; i++ {
+			// For now we ignore the RTT, in the future we can use this for some report
+			dnsResponseMessage, _, err = q.client.Exchange(dnsRequestMessage, host)
+
+			// Check if there was a timeout in the connection, if so try again a couple of times
+			// just to make it sure that we didn't lose any UDP package
+			if err == nil {
+				break
+
+			} else if netErr, ok := err.(net.Error); !ok || !netErr.Timeout() {
+				break
+			}
 		}
 	}
 
