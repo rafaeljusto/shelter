@@ -1,4 +1,4 @@
-package rest
+package handler
 
 import (
 	"fmt"

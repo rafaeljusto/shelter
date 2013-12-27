@@ -15,12 +15,39 @@ var (
 	// Programmer must set the Database attribute from DomainDAO with a valid connection
 	// before using this object
 	ErrDomainDAOUndefinedDatabase = errors.New("No database defined for DomainDAO")
+
+	// Pagination attribute is mandatory, and it's a pointer only to fill some query
+	// informations in it. For the user that wants all records without pagination for a B2B
+	// integration need to pass zero in the page size
+	ErrDomainDAOPaginationUndefined = errors.New("Pagination was not defined")
 )
 
 const (
 	domainDAOCollection  = "domain" // Collection used to store all domain objects in the MongoDB database
 	concurrentOperations = 1000     // Number of Go routines that will be used to execute many operations at once
 )
+
+// List of possible fields that can be used to order a result set
+const (
+	DomainDAOOrderByFieldFQDN           DomainDAOOrderByField = 0 // Order by domain's FQDN
+	DomainDAOOrderByFieldLastModifiedAt DomainDAOOrderByField = 1 // Order by the last modification date of the domain object
+)
+
+// Enumerate definition for the OrderBy so that we can limit the fields that the user can
+// use in a query
+type DomainDAOOrderByField int
+
+// List of possible directions of each field in an order by query
+const (
+	DomainDAOOrderByDirectionAscending  DomainDAOOrderByDirection = 1  // From lower to higher
+	DomainDAOOrderByDirectionDescending DomainDAOOrderByDirection = -1 // From Higher to lower
+)
+
+// Enumerate definition for the OrderBy so that we can make it easy to determinate the
+// direction of an order by field. This is good to hide low level database interfaces.
+// Maybe we can move this enum to a more generic DAO because it can be used by other DAOs
+// too
+type DomainDAOOrderByDirection int
 
 func init() {
 	// Add index on FQDN to speed up searchs. FQDN will be a unique field in database
@@ -40,6 +67,24 @@ func init() {
 // domain anytime during the their existence
 type DomainDAO struct {
 	Database *mgo.Database // MongoDB Database
+}
+
+// DomainDAOPagination was created as a necessity for big result sets that needs to be
+// sent for an end-user. With pagination we can control the size of the data and make it
+// faster for the user to interact with it in a web interface as example
+type DomainDAOPagination struct {
+	OrderBy       []DomainDAOSort // Sort the list before the pagination
+	PageSize      int             // Number of items that are going to be considered in one page
+	Page          int             // Current page that will be returned
+	NumberOfItems int             // Total number of items in the result set
+	NumberOfPages int             // Total number of pages calculated for the current result set
+}
+
+// DomainDAOSort is an object responsable to relate the order by field and direction. Each
+// field used for sort, can be sorted in both directions
+type DomainDAOSort struct {
+	Field     DomainDAOOrderByField     // Field to be sorted
+	Direction DomainDAOOrderByDirection // Direction used in the sort
 }
 
 // Save the domain object in the database and by consequence will also save the
@@ -83,11 +128,73 @@ func (dao DomainDAO) SaveMany(domains []*model.Domain) []DomainResult {
 	return dao.executeMany(domains, dao.Save)
 }
 
+// Retrieve all domains using pagination control. This method is used by an end user to
+// see all domains that are alredy registered in the system, except for a B2B integration
+// systems the user will probably want pagination so that it can analyze the data in
+// amounts. For the user that wants all records without pagination for a B2B
+// integration need to pass zero in the page size
+func (dao DomainDAO) FindAll(pagination *DomainDAOPagination) ([]model.Domain, error) {
+	// Check if the programmer forgot to set the database in DomainDAO object
+	if dao.Database == nil {
+		return nil, ErrDomainDAOUndefinedDatabase
+	}
+
+	if pagination == nil {
+		return nil, ErrDomainDAOPaginationUndefined
+	}
+
+	var query *mgo.Query
+
+	if pagination.PageSize == 0 {
+		query = dao.Database.C(domainDAOCollection).Find(bson.M{})
+
+	} else {
+		var sortList []string
+		for _, sort := range pagination.OrderBy {
+			var sortTmp string
+
+			if sort.Direction == DomainDAOOrderByDirectionDescending {
+				sortTmp = "-"
+			}
+
+			switch sort.Field {
+			case DomainDAOOrderByFieldFQDN:
+				sortTmp += "fqdn"
+			case DomainDAOOrderByFieldLastModifiedAt:
+				sortTmp += "lastModifiedAt"
+			}
+
+			sortList = append(sortList, sortTmp)
+		}
+
+		query = dao.Database.C(domainDAOCollection).Find(bson.M{}).
+			Sort(sortList...).
+			Skip(pagination.PageSize * (pagination.Page - 1)).
+			Limit(pagination.PageSize)
+	}
+
+	var domains []model.Domain
+	if err := query.All(domains); err != nil {
+		return nil, err
+	}
+
+	var err error
+	if pagination.NumberOfItems, err = query.Count(); err != nil {
+		return nil, err
+	}
+
+	if pagination.PageSize > 0 {
+		pagination.NumberOfPages = pagination.NumberOfItems / pagination.PageSize
+	}
+
+	return domains, nil
+}
+
 // Retrieve all domains for a scan. This method can take a long time to load all domains,
 // so it will return a channel and will send a domain as soon as it is loaded from the
 // database. The method ends when it returns a nil domain or an error in the channel
 // result
-func (dao DomainDAO) FindAll() (chan DomainResult, error) {
+func (dao DomainDAO) FindAllAsync() (chan DomainResult, error) {
 	// Check if the programmer forgot to set the database in DomainDAO object
 	if dao.Database == nil {
 		return nil, ErrDomainDAOUndefinedDatabase

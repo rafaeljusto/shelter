@@ -175,7 +175,7 @@ func domainsLifeCycle(domainDAO dao.DomainDAO) {
 	}
 
 	// Check if find all really return all domains
-	allDomainsChannel, err := domainDAO.FindAll()
+	allDomainsChannel, err := domainDAO.FindAllAsync()
 	if err != nil {
 		utils.Fatalln("Error while retrieving all domains from database", err)
 	}
@@ -228,7 +228,7 @@ func domainsLifeCycle(domainDAO dao.DomainDAO) {
 		utils.Fatalln("Couldn't remove all domains", err)
 	}
 
-	allDomainsChannel, err = domainDAO.FindAll()
+	allDomainsChannel, err = domainDAO.FindAllAsync()
 	if err != nil {
 		utils.Fatalln("Error while retrieving all domains from database", err)
 	}

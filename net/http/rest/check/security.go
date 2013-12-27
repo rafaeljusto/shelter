@@ -68,9 +68,9 @@ func buildStringToSign(r *http.Request, secretId string) (string, error) {
 	stringToSign = fmt.Sprintf("%s\n%s", stringToSign, r.URL.Path)
 
 	var queryString []string
-	for k, v := range r.URL.Query() {
-		for _, vm := range v { // multiple values
-			keyAndValue := fmt.Sprintf("%s=%s", k, vm)
+	for key, values := range r.URL.Query() {
+		for _, value := range values {
+			keyAndValue := fmt.Sprintf("%s=%s", key, value)
 			queryString = append(queryString, keyAndValue)
 		}
 	}

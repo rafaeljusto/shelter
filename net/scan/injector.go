@@ -53,7 +53,7 @@ func (i *Injector) Start(scanGroup *sync.WaitGroup, errorsChannel chan error) ch
 		}
 
 		// Load all domains from database to begin the scan
-		domainChannel, err := domainDAO.FindAll()
+		domainChannel, err := domainDAO.FindAllAsync()
 
 		// Low level error was detected. No domain was processed yet, but we still need to
 		// shutdown the querier and by consequence the collector, so we send back the error
