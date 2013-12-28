@@ -74,6 +74,7 @@ func main() {
 	domainsLifeCycle(domainDAO)
 	domainUniqueFQDN(domainDAO)
 	domainConcurrency(domainDAO)
+	domainsPagination(domainDAO)
 
 	// Domain DAO performance report is optional and only generated when the report file
 	// path parameter is given
@@ -298,6 +299,61 @@ func domainConcurrency(domainDAO dao.DomainDAO) {
 
 	if err := domainDAO.Save(&domain2); err == nil {
 		utils.Fatalln("Not controlling domain concurrency", nil)
+	}
+
+	// Remove domain
+	if err := domainDAO.RemoveByFQDN(domain.FQDN); err != nil {
+		utils.Fatalln("Error while trying to remove a domain", err)
+	}
+}
+
+func domainsPagination(domainDAO dao.DomainDAO) {
+	numberOfItems := 1000
+
+	for i := 0; i < numberOfItems; i++ {
+		domain := model.Domain{
+			FQDN: fmt.Sprintf("example%d.com.br", i),
+		}
+
+		if err := domainDAO.Save(&domain); err != nil {
+			utils.Fatalln("Error saving domain in database", err)
+		}
+	}
+
+	pagination := dao.DomainDAOPagination{
+		PageSize: 10,
+		Page:     5,
+		OrderBy: []dao.DomainDAOSort{
+			{
+				Field:     dao.DomainDAOOrderByFieldFQDN,
+				Direction: dao.DomainDAOOrderByDirectionAscending,
+			},
+		},
+	}
+
+	domains, err := domainDAO.FindAll(&pagination)
+	if err != nil {
+		utils.Fatalln("Error retrieving domains", err)
+	}
+
+	if pagination.NumberOfItems != numberOfItems {
+		println(pagination.NumberOfItems)
+		utils.Errorln("Number of items not calculated correctly", nil)
+	}
+
+	if pagination.NumberOfPages != numberOfItems/pagination.PageSize {
+		utils.Errorln("Number of pages not calculated correctly", nil)
+	}
+
+	if len(domains) != pagination.PageSize {
+		utils.Errorln("Number of domains not following page size", nil)
+	}
+
+	for i := 0; i < numberOfItems; i++ {
+		fqdn := fmt.Sprintf("example%d.com.br", i)
+		if err := domainDAO.RemoveByFQDN(fqdn); err != nil {
+			utils.Fatalln("Error removing domain from database", err)
+		}
 	}
 }
 

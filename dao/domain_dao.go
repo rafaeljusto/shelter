@@ -148,6 +148,11 @@ func (dao DomainDAO) FindAll(pagination *DomainDAOPagination) ([]model.Domain, e
 	if pagination.PageSize == 0 {
 		query = dao.Database.C(domainDAOCollection).Find(bson.M{})
 
+		var err error
+		if pagination.NumberOfItems, err = query.Count(); err != nil {
+			return nil, err
+		}
+
 	} else {
 		var sortList []string
 		for _, sort := range pagination.OrderBy {
@@ -167,19 +172,23 @@ func (dao DomainDAO) FindAll(pagination *DomainDAOPagination) ([]model.Domain, e
 			sortList = append(sortList, sortTmp)
 		}
 
-		query = dao.Database.C(domainDAOCollection).Find(bson.M{}).
+		query = dao.Database.C(domainDAOCollection).Find(bson.M{})
+
+		// We store the number of items before applying pagination, if we do this after we get only the
+		// number of items of a page size
+		var err error
+		if pagination.NumberOfItems, err = query.Count(); err != nil {
+			return nil, err
+		}
+
+		query.
 			Sort(sortList...).
 			Skip(pagination.PageSize * (pagination.Page - 1)).
 			Limit(pagination.PageSize)
 	}
 
 	var domains []model.Domain
-	if err := query.All(domains); err != nil {
-		return nil, err
-	}
-
-	var err error
-	if pagination.NumberOfItems, err = query.Count(); err != nil {
+	if err := query.All(&domains); err != nil {
 		return nil, err
 	}
 
