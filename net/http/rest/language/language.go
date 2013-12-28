@@ -31,16 +31,18 @@ type LanguagePacks struct {
 // Select the language that is going to be used in the REST server messages based on the
 // Language HTTP header
 func (l *LanguagePacks) Select(language string) *LanguagePack {
+	language = strings.ToLower(language)
+
 	// Try searching for the specific language name first
 	for _, pack := range l.Packs {
-		if pack.SpecificName == language {
+		if strings.ToLower(pack.SpecificName) == language {
 			return &pack
 		}
 	}
 
 	// Now we look for the first generic language name that we found
 	for _, pack := range l.Packs {
-		if pack.GenericName == language {
+		if strings.ToLower(pack.GenericName) == language {
 			ShelterRESTLanguagePack = &pack
 			return &pack
 		}
