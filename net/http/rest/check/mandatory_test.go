@@ -92,3 +92,37 @@ func TestHTTPAcceptLanguage(t *testing.T) {
 		t.Error("Not accepting a wildcard language")
 	}
 }
+
+func TestHTTPAcceptCharset(t *testing.T) {
+	r, err := http.NewRequest("", "", nil)
+	if err != nil {
+		t.Fatal("Error creating the request. Details:", err)
+	}
+
+	r.Header.Set("Accept-Charset", "")
+	if !HTTPAcceptCharset(r) {
+		t.Error("Not accepting when there's no " +
+			"HTTP Accept Charset header field")
+	}
+
+	r.Header.Set("Accept-Charset", "iso-8859-1")
+	if HTTPAcceptCharset(r) {
+		t.Error("Accepting an unsupported language")
+	}
+
+	r.Header.Set("Accept-Charset", "iso-8859-1,    UTF-8  ")
+	if !HTTPAcceptCharset(r) {
+		t.Error("Not accepting a supported charset with " +
+			"different case and spaces")
+	}
+
+	r.Header.Set("Accept-Charset", "iso-8859-1,utf-8;q=0.7")
+	if !HTTPAcceptCharset(r) {
+		t.Error("Not accepting a supported charset with options")
+	}
+
+	r.Header.Set("Accept-Charset", "*")
+	if !HTTPAcceptCharset(r) {
+		t.Error("Not accepting a wildcard charset")
+	}
+}

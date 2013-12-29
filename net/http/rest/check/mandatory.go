@@ -16,6 +16,10 @@ const (
 	// the idea is to support in a near future XML
 	SupportedContentType = "application/vnd.shelter+json"
 
+	// Define the supported charset of the system. For now we use for everything utf-8, from database
+	// to data manipulation. There's no conversion for any special charset
+	SupportedCharset = "utf-8"
+
 	// Variable used to determinate the namespace in Authorization HTTP header. The format
 	// is "<namespace> <secretId>:<secret>"
 	SupportedNamespace = "shelter"
@@ -111,7 +115,7 @@ func HTTPAcceptCharset(r *http.Request) bool {
 			acceptCharsetPart = acceptCharsetPart[0:idx]
 		}
 
-		if acceptCharsetPart == "*" || acceptCharset == "utf-8" {
+		if acceptCharsetPart == "*" || acceptCharsetPart == SupportedCharset {
 			return true
 		}
 	}
