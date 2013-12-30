@@ -1,12 +1,14 @@
 package check
 
 import (
+	"errors"
 	"io/ioutil"
 	"net/http"
 	"shelter/net/http/rest/context"
 	"shelter/net/http/rest/language"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestHTTPAccept(t *testing.T) {
@@ -174,7 +176,6 @@ func TestHTTPContentMD5(t *testing.T) {
 			"HTTP Content MD5 header field")
 	}
 
-	// TODO: We should check more MD5 for tests
 	r.Header.Set("Content-MD5", "bGlmZSBvZiBicmlhbg==")
 	if HTTPContentMD5(r, &context) {
 		t.Error("Accepting an invalid content MD5")
@@ -183,5 +184,128 @@ func TestHTTPContentMD5(t *testing.T) {
 	r.Header.Set("Content-MD5", "   nwqq6b6ua/tTDk7B5M184w==  ")
 	if !HTTPContentMD5(r, &context) {
 		t.Error("Not accepting a valid content MD5 with spaces")
+	}
+}
+
+func TestHTTPDate(t *testing.T) {
+	r, err := http.NewRequest("", "", nil)
+	if err != nil {
+		t.Fatal("Error creating the request. Details:", err)
+	}
+
+	r.Header.Set("Date", "")
+	if ok, err := HTTPDate(r); !ok || err != nil {
+		t.Error("Not accepting when there's no " +
+			"HTTP Date header field")
+	}
+
+	r.Header.Set("Date", "2006-01-02T15:04:05Z07:00")
+	if ok, err := HTTPDate(r); ok || err == nil {
+		t.Error("Accepting an invalid date format out " +
+			"of the time frame. Should only support RFC 1123")
+	}
+
+	r.Header.Set("Date", "Mon, 02 Jan 2006 15:04:05 MST")
+	if ok, _ := HTTPDate(r); ok {
+		t.Error("Accepting a HTTP Date header " +
+			"field outside the time frame")
+	}
+
+	duration, _ := time.ParseDuration(timeFrameDuration)
+	timeInTimeFrame := time.
+		Now().
+		UTC().
+		Add(-duration / 2).
+		Format(time.RFC1123)
+
+	r.Header.Set("Date", "   "+strings.ToUpper(timeInTimeFrame)+"  ")
+	if ok, err := HTTPDate(r); !ok || err != nil {
+		t.Error("Not accepting a valid HTTP Date header "+
+			"field with spaces and case changes. Details:", err)
+	}
+}
+
+func TestHTTPAuthorization(t *testing.T) {
+	r, err := http.NewRequest("", "", nil)
+	if err != nil {
+		t.Fatal("Error creating the request. Details:", err)
+	}
+
+	r.Header.Set("Authorization", "")
+	if ok, err := HTTPAuthorization(r, func(keyId string) (string, error) {
+		return "abc123", nil
+	}); ok || err == nil {
+		t.Error("Accepting requests without HTTP Authorization header field")
+	}
+
+	r.Header.Set("Authorization", SupportedNamespace+" 1:bWq2s1WEIj+Ydj0vQ697zp+IXMU=")
+	if ok, err := HTTPAuthorization(r, func(keyId string) (string, error) {
+		return "abc123", nil
+	}); ok || err == nil {
+		t.Error("Accepting an invalid HTTP Authorization header field")
+	}
+
+	duration, _ := time.ParseDuration(timeFrameDuration)
+	timeInTimeFrame := time.
+		Now().
+		UTC().
+		Add(-duration / 2).
+		Format(time.RFC1123)
+	r.Header.Set("Date", timeInTimeFrame)
+
+	stringToSign, err := buildStringToSign(r, "1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	signature := generateSignature(stringToSign, "abc123")
+
+	r.Header.Set("Authorization", SupportedNamespace+"X 1:"+signature)
+	if ok, err := HTTPAuthorization(r, func(keyId string) (string, error) {
+		return "abc123", nil
+	}); ok || err == nil {
+		t.Error("Accepting a HTTP Authorization header field " +
+			"with an invalid namespace")
+	}
+
+	r.Header.Set("Authorization", SupportedNamespace+"1:"+signature)
+	if ok, err := HTTPAuthorization(r, func(keyId string) (string, error) {
+		return "abc123", nil
+	}); ok || err == nil {
+		t.Error("Accepting an invalid HTTP Authorization " +
+			"header field with no spaces between namespace " +
+			"and secret parts")
+	}
+
+	r.Header.Set("Authorization", SupportedNamespace+" 1"+signature)
+	if ok, err := HTTPAuthorization(r, func(keyId string) (string, error) {
+		return "abc123", nil
+	}); ok || err == nil {
+		t.Error("Accepting an invalid HTTP Authorization " +
+			"header field with no spaces between secret id " +
+			"and secret")
+	}
+
+	r.Header.Set("Authorization", SupportedNamespace+" 2:"+signature)
+	if ok, err := HTTPAuthorization(r, func(keyId string) (string, error) {
+		return "", errors.New("Not found")
+	}); ok || err == nil {
+		t.Error("Accepting an invalid HTTP Authorization " +
+			"header field with an unknown secret id")
+	}
+
+	r.Header.Set("Authorization", SupportedNamespace+" 1:"+signature+"X")
+	if ok, _ := HTTPAuthorization(r, func(keyId string) (string, error) {
+		return "abc123", nil
+	}); ok {
+		t.Error("Accepting an invalid HTTP Authorization " +
+			"header field with a wrong signature")
+	}
+
+	r.Header.Set("Authorization", SupportedNamespace+" 1:"+signature)
+	if ok, err := HTTPAuthorization(r, func(keyId string) (string, error) {
+		return "abc123", nil
+	}); !ok || err != nil {
+		t.Error("Not accepting a valid HTTP Authorization "+
+			"header field. Details:", err)
 	}
 }

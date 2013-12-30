@@ -169,9 +169,11 @@ func HTTPDate(r *http.Request) (bool, error) {
 		return false, err
 	}
 
+	// TODO: Maybe we should put this parse in a global directive, to avoid doing it all the requests
+	duration, _ := time.ParseDuration(timeFrameDuration)
+
 	// Check if the date is inside the time frame, avoiding reply attack
 	now := time.Now().UTC()
-	duration, _ := time.ParseDuration(timeFrameDuration)
 	frameInception := now.Add(duration * -1)
 	frameExpiration := now.Add(duration)
 	return !date.UTC().Before(frameInception) && !date.UTC().After(frameExpiration), nil
@@ -183,7 +185,7 @@ func HTTPDate(r *http.Request) (bool, error) {
 // used in their Cloud API. More information can be found in
 // http://docs.aws.amazon.com/AmazonS3/latest/dev/RESTAuthentication.html#ConstructingTheAuthenticationHeader
 func HTTPAuthorization(r *http.Request, secretFinder func(string) (string, error)) (bool, error) {
-	authorization := r.Header.Get("Autorization")
+	authorization := r.Header.Get("Authorization")
 	authorization = strings.TrimSpace(authorization)
 
 	// Authorization header is mandatory in all requests
@@ -205,7 +207,12 @@ func HTTPAuthorization(r *http.Request, secretFinder func(string) (string, error
 		return false, ErrInvalidHTTPAuthorization
 	}
 
-	secretId := authorizationParts[1]
+	secretParts := strings.Split(authorizationParts[1], ":")
+	if len(secretParts) != 2 {
+		return false, ErrInvalidHTTPAuthorization
+	}
+
+	secretId := secretParts[0]
 	secretId = strings.TrimSpace(secretId)
 	secretId = strings.ToLower(secretId)
 
@@ -220,5 +227,5 @@ func HTTPAuthorization(r *http.Request, secretFinder func(string) (string, error
 	}
 
 	signature := generateSignature(stringToSign, secret)
-	return signature == authorization, nil
+	return signature == secretParts[1], nil
 }
