@@ -33,9 +33,11 @@ func NewShelterRESTContext(r *http.Request) (ShelterRESTContext, error) {
 		Language: language.ShelterRESTLanguagePack,
 	}
 
-	var err error
-	if context.RequestContent, err = ioutil.ReadAll(r.Body); err != nil {
-		return context, err
+	if r.ContentLength > 0 && r.Body != nil {
+		var err error
+		if context.RequestContent, err = ioutil.ReadAll(r.Body); err != nil {
+			return context, err
+		}
 	}
 
 	database, err := mongodb.Open(

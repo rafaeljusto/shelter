@@ -1,6 +1,7 @@
 package check
 
 import (
+	"io/ioutil"
 	"net/http"
 	"shelter/net/http/rest/context"
 	"shelter/net/http/rest/language"
@@ -124,5 +125,62 @@ func TestHTTPAcceptCharset(t *testing.T) {
 	r.Header.Set("Accept-Charset", "*")
 	if !HTTPAcceptCharset(r) {
 		t.Error("Not accepting a wildcard charset")
+	}
+}
+
+func TestHTTPContentType(t *testing.T) {
+	r, err := http.NewRequest("", "", nil)
+	if err != nil {
+		t.Fatal("Error creating the request. Details:", err)
+	}
+
+	r.Header.Set("Content-Type", "")
+	if !HTTPContentType(r) {
+		t.Error("Not accepting when there's no " +
+			"HTTP Content Type header field")
+	}
+
+	r.Header.Set("Content-Type", "text/html")
+	if HTTPContentType(r) {
+		t.Error("Accepting an unsupported content type")
+	}
+
+	r.Header.Set("Content-Type", "  "+strings.ToUpper(SupportedContentType)+"   ")
+	if !HTTPContentType(r) {
+		t.Error("Not accepting a supported content type with " +
+			"different case and spaces")
+	}
+
+	r.Header.Set("Content-Type", SupportedContentType+";v=2")
+	if !HTTPContentType(r) {
+		t.Error("Not accepting a supported content type with options")
+	}
+}
+
+func TestHTTPContentMD5(t *testing.T) {
+	r, err := http.NewRequest("", "", strings.NewReader("Check Integrity!"))
+	if err != nil {
+		t.Fatal("Error creating the request. Details:", err)
+	}
+
+	var context context.ShelterRESTContext
+	if context.RequestContent, err = ioutil.ReadAll(r.Body); err != nil {
+		t.Fatal(err)
+	}
+
+	r.Header.Set("Content-MD5", "")
+	if !HTTPContentMD5(r, &context) {
+		t.Error("Not accepting when there's no " +
+			"HTTP Content MD5 header field")
+	}
+
+	r.Header.Set("Content-MD5", "bGlmZSBvZiBicmlhbg==")
+	if HTTPContentMD5(r, &context) {
+		t.Error("Accepting an invalid content MD5")
+	}
+
+	r.Header.Set("Content-MD5", "   nwqq6b6ua/tTDk7B5M184w==  ")
+	if !HTTPContentMD5(r, &context) {
+		t.Error("Not accepting a valid content MD5 with spaces")
 	}
 }
