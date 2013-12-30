@@ -174,6 +174,7 @@ func TestHTTPContentMD5(t *testing.T) {
 			"HTTP Content MD5 header field")
 	}
 
+	// TODO: We should check more MD5 for tests
 	r.Header.Set("Content-MD5", "bGlmZSBvZiBicmlhbg==")
 	if HTTPContentMD5(r, &context) {
 		t.Error("Accepting an invalid content MD5")
