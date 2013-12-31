@@ -49,7 +49,7 @@ func retrieveDomain(r *http.Request, context *context.ShelterRESTContext) {
 		return
 	}
 
-	modifiedSince, err := check.IfModifiedSince(r, domain.LastModifiedAt)
+	modifiedSince, err := check.HTTPIfModifiedSince(r, domain.LastModifiedAt)
 	if err != nil {
 		context.MessageResponse(http.StatusBadRequest, "invalid-header-date")
 		return
@@ -62,7 +62,7 @@ func retrieveDomain(r *http.Request, context *context.ShelterRESTContext) {
 		return
 	}
 
-	unmodifiedSince, err := check.IfUnmodifiedSince(r, domain.LastModifiedAt)
+	unmodifiedSince, err := check.HTTPIfUnmodifiedSince(r, domain.LastModifiedAt)
 	if err != nil {
 		context.MessageResponse(http.StatusBadRequest, "invalid-header-date")
 		return
@@ -75,7 +75,7 @@ func retrieveDomain(r *http.Request, context *context.ShelterRESTContext) {
 		return
 	}
 
-	match, err := check.IfMatch(r, domain.Revision)
+	match, err := check.HTTPIfMatch(r, domain.Revision)
 	if err != nil {
 		context.MessageResponse(http.StatusBadRequest, "invalid-if-match")
 		return
@@ -88,7 +88,7 @@ func retrieveDomain(r *http.Request, context *context.ShelterRESTContext) {
 		return
 	}
 
-	noneMatch, err := check.IfNoneMatch(r, domain.Revision)
+	noneMatch, err := check.HTTPIfNoneMatch(r, domain.Revision)
 	if err != nil {
 		context.MessageResponse(http.StatusBadRequest, "invalid-if-none-match")
 		return
@@ -133,7 +133,7 @@ func createUpdateDomain(r *http.Request, context *context.ShelterRESTContext) {
 	// user, if the domain does not exist yet thats alright because we will create it
 	domain, _ := domainDAO.FindByFQDN(fqdn)
 
-	modifiedSince, err := check.IfModifiedSince(r, domain.LastModifiedAt)
+	modifiedSince, err := check.HTTPIfModifiedSince(r, domain.LastModifiedAt)
 	if err != nil {
 		context.MessageResponse(http.StatusBadRequest, "invalid-header-date")
 		return
@@ -146,7 +146,7 @@ func createUpdateDomain(r *http.Request, context *context.ShelterRESTContext) {
 		return
 	}
 
-	unmodifiedSince, err := check.IfUnmodifiedSince(r, domain.LastModifiedAt)
+	unmodifiedSince, err := check.HTTPIfUnmodifiedSince(r, domain.LastModifiedAt)
 	if err != nil {
 		context.MessageResponse(http.StatusBadRequest, "invalid-header-date")
 		return
@@ -166,7 +166,7 @@ func createUpdateDomain(r *http.Request, context *context.ShelterRESTContext) {
 		return
 	}
 
-	match, err := check.IfMatch(r, domain.Revision)
+	match, err := check.HTTPIfMatch(r, domain.Revision)
 	if err != nil {
 		context.MessageResponse(http.StatusBadRequest, "invalid-if-match")
 		return
@@ -179,7 +179,7 @@ func createUpdateDomain(r *http.Request, context *context.ShelterRESTContext) {
 		return
 	}
 
-	noneMatch, err := check.IfNoneMatch(r, domain.Revision)
+	noneMatch, err := check.HTTPIfNoneMatch(r, domain.Revision)
 	if err != nil {
 		context.MessageResponse(http.StatusBadRequest, "invalid-if-none-match")
 		return
@@ -234,7 +234,7 @@ func removeDomain(r *http.Request, context *context.ShelterRESTContext) {
 		return
 	}
 
-	modifiedSince, err := check.IfModifiedSince(r, domain.LastModifiedAt)
+	modifiedSince, err := check.HTTPIfModifiedSince(r, domain.LastModifiedAt)
 	if err != nil {
 		context.MessageResponse(http.StatusBadRequest, "invalid-header-date")
 		return
@@ -247,7 +247,7 @@ func removeDomain(r *http.Request, context *context.ShelterRESTContext) {
 		return
 	}
 
-	unmodifiedSince, err := check.IfUnmodifiedSince(r, domain.LastModifiedAt)
+	unmodifiedSince, err := check.HTTPIfUnmodifiedSince(r, domain.LastModifiedAt)
 	if err != nil {
 		context.MessageResponse(http.StatusBadRequest, "invalid-header-date")
 		return
@@ -260,7 +260,7 @@ func removeDomain(r *http.Request, context *context.ShelterRESTContext) {
 		return
 	}
 
-	match, err := check.IfMatch(r, domain.Revision)
+	match, err := check.HTTPIfMatch(r, domain.Revision)
 	if err != nil {
 		context.MessageResponse(http.StatusBadRequest, "invalid-if-match")
 		return
@@ -273,7 +273,7 @@ func removeDomain(r *http.Request, context *context.ShelterRESTContext) {
 		return
 	}
 
-	noneMatch, err := check.IfNoneMatch(r, domain.Revision)
+	noneMatch, err := check.HTTPIfNoneMatch(r, domain.Revision)
 	if err != nil {
 		context.MessageResponse(http.StatusBadRequest, "invalid-if-none-match")
 		return

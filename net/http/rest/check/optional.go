@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func IfModifiedSince(r *http.Request, lastModifiedAt time.Time) (bool, error) {
+func HTTPIfModifiedSince(r *http.Request, lastModifiedAt time.Time) (bool, error) {
 	ifModifiedSinceStr := r.Header.Get("If-Modified-Since")
 	ifModifiedSinceStr = strings.TrimSpace(ifModifiedSinceStr)
 
@@ -27,7 +27,7 @@ func IfModifiedSince(r *http.Request, lastModifiedAt time.Time) (bool, error) {
 	return true, nil
 }
 
-func IfUnmodifiedSince(r *http.Request, lastModifiedAt time.Time) (bool, error) {
+func HTTPIfUnmodifiedSince(r *http.Request, lastModifiedAt time.Time) (bool, error) {
 	ifUnmodifiedSinceStr := r.Header.Get("If-Unmodified-Since")
 	ifUnmodifiedSinceStr = strings.TrimSpace(ifUnmodifiedSinceStr)
 
@@ -47,7 +47,7 @@ func IfUnmodifiedSince(r *http.Request, lastModifiedAt time.Time) (bool, error) 
 	return true, nil
 }
 
-func IfMatch(r *http.Request, revision int) (bool, error) {
+func HTTPIfMatch(r *http.Request, revision int) (bool, error) {
 	ifMatch := r.Header.Get("If-Match")
 	ifMatch = strings.TrimSpace(ifMatch)
 
@@ -81,7 +81,7 @@ func IfMatch(r *http.Request, revision int) (bool, error) {
 	return false, nil
 }
 
-func IfNoneMatch(r *http.Request, revision int) (bool, error) {
+func HTTPIfNoneMatch(r *http.Request, revision int) (bool, error) {
 	ifNoneMatch := r.Header.Get("If-None-Match")
 	ifNoneMatch = strings.TrimSpace(ifNoneMatch)
 
