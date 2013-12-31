@@ -59,3 +59,81 @@ func TestHTTPIfUnmodifiedSince(t *testing.T) {
 		t.Error("Not comparing properly when object was modified")
 	}
 }
+
+func TestHTTPIfMatch(t *testing.T) {
+	r, err := http.NewRequest("", "", nil)
+	if err != nil {
+		t.Fatal("Error creating the request. Details:", err)
+	}
+
+	r.Header.Set("If-Match", "")
+	if ok, err := HTTPIfMatch(r, 1); !ok || err != nil {
+		t.Error("Not accepting when there's no HTTP If-Match header field")
+	}
+
+	r.Header.Set("If-Match", "abc")
+	if ok, err := HTTPIfMatch(r, 1); ok || err == nil {
+		t.Error("Accepting wrong ETag in If-Match header field")
+	}
+
+	r.Header.Set("If-Match", "2")
+	if ok, _ := HTTPIfMatch(r, 1); ok {
+		t.Error("Match with an ETag that does not exists")
+	}
+
+	r.Header.Set("If-Match", "1")
+	if ok, err := HTTPIfMatch(r, 1); !ok || err != nil {
+		t.Error("Not accepting a valid ETag in If-Match header field")
+	}
+
+	r.Header.Set("If-Match", "*")
+	if ok, err := HTTPIfMatch(r, 1); !ok || err != nil {
+		t.Error("Not accepting a valid ETag wildcard in If-Match header field")
+	}
+
+	r.Header.Set("If-Match", "*")
+	if ok, err := HTTPIfMatch(r, 0); ok || err != nil {
+		t.Error("Not returning the correct response when the entity " +
+			"does not exist in the system with a valid ETag wildcard " +
+			"in If-Match header field")
+	}
+}
+
+func TestHTTPIfNoneMatch(t *testing.T) {
+	r, err := http.NewRequest("", "", nil)
+	if err != nil {
+		t.Fatal("Error creating the request. Details:", err)
+	}
+
+	r.Header.Set("If-None-Match", "")
+	if ok, err := HTTPIfNoneMatch(r, 1); !ok || err != nil {
+		t.Error("Not accepting when there's no HTTP If-None-Match header field")
+	}
+
+	r.Header.Set("If-None-Match", "abc")
+	if ok, err := HTTPIfNoneMatch(r, 1); ok || err == nil {
+		t.Error("Accepting wrong ETag in If-None-Match header field")
+	}
+
+	r.Header.Set("If-None-Match", "1")
+	if ok, _ := HTTPIfNoneMatch(r, 1); ok {
+		t.Error("Match with an ETag should fail the If-None-Match condition")
+	}
+
+	r.Header.Set("If-None-Match", "2")
+	if ok, err := HTTPIfNoneMatch(r, 1); !ok || err != nil {
+		t.Error("Not accepting a valid ETag in If-None-Match header field")
+	}
+
+	r.Header.Set("If-None-Match", "*")
+	if ok, err := HTTPIfNoneMatch(r, 1); ok || err != nil {
+		t.Error("Not accepting a valid ETag wildcard in If-None-Match header field")
+	}
+
+	r.Header.Set("If-None-Match", "*")
+	if ok, err := HTTPIfNoneMatch(r, 0); !ok || err != nil {
+		t.Error("Not returning the correct response when the entity " +
+			"does not exist in the system with a valid ETag wildcard " +
+			"in If-None-Match header field")
+	}
+}
