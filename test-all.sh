@@ -2,6 +2,7 @@
 
 : ${GOPATH:?"Need to set GOPATH"}
 current_dir=$PWD
+option=$1
 
 # Unit tests
 echo "\n[[ UNIT TESTS ]]\n"
@@ -14,6 +15,11 @@ return_code=$?
 if [ $return_code -ne 0 ]; then
   cd $current_dir
   exit $return_code
+fi
+
+# Check for unit test only
+if [ "$option" = "-unit" ]; then
+  exit 0
 fi
 
 # Integration tests
