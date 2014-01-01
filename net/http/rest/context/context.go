@@ -90,8 +90,6 @@ func (s *ShelterRESTContext) AddHeader(key, value string) {
 	// don't allow header overwrite because in the low level MIMEHeader the HTTP header
 	// value is appended instead of replaced
 	if key == "Content-Type" ||
-		key == "Content-Encoding" ||
-		key == "Content-Charset" ||
 		key == "Content-Language" ||
 		key == "Content-Length" ||
 		key == "Content-MD5" ||

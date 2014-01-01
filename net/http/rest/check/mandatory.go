@@ -131,6 +131,8 @@ func HTTPContentType(r *http.Request) bool {
 		return true
 	}
 
+	// TODO: Check content type charset!
+
 	// For now we are ignoring version
 	if idx := strings.Index(contentType, ";"); idx > 0 {
 		contentType = contentType[0:idx]

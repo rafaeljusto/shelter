@@ -190,8 +190,7 @@ func (mux shelterRESTMux) writeResponse(w http.ResponseWriter,
 	context context.ShelterRESTContext) {
 
 	if len(context.ResponseContent) > 0 {
-		w.Header().Add("Content-Type", "application/vnd.shelter+json")
-		w.Header().Add("Content-Encoding", "utf-8")
+		w.Header().Add("Content-Type", fmt.Sprintf("application/vnd.shelter+json; charset=%s", check.SupportedCharset))
 		w.Header().Add("Content-Language", context.Language.Name())
 		w.Header().Add("Content-Length", fmt.Sprintf("%d", len(context.ResponseContent)))
 
