@@ -16,7 +16,7 @@ type ShelterRESTContext struct {
 	Database           *mgo.Database          // MongoDB Database
 	Language           *language.LanguagePack // Language choosen by the user
 	RequestContent     []byte                 // Request body
-	ResponseHttpStatus int                    // Response HTTP status
+	ResponseHTTPStatus int                    // Response HTTP status
 	ResponseContent    []byte                 // Response body
 	HTTPHeader         map[string]string      // Extra headers to be sent in the response
 }
@@ -30,9 +30,10 @@ type ShelterRESTContext struct {
 // level DAOs are going to detect a nil pointer
 func NewShelterRESTContext(r *http.Request, database *mgo.Database) (ShelterRESTContext, error) {
 	context := ShelterRESTContext{
-		Database:   database,
-		Language:   language.ShelterRESTLanguagePack,
-		HTTPHeader: make(map[string]string),
+		Database:           database,
+		Language:           language.ShelterRESTLanguagePack,
+		ResponseHTTPStatus: http.StatusOK, // Default status code
+		HTTPHeader:         make(map[string]string),
 	}
 
 	if r.ContentLength > 0 && r.Body != nil {
@@ -53,12 +54,12 @@ func (s *ShelterRESTContext) JSONRequest(object interface{}) error {
 
 // Store only the HTTP status, for no content responses
 func (s *ShelterRESTContext) Response(httpStatus int) {
-	s.ResponseHttpStatus = httpStatus
+	s.ResponseHTTPStatus = httpStatus
 }
 
 // Store a message response, translating the message id to the proper language message
 func (s *ShelterRESTContext) MessageResponse(httpStatus int, messageId string) {
-	s.ResponseHttpStatus = httpStatus
+	s.ResponseHTTPStatus = httpStatus
 	s.ResponseContent = []byte(s.Language.Messages[messageId])
 }
 
@@ -70,7 +71,7 @@ func (s *ShelterRESTContext) JSONResponse(httpStatus int, object interface{}) er
 		return err
 	}
 
-	s.ResponseHttpStatus = httpStatus
+	s.ResponseHTTPStatus = httpStatus
 	s.ResponseContent = content
 	return nil
 }
