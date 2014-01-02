@@ -26,7 +26,7 @@ const (
 
 	// Date HTTP header field must be near the current time, otherwise we must assume that is a reply
 	// attack. The variable bellow stores the tollerance for the date HTTP header field
-	timeFrameDuration = "10m"
+	timeFrameDuration = time.Duration(10 * time.Minute)
 )
 
 // List of possible errors that can occur when calling functions from this file. Other
@@ -131,10 +131,34 @@ func HTTPContentType(r *http.Request) bool {
 		return true
 	}
 
-	// TODO: Check content type charset!
-
-	// For now we are ignoring version
+	// For now we are ignoring version and only checking the charset option
 	if idx := strings.Index(contentType, ";"); idx > 0 {
+		options := contentType[idx:]
+
+		optionsParts := strings.Split(options, ";")
+		for _, optionsPart := range optionsParts {
+			option := strings.Split(optionsPart, "=")
+			if len(option) != 2 {
+				continue
+			}
+
+			key := option[0]
+			key = strings.TrimSpace(key)
+			key = strings.ToLower(key)
+
+			value := option[1]
+			value = strings.TrimSpace(value)
+			value = strings.ToLower(value)
+
+			if key == "charset" {
+				if value != SupportedCharset {
+					return false
+				}
+			}
+		}
+
+		// Removing options from content type to compare it with the supported types of the
+		// system
 		contentType = contentType[0:idx]
 	}
 
@@ -171,13 +195,10 @@ func HTTPDate(r *http.Request) (bool, error) {
 		return false, err
 	}
 
-	// TODO: Maybe we should put this parse in a global directive, to avoid doing it all the requests
-	duration, _ := time.ParseDuration(timeFrameDuration)
-
 	// Check if the date is inside the time frame, avoiding reply attack
 	now := time.Now().UTC()
-	frameInception := now.Add(duration * -1)
-	frameExpiration := now.Add(duration)
+	frameInception := now.Add(timeFrameDuration * -1)
+	frameExpiration := now.Add(timeFrameDuration)
 	return !date.UTC().Before(frameInception) && !date.UTC().After(frameExpiration), nil
 }
 

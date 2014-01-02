@@ -157,6 +157,16 @@ func TestHTTPContentType(t *testing.T) {
 	if !HTTPContentType(r) {
 		t.Error("Not accepting a supported content type with options")
 	}
+
+	r.Header.Set("Content-Type", SupportedContentType+";v=2;charset=iso-8859-1")
+	if HTTPContentType(r) {
+		t.Error("Accepting a charset that the system is not prepared")
+	}
+
+	r.Header.Set("Content-Type", SupportedContentType+";v=2;charset=utf-8")
+	if !HTTPContentType(r) {
+		t.Error("Not accepting a valid charset")
+	}
 }
 
 func TestHTTPContentMD5(t *testing.T) {
@@ -211,11 +221,10 @@ func TestHTTPDate(t *testing.T) {
 			"field outside the time frame")
 	}
 
-	duration, _ := time.ParseDuration(timeFrameDuration)
 	timeInTimeFrame := time.
 		Now().
 		UTC().
-		Add(-duration / 2).
+		Add(-timeFrameDuration / 2).
 		Format(time.RFC1123)
 
 	r.Header.Set("Date", "   "+strings.ToUpper(timeInTimeFrame)+"  ")
@@ -245,11 +254,10 @@ func TestHTTPAuthorization(t *testing.T) {
 		t.Error("Accepting an invalid HTTP Authorization header field")
 	}
 
-	duration, _ := time.ParseDuration(timeFrameDuration)
 	timeInTimeFrame := time.
 		Now().
 		UTC().
-		Add(-duration / 2).
+		Add(-timeFrameDuration / 2).
 		Format(time.RFC1123)
 	r.Header.Set("Date", timeInTimeFrame)
 
