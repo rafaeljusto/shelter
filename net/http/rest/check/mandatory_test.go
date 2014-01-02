@@ -2,7 +2,6 @@ package check
 
 import (
 	"errors"
-	"io/ioutil"
 	"net/http"
 	"shelter/net/http/rest/context"
 	"shelter/net/http/rest/language"
@@ -52,7 +51,10 @@ func TestHTTPAcceptLanguage(t *testing.T) {
 		t.Fatal("Error creating the request. Details:", err)
 	}
 
-	var context context.ShelterRESTContext
+	context, err := context.NewShelterRESTContext(r, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	language.ShelterRESTLanguagePacks = language.LanguagePacks{
 		Default: "en-US",
@@ -175,8 +177,8 @@ func TestHTTPContentMD5(t *testing.T) {
 		t.Fatal("Error creating the request. Details:", err)
 	}
 
-	var context context.ShelterRESTContext
-	if context.RequestContent, err = ioutil.ReadAll(r.Body); err != nil {
+	context, err := context.NewShelterRESTContext(r, nil)
+	if err != nil {
 		t.Fatal(err)
 	}
 
