@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"shelter/config"
+	"shelter/database/mongodb"
 	"shelter/net/http/rest/check"
 	"shelter/net/http/rest/context"
 	"shelter/net/http/rest/language"
@@ -49,7 +50,12 @@ func (mux shelterRESTMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	context, err := context.NewShelterRESTContext(r)
+	database, err := mongodb.Open(
+		config.ShelterConfig.Database.URI,
+		config.ShelterConfig.Database.Name,
+	)
+
+	context, err := context.NewShelterRESTContext(r, database)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Println("Error creating context. Details:", err)

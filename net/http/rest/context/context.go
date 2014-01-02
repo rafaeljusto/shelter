@@ -6,8 +6,6 @@ import (
 	"io/ioutil"
 	"labix.org/v2/mgo"
 	"net/http"
-	"shelter/config"
-	"shelter/database/mongodb"
 	"shelter/net/http/rest/language"
 )
 
@@ -27,10 +25,14 @@ type ShelterRESTContext struct {
 // the bytes from the request body because we can read only once from the buffer reader
 // and we need to check it for some HTTP header verifications. We don't return a pointer
 // of the context because we want to control the destruction of the object and don't leave
-// it to the garbage collector
-func NewShelterRESTContext(r *http.Request) (ShelterRESTContext, error) {
+// it to the garbage collector. We are injecting the database connection into the context
+// to allow unit tests in it. If the programmer forgot to use this constructor, the low
+// level DAOs are going to detect a nil pointer
+func NewShelterRESTContext(r *http.Request, database *mgo.Database) (ShelterRESTContext, error) {
 	context := ShelterRESTContext{
-		Language: language.ShelterRESTLanguagePack,
+		Database:   database,
+		Language:   language.ShelterRESTLanguagePack,
+		HTTPHeader: make(map[string]string),
 	}
 
 	if r.ContentLength > 0 && r.Body != nil {
@@ -40,16 +42,6 @@ func NewShelterRESTContext(r *http.Request) (ShelterRESTContext, error) {
 		}
 	}
 
-	database, err := mongodb.Open(
-		config.ShelterConfig.Database.URI,
-		config.ShelterConfig.Database.Name,
-	)
-
-	if err != nil {
-		return context, err
-	}
-
-	context.Database = database
 	return context, nil
 }
 
