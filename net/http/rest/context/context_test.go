@@ -1,11 +1,21 @@
 package context
 
 import (
+	"errors"
+	"math"
 	"net/http"
 	"shelter/net/http/rest/language"
 	"strings"
 	"testing"
 )
+
+type ReaderWithError struct{}
+
+func (r *ReaderWithError) Read(p []byte) (n int, err error) {
+	n = 0
+	err = errors.New("Just throwing an error for tests")
+	return
+}
 
 func TestNewShelterRESTContext(t *testing.T) {
 	r, err := http.NewRequest("", "", strings.NewReader("Test"))
@@ -20,6 +30,17 @@ func TestNewShelterRESTContext(t *testing.T) {
 
 	if string(context.RequestContent) != "Test" {
 		t.Error("Not storing request body correctly")
+	}
+
+	r, err = http.NewRequest("", "", &ReaderWithError{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	r.ContentLength = 100
+	_, err = NewShelterRESTContext(r, nil)
+	if err == nil {
+		t.Error("Not detecting request content error")
 	}
 }
 
@@ -111,7 +132,9 @@ func TestJSONReponse(t *testing.T) {
 	}{
 		Key: "value",
 	}
-	context.JSONResponse(http.StatusNotFound, object)
+	if err := context.JSONResponse(http.StatusNotFound, object); err != nil {
+		t.Fatal("Not creating a valid JSON")
+	}
 
 	if context.ResponseHTTPStatus != http.StatusNotFound {
 		t.Error("Not setting the return status code properly")
@@ -119,6 +142,10 @@ func TestJSONReponse(t *testing.T) {
 
 	if string(context.ResponseContent) != "{\"key\":\"value\"}" {
 		t.Error("Not setting the return message properly")
+	}
+
+	if err := context.JSONResponse(http.StatusOK, math.NaN()); err == nil {
+		t.Error("Not detecting strange JSON objects")
 	}
 }
 
