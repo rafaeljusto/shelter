@@ -4,7 +4,7 @@ import (
 	"errors"
 	"math"
 	"net/http"
-	"shelter/net/http/rest/language"
+	"shelter/net/http/rest/messages"
 	"strings"
 	"testing"
 )
@@ -99,7 +99,7 @@ func TestMessageReponse(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	context.Language = &language.LanguagePack{
+	context.Language = &messages.LanguagePack{
 		Messages: map[string]string{
 			"key": "value",
 		},

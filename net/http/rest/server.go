@@ -6,8 +6,8 @@ import (
 	"net"
 	"net/http"
 	"shelter/config"
-	"shelter/net/http/rest/language"
 	"shelter/net/http/rest/log"
+	"shelter/net/http/rest/messages"
 	"strconv"
 )
 
@@ -51,7 +51,7 @@ func Listen() error {
 
 func Start(listeners []net.Listener) error {
 	// Initialize language configuration file
-	if err := language.LoadConfig(config.ShelterConfig.RESTServer.LanguageConfigPath); err != nil {
+	if err := messages.LoadConfig(config.ShelterConfig.RESTServer.LanguageConfigPath); err != nil {
 		return err
 	}
 

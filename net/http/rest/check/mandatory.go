@@ -6,7 +6,7 @@ import (
 	"errors"
 	"net/http"
 	"shelter/net/http/rest/context"
-	"shelter/net/http/rest/language"
+	"shelter/net/http/rest/messages"
 	"strings"
 	"time"
 )
@@ -86,7 +86,7 @@ func HTTPAcceptLanguage(r *http.Request, context *context.ShelterRESTContext) bo
 			return true
 		}
 
-		languagePack := language.ShelterRESTLanguagePacks.Select(acceptLanguagePart)
+		languagePack := messages.ShelterRESTLanguagePacks.Select(acceptLanguagePart)
 		if languagePack != nil {
 			context.Language = languagePack
 			return true

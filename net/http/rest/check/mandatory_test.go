@@ -4,7 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"shelter/net/http/rest/context"
-	"shelter/net/http/rest/language"
+	"shelter/net/http/rest/messages"
 	"strings"
 	"testing"
 	"time"
@@ -56,9 +56,9 @@ func TestHTTPAcceptLanguage(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	language.ShelterRESTLanguagePacks = language.LanguagePacks{
+	messages.ShelterRESTLanguagePacks = messages.LanguagePacks{
 		Default: "en-US",
-		Packs: []language.LanguagePack{
+		Packs: []messages.LanguagePack{
 			{
 				GenericName:  "en",
 				SpecificName: "en-US",

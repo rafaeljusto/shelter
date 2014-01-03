@@ -10,8 +10,8 @@ import (
 	"shelter/database/mongodb"
 	"shelter/net/http/rest/check"
 	"shelter/net/http/rest/context"
-	"shelter/net/http/rest/language"
 	"shelter/net/http/rest/log"
+	"shelter/net/http/rest/messages"
 	"strings"
 	"time"
 )
@@ -208,7 +208,7 @@ func (mux shelterRESTMux) writeResponse(w http.ResponseWriter,
 	}
 
 	w.Header().Add("Accept", check.SupportedContentType)
-	w.Header().Add("Accept-Language", language.ShelterRESTLanguagePacks.Names())
+	w.Header().Add("Accept-Language", messages.ShelterRESTLanguagePacks.Names())
 	w.Header().Add("Accept-Charset", "utf-8")
 	w.Header().Add("Date", time.Now().UTC().Format(time.RFC1123))
 
@@ -216,7 +216,7 @@ func (mux shelterRESTMux) writeResponse(w http.ResponseWriter,
 		w.Header().Add(key, value)
 	}
 
-	w.WriteHeader(context.ResponseHttpStatus)
+	w.WriteHeader(context.ResponseHTTPStatus)
 
 	if len(context.ResponseContent) > 0 {
 		w.Write(context.ResponseContent)

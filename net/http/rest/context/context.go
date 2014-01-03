@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"labix.org/v2/mgo"
 	"net/http"
-	"shelter/net/http/rest/language"
+	"shelter/net/http/rest/messages"
 )
 
 // ShelterRESTContext is responsable to store a state of a request during the request
@@ -14,14 +14,14 @@ import (
 // the user
 type ShelterRESTContext struct {
 	Database           *mgo.Database          // MongoDB Database
-	Language           *language.LanguagePack // Language choosen by the user
+	Language           *messages.LanguagePack // Language choosen by the user
 	RequestContent     []byte                 // Request body
 	ResponseHTTPStatus int                    // Response HTTP status
 	ResponseContent    []byte                 // Response body
 	HTTPHeader         map[string]string      // Extra headers to be sent in the response
 }
 
-// Initialize a new context. By default use system choosen language pack. We also store
+// Initialize a new context. By default use system choosen messages pack. We also store
 // the bytes from the request body because we can read only once from the buffer reader
 // and we need to check it for some HTTP header verifications. We don't return a pointer
 // of the context because we want to control the destruction of the object and don't leave
@@ -31,7 +31,7 @@ type ShelterRESTContext struct {
 func NewShelterRESTContext(r *http.Request, database *mgo.Database) (ShelterRESTContext, error) {
 	context := ShelterRESTContext{
 		Database:           database,
-		Language:           language.ShelterRESTLanguagePack,
+		Language:           messages.ShelterRESTLanguagePack,
 		ResponseHTTPStatus: http.StatusOK, // Default status code
 		HTTPHeader:         make(map[string]string),
 	}
