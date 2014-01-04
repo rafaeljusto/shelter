@@ -9,10 +9,10 @@ import (
 	"shelter/net/http/rest/messages"
 )
 
-// ShelterRESTContext is responsable to store a state of a request during the request
+// Context is responsable to store a state of a request during the request
 // live. It's necessary to create the request enviroment, with the preferred settings of
 // the user
-type ShelterRESTContext struct {
+type Context struct {
 	Database           *mgo.Database          // MongoDB Database
 	Language           *messages.LanguagePack // Language choosen by the user
 	RequestContent     []byte                 // Request body
@@ -28,8 +28,8 @@ type ShelterRESTContext struct {
 // it to the garbage collector. We are injecting the database connection into the context
 // to allow unit tests in it. If the programmer forgot to use this constructor, the low
 // level DAOs are going to detect a nil pointer
-func NewShelterRESTContext(r *http.Request, database *mgo.Database) (ShelterRESTContext, error) {
-	context := ShelterRESTContext{
+func NewContext(r *http.Request, database *mgo.Database) (Context, error) {
+	context := Context{
 		Database:           database,
 		Language:           messages.ShelterRESTLanguagePack,
 		ResponseHTTPStatus: http.StatusOK, // Default status code
@@ -47,24 +47,24 @@ func NewShelterRESTContext(r *http.Request, database *mgo.Database) (ShelterREST
 }
 
 // Transform the content body, that is in JSON format into an object
-func (s *ShelterRESTContext) JSONRequest(object interface{}) error {
+func (s *Context) JSONRequest(object interface{}) error {
 	decoder := json.NewDecoder(bytes.NewBuffer(s.RequestContent))
 	return decoder.Decode(object)
 }
 
 // Store only the HTTP status, for no content responses
-func (s *ShelterRESTContext) Response(httpStatus int) {
+func (s *Context) Response(httpStatus int) {
 	s.ResponseHTTPStatus = httpStatus
 }
 
 // Store a message response, translating the message id to the proper language message
-func (s *ShelterRESTContext) MessageResponse(httpStatus int, messageId string) {
+func (s *Context) MessageResponse(httpStatus int, messageId string) {
 	s.ResponseHTTPStatus = httpStatus
 	s.ResponseContent = []byte(s.Language.Messages[messageId])
 }
 
 // Store a object in json format for the response
-func (s *ShelterRESTContext) JSONResponse(httpStatus int, object interface{}) error {
+func (s *Context) JSONResponse(httpStatus int, object interface{}) error {
 	content, err := json.Marshal(object)
 
 	if err != nil {
@@ -78,7 +78,7 @@ func (s *ShelterRESTContext) JSONResponse(httpStatus int, object interface{}) er
 
 // Add a custom HTTP header. Used for some types of response where you need to set ETag or
 // LastModified fields
-func (s *ShelterRESTContext) AddHeader(key, value string) {
+func (s *Context) AddHeader(key, value string) {
 	// Avoid adding headers that are automatically generated at the end of the request. We
 	// don't allow header overwrite because in the low level MIMEHeader the HTTP header
 	// value is appended instead of replaced

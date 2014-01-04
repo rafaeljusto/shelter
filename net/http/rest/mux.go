@@ -45,7 +45,7 @@ func (mux shelterRESTMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		config.ShelterConfig.Database.Name,
 	)
 
-	context, err := context.NewShelterRESTContext(r, database)
+	context, err := context.NewContext(r, database)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Println("Error creating context. Details:", err)
@@ -82,7 +82,7 @@ func (mux shelterRESTMux) findRoute(uri string) handler.Handler {
 
 // Verify HTTP headers and fill context with user preferences
 func (mux shelterRESTMux) checkHTTPHeaders(w http.ResponseWriter,
-	r *http.Request, context *context.ShelterRESTContext) bool {
+	r *http.Request, context *context.Context) bool {
 
 	// We first check the language header, because if it's acceptable the next messages are
 	// going to be returned in the language choosen by the user
@@ -183,7 +183,7 @@ func (mux shelterRESTMux) checkHTTPHeaders(w http.ResponseWriter,
 
 // Write response with the defaults HTTP response headers
 func (mux shelterRESTMux) writeResponse(w http.ResponseWriter,
-	context context.ShelterRESTContext) {
+	context context.Context) {
 
 	if len(context.ResponseContent) > 0 {
 		w.Header().Add("Content-Type", fmt.Sprintf("application/vnd.shelter+json; charset=%s", check.SupportedCharset))

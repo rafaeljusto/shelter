@@ -16,7 +16,7 @@ func init() {
 	HandleFunc("/domain/", handleDomain)
 }
 
-func handleDomain(r *http.Request, context *context.ShelterRESTContext) {
+func handleDomain(r *http.Request, context *context.Context) {
 	if r.Method == "GET" {
 		retrieveDomain(r, context)
 
@@ -31,7 +31,7 @@ func handleDomain(r *http.Request, context *context.ShelterRESTContext) {
 	}
 }
 
-func retrieveDomain(r *http.Request, context *context.ShelterRESTContext) {
+func retrieveDomain(r *http.Request, context *context.Context) {
 	fqdn := getFQDNFromURI(r.URL.Path)
 	if len(fqdn) == 0 {
 		context.MessageResponse(http.StatusBadRequest, "invalid-uri")
@@ -107,7 +107,7 @@ func retrieveDomain(r *http.Request, context *context.ShelterRESTContext) {
 	context.JSONResponse(http.StatusOK, protocol.ToDomainResponse(domain))
 }
 
-func createUpdateDomain(r *http.Request, context *context.ShelterRESTContext) {
+func createUpdateDomain(r *http.Request, context *context.Context) {
 	fqdn := getFQDNFromURI(r.URL.Path)
 	if len(fqdn) == 0 {
 		context.MessageResponse(http.StatusBadRequest, "invalid-uri")
@@ -216,7 +216,7 @@ func createUpdateDomain(r *http.Request, context *context.ShelterRESTContext) {
 	}
 }
 
-func removeDomain(r *http.Request, context *context.ShelterRESTContext) {
+func removeDomain(r *http.Request, context *context.Context) {
 	fqdn := getFQDNFromURI(r.URL.Path)
 	if len(fqdn) == 0 {
 		context.MessageResponse(http.StatusBadRequest, "invalid-uri")

@@ -14,7 +14,7 @@ func init() {
 	HandleFunc("/domains", handleDomains)
 }
 
-func handleDomains(r *http.Request, context *context.ShelterRESTContext) {
+func handleDomains(r *http.Request, context *context.Context) {
 	if r.Method == "GET" {
 		retrieveDomains(r, context)
 
@@ -23,7 +23,7 @@ func handleDomains(r *http.Request, context *context.ShelterRESTContext) {
 	}
 }
 
-func retrieveDomains(r *http.Request, context *context.ShelterRESTContext) {
+func retrieveDomains(r *http.Request, context *context.Context) {
 	var pagination dao.DomainDAOPagination
 
 	for key, values := range r.URL.Query() {

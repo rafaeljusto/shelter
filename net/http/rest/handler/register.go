@@ -11,7 +11,7 @@ var (
 )
 
 // Create this type to make it easy to reference a handler
-type Handler func(*http.Request, *context.ShelterRESTContext)
+type Handler func(*http.Request, *context.Context)
 
 // Function created only to register the handlers more easily
 func HandleFunc(route string, handler Handler) {

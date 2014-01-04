@@ -65,7 +65,7 @@ func HTTPAccept(r *http.Request) bool {
 
 // The accept language check beyond verifying if the language exists in out system, set
 // the first language found in the context
-func HTTPAcceptLanguage(r *http.Request, context *context.ShelterRESTContext) bool {
+func HTTPAcceptLanguage(r *http.Request, context *context.Context) bool {
 	acceptLanguage := r.Header.Get("Accept-Language")
 	acceptLanguage = strings.TrimSpace(acceptLanguage)
 	acceptLanguage = strings.ToLower(acceptLanguage)
@@ -167,7 +167,7 @@ func HTTPContentType(r *http.Request) bool {
 
 // To garantee that the content was not modified during the network phase or is incomplete, we check
 // the hash of the content and compare with the HTTP header field
-func HTTPContentMD5(r *http.Request, context *context.ShelterRESTContext) bool {
+func HTTPContentMD5(r *http.Request, context *context.Context) bool {
 	contentMD5 := getHTTPContentMD5(r)
 	if len(contentMD5) == 0 {
 		return true
