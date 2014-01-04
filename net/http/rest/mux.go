@@ -10,15 +10,11 @@ import (
 	"shelter/database/mongodb"
 	"shelter/net/http/rest/check"
 	"shelter/net/http/rest/context"
+	"shelter/net/http/rest/handler"
 	"shelter/net/http/rest/log"
 	"shelter/net/http/rest/messages"
 	"strings"
 	"time"
-)
-
-// Main router used by the Shelter REST system to manage the requests
-var (
-	mux shelterRESTMux
 )
 
 // List of possible errors that can occur when calling functions from this file. Other
@@ -27,20 +23,14 @@ var (
 	ErrSecretNotFound = errors.New("Secret related to Authorization's secret id not found")
 )
 
-// Create this type to make it easy to reference a Shelter REST server handler
-type shelterRESTHandler func(*http.Request, *context.ShelterRESTContext)
+// Main router used by the Shelter REST system to manage the requests
+var (
+	mux shelterRESTMux
+)
 
-// shelterRESTMux is responsable for storing all routes. Beyond of searching the best
-// route for each request, the mux will do all initial HTTP checks before calling the
-// handler
-type shelterRESTMux struct {
-	routes map[string]shelterRESTHandler // Map of all available routes
-}
-
-// Function created only to register the handlers more easily in the mux
-func HandleFunc(route string, handler shelterRESTHandler) {
-	mux.routes[route] = handler
-}
+// shelterRESTMux is responsable for all initial HTTP checks before calling a specific handler, and
+// for adding the system HTTP headers on each response
+type shelterRESTMux struct{}
 
 // Main function of the REST server
 func (mux shelterRESTMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -71,11 +61,11 @@ func (mux shelterRESTMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // Find the best handler for the given URI. The best handler is the most specific one
-func (mux shelterRESTMux) findRoute(uri string) shelterRESTHandler {
+func (mux shelterRESTMux) findRoute(uri string) handler.Handler {
 	var selectedRoute string
-	var selectedHandler shelterRESTHandler
+	var selectedHandler handler.Handler
 
-	for route, handler := range mux.routes {
+	for route, handler := range handler.Routes {
 		if !strings.HasPrefix(uri, route) {
 			continue
 		}

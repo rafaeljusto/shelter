@@ -3,7 +3,6 @@ package handler
 import (
 	"net/http"
 	"shelter/dao"
-	"shelter/net/http/rest"
 	"shelter/net/http/rest/context"
 	"shelter/net/http/rest/log"
 	"shelter/net/http/rest/protocol"
@@ -12,7 +11,7 @@ import (
 )
 
 func init() {
-	rest.HandleFunc("/domains", handleDomains)
+	HandleFunc("/domains", handleDomains)
 }
 
 func handleDomains(r *http.Request, context *context.ShelterRESTContext) {

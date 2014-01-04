@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"shelter/dao"
-	"shelter/net/http/rest"
 	"shelter/net/http/rest/check"
 	"shelter/net/http/rest/context"
 	"shelter/net/http/rest/log"
@@ -14,7 +13,7 @@ import (
 )
 
 func init() {
-	rest.HandleFunc("/domain/", handleDomain)
+	HandleFunc("/domain/", handleDomain)
 }
 
 func handleDomain(r *http.Request, context *context.ShelterRESTContext) {
