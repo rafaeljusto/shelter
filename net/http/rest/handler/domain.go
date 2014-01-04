@@ -13,31 +13,31 @@ import (
 )
 
 func init() {
-	HandleFunc("/domain/", handleDomain)
+	HandleFunc("/domain/", HandleDomain)
 }
 
-func handleDomain(r *http.Request, context *context.Context) {
-	if r.Method == "GET" {
-		retrieveDomain(r, context)
-
-	} else if r.Method == "PUT" {
-		createUpdateDomain(r, context)
-
-	} else if r.Method == "DELETE" {
-		removeDomain(r, context)
-
-	} else {
-		context.Response(http.StatusMethodNotAllowed)
-	}
-}
-
-func retrieveDomain(r *http.Request, context *context.Context) {
+func HandleDomain(r *http.Request, context *context.Context) {
 	fqdn := getFQDNFromURI(r.URL.Path)
 	if len(fqdn) == 0 {
 		context.MessageResponse(http.StatusBadRequest, "invalid-uri")
 		return
 	}
 
+	if r.Method == "GET" {
+		retrieveDomain(r, context, fqdn)
+
+	} else if r.Method == "PUT" {
+		createUpdateDomain(r, context, fqdn)
+
+	} else if r.Method == "DELETE" {
+		removeDomain(r, context, fqdn)
+
+	} else {
+		context.Response(http.StatusMethodNotAllowed)
+	}
+}
+
+func retrieveDomain(r *http.Request, context *context.Context, fqdn string) {
 	domainDAO := dao.DomainDAO{
 		Database: context.Database,
 	}
@@ -107,13 +107,7 @@ func retrieveDomain(r *http.Request, context *context.Context) {
 	context.JSONResponse(http.StatusOK, protocol.ToDomainResponse(domain))
 }
 
-func createUpdateDomain(r *http.Request, context *context.Context) {
-	fqdn := getFQDNFromURI(r.URL.Path)
-	if len(fqdn) == 0 {
-		context.MessageResponse(http.StatusBadRequest, "invalid-uri")
-		return
-	}
-
+func createUpdateDomain(r *http.Request, context *context.Context, fqdn string) {
 	var domainRequest protocol.DomainRequest
 	if err := context.JSONRequest(&domainRequest); err != nil {
 		context.MessageResponse(http.StatusBadRequest, "invalid-json-content")
@@ -216,13 +210,7 @@ func createUpdateDomain(r *http.Request, context *context.Context) {
 	}
 }
 
-func removeDomain(r *http.Request, context *context.Context) {
-	fqdn := getFQDNFromURI(r.URL.Path)
-	if len(fqdn) == 0 {
-		context.MessageResponse(http.StatusBadRequest, "invalid-uri")
-		return
-	}
-
+func removeDomain(r *http.Request, context *context.Context, fqdn string) {
 	domainDAO := dao.DomainDAO{
 		Database: context.Database,
 	}
@@ -293,16 +281,4 @@ func removeDomain(r *http.Request, context *context.Context) {
 	}
 
 	context.Response(http.StatusNoContent)
-}
-
-// Retrieve the FQDN from the URI. The FQDN is going to be the last part of the URI. For
-// example "/domain/rafael.net.br" will return "rafael.net.br". If there's any error an
-// empty string is returned
-func getFQDNFromURI(uri string) string {
-	idx := strings.LastIndex(uri, "/")
-	if idx == -1 {
-		return ""
-	}
-
-	return uri[idx:]
 }

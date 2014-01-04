@@ -17,13 +17,13 @@ func (r *ReaderWithError) Read(p []byte) (n int, err error) {
 	return
 }
 
-func TestNewShelterRESTContext(t *testing.T) {
+func TestNewContext(t *testing.T) {
 	r, err := http.NewRequest("", "", strings.NewReader("Test"))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	context, err := NewShelterRESTContext(r, nil)
+	context, err := NewContext(r, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -38,7 +38,7 @@ func TestNewShelterRESTContext(t *testing.T) {
 	}
 
 	r.ContentLength = 100
-	_, err = NewShelterRESTContext(r, nil)
+	_, err = NewContext(r, nil)
 	if err == nil {
 		t.Error("Not detecting request content error")
 	}
@@ -51,7 +51,7 @@ func TestJSONRequest(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	context, err := NewShelterRESTContext(r, nil)
+	context, err := NewContext(r, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -77,7 +77,7 @@ func TestResponse(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	context, err := NewShelterRESTContext(r, nil)
+	context, err := NewContext(r, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -94,7 +94,7 @@ func TestMessageReponse(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	context, err := NewShelterRESTContext(r, nil)
+	context, err := NewContext(r, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -122,7 +122,7 @@ func TestJSONReponse(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	context, err := NewShelterRESTContext(r, nil)
+	context, err := NewContext(r, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -155,7 +155,7 @@ func TestAddHeader(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	context, err := NewShelterRESTContext(r, nil)
+	context, err := NewContext(r, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

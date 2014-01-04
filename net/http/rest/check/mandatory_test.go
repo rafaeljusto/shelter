@@ -51,7 +51,7 @@ func TestHTTPAcceptLanguage(t *testing.T) {
 		t.Fatal("Error creating the request. Details:", err)
 	}
 
-	context, err := context.NewShelterRESTContext(r, nil)
+	context, err := context.NewContext(r, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -177,7 +177,7 @@ func TestHTTPContentMD5(t *testing.T) {
 		t.Fatal("Error creating the request. Details:", err)
 	}
 
-	context, err := context.NewShelterRESTContext(r, nil)
+	context, err := context.NewContext(r, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

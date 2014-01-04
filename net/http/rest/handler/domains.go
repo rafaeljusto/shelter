@@ -11,10 +11,10 @@ import (
 )
 
 func init() {
-	HandleFunc("/domains", handleDomains)
+	HandleFunc("/domains", HandleDomains)
 }
 
-func handleDomains(r *http.Request, context *context.Context) {
+func HandleDomains(r *http.Request, context *context.Context) {
 	if r.Method == "GET" {
 		retrieveDomains(r, context)
 
