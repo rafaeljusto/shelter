@@ -68,10 +68,18 @@ func main() {
 	createDomain(database)
 	updateDomain(database)
 	retrieveDomain(database)
+	retrieveDomainIfModifiedSince(database)
+	retrieveDomainIfUnmodifiedSince(database)
+	retrieveDomainIfMatch(database)
+	retrieveDomainIfNoneMatch(database)
 	updateDomainIfModifiedSince(database)
 	updateDomainIfUnmodifiedSince(database)
 	updateDomainIfMatch(database)
 	updateDomainIfNoneMatch(database)
+	deleteDomainIfModifiedSince(database)
+	deleteDomainIfUnmodifiedSince(database)
+	deleteDomainIfMatch(database)
+	deleteDomainIfNoneMatch(database)
 	deleteDomain(database)
 	retrieveUnknownDomain(database)
 
@@ -174,6 +182,90 @@ func retrieveDomain(database *mgo.Database) {
 	}
 }
 
+func retrieveDomainIfModifiedSince(database *mgo.Database) {
+	r, err := http.NewRequest("GET", "/domain/example.com.br.", nil)
+	if err != nil {
+		utils.Fatalln("Error creting the HTTP request", err)
+	}
+	r.Header.Add("If-Modified-Since",
+		time.Now().Add(1*time.Second).UTC().Format(time.RFC1123))
+
+	context, err := context.NewContext(r, database)
+	if err != nil {
+		utils.Fatalln("Error creating context", err)
+	}
+
+	handler.HandleDomain(r, &context)
+
+	if context.ResponseHTTPStatus != http.StatusNotModified {
+		utils.Fatalln("Error retrieving domain with If-Modified-Since "+
+			"conditional HTTP header", errors.New(string(context.ResponseContent)))
+	}
+}
+
+func retrieveDomainIfUnmodifiedSince(database *mgo.Database) {
+	r, err := http.NewRequest("GET", "/domain/example.com.br.", nil)
+	if err != nil {
+		utils.Fatalln("Error creting the HTTP request", err)
+	}
+	r.Header.Add("If-Unmodified-Since",
+		time.Now().Add(-10*time.Second).UTC().Format(time.RFC1123))
+
+	context, err := context.NewContext(r, database)
+	if err != nil {
+		utils.Fatalln("Error creating context", err)
+	}
+
+	handler.HandleDomain(r, &context)
+
+	if context.ResponseHTTPStatus != http.StatusPreconditionFailed {
+		utils.Fatalln("Error retrieving domain with If-Unmodified-Since "+
+			"conditional HTTP header", errors.New(string(context.ResponseContent)))
+	}
+}
+
+func retrieveDomainIfMatch(database *mgo.Database) {
+	r, err := http.NewRequest("GET", "/domain/example.com.br.", nil)
+	if err != nil {
+		utils.Fatalln("Error creting the HTTP request", err)
+	}
+	r.Header.Add("If-Match", "3")
+
+	context, err := context.NewContext(r, database)
+	if err != nil {
+		utils.Fatalln("Error creating context", err)
+	}
+
+	handler.HandleDomain(r, &context)
+
+	if context.ResponseHTTPStatus != http.StatusPreconditionFailed {
+		utils.Fatalln("Error retrieving domain with If-Match "+
+			"conditional HTTP header",
+			errors.New(string(context.ResponseContent)))
+	}
+}
+
+func retrieveDomainIfNoneMatch(database *mgo.Database) {
+	r, err := http.NewRequest("GET", "/domain/example.com.br.", nil)
+	if err != nil {
+		utils.Fatalln("Error creting the HTTP request", err)
+	}
+	r.Header.Add("If-None-Match", "2")
+
+	context, err := context.NewContext(r, database)
+	if err != nil {
+		utils.Fatalln("Error creating context", err)
+	}
+
+	handler.HandleDomain(r, &context)
+
+	if context.ResponseHTTPStatus != http.StatusNotModified {
+		utils.Fatalln("Error retrieving domain with If-None-Match "+
+			"conditional HTTP header",
+			errors.New(string(context.ResponseContent)))
+	}
+}
+
 func updateDomainIfModifiedSince(database *mgo.Database) {
 	r, err := http.NewRequest("PUT", "/domain/example.com.br.",
 		strings.NewReader(`{
@@ -199,7 +291,8 @@ func updateDomainIfModifiedSince(database *mgo.Database) {
 	handler.HandleDomain(r, &context)
 
 	if context.ResponseHTTPStatus != http.StatusNotModified {
-		utils.Fatalln("Not verifying If-Modified-Since header condition", nil)
+		utils.Fatalln("Error updating domain. Not verifying "+
+			"If-Modified-Since header condition", nil)
 	}
 }
 
@@ -228,7 +321,8 @@ func updateDomainIfUnmodifiedSince(database *mgo.Database) {
 	handler.HandleDomain(r, &context)
 
 	if context.ResponseHTTPStatus != http.StatusPreconditionFailed {
-		utils.Fatalln("Not verifying If-Unmodified-Since header condition", nil)
+		utils.Fatalln("Error updating domain. Not verifying "+
+			"If-Unmodified-Since header condition", nil)
 	}
 }
 
@@ -256,7 +350,8 @@ func updateDomainIfMatch(database *mgo.Database) {
 	handler.HandleDomain(r, &context)
 
 	if context.ResponseHTTPStatus != http.StatusPreconditionFailed {
-		utils.Fatalln("Not verifying If-Match header condition", nil)
+		utils.Fatalln("Error updating domains Not verifying "+
+			"If-Match header condition", nil)
 	}
 }
 
@@ -284,7 +379,94 @@ func updateDomainIfNoneMatch(database *mgo.Database) {
 	handler.HandleDomain(r, &context)
 
 	if context.ResponseHTTPStatus != http.StatusPreconditionFailed {
-		utils.Fatalln("Not verifying If-None-Match header condition", nil)
+		utils.Fatalln("Error updating domain. Not verifying "+
+			"If-None-Match header condition", nil)
+	}
+}
+
+func deleteDomainIfModifiedSince(database *mgo.Database) {
+	r, err := http.NewRequest("DELETE", "/domain/example.com.br.", nil)
+	if err != nil {
+		utils.Fatalln("Error creting the HTTP request", err)
+	}
+	r.Header.Add("If-Modified-Since",
+		time.Now().Add(1*time.Second).UTC().Format(time.RFC1123))
+
+	context, err := context.NewContext(r, database)
+	if err != nil {
+		utils.Fatalln("Error creating context", err)
+	}
+
+	handler.HandleDomain(r, &context)
+
+	if context.ResponseHTTPStatus != http.StatusNotModified {
+		utils.Fatalln("Error removing domain with If-Modified-Since "+
+			"conditional HTTP header",
+			errors.New(string(context.ResponseContent)))
+	}
+}
+
+func deleteDomainIfUnmodifiedSince(database *mgo.Database) {
+	r, err := http.NewRequest("DELETE", "/domain/example.com.br.", nil)
+	if err != nil {
+		utils.Fatalln("Error creting the HTTP request", err)
+	}
+	r.Header.Add("If-Unmodified-Since",
+		time.Now().Add(-10*time.Second).UTC().Format(time.RFC1123))
+
+	context, err := context.NewContext(r, database)
+	if err != nil {
+		utils.Fatalln("Error creating context", err)
+	}
+
+	handler.HandleDomain(r, &context)
+
+	if context.ResponseHTTPStatus != http.StatusPreconditionFailed {
+		utils.Fatalln("Error removing domain with If-Unmodified-Since "+
+			"conditional HTTP header",
+			errors.New(string(context.ResponseContent)))
+	}
+}
+
+func deleteDomainIfMatch(database *mgo.Database) {
+	r, err := http.NewRequest("DELETE", "/domain/example.com.br.", nil)
+	if err != nil {
+		utils.Fatalln("Error creting the HTTP request", err)
+	}
+	r.Header.Add("If-Match", "3")
+
+	context, err := context.NewContext(r, database)
+	if err != nil {
+		utils.Fatalln("Error creating context", err)
+	}
+
+	handler.HandleDomain(r, &context)
+
+	if context.ResponseHTTPStatus != http.StatusPreconditionFailed {
+		utils.Fatalln("Error removing domain with If-Match "+
+			"conditional HTTP header",
+			errors.New(string(context.ResponseContent)))
+	}
+}
+
+func deleteDomainIfNoneMatch(database *mgo.Database) {
+	r, err := http.NewRequest("DELETE", "/domain/example.com.br.", nil)
+	if err != nil {
+		utils.Fatalln("Error creting the HTTP request", err)
+	}
+	r.Header.Add("If-None-Match", "2")
+
+	context, err := context.NewContext(r, database)
+	if err != nil {
+		utils.Fatalln("Error creating context", err)
+	}
+
+	handler.HandleDomain(r, &context)
+
+	if context.ResponseHTTPStatus != http.StatusPreconditionFailed {
+		utils.Fatalln("Error removing domain with If-None-Match "+
+			"conditional HTTP header",
+			errors.New(string(context.ResponseContent)))
 	}
 }
 
