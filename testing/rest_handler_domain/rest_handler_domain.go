@@ -14,6 +14,7 @@ import (
 	"shelter/net/http/rest/protocol"
 	"shelter/testing/utils"
 	"strings"
+	"time"
 )
 
 var (
@@ -67,6 +68,10 @@ func main() {
 	createDomain(database)
 	updateDomain(database)
 	retrieveDomain(database)
+	updateDomainIfModifiedSince(database)
+	updateDomainIfUnmodifiedSince(database)
+	updateDomainIfMatch(database)
+	updateDomainIfNoneMatch(database)
 	deleteDomain(database)
 	retrieveUnknownDomain(database)
 
@@ -166,6 +171,120 @@ func retrieveDomain(database *mgo.Database) {
 		domainResponse.Owners[0] != "administrator@example.com.br." {
 
 		utils.Fatalln("Domain's owners were not persisted correctly", nil)
+	}
+}
+
+func updateDomainIfModifiedSince(database *mgo.Database) {
+	r, err := http.NewRequest("PUT", "/domain/example.com.br.",
+		strings.NewReader(`{
+      "Nameservers": [
+        { "Host": "ns1.example.com.br.", "ipv4": "127.0.0.1" },
+        { "Host": "ns3.example.com.br.", "ipv6": "::1" }
+      ],
+      "Owners": [
+        "administrator@example.com.br."
+      ]
+    }`))
+	if err != nil {
+		utils.Fatalln("Error creting the HTTP request", err)
+	}
+	r.Header.Add("If-Modified-Since",
+		time.Now().Add(1*time.Second).UTC().Format(time.RFC1123))
+
+	context, err := context.NewContext(r, database)
+	if err != nil {
+		utils.Fatalln("Error creating context", err)
+	}
+
+	handler.HandleDomain(r, &context)
+
+	if context.ResponseHTTPStatus != http.StatusNotModified {
+		utils.Fatalln("Not verifying If-Modified-Since header condition", nil)
+	}
+}
+
+func updateDomainIfUnmodifiedSince(database *mgo.Database) {
+	r, err := http.NewRequest("PUT", "/domain/example.com.br.",
+		strings.NewReader(`{
+      "Nameservers": [
+        { "Host": "ns1.example.com.br.", "ipv4": "127.0.0.1" },
+        { "Host": "ns3.example.com.br.", "ipv6": "::1" }
+      ],
+      "Owners": [
+        "administrator@example.com.br."
+      ]
+    }`))
+	if err != nil {
+		utils.Fatalln("Error creting the HTTP request", err)
+	}
+	r.Header.Add("If-Unmodified-Since",
+		time.Now().Add(-10*time.Second).UTC().Format(time.RFC1123))
+
+	context, err := context.NewContext(r, database)
+	if err != nil {
+		utils.Fatalln("Error creating context", err)
+	}
+
+	handler.HandleDomain(r, &context)
+
+	if context.ResponseHTTPStatus != http.StatusPreconditionFailed {
+		utils.Fatalln("Not verifying If-Unmodified-Since header condition", nil)
+	}
+}
+
+func updateDomainIfMatch(database *mgo.Database) {
+	r, err := http.NewRequest("PUT", "/domain/example.com.br.",
+		strings.NewReader(`{
+      "Nameservers": [
+        { "Host": "ns1.example.com.br.", "ipv4": "127.0.0.1" },
+        { "Host": "ns3.example.com.br.", "ipv6": "::1" }
+      ],
+      "Owners": [
+        "administrator@example.com.br."
+      ]
+    }`))
+	if err != nil {
+		utils.Fatalln("Error creting the HTTP request", err)
+	}
+	r.Header.Add("If-Match", "3")
+
+	context, err := context.NewContext(r, database)
+	if err != nil {
+		utils.Fatalln("Error creating context", err)
+	}
+
+	handler.HandleDomain(r, &context)
+
+	if context.ResponseHTTPStatus != http.StatusPreconditionFailed {
+		utils.Fatalln("Not verifying If-Match header condition", nil)
+	}
+}
+
+func updateDomainIfNoneMatch(database *mgo.Database) {
+	r, err := http.NewRequest("PUT", "/domain/example.com.br.",
+		strings.NewReader(`{
+      "Nameservers": [
+        { "Host": "ns1.example.com.br.", "ipv4": "127.0.0.1" },
+        { "Host": "ns3.example.com.br.", "ipv6": "::1" }
+      ],
+      "Owners": [
+        "administrator@example.com.br."
+      ]
+    }`))
+	if err != nil {
+		utils.Fatalln("Error creting the HTTP request", err)
+	}
+	r.Header.Add("If-None-Match", "2")
+
+	context, err := context.NewContext(r, database)
+	if err != nil {
+		utils.Fatalln("Error creating context", err)
+	}
+
+	handler.HandleDomain(r, &context)
+
+	if context.ResponseHTTPStatus != http.StatusPreconditionFailed {
+		utils.Fatalln("Not verifying If-None-Match header condition", nil)
 	}
 }
 

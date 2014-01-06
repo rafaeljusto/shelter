@@ -152,13 +152,6 @@ func createUpdateDomain(r *http.Request, context *context.Context, fqdn string) 
 		return
 	}
 
-	if domain, err = protocol.Merge(domain, domainRequest); err != nil {
-		log.Println("Error while merging domain objects for create or "+
-			"update operation. Details:", err)
-		context.Response(http.StatusInternalServerError)
-		return
-	}
-
 	match, err := check.HTTPIfMatch(r, domain.Revision)
 	if err != nil {
 		context.MessageResponse(http.StatusBadRequest, "invalid-if-match")
@@ -183,6 +176,13 @@ func createUpdateDomain(r *http.Request, context *context.Context, fqdn string) 
 		// (particularly ETag) of one of the entities that matched. For all other request
 		// methods, the server MUST respond with a status of 412 (Precondition Failed)
 		context.MessageResponse(http.StatusPreconditionFailed, "if-match-none-failed")
+		return
+	}
+
+	if domain, err = protocol.Merge(domain, domainRequest); err != nil {
+		log.Println("Error while merging domain objects for create or "+
+			"update operation. Details:", err)
+		context.Response(http.StatusInternalServerError)
 		return
 	}
 

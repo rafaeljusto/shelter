@@ -47,38 +47,41 @@ func NewContext(r *http.Request, database *mgo.Database) (Context, error) {
 }
 
 // Transform the content body, that is in JSON format into an object
-func (s *Context) JSONRequest(object interface{}) error {
-	decoder := json.NewDecoder(bytes.NewBuffer(s.RequestContent))
+func (c *Context) JSONRequest(object interface{}) error {
+	decoder := json.NewDecoder(bytes.NewBuffer(c.RequestContent))
 	return decoder.Decode(object)
 }
 
 // Store only the HTTP status, for no content responses
-func (s *Context) Response(httpStatus int) {
-	s.ResponseHTTPStatus = httpStatus
+func (c *Context) Response(httpStatus int) {
+	c.ResponseHTTPStatus = httpStatus
 }
 
 // Store a message response, translating the message id to the proper language message
-func (s *Context) MessageResponse(httpStatus int, messageId string) {
-	s.ResponseHTTPStatus = httpStatus
-	s.ResponseContent = []byte(s.Language.Messages[messageId])
+func (c *Context) MessageResponse(httpStatus int, messageId string) {
+	c.ResponseHTTPStatus = httpStatus
+
+	if c.Language != nil && c.Language.Messages != nil {
+		c.ResponseContent = []byte(c.Language.Messages[messageId])
+	}
 }
 
 // Store a object in json format for the response
-func (s *Context) JSONResponse(httpStatus int, object interface{}) error {
+func (c *Context) JSONResponse(httpStatus int, object interface{}) error {
 	content, err := json.Marshal(object)
 
 	if err != nil {
 		return err
 	}
 
-	s.ResponseHTTPStatus = httpStatus
-	s.ResponseContent = content
+	c.ResponseHTTPStatus = httpStatus
+	c.ResponseContent = content
 	return nil
 }
 
 // Add a custom HTTP header. Used for some types of response where you need to set ETag or
 // LastModified fields
-func (s *Context) AddHeader(key, value string) {
+func (c *Context) AddHeader(key, value string) {
 	// Avoid adding headers that are automatically generated at the end of the request. We
 	// don't allow header overwrite because in the low level MIMEHeader the HTTP header
 	// value is appended instead of replaced
@@ -93,5 +96,5 @@ func (s *Context) AddHeader(key, value string) {
 		return
 	}
 
-	s.HTTPHeader[key] = value
+	c.HTTPHeader[key] = value
 }
