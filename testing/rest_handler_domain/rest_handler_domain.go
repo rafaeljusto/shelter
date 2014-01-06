@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -10,6 +11,7 @@ import (
 	"shelter/database/mongodb"
 	"shelter/net/http/rest/context"
 	"shelter/net/http/rest/handler"
+	"shelter/net/http/rest/protocol"
 	"shelter/testing/utils"
 	"strings"
 )
@@ -66,6 +68,7 @@ func main() {
 	updateDomain(database)
 	retrieveDomain(database)
 	deleteDomain(database)
+	retrieveUnknownDomain(database)
 
 	utils.Println("SUCCESS!")
 }
@@ -143,6 +146,27 @@ func retrieveDomain(database *mgo.Database) {
 		utils.Fatalln("Error retrieving domain",
 			errors.New(string(context.ResponseContent)))
 	}
+
+	var domainResponse protocol.DomainResponse
+	json.Unmarshal(context.ResponseContent, &domainResponse)
+
+	if domainResponse.FQDN != "example.com.br." {
+		utils.Fatalln("Domain's FQDN was not persisted correctly", nil)
+	}
+
+	if len(domainResponse.Nameservers) != 2 ||
+		domainResponse.Nameservers[0].Host != "ns1.example.com.br." ||
+		domainResponse.Nameservers[0].IPv4 != "127.0.0.1" ||
+		domainResponse.Nameservers[1].Host != "ns3.example.com.br." ||
+		domainResponse.Nameservers[1].IPv6 != "::1" {
+		utils.Fatalln("Domain's nameservers were not persisted correctly", nil)
+	}
+
+	if len(domainResponse.Owners) != 1 ||
+		domainResponse.Owners[0] != "administrator@example.com.br." {
+
+		utils.Fatalln("Domain's owners were not persisted correctly", nil)
+	}
 }
 
 func deleteDomain(database *mgo.Database) {
@@ -160,6 +184,25 @@ func deleteDomain(database *mgo.Database) {
 
 	if context.ResponseHTTPStatus != http.StatusNoContent {
 		utils.Fatalln("Error deleting domain",
+			errors.New(string(context.ResponseContent)))
+	}
+}
+
+func retrieveUnknownDomain(database *mgo.Database) {
+	r, err := http.NewRequest("GET", "/domain/example.com.br.", nil)
+	if err != nil {
+		utils.Fatalln("Error creting the HTTP request", err)
+	}
+
+	context, err := context.NewContext(r, database)
+	if err != nil {
+		utils.Fatalln("Error creating context", err)
+	}
+
+	handler.HandleDomain(r, &context)
+
+	if context.ResponseHTTPStatus != http.StatusNotFound {
+		utils.Fatalln("Error retrieving unknown domain",
 			errors.New(string(context.ResponseContent)))
 	}
 }
