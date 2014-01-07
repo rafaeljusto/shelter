@@ -102,8 +102,7 @@ func invalidFQDN(database *mgo.Database) {
 	handler.HandleDomain(r, &context)
 
 	if context.ResponseHTTPStatus != http.StatusBadRequest {
-		utils.Fatalln("Not verifying if FQDN exists in the URI",
-			errors.New(string(context.ResponseContent)))
+		utils.Fatalln("Not verifying if FQDN exists in the URI", nil)
 	}
 }
 
@@ -253,6 +252,10 @@ func retrieveDomainMetadata(database *mgo.Database) {
 			errors.New(string(context.ResponseContent)))
 	}
 
+	if len(context.ResponseContent) > 0 {
+		utils.Fatalln("HEAD method should not return body", nil)
+	}
+
 	if context.HTTPHeader["ETag"] != "2" {
 		utils.Fatalln("Not setting ETag in domain head response", nil)
 	}
@@ -278,7 +281,7 @@ func retrieveDomainIfModifiedSince(database *mgo.Database) {
 
 	if context.ResponseHTTPStatus != http.StatusBadRequest {
 		utils.Fatalln("Error retrieving domain with an invalid If-Modified-Since "+
-			"conditional HTTP header", errors.New(string(context.ResponseContent)))
+			"conditional HTTP header", nil)
 	}
 
 	r.Header.Set("If-Modified-Since",
@@ -308,7 +311,7 @@ func retrieveDomainIfUnmodifiedSince(database *mgo.Database) {
 
 	if context.ResponseHTTPStatus != http.StatusBadRequest {
 		utils.Fatalln("Error retrieving domain with an invalid If-Unmodified-Since "+
-			"conditional HTTP header", errors.New(string(context.ResponseContent)))
+			"conditional HTTP header", nil)
 	}
 
 	r.Header.Set("If-Unmodified-Since",
@@ -338,8 +341,7 @@ func retrieveDomainIfMatch(database *mgo.Database) {
 
 	if context.ResponseHTTPStatus != http.StatusBadRequest {
 		utils.Fatalln("Error retrieving domain with an invalid If-Match "+
-			"conditional HTTP header",
-			errors.New(string(context.ResponseContent)))
+			"conditional HTTP header", nil)
 	}
 
 	r.Header.Set("If-Match", "3")
@@ -369,8 +371,7 @@ func retrieveDomainIfNoneMatch(database *mgo.Database) {
 
 	if context.ResponseHTTPStatus != http.StatusBadRequest {
 		utils.Fatalln("Error retrieving domain with an invalid If-None-Match "+
-			"conditional HTTP header",
-			errors.New(string(context.ResponseContent)))
+			"conditional HTTP header", nil)
 	}
 
 	r.Header.Set("If-None-Match", "2")
@@ -419,7 +420,8 @@ func updateDomainIfModifiedSince(database *mgo.Database) {
 
 	if context.ResponseHTTPStatus != http.StatusNotModified {
 		utils.Fatalln("Error updating domain. Not verifying "+
-			"If-Modified-Since header condition", nil)
+			"If-Modified-Since header condition",
+			errors.New(string(context.ResponseContent)))
 	}
 }
 
@@ -458,7 +460,8 @@ func updateDomainIfUnmodifiedSince(database *mgo.Database) {
 
 	if context.ResponseHTTPStatus != http.StatusPreconditionFailed {
 		utils.Fatalln("Error updating domain. Not verifying "+
-			"If-Unmodified-Since header condition", nil)
+			"If-Unmodified-Since header condition",
+			errors.New(string(context.ResponseContent)))
 	}
 }
 
@@ -496,7 +499,8 @@ func updateDomainIfMatch(database *mgo.Database) {
 
 	if context.ResponseHTTPStatus != http.StatusPreconditionFailed {
 		utils.Fatalln("Error updating domains. Not verifying "+
-			"If-Match header condition", nil)
+			"If-Match header condition",
+			errors.New(string(context.ResponseContent)))
 	}
 }
 
@@ -534,7 +538,8 @@ func updateDomainIfNoneMatch(database *mgo.Database) {
 
 	if context.ResponseHTTPStatus != http.StatusPreconditionFailed {
 		utils.Fatalln("Error updating domain. Not verifying "+
-			"If-None-Match header condition", nil)
+			"If-None-Match header condition",
+			errors.New(string(context.ResponseContent)))
 	}
 }
 
@@ -554,8 +559,7 @@ func deleteDomainIfModifiedSince(database *mgo.Database) {
 
 	if context.ResponseHTTPStatus != http.StatusBadRequest {
 		utils.Fatalln("Error removing domain with an invalid If-Modified-Since "+
-			"conditional HTTP header",
-			errors.New(string(context.ResponseContent)))
+			"conditional HTTP header", nil)
 	}
 
 	r.Header.Set("If-Modified-Since",
@@ -586,8 +590,7 @@ func deleteDomainIfUnmodifiedSince(database *mgo.Database) {
 
 	if context.ResponseHTTPStatus != http.StatusBadRequest {
 		utils.Fatalln("Error removing domain with an invalid If-Unmodified-Since "+
-			"conditional HTTP header",
-			errors.New(string(context.ResponseContent)))
+			"conditional HTTP header", nil)
 	}
 
 	r.Header.Set("If-Unmodified-Since",
@@ -618,8 +621,7 @@ func deleteDomainIfMatch(database *mgo.Database) {
 
 	if context.ResponseHTTPStatus != http.StatusBadRequest {
 		utils.Fatalln("Error removing domain with an invalid If-Match "+
-			"conditional HTTP header",
-			errors.New(string(context.ResponseContent)))
+			"conditional HTTP header", nil)
 	}
 
 	r.Header.Set("If-Match", "3")
@@ -649,8 +651,7 @@ func deleteDomainIfNoneMatch(database *mgo.Database) {
 
 	if context.ResponseHTTPStatus != http.StatusBadRequest {
 		utils.Fatalln("Error removing domain with an invalid If-None-Match "+
-			"conditional HTTP header",
-			errors.New(string(context.ResponseContent)))
+			"conditional HTTP header", nil)
 	}
 
 	r.Header.Set("If-None-Match", "2")

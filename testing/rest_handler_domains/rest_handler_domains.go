@@ -1,12 +1,17 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"labix.org/v2/mgo"
+	"net/http"
 	"shelter/dao"
 	"shelter/database/mongodb"
+	"shelter/net/http/rest/context"
+	"shelter/net/http/rest/handler"
 	"shelter/testing/utils"
+	"strings"
 )
 
 var (
@@ -60,18 +65,101 @@ func main() {
 	createDomains(database)
 	retrieveDomains(database)
 	retrieveDomainsMetadata(database)
+	deleteDomains(database)
 
 	utils.Println("SUCCESS!")
 }
 
 func createDomains(database *mgo.Database) {
+	for i := 0; i < 100; i++ {
+		r, err := http.NewRequest("PUT", fmt.Sprintf("/domain/example%d.com.br.", i),
+			strings.NewReader(`{
+      "Nameservers": [
+        { "Host": "ns1.example.com.br." },
+        { "Host": "ns2.example.com.br." }
+      ],
+      "Owners": [
+        "admin@example.com.br."
+      ]
+    }`))
+		if err != nil {
+			utils.Fatalln("Error creting the HTTP request", err)
+		}
 
+		context, err := context.NewContext(r, database)
+		if err != nil {
+			utils.Fatalln("Error creating context", err)
+		}
+
+		handler.HandleDomain(r, &context)
+
+		if context.ResponseHTTPStatus != http.StatusCreated {
+			utils.Fatalln("Error creating domain",
+				errors.New(string(context.ResponseContent)))
+		}
+	}
 }
 
 func retrieveDomains(database *mgo.Database) {
+	r, err := http.NewRequest("GET", "/domains/?orderby=fqdn:desc&pagesize=10&page=1", nil)
+	if err != nil {
+		utils.Fatalln("Error creting the HTTP request", err)
+	}
 
+	context, err := context.NewContext(r, database)
+	if err != nil {
+		utils.Fatalln("Error creating context", err)
+	}
+
+	handler.HandleDomains(r, &context)
+
+	if context.ResponseHTTPStatus != http.StatusOK {
+		println(context.ResponseHTTPStatus)
+		utils.Fatalln("Error retrieving domains",
+			errors.New(string(context.ResponseContent)))
+	}
 }
 
 func retrieveDomainsMetadata(database *mgo.Database) {
+	r, err := http.NewRequest("HEAD", "/domains/?orderby=fqdn:desc&pagesize=10&page=1", nil)
+	if err != nil {
+		utils.Fatalln("Error creting the HTTP request", err)
+	}
 
+	context, err := context.NewContext(r, database)
+	if err != nil {
+		utils.Fatalln("Error creating context", err)
+	}
+
+	handler.HandleDomains(r, &context)
+
+	if context.ResponseHTTPStatus != http.StatusOK {
+		utils.Fatalln("Error retrieving domains",
+			errors.New(string(context.ResponseContent)))
+	}
+
+	if len(context.ResponseContent) > 0 {
+		utils.Fatalln("HEAD method should not return body", nil)
+	}
+}
+
+func deleteDomains(database *mgo.Database) {
+	for i := 0; i < 100; i++ {
+		r, err := http.NewRequest("DELETE", fmt.Sprintf("/domain/example%d.com.br.", i), nil)
+		if err != nil {
+			utils.Fatalln("Error creting the HTTP request", err)
+		}
+
+		context, err := context.NewContext(r, database)
+		if err != nil {
+			utils.Fatalln("Error creating context", err)
+		}
+
+		handler.HandleDomain(r, &context)
+
+		if context.ResponseHTTPStatus != http.StatusNoContent {
+			utils.Fatalln("Error removing domain",
+				errors.New(string(context.ResponseContent)))
+		}
+	}
 }
