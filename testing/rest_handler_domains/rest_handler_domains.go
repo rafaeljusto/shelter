@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -10,6 +11,7 @@ import (
 	"shelter/database/mongodb"
 	"shelter/net/http/rest/context"
 	"shelter/net/http/rest/handler"
+	"shelter/net/http/rest/protocol"
 	"shelter/testing/utils"
 	"strings"
 )
@@ -180,6 +182,13 @@ func retrieveDomains(database *mgo.Database) {
 	if c.ResponseHTTPStatus != http.StatusOK {
 		utils.Fatalln("Error retrieving domains",
 			errors.New(string(c.ResponseContent)))
+	}
+
+	var domainsResponse protocol.DomainsResponse
+	json.Unmarshal(c.ResponseContent, &domainsResponse)
+
+	if len(domainsResponse.Domains) != 10 {
+		utils.Fatalln("Error retrieving the wrong number of domains", nil)
 	}
 }
 
