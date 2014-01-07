@@ -101,22 +101,85 @@ func createDomains(database *mgo.Database) {
 }
 
 func retrieveDomains(database *mgo.Database) {
-	r, err := http.NewRequest("GET", "/domains/?orderby=fqdn:desc&pagesize=10&page=1", nil)
+	r, err := http.NewRequest("GET", "/domains/?orderby=xxx:desc&pagesize=10&page=1", nil)
 	if err != nil {
 		utils.Fatalln("Error creting the HTTP request", err)
 	}
 
-	context, err := context.NewContext(r, database)
+	c, err := context.NewContext(r, database)
 	if err != nil {
 		utils.Fatalln("Error creating context", err)
 	}
 
-	handler.HandleDomains(r, &context)
+	handler.HandleDomains(r, &c)
 
-	if context.ResponseHTTPStatus != http.StatusOK {
-		println(context.ResponseHTTPStatus)
+	if c.ResponseHTTPStatus != http.StatusBadRequest {
+		utils.Fatalln("Did not analyze orderby parameter", nil)
+	}
+
+	r, err = http.NewRequest("GET", "/domains/?orderby=fqdn:xxx&pagesize=10&page=1", nil)
+	if err != nil {
+		utils.Fatalln("Error creting the HTTP request", err)
+	}
+
+	c, err = context.NewContext(r, database)
+	if err != nil {
+		utils.Fatalln("Error creating context", err)
+	}
+
+	handler.HandleDomains(r, &c)
+
+	if c.ResponseHTTPStatus != http.StatusBadRequest {
+		utils.Fatalln("Did not analyze orderby direction parameter", nil)
+	}
+
+	r, err = http.NewRequest("GET", "/domains/?orderby=fqdn:desc&pagesize=xxx&page=1", nil)
+	if err != nil {
+		utils.Fatalln("Error creting the HTTP request", err)
+	}
+
+	c, err = context.NewContext(r, database)
+	if err != nil {
+		utils.Fatalln("Error creating context", err)
+	}
+
+	handler.HandleDomains(r, &c)
+
+	if c.ResponseHTTPStatus != http.StatusBadRequest {
+		utils.Fatalln("Did not analyze pagesize parameter", nil)
+	}
+
+	r, err = http.NewRequest("GET", "/domains/?orderby=fqdn:desc&pagesize=10&page=xxx", nil)
+	if err != nil {
+		utils.Fatalln("Error creting the HTTP request", err)
+	}
+
+	c, err = context.NewContext(r, database)
+	if err != nil {
+		utils.Fatalln("Error creating context", err)
+	}
+
+	handler.HandleDomains(r, &c)
+
+	if c.ResponseHTTPStatus != http.StatusBadRequest {
+		utils.Fatalln("Did not analyze page parameter", nil)
+	}
+
+	r, err = http.NewRequest("GET", "/domains/?orderby=fqdn:desc&pagesize=10&page=1", nil)
+	if err != nil {
+		utils.Fatalln("Error creting the HTTP request", err)
+	}
+
+	c, err = context.NewContext(r, database)
+	if err != nil {
+		utils.Fatalln("Error creating context", err)
+	}
+
+	handler.HandleDomains(r, &c)
+
+	if c.ResponseHTTPStatus != http.StatusOK {
 		utils.Fatalln("Error retrieving domains",
-			errors.New(string(context.ResponseContent)))
+			errors.New(string(c.ResponseContent)))
 	}
 }
 
