@@ -24,7 +24,7 @@ func HandleDomain(r *http.Request, context *context.Context) {
 	}
 
 	if r.Method == "GET" {
-		retrieveDomain(r, context, fqdn)
+		retrieveDomain(r, context, fqdn, true)
 
 	} else if r.Method == "PUT" {
 		createUpdateDomain(r, context, fqdn)
@@ -32,12 +32,17 @@ func HandleDomain(r *http.Request, context *context.Context) {
 	} else if r.Method == "DELETE" {
 		removeDomain(r, context, fqdn)
 
+	} else if r.Method == "HEAD" {
+		retrieveDomain(r, context, fqdn, false)
+
 	} else {
 		context.Response(http.StatusMethodNotAllowed)
 	}
 }
 
-func retrieveDomain(r *http.Request, context *context.Context, fqdn string) {
+// The HEAD method is identical to GET except that the server MUST NOT return a message-
+// body in the response. For that reason we have the domainInResponseParameter
+func retrieveDomain(r *http.Request, context *context.Context, fqdn string, domainInResponse bool) {
 	domainDAO := dao.DomainDAO{
 		Database: context.Database,
 	}
@@ -104,7 +109,12 @@ func retrieveDomain(r *http.Request, context *context.Context, fqdn string) {
 
 	context.AddHeader("ETag", fmt.Sprintf("%d", domain.Revision))
 	context.AddHeader("Last-Modified", domain.LastModifiedAt.Format(time.RFC1123))
-	context.JSONResponse(http.StatusOK, protocol.ToDomainResponse(domain))
+
+	if domainInResponse {
+		context.JSONResponse(http.StatusOK, protocol.ToDomainResponse(domain))
+	} else {
+		context.Response(http.StatusOK)
+	}
 }
 
 func createUpdateDomain(r *http.Request, context *context.Context, fqdn string) {

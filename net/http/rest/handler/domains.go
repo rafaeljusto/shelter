@@ -16,14 +16,19 @@ func init() {
 
 func HandleDomains(r *http.Request, context *context.Context) {
 	if r.Method == "GET" {
-		retrieveDomains(r, context)
+		retrieveDomains(r, context, true)
+
+	} else if r.Method == "HEAD" {
+		retrieveDomains(r, context, false)
 
 	} else {
 		context.Response(http.StatusMethodNotAllowed)
 	}
 }
 
-func retrieveDomains(r *http.Request, context *context.Context) {
+// The HEAD method is identical to GET except that the server MUST NOT return a message-
+// body in the response. For that reason we have the domainInResponseParameter
+func retrieveDomains(r *http.Request, context *context.Context, domainsInResponse bool) {
 	var pagination dao.DomainDAOPagination
 
 	for key, values := range r.URL.Query() {
@@ -128,5 +133,9 @@ func retrieveDomains(r *http.Request, context *context.Context) {
 		return
 	}
 
-	context.JSONResponse(http.StatusOK, protocol.ToDomainsResponse(domains, pagination))
+	if domainsInResponse {
+		context.JSONResponse(http.StatusOK, protocol.ToDomainsResponse(domains, pagination))
+	} else {
+		context.Response(http.StatusOK)
+	}
 }
