@@ -105,13 +105,37 @@ func TestMessageReponse(t *testing.T) {
 		},
 	}
 
-	context.MessageResponse(http.StatusNotFound, "key")
+	if err := context.MessageResponse(http.StatusOK,
+		"key", "this% is% not% an% URI"); err == nil {
+
+		t.Fatal("Not detecting when the ROID is not a valid URI")
+	}
+
+	if err := context.MessageResponse(http.StatusOK,
+		"key", "/domain/example.com.br."); err != nil {
+
+		t.Fatal("Not accepting a valid message response")
+	}
+
+	if context.ResponseHTTPStatus != http.StatusOK {
+		t.Error("Not setting the return status code properly")
+	}
+
+	if string(context.ResponseContent) !=
+		`{"id":"key","message":"value","links":{"related":"/domain/example.com.br."}}` {
+
+		t.Error("Not setting the return message properly")
+	}
+
+	if err := context.MessageResponse(http.StatusNotFound, "key", ""); err != nil {
+		t.Fatal("Not accepting a valid message response")
+	}
 
 	if context.ResponseHTTPStatus != http.StatusNotFound {
 		t.Error("Not setting the return status code properly")
 	}
 
-	if string(context.ResponseContent) != "value" {
+	if string(context.ResponseContent) != `{"id":"key","message":"value"}` {
 		t.Error("Not setting the return message properly")
 	}
 }

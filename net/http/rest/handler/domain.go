@@ -19,7 +19,12 @@ func init() {
 func HandleDomain(r *http.Request, context *context.Context) {
 	fqdn := getFQDNFromURI(r.URL.Path)
 	if len(fqdn) == 0 {
-		context.MessageResponse(http.StatusBadRequest, "invalid-uri")
+		if err := context.MessageResponse(http.StatusBadRequest,
+			"invalid-uri", r.URL.RequestURI()); err != nil {
+
+			log.Println("Error while writing response. Details:", err)
+			context.Response(http.StatusInternalServerError)
+		}
 		return
 	}
 
@@ -55,7 +60,12 @@ func retrieveDomain(r *http.Request, context *context.Context, fqdn string, doma
 
 	modifiedSince, err := check.HTTPIfModifiedSince(r, domain.LastModifiedAt)
 	if err != nil {
-		context.MessageResponse(http.StatusBadRequest, "invalid-header-date")
+		if err := context.MessageResponse(http.StatusBadRequest,
+			"invalid-header-date", r.URL.RequestURI()); err != nil {
+
+			log.Println("Error while writing response. Details:", err)
+			context.Response(http.StatusInternalServerError)
+		}
 		return
 
 	} else if !modifiedSince {
@@ -68,7 +78,12 @@ func retrieveDomain(r *http.Request, context *context.Context, fqdn string, doma
 
 	unmodifiedSince, err := check.HTTPIfUnmodifiedSince(r, domain.LastModifiedAt)
 	if err != nil {
-		context.MessageResponse(http.StatusBadRequest, "invalid-header-date")
+		if err := context.MessageResponse(http.StatusBadRequest,
+			"invalid-header-date", r.URL.RequestURI()); err != nil {
+
+			log.Println("Error while writing response. Details:", err)
+			context.Response(http.StatusInternalServerError)
+		}
 		return
 
 	} else if !unmodifiedSince {
@@ -81,20 +96,35 @@ func retrieveDomain(r *http.Request, context *context.Context, fqdn string, doma
 
 	match, err := check.HTTPIfMatch(r, domain.Revision)
 	if err != nil {
-		context.MessageResponse(http.StatusBadRequest, "invalid-if-match")
+		if err := context.MessageResponse(http.StatusBadRequest,
+			"invalid-if-match", r.URL.RequestURI()); err != nil {
+
+			log.Println("Error while writing response. Details:", err)
+			context.Response(http.StatusInternalServerError)
+		}
 		return
 
 	} else if !match {
 		// If "*" is given and no current entity exists or if none of the entity tags match
 		// the server MUST NOT perform the requested method, and MUST return a 412
 		// (Precondition Failed) response
-		context.MessageResponse(http.StatusPreconditionFailed, "if-match-failed")
+		if err := context.MessageResponse(http.StatusPreconditionFailed,
+			"if-match-failed", r.URL.RequestURI()); err != nil {
+
+			log.Println("Error while writing response. Details:", err)
+			context.Response(http.StatusInternalServerError)
+		}
 		return
 	}
 
 	noneMatch, err := check.HTTPIfNoneMatch(r, domain.Revision)
 	if err != nil {
-		context.MessageResponse(http.StatusBadRequest, "invalid-if-none-match")
+		if err := context.MessageResponse(http.StatusBadRequest,
+			"invalid-if-none-match", r.URL.RequestURI()); err != nil {
+
+			log.Println("Error while writing response. Details:", err)
+			context.Response(http.StatusInternalServerError)
+		}
 		return
 
 	} else if !noneMatch {
@@ -103,7 +133,12 @@ func retrieveDomain(r *http.Request, context *context.Context, fqdn string, doma
 		// (particularly ETag) of one of the entities that matched. For all other request
 		// methods, the server MUST respond with a status of 412 (Precondition Failed)
 		context.AddHeader("ETag", fmt.Sprintf("%d", domain.Revision))
-		context.MessageResponse(http.StatusNotModified, "if-match-none-failed")
+		if err := context.MessageResponse(http.StatusNotModified,
+			"if-match-none-failed", r.URL.RequestURI()); err != nil {
+
+			log.Println("Error while writing response. Details:", err)
+			context.Response(http.StatusInternalServerError)
+		}
 		return
 	}
 
@@ -111,7 +146,12 @@ func retrieveDomain(r *http.Request, context *context.Context, fqdn string, doma
 	context.AddHeader("Last-Modified", domain.LastModifiedAt.Format(time.RFC1123))
 
 	if domainInResponse {
-		context.JSONResponse(http.StatusOK, protocol.ToDomainResponse(domain))
+		if err := context.JSONResponse(http.StatusOK,
+			protocol.ToDomainResponse(domain)); err != nil {
+
+			log.Println("Error while writing response. Details:", err)
+			context.Response(http.StatusInternalServerError)
+		}
 	} else {
 		context.Response(http.StatusOK)
 	}
@@ -120,7 +160,12 @@ func retrieveDomain(r *http.Request, context *context.Context, fqdn string, doma
 func createUpdateDomain(r *http.Request, context *context.Context, fqdn string) {
 	var domainRequest protocol.DomainRequest
 	if err := context.JSONRequest(&domainRequest); err != nil {
-		context.MessageResponse(http.StatusBadRequest, "invalid-json-content")
+		if err := context.MessageResponse(http.StatusBadRequest,
+			"invalid-json-content", r.URL.RequestURI()); err != nil {
+
+			log.Println("Error while writing response. Details:", err)
+			context.Response(http.StatusInternalServerError)
+		}
 		return
 	}
 
@@ -138,7 +183,12 @@ func createUpdateDomain(r *http.Request, context *context.Context, fqdn string) 
 
 	modifiedSince, err := check.HTTPIfModifiedSince(r, domain.LastModifiedAt)
 	if err != nil {
-		context.MessageResponse(http.StatusBadRequest, "invalid-header-date")
+		if err := context.MessageResponse(http.StatusBadRequest,
+			"invalid-header-date", r.URL.RequestURI()); err != nil {
+
+			log.Println("Error while writing response. Details:", err)
+			context.Response(http.StatusInternalServerError)
+		}
 		return
 
 	} else if !modifiedSince {
@@ -151,7 +201,12 @@ func createUpdateDomain(r *http.Request, context *context.Context, fqdn string) 
 
 	unmodifiedSince, err := check.HTTPIfUnmodifiedSince(r, domain.LastModifiedAt)
 	if err != nil {
-		context.MessageResponse(http.StatusBadRequest, "invalid-header-date")
+		if err := context.MessageResponse(http.StatusBadRequest,
+			"invalid-header-date", r.URL.RequestURI()); err != nil {
+
+			log.Println("Error while writing response. Details:", err)
+			context.Response(http.StatusInternalServerError)
+		}
 		return
 
 	} else if !unmodifiedSince {
@@ -164,20 +219,35 @@ func createUpdateDomain(r *http.Request, context *context.Context, fqdn string) 
 
 	match, err := check.HTTPIfMatch(r, domain.Revision)
 	if err != nil {
-		context.MessageResponse(http.StatusBadRequest, "invalid-if-match")
+		if err := context.MessageResponse(http.StatusBadRequest,
+			"invalid-if-match", r.URL.RequestURI()); err != nil {
+
+			log.Println("Error while writing response. Details:", err)
+			context.Response(http.StatusInternalServerError)
+		}
 		return
 
 	} else if !match {
 		// If "*" is given and no current entity exists or if none of the entity tags match
 		// the server MUST NOT perform the requested method, and MUST return a 412
 		// (Precondition Failed) response
-		context.MessageResponse(http.StatusPreconditionFailed, "if-match-failed")
+		if err := context.MessageResponse(http.StatusPreconditionFailed,
+			"if-match-failed", r.URL.RequestURI()); err != nil {
+
+			log.Println("Error while writing response. Details:", err)
+			context.Response(http.StatusInternalServerError)
+		}
 		return
 	}
 
 	noneMatch, err := check.HTTPIfNoneMatch(r, domain.Revision)
 	if err != nil {
-		context.MessageResponse(http.StatusBadRequest, "invalid-if-none-match")
+		if err := context.MessageResponse(http.StatusBadRequest,
+			"invalid-if-none-match", r.URL.RequestURI()); err != nil {
+
+			log.Println("Error while writing response. Details:", err)
+			context.Response(http.StatusInternalServerError)
+		}
 		return
 
 	} else if !noneMatch {
@@ -185,7 +255,12 @@ func createUpdateDomain(r *http.Request, context *context.Context, fqdn string) 
 		// 304 (Not Modified) response, including the cache-related header fields
 		// (particularly ETag) of one of the entities that matched. For all other request
 		// methods, the server MUST respond with a status of 412 (Precondition Failed)
-		context.MessageResponse(http.StatusPreconditionFailed, "if-match-none-failed")
+		if err := context.MessageResponse(http.StatusPreconditionFailed,
+			"if-match-none-failed", r.URL.RequestURI()); err != nil {
+
+			log.Println("Error while writing response. Details:", err)
+			context.Response(http.StatusInternalServerError)
+		}
 		return
 	}
 
@@ -198,7 +273,12 @@ func createUpdateDomain(r *http.Request, context *context.Context, fqdn string) 
 
 	if err := domainDAO.Save(&domain); err != nil {
 		if strings.Index(err.Error(), "duplicate key error index") != -1 {
-			context.MessageResponse(http.StatusConflict, "conflict")
+			if err := context.MessageResponse(http.StatusConflict,
+				"conflict", r.URL.RequestURI()); err != nil {
+
+				log.Println("Error while writing response. Details:", err)
+				context.Response(http.StatusInternalServerError)
+			}
 
 		} else {
 			log.Println("Error while saving domain object for create or "+
@@ -233,7 +313,12 @@ func removeDomain(r *http.Request, context *context.Context, fqdn string) {
 
 	modifiedSince, err := check.HTTPIfModifiedSince(r, domain.LastModifiedAt)
 	if err != nil {
-		context.MessageResponse(http.StatusBadRequest, "invalid-header-date")
+		if err := context.MessageResponse(http.StatusBadRequest,
+			"invalid-header-date", r.URL.RequestURI()); err != nil {
+
+			log.Println("Error while writing response. Details:", err)
+			context.Response(http.StatusInternalServerError)
+		}
 		return
 
 	} else if !modifiedSince {
@@ -246,7 +331,12 @@ func removeDomain(r *http.Request, context *context.Context, fqdn string) {
 
 	unmodifiedSince, err := check.HTTPIfUnmodifiedSince(r, domain.LastModifiedAt)
 	if err != nil {
-		context.MessageResponse(http.StatusBadRequest, "invalid-header-date")
+		if err := context.MessageResponse(http.StatusBadRequest,
+			"invalid-header-date", r.URL.RequestURI()); err != nil {
+
+			log.Println("Error while writing response. Details:", err)
+			context.Response(http.StatusInternalServerError)
+		}
 		return
 
 	} else if !unmodifiedSince {
@@ -259,20 +349,35 @@ func removeDomain(r *http.Request, context *context.Context, fqdn string) {
 
 	match, err := check.HTTPIfMatch(r, domain.Revision)
 	if err != nil {
-		context.MessageResponse(http.StatusBadRequest, "invalid-if-match")
+		if err := context.MessageResponse(http.StatusBadRequest,
+			"invalid-if-match", r.URL.RequestURI()); err != nil {
+
+			log.Println("Error while writing response. Details:", err)
+			context.Response(http.StatusInternalServerError)
+		}
 		return
 
 	} else if !match {
 		// If "*" is given and no current entity exists or if none of the entity tags match
 		// the server MUST NOT perform the requested method, and MUST return a 412
 		// (Precondition Failed) response
-		context.MessageResponse(http.StatusPreconditionFailed, "if-match-failed")
+		if err := context.MessageResponse(http.StatusPreconditionFailed,
+			"if-match-failed", r.URL.RequestURI()); err != nil {
+
+			log.Println("Error while writing response. Details:", err)
+			context.Response(http.StatusInternalServerError)
+		}
 		return
 	}
 
 	noneMatch, err := check.HTTPIfNoneMatch(r, domain.Revision)
 	if err != nil {
-		context.MessageResponse(http.StatusBadRequest, "invalid-if-none-match")
+		if err := context.MessageResponse(http.StatusBadRequest,
+			"invalid-if-none-match", r.URL.RequestURI()); err != nil {
+
+			log.Println("Error while writing response. Details:", err)
+			context.Response(http.StatusInternalServerError)
+		}
 		return
 
 	} else if !noneMatch {
@@ -280,7 +385,12 @@ func removeDomain(r *http.Request, context *context.Context, fqdn string) {
 		// 304 (Not Modified) response, including the cache-related header fields
 		// (particularly ETag) of one of the entities that matched. For all other request
 		// methods, the server MUST respond with a status of 412 (Precondition Failed)
-		context.MessageResponse(http.StatusPreconditionFailed, "if-match-none-failed")
+		if err := context.MessageResponse(http.StatusPreconditionFailed,
+			"if-match-none-failed", r.URL.RequestURI()); err != nil {
+
+			log.Println("Error while writing response. Details:", err)
+			context.Response(http.StatusInternalServerError)
+		}
 		return
 	}
 

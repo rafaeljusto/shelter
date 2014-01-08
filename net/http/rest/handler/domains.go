@@ -67,7 +67,12 @@ func retrieveDomains(r *http.Request, context *context.Context, domainsInRespons
 						field, direction = orderByAndDirection[0], orderByAndDirection[1]
 
 					} else {
-						context.MessageResponse(http.StatusBadRequest, "invalid-query-order-by")
+						if err := context.MessageResponse(http.StatusBadRequest,
+							"invalid-query-order-by", ""); err != nil {
+
+							log.Println("Error while writing response. Details:", err)
+							context.Response(http.StatusInternalServerError)
+						}
 						return
 					}
 
@@ -80,7 +85,12 @@ func retrieveDomains(r *http.Request, context *context.Context, domainsInRespons
 						orderByField = dao.DomainDAOOrderByFieldLastModifiedAt
 
 					} else {
-						context.MessageResponse(http.StatusBadRequest, "invalid-query-order-by")
+						if err := context.MessageResponse(http.StatusBadRequest,
+							"invalid-query-order-by", ""); err != nil {
+
+							log.Println("Error while writing response. Details:", err)
+							context.Response(http.StatusInternalServerError)
+						}
 						return
 					}
 
@@ -93,7 +103,12 @@ func retrieveDomains(r *http.Request, context *context.Context, domainsInRespons
 						orderByDirection = dao.DomainDAOOrderByDirectionDescending
 
 					} else {
-						context.MessageResponse(http.StatusBadRequest, "invalid-query-order-by")
+						if err := context.MessageResponse(http.StatusBadRequest,
+							"invalid-query-order-by", ""); err != nil {
+
+							log.Println("Error while writing response. Details:", err)
+							context.Response(http.StatusInternalServerError)
+						}
 						return
 					}
 
@@ -107,7 +122,12 @@ func retrieveDomains(r *http.Request, context *context.Context, domainsInRespons
 				var err error
 				pagination.PageSize, err = strconv.Atoi(value)
 				if err != nil {
-					context.MessageResponse(http.StatusBadRequest, "invalid-query-page-size")
+					if err := context.MessageResponse(http.StatusBadRequest,
+						"invalid-query-page-size", ""); err != nil {
+
+						log.Println("Error while writing response. Details:", err)
+						context.Response(http.StatusInternalServerError)
+					}
 					return
 				}
 
@@ -115,7 +135,12 @@ func retrieveDomains(r *http.Request, context *context.Context, domainsInRespons
 				var err error
 				pagination.Page, err = strconv.Atoi(value)
 				if err != nil {
-					context.MessageResponse(http.StatusBadRequest, "invalid-query-page")
+					if err := context.MessageResponse(http.StatusBadRequest,
+						"invalid-query-page", ""); err != nil {
+
+						log.Println("Error while writing response. Details:", err)
+						context.Response(http.StatusInternalServerError)
+					}
 					return
 				}
 			}
@@ -134,7 +159,12 @@ func retrieveDomains(r *http.Request, context *context.Context, domainsInRespons
 	}
 
 	if domainsInResponse {
-		context.JSONResponse(http.StatusOK, protocol.ToDomainsResponse(domains, pagination))
+		if err := context.JSONResponse(http.StatusOK,
+			protocol.ToDomainsResponse(domains, pagination)); err != nil {
+
+			log.Println("Error while writing response. Details:", err)
+			context.Response(http.StatusInternalServerError)
+		}
 	} else {
 		context.Response(http.StatusOK)
 	}

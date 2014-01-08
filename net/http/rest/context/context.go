@@ -6,7 +6,9 @@ import (
 	"io/ioutil"
 	"labix.org/v2/mgo"
 	"net/http"
+	"net/url"
 	"shelter/net/http/rest/messages"
+	"shelter/net/http/rest/protocol"
 )
 
 // Context is responsable to store a state of a request during the request
@@ -58,12 +60,29 @@ func (c *Context) Response(httpStatus int) {
 }
 
 // Store a message response, translating the message id to the proper language message
-func (c *Context) MessageResponse(httpStatus int, messageId string) {
-	c.ResponseHTTPStatus = httpStatus
+func (c *Context) MessageResponse(httpStatus int, messageId string, roid string) error {
+	messageResponse := protocol.MessageResponse{
+		Id:    messageId,
+		Links: make(map[string]string),
+	}
 
 	if c.Language != nil && c.Language.Messages != nil {
-		c.ResponseContent = []byte(c.Language.Messages[messageId])
+		messageResponse.Message = c.Language.Messages[messageId]
 	}
+
+	// Add the object related to the message according to RFC 4287 and IANA link relations
+	// on http://www.iana.org/assignments/link-relations/link-relations.xml
+	if len(roid) != 0 {
+		// roid must be an URI to be a valid link
+		uri, err := url.Parse(roid)
+		if err != nil {
+			return err
+		}
+
+		messageResponse.Links["related"] = uri.RequestURI()
+	}
+
+	return c.JSONResponse(httpStatus, messageResponse)
 }
 
 // Store a object in json format for the response
