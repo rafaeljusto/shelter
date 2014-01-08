@@ -103,92 +103,63 @@ func createDomains(database *mgo.Database) {
 }
 
 func retrieveDomains(database *mgo.Database) {
-	r, err := http.NewRequest("GET", "/domains/?orderby=xxx:desc&pagesize=10&page=1", nil)
-	if err != nil {
-		utils.Fatalln("Error creting the HTTP request", err)
+	data := []struct {
+		URI                string
+		ExpectedHTTPStatus int
+		ContentCheck       func([]byte)
+	}{
+		{
+			URI:                "/domains/?orderby=xxx:desc&pagesize=10&page=1",
+			ExpectedHTTPStatus: http.StatusBadRequest,
+		},
+		{
+			URI:                "/domains/?orderby=fqdn:xxx&pagesize=10&page=1",
+			ExpectedHTTPStatus: http.StatusBadRequest,
+		},
+		{
+			URI:                "/domains/?orderby=fqdn:desc&pagesize=xxx&page=1",
+			ExpectedHTTPStatus: http.StatusBadRequest,
+		},
+		{
+			URI:                "/domains/?orderby=fqdn:desc&pagesize=10&page=xxx",
+			ExpectedHTTPStatus: http.StatusBadRequest,
+		},
+		{
+			URI:                "/domains/?orderby=fqdn:desc&pagesize=10&page=1",
+			ExpectedHTTPStatus: http.StatusOK,
+			ContentCheck: func(content []byte) {
+				var domainsResponse protocol.DomainsResponse
+				json.Unmarshal(content, &domainsResponse)
+
+				if len(domainsResponse.Domains) != 10 {
+					utils.Fatalln("Error retrieving the wrong number of domains", nil)
+				}
+			},
+		},
 	}
 
-	c, err := context.NewContext(r, database)
-	if err != nil {
-		utils.Fatalln("Error creating context", err)
-	}
+	for _, item := range data {
+		r, err := http.NewRequest("GET", item.URI, nil)
+		if err != nil {
+			utils.Fatalln("Error creting the HTTP request", err)
+		}
 
-	handler.HandleDomains(r, &c)
+		context, err := context.NewContext(r, database)
+		if err != nil {
+			utils.Fatalln("Error creating context", err)
+		}
 
-	if c.ResponseHTTPStatus != http.StatusBadRequest {
-		utils.Fatalln("Did not analyze orderby parameter", nil)
-	}
+		handler.HandleDomains(r, &context)
 
-	r, err = http.NewRequest("GET", "/domains/?orderby=fqdn:xxx&pagesize=10&page=1", nil)
-	if err != nil {
-		utils.Fatalln("Error creting the HTTP request", err)
-	}
+		if context.ResponseHTTPStatus != item.ExpectedHTTPStatus {
+			utils.Fatalln(fmt.Sprintf("Error when requesting domains using the URI [%s]. "+
+				"Expected HTTP status code %d but got %d", item.URI,
+				item.ExpectedHTTPStatus, context.ResponseHTTPStatus), nil)
+		}
 
-	c, err = context.NewContext(r, database)
-	if err != nil {
-		utils.Fatalln("Error creating context", err)
-	}
-
-	handler.HandleDomains(r, &c)
-
-	if c.ResponseHTTPStatus != http.StatusBadRequest {
-		utils.Fatalln("Did not analyze orderby direction parameter", nil)
-	}
-
-	r, err = http.NewRequest("GET", "/domains/?orderby=fqdn:desc&pagesize=xxx&page=1", nil)
-	if err != nil {
-		utils.Fatalln("Error creting the HTTP request", err)
-	}
-
-	c, err = context.NewContext(r, database)
-	if err != nil {
-		utils.Fatalln("Error creating context", err)
-	}
-
-	handler.HandleDomains(r, &c)
-
-	if c.ResponseHTTPStatus != http.StatusBadRequest {
-		utils.Fatalln("Did not analyze pagesize parameter", nil)
-	}
-
-	r, err = http.NewRequest("GET", "/domains/?orderby=fqdn:desc&pagesize=10&page=xxx", nil)
-	if err != nil {
-		utils.Fatalln("Error creting the HTTP request", err)
-	}
-
-	c, err = context.NewContext(r, database)
-	if err != nil {
-		utils.Fatalln("Error creating context", err)
-	}
-
-	handler.HandleDomains(r, &c)
-
-	if c.ResponseHTTPStatus != http.StatusBadRequest {
-		utils.Fatalln("Did not analyze page parameter", nil)
-	}
-
-	r, err = http.NewRequest("GET", "/domains/?orderby=fqdn:desc&pagesize=10&page=1", nil)
-	if err != nil {
-		utils.Fatalln("Error creting the HTTP request", err)
-	}
-
-	c, err = context.NewContext(r, database)
-	if err != nil {
-		utils.Fatalln("Error creating context", err)
-	}
-
-	handler.HandleDomains(r, &c)
-
-	if c.ResponseHTTPStatus != http.StatusOK {
-		utils.Fatalln("Error retrieving domains",
-			errors.New(string(c.ResponseContent)))
-	}
-
-	var domainsResponse protocol.DomainsResponse
-	json.Unmarshal(c.ResponseContent, &domainsResponse)
-
-	if len(domainsResponse.Domains) != 10 {
-		utils.Fatalln("Error retrieving the wrong number of domains", nil)
+		if item.ContentCheck != nil {
+			item.ContentCheck(context.ResponseContent)
+		}
 	}
 }
 
