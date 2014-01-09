@@ -63,15 +63,14 @@ func (c *Context) Response(httpStatus int) {
 func (c *Context) MessageResponse(httpStatus int, messageId string, roid string) error {
 	messageResponse := protocol.MessageResponse{
 		Id:    messageId,
-		Links: make(map[string]string),
+		Links: make(protocol.Links),
 	}
 
 	if c.Language != nil && c.Language.Messages != nil {
 		messageResponse.Message = c.Language.Messages[messageId]
 	}
 
-	// Add the object related to the message according to RFC 4287 and IANA link relations
-	// on http://www.iana.org/assignments/link-relations/link-relations.xml
+	// Add the object related to the message according to RFC 4287
 	if len(roid) != 0 {
 		// roid must be an URI to be a valid link
 		uri, err := url.Parse(roid)
@@ -79,7 +78,7 @@ func (c *Context) MessageResponse(httpStatus int, messageId string, roid string)
 			return err
 		}
 
-		messageResponse.Links["related"] = uri.RequestURI()
+		messageResponse.Links[protocol.LinkTypeRelated] = uri.RequestURI()
 	}
 
 	return c.JSONResponse(httpStatus, messageResponse)
