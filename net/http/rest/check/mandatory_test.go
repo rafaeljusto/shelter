@@ -263,11 +263,11 @@ func TestHTTPAuthorization(t *testing.T) {
 		Format(time.RFC1123)
 	r.Header.Set("Date", timeInTimeFrame)
 
-	stringToSign, err := buildStringToSign(r, "1")
+	stringToSign, err := BuildStringToSign(r, "1")
 	if err != nil {
 		t.Fatal(err)
 	}
-	signature := generateSignature(stringToSign, "abc123")
+	signature := GenerateSignature(stringToSign, "abc123")
 
 	r.Header.Set("Authorization", SupportedNamespace+"X 1:"+signature)
 	if ok, err := HTTPAuthorization(r, func(keyId string) (string, error) {

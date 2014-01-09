@@ -239,7 +239,7 @@ func HTTPAuthorization(r *http.Request, secretFinder func(string) (string, error
 	secretId = strings.TrimSpace(secretId)
 	secretId = strings.ToLower(secretId)
 
-	stringToSign, err := buildStringToSign(r, secretId)
+	stringToSign, err := BuildStringToSign(r, secretId)
 	if err != nil {
 		return false, err
 	}
@@ -249,6 +249,6 @@ func HTTPAuthorization(r *http.Request, secretFinder func(string) (string, error
 		return false, err
 	}
 
-	signature := generateSignature(stringToSign, secret)
+	signature := GenerateSignature(stringToSign, secret)
 	return signature == secretParts[1], nil
 }

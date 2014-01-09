@@ -30,7 +30,7 @@ var (
 //  AccessKeyID + "\n" +
 //  Path + "\n" +
 //  CanonicalizedQueryString;
-func buildStringToSign(r *http.Request, secretId string) (string, error) {
+func BuildStringToSign(r *http.Request, secretId string) (string, error) {
 	stringToSign := r.Method
 
 	contentMD5 := ""
@@ -82,7 +82,7 @@ func buildStringToSign(r *http.Request, secretId string) (string, error) {
 	return stringToSign, nil
 }
 
-func generateSignature(stringToSign, secret string) string {
+func GenerateSignature(stringToSign, secret string) string {
 	h := hmac.New(sha1.New, []byte(secret))
 	h.Write([]byte(stringToSign))
 	return base64.StdEncoding.EncodeToString(h.Sum(nil))

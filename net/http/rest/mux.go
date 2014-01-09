@@ -25,15 +25,15 @@ var (
 
 // Main router used by the Shelter REST system to manage the requests
 var (
-	mux shelterRESTMux
+	mux Mux
 )
 
-// shelterRESTMux is responsable for all initial HTTP checks before calling a specific handler, and
+// Mux is responsable for all initial HTTP checks before calling a specific handler, and
 // for adding the system HTTP headers on each response
-type shelterRESTMux struct{}
+type Mux struct{}
 
 // Main function of the REST server
-func (mux shelterRESTMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (mux Mux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	handler := mux.findRoute(r.URL.Path)
 	if handler == nil {
 		w.WriteHeader(http.StatusServiceUnavailable)
@@ -52,16 +52,15 @@ func (mux shelterRESTMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !mux.checkHTTPHeaders(w, r, &context) {
-		return
+	if mux.checkHTTPHeaders(w, r, &context) {
+		handler(r, &context)
 	}
 
-	handler(r, &context)
 	mux.writeResponse(w, context)
 }
 
 // Find the best handler for the given URI. The best handler is the most specific one
-func (mux shelterRESTMux) findRoute(uri string) handler.Handler {
+func (mux Mux) findRoute(uri string) handler.Handler {
 	var selectedRoute string
 	var selectedHandler handler.Handler
 
@@ -81,51 +80,44 @@ func (mux shelterRESTMux) findRoute(uri string) handler.Handler {
 }
 
 // Verify HTTP headers and fill context with user preferences
-func (mux shelterRESTMux) checkHTTPHeaders(w http.ResponseWriter,
+func (mux Mux) checkHTTPHeaders(w http.ResponseWriter,
 	r *http.Request, context *context.Context) bool {
 
 	// We first check the language header, because if it's acceptable the next messages are
 	// going to be returned in the language choosen by the user
 	if !check.HTTPAcceptLanguage(r, context) {
-		w.WriteHeader(http.StatusNotAcceptable)
-		fmt.Fprintf(w, context.Language.Messages["accept-language-error"])
+		context.MessageResponse(http.StatusNotAcceptable, "accept-language-error", r.RequestURI)
 		return false
 	}
 
 	if !check.HTTPAccept(r) {
-		w.WriteHeader(http.StatusNotAcceptable)
-		fmt.Fprintf(w, context.Language.Messages["accept-error"])
+		context.MessageResponse(http.StatusNotAcceptable, "accept-error", r.RequestURI)
 		return false
 	}
 
 	if !check.HTTPAcceptCharset(r) {
-		w.WriteHeader(http.StatusNotAcceptable)
-		fmt.Fprintf(w, context.Language.Messages["accept-charset-error"])
+		context.MessageResponse(http.StatusNotAcceptable, "accept-charset-error", r.RequestURI)
 		return false
 	}
 
 	if !check.HTTPContentType(r) {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, context.Language.Messages["invalid-content-type"])
+		context.MessageResponse(http.StatusBadRequest, "invalid-content-type", r.RequestURI)
 		return false
 	}
 
 	if !check.HTTPContentMD5(r, context) {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, context.Language.Messages["invalid-content-md5"])
+		context.MessageResponse(http.StatusBadRequest, "invalid-content-md5", r.RequestURI)
 		return false
 	}
 
 	timeFrameOK, err := check.HTTPDate(r)
 
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, context.Language.Messages["invalid-header-date"])
+		context.MessageResponse(http.StatusBadRequest, "invalid-header-date", r.RequestURI)
 		return false
 
 	} else if !timeFrameOK {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, context.Language.Messages["invalid-date-time-frame"])
+		context.MessageResponse(http.StatusBadRequest, "invalid-date-time-frame", r.RequestURI)
 		return false
 	}
 
@@ -143,38 +135,32 @@ func (mux shelterRESTMux) checkHTTPHeaders(w http.ResponseWriter,
 
 	if err != nil {
 		if err == check.ErrHTTPContentTypeNotFound {
-			w.WriteHeader(http.StatusBadRequest)
-			fmt.Fprintf(w, context.Language.Messages["content-type-missing"])
+			context.MessageResponse(http.StatusBadRequest, "content-type-missing", r.RequestURI)
 
 		} else if err == check.ErrHTTPContentMD5NotFound {
-			w.WriteHeader(http.StatusBadRequest)
-			fmt.Fprintf(w, context.Language.Messages["content-md5-missing"])
+			context.MessageResponse(http.StatusBadRequest, "content-md5-missing", r.RequestURI)
 
 		} else if err == check.ErrHTTPDateNotFound {
-			w.WriteHeader(http.StatusBadRequest)
-			fmt.Fprintf(w, context.Language.Messages["date-missing"])
+			context.MessageResponse(http.StatusBadRequest, "date-missing", r.RequestURI)
 
 		} else if err == check.ErrHTTPAuthorizationNotFound {
-			w.WriteHeader(http.StatusBadRequest)
-			fmt.Fprintf(w, context.Language.Messages["authorization-missing"])
+			context.MessageResponse(http.StatusBadRequest, "authorization-missing", r.RequestURI)
 
 		} else if err == check.ErrInvalidHTTPAuthorization {
-			w.WriteHeader(http.StatusBadRequest)
-			fmt.Fprintf(w, context.Language.Messages["invalid-authorization"])
+			context.MessageResponse(http.StatusBadRequest, "invalid-authorization", r.RequestURI)
 
 		} else if err == ErrSecretNotFound {
-			w.WriteHeader(http.StatusBadRequest)
-			fmt.Fprintf(w, context.Language.Messages["secret-not-found"])
+			context.MessageResponse(http.StatusBadRequest, "secret-not-found", r.RequestURI)
 
 		} else {
-			w.WriteHeader(http.StatusInternalServerError)
+			context.Response(http.StatusInternalServerError)
 			log.Println("Error checking authorization. Details:", err)
 		}
 
 		return false
 
 	} else if !authorized {
-		w.WriteHeader(http.StatusUnauthorized)
+		context.Response(http.StatusUnauthorized)
 		return false
 	}
 
@@ -182,13 +168,16 @@ func (mux shelterRESTMux) checkHTTPHeaders(w http.ResponseWriter,
 }
 
 // Write response with the defaults HTTP response headers
-func (mux shelterRESTMux) writeResponse(w http.ResponseWriter,
+func (mux Mux) writeResponse(w http.ResponseWriter,
 	context context.Context) {
 
 	if len(context.ResponseContent) > 0 {
 		w.Header().Add("Content-Type", fmt.Sprintf("application/vnd.shelter+json; charset=%s", check.SupportedCharset))
-		w.Header().Add("Content-Language", context.Language.Name())
 		w.Header().Add("Content-Length", fmt.Sprintf("%d", len(context.ResponseContent)))
+
+		if context.Language != nil {
+			w.Header().Add("Content-Language", context.Language.Name())
+		}
 
 		hash := md5.New()
 		hash.Write(context.ResponseContent)
