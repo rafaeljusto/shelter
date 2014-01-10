@@ -113,17 +113,17 @@ func deleteDomain(mux *rest.Mux) {
 
 func buildHTTPHeader(r *http.Request, content []byte) {
 	if r.ContentLength > 0 {
-		r.Header.Add("Content-Type", check.SupportedContentType)
+		r.Header.Set("Content-Type", check.SupportedContentType)
 
 		hash := md5.New()
 		hash.Write(content)
 		hashBytes := hash.Sum(nil)
 		hashBase64 := base64.StdEncoding.EncodeToString(hashBytes)
 
-		r.Header.Add("Content-MD5", hashBase64)
+		r.Header.Set("Content-MD5", hashBase64)
 	}
 
-	r.Header.Add("Date", time.Now().Format(time.RFC1123))
+	r.Header.Set("Date", time.Now().Format(time.RFC1123))
 
 	stringToSign, err := check.BuildStringToSign(r, "1")
 	if err != nil {
@@ -131,5 +131,5 @@ func buildHTTPHeader(r *http.Request, content []byte) {
 	}
 
 	signature := check.GenerateSignature(stringToSign, config.ShelterConfig.RESTServer.Secrets["1"])
-	r.Header.Add("Authorization", fmt.Sprintf("%s %d:%s", check.SupportedNamespace, 1, signature))
+	r.Header.Set("Authorization", fmt.Sprintf("%s %d:%s", check.SupportedNamespace, 1, signature))
 }

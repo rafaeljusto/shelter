@@ -6,6 +6,7 @@ import (
 	"labix.org/v2/mgo/bson"
 	"shelter/database/mongodb"
 	"shelter/model"
+	"strings"
 	"time"
 )
 
@@ -20,6 +21,14 @@ var (
 	// informations in it. For the user that wants all records without pagination for a B2B
 	// integration need to pass zero in the page size
 	ErrDomainDAOPaginationUndefined = errors.New("Pagination was not defined")
+
+	// An invalid order by field was given to be converted in one of the known order by
+	// fields of the Domain DAO
+	ErrDomainDAOOrderByFieldUnknown = errors.New("Unknown order by field")
+
+	// An invalid order by direction was given to be converted in one of the known order by
+	// fields of the Domain DAO
+	ErrDomainDAOOrderByDirectionUnknown = errors.New("Unknown order by direction")
 )
 
 const (
@@ -37,6 +46,36 @@ const (
 // use in a query
 type DomainDAOOrderByField int
 
+// Convert the DomainDAO order by field from string into enum. If the string is unknown an
+// error will be returned. The string is case insensitive and spaces around it are ignored
+func DomainDAOOrderByFieldFromString(value string) (DomainDAOOrderByField, error) {
+	value = strings.ToLower(value)
+	value = strings.TrimSpace(value)
+
+	switch value {
+	case "fqdn":
+		return DomainDAOOrderByFieldFQDN, nil
+	case "lastmodified":
+		return DomainDAOOrderByFieldLastModifiedAt, nil
+	}
+
+	return DomainDAOOrderByFieldFQDN, ErrDomainDAOOrderByFieldUnknown
+}
+
+// Convert the DomainDAO order by field from enum into string. If the enum is unknown this
+// method will return an empty string
+func DomainDAOOrderByFieldToString(value DomainDAOOrderByField) string {
+	switch value {
+	case DomainDAOOrderByFieldFQDN:
+		return "fqdn"
+
+	case DomainDAOOrderByFieldLastModifiedAt:
+		return "lastmodified"
+	}
+
+	return ""
+}
+
 // List of possible directions of each field in an order by query
 const (
 	DomainDAOOrderByDirectionAscending  DomainDAOOrderByDirection = 1  // From lower to higher
@@ -48,6 +87,37 @@ const (
 // Maybe we can move this enum to a more generic DAO because it can be used by other DAOs
 // too
 type DomainDAOOrderByDirection int
+
+// Convert the DomainDAO order by direction from string into enum. If the string is
+// unknown an error will be returned. The string is case insensitive and spaces around it
+// are ignored
+func DomainDAOOrderByDirectionFromString(value string) (DomainDAOOrderByDirection, error) {
+	value = strings.ToLower(value)
+	value = strings.TrimSpace(value)
+
+	switch value {
+	case "asc":
+		return DomainDAOOrderByDirectionAscending, nil
+	case "desc":
+		return DomainDAOOrderByDirectionDescending, nil
+	}
+
+	return DomainDAOOrderByDirectionAscending, ErrDomainDAOOrderByDirectionUnknown
+}
+
+// Convert the DomainDAO order by direction from enum into string. If the enum is unknown
+// this method will return an empty string
+func DomainDAOOrderByDirectionToString(value DomainDAOOrderByDirection) string {
+	switch value {
+	case DomainDAOOrderByDirectionAscending:
+		return "asc"
+
+	case DomainDAOOrderByDirectionDescending:
+		return "desc"
+	}
+
+	return ""
+}
 
 func init() {
 	// Add index on FQDN to speed up searchs. FQDN will be a unique field in database
@@ -67,24 +137,6 @@ func init() {
 // domain anytime during the their existence
 type DomainDAO struct {
 	Database *mgo.Database // MongoDB Database
-}
-
-// DomainDAOPagination was created as a necessity for big result sets that needs to be
-// sent for an end-user. With pagination we can control the size of the data and make it
-// faster for the user to interact with it in a web interface as example
-type DomainDAOPagination struct {
-	OrderBy       []DomainDAOSort // Sort the list before the pagination
-	PageSize      int             // Number of items that are going to be considered in one page
-	Page          int             // Current page that will be returned
-	NumberOfItems int             // Total number of items in the result set
-	NumberOfPages int             // Total number of pages calculated for the current result set
-}
-
-// DomainDAOSort is an object responsable to relate the order by field and direction. Each
-// field used for sort, can be sorted in both directions
-type DomainDAOSort struct {
-	Field     DomainDAOOrderByField     // Field to be sorted
-	Direction DomainDAOOrderByDirection // Direction used in the sort
 }
 
 // Save the domain object in the database and by consequence will also save the
@@ -367,4 +419,22 @@ func (dao DomainDAO) executeMany(domains []*model.Domain,
 type DomainResult struct {
 	Domain *model.Domain // Domain related to the result
 	Error  error         // When different of nil, represents an error of the operation
+}
+
+// DomainDAOPagination was created as a necessity for big result sets that needs to be
+// sent for an end-user. With pagination we can control the size of the data and make it
+// faster for the user to interact with it in a web interface as example
+type DomainDAOPagination struct {
+	OrderBy       []DomainDAOSort // Sort the list before the pagination
+	PageSize      int             // Number of items that are going to be considered in one page
+	Page          int             // Current page that will be returned
+	NumberOfItems int             // Total number of items in the result set
+	NumberOfPages int             // Total number of pages calculated for the current result set
+}
+
+// DomainDAOSort is an object responsable to relate the order by field and direction. Each
+// field used for sort, can be sorted in both directions
+type DomainDAOSort struct {
+	Field     DomainDAOOrderByField     // Field to be sorted
+	Direction DomainDAOOrderByDirection // Direction used in the sort
 }

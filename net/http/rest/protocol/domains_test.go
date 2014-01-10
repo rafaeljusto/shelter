@@ -26,8 +26,18 @@ func TestToDomainsResponse(t *testing.T) {
 	}
 
 	pagination := dao.DomainDAOPagination{
-		PageSize:      10,
-		Page:          1,
+		PageSize: 10,
+		Page:     1,
+		OrderBy: []dao.DomainDAOSort{
+			{
+				Field:     dao.DomainDAOOrderByFieldFQDN,
+				Direction: dao.DomainDAOOrderByDirectionAscending,
+			},
+			{
+				Field:     dao.DomainDAOOrderByFieldLastModifiedAt,
+				Direction: dao.DomainDAOOrderByDirectionDescending,
+			},
+		},
 		NumberOfItems: len(domains),
 		NumberOfPages: len(domains) / 10,
 	}
@@ -52,5 +62,9 @@ func TestToDomainsResponse(t *testing.T) {
 
 	if domainsResponse.NumberOfPages != len(domains)/10 {
 		t.Error("Pagination not storing number of pages properly")
+	}
+
+	if len(domainsResponse.Links) != 4 {
+		t.Error("Response not adding the necessary links")
 	}
 }

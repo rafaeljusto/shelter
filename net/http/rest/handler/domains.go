@@ -76,15 +76,8 @@ func retrieveDomains(r *http.Request, context *context.Context, domainsInRespons
 						return
 					}
 
-					var orderByField dao.DomainDAOOrderByField
-
-					if field == "fqdn" {
-						orderByField = dao.DomainDAOOrderByFieldFQDN
-
-					} else if field == "lastmodified" {
-						orderByField = dao.DomainDAOOrderByFieldLastModifiedAt
-
-					} else {
+					orderByField, err := dao.DomainDAOOrderByFieldFromString(field)
+					if err != nil {
 						if err := context.MessageResponse(http.StatusBadRequest,
 							"invalid-query-order-by", ""); err != nil {
 
@@ -94,15 +87,8 @@ func retrieveDomains(r *http.Request, context *context.Context, domainsInRespons
 						return
 					}
 
-					var orderByDirection dao.DomainDAOOrderByDirection
-
-					if direction == "asc" {
-						orderByDirection = dao.DomainDAOOrderByDirectionAscending
-
-					} else if direction == "desc" {
-						orderByDirection = dao.DomainDAOOrderByDirectionDescending
-
-					} else {
+					orderByDirection, err := dao.DomainDAOOrderByDirectionFromString(direction)
+					if err != nil {
 						if err := context.MessageResponse(http.StatusBadRequest,
 							"invalid-query-order-by", ""); err != nil {
 
