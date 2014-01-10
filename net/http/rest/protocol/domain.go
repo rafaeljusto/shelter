@@ -2,6 +2,7 @@ package protocol
 
 import (
 	"errors"
+	"fmt"
 	"net/mail"
 	"shelter/model"
 	"strings"
@@ -112,6 +113,7 @@ type DomainResponse struct {
 	Nameservers []NameserverResponse `json:"nameservers,omitempty"` // Nameservers that asnwer with authority for this domain
 	DSSet       []DSResponse         `json:"dsset,omitempty"`       // Records for the DNS tree chain of trust
 	Owners      []string             `json:"owners,omitempty"`      // E-mails that will be alerted on any problem
+	Links       []Link               `json:"links"`                 // Links to manipulate object
 }
 
 // Convert the domain system object to a limited information user format
@@ -129,10 +131,23 @@ func ToDomainResponse(domain model.Domain) DomainResponse {
 		owners = append(owners, email)
 	}
 
+	// We should add more links here for system navigation. For example, we could add links
+	// for object update, delete, list, etc. But I did not found yet in IANA list the
+	// correct link type to be used. Also, the URI is hard coded, I didn't have any idea on
+	// how can we do this dynamically yet. We cannot get the URI from the handler because we
+	// are going to have a cross-reference problem
+	links := []Link{
+		{
+			Types: []LinkType{LinkTypeSelf},
+			HRef:  fmt.Sprintf("/domain/%s", domain.FQDN),
+		},
+	}
+
 	return DomainResponse{
 		FQDN:        domain.FQDN,
 		Nameservers: toNameserversResponse(domain.Nameservers),
 		DSSet:       toDSSetResponse(domain.DSSet),
 		Owners:      owners,
+		Links:       links,
 	}
 }

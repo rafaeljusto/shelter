@@ -62,8 +62,7 @@ func (c *Context) Response(httpStatus int) {
 // Store a message response, translating the message id to the proper language message
 func (c *Context) MessageResponse(httpStatus int, messageId string, roid string) error {
 	messageResponse := protocol.MessageResponse{
-		Id:    messageId,
-		Links: make(protocol.Links),
+		Id: messageId,
 	}
 
 	if c.Language != nil && c.Language.Messages != nil {
@@ -78,7 +77,12 @@ func (c *Context) MessageResponse(httpStatus int, messageId string, roid string)
 			return err
 		}
 
-		messageResponse.Links[protocol.LinkTypeRelated] = uri.RequestURI()
+		messageResponse.Links = []protocol.Link{
+			{
+				Types: []protocol.LinkType{protocol.LinkTypeRelated},
+				HRef:  uri.RequestURI(),
+			},
+		}
 	}
 
 	return c.JSONResponse(httpStatus, messageResponse)

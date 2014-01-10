@@ -5,5 +5,5 @@ package protocol
 type MessageResponse struct {
 	Id      string `json:"id,omitempty"`      // Code for integration systems to automatically solve the problem
 	Message string `json:"message,omitempty"` // Message in the user's desired language
-	Links   Links  `json:"links,omitempty"`   // Links associating this message with other resources
+	Links   []Link `json:"links,omitempty"`   // Links associating this message with other resources
 }

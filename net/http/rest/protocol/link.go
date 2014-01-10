@@ -80,6 +80,9 @@ const (
 // LinkType is a string that represents the type of the link used in the protocol
 type LinkType string
 
-// Links structure to relate resources in the system. This is what makes everything really
-// RESTful
-type Links map[LinkType]string
+// Link structure was created to relate resources in the system. A link can have multiple
+// types according to W3C in http://www.w3.org/TR/html401/struct/links.html
+type Link struct {
+	Types []LinkType `json:"types,omitempty"` // List of link types that can be applied for the same URI
+	HRef  string     `json:"href,omitempty"`  // URI for the link
+}

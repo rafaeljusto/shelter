@@ -122,7 +122,7 @@ func TestMessageReponse(t *testing.T) {
 	}
 
 	if string(context.ResponseContent) !=
-		`{"id":"key","message":"value","links":{"related":"/domain/example.com.br."}}` {
+		`{"id":"key","message":"value","links":[{"types":["related"],"href":"/domain/example.com.br."}]}` {
 
 		t.Error("Not setting the return message properly")
 	}
