@@ -23,16 +23,6 @@ type DomainRequest struct {
 	Owners      []string            `json:"owners,omitempty"`      // E-mails that will be alerted on any problem
 }
 
-// Domain object from the protocol used to determinate what the user can see. The last
-// modified field is not here because it is sent in HTTP header field as it is with
-// revision (ETag)
-type DomainResponse struct {
-	FQDN        string               `json:"fqdn"`                  // Actual domain name
-	Nameservers []NameserverResponse `json:"nameservers,omitempty"` // Nameservers that asnwer with authority for this domain
-	DSSet       []DSResponse         `json:"dsset,omitempty"`       // Records for the DNS tree chain of trust
-	Owners      []string             `json:"owners,omitempty"`      // E-mails that will be alerted on any problem
-}
-
 // Merge is used to merge a domain request object sent by the user into a domain object of
 // the database. It can return errors related to merge problems that are problem caused by
 // data format of the user input
@@ -112,6 +102,16 @@ func Merge(domain model.Domain, domainRequest DomainRequest) (model.Domain, erro
 	domain.Owners = owners
 
 	return domain, nil
+}
+
+// Domain object from the protocol used to determinate what the user can see. The last
+// modified field is not here because it is sent in HTTP header field as it is with
+// revision (ETag)
+type DomainResponse struct {
+	FQDN        string               `json:"fqdn"`                  // Actual domain name
+	Nameservers []NameserverResponse `json:"nameservers,omitempty"` // Nameservers that asnwer with authority for this domain
+	DSSet       []DSResponse         `json:"dsset,omitempty"`       // Records for the DNS tree chain of trust
+	Owners      []string             `json:"owners,omitempty"`      // E-mails that will be alerted on any problem
 }
 
 // Convert the domain system object to a limited information user format

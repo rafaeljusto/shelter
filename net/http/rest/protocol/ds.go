@@ -22,19 +22,6 @@ type DSRequest struct {
 	DigestType uint8  `json:"digestType,omitempty"` // Hash type decided by user when generating the DS
 }
 
-// DS object used in the protocol to determinate what the user can see. The status was
-// converted to text format for easy interpretation
-type DSResponse struct {
-	Keytag      uint16    `json:"keytag,omitempty"`      // DNSKEY's identification number
-	Algorithm   uint8     `json:"algorithm,omitempty"`   // DNSKEY's algorithm
-	Digest      string    `json:"digest,omitempty"`      // Hash of the DNSKEY content
-	DigestType  uint8     `json:"digestType,omitempty"`  // Hash type decided by user when generating the DS
-	ExpiresAt   time.Time `json:"expiresAt,omitempty"`   // DNSKEY's signature expiration date
-	LastStatus  string    `json:"lastStatus,omitempty"`  // Result of the last configuration check
-	LastCheckAt time.Time `json:"lastCheckAt,omitempty"` // Time of the last configuration check
-	LastOKAt    time.Time `json:"lastOKAt,omitempty"`    // Last time that the DNSSEC configuration was OK
-}
-
 // Convert a DS request object into a DS model object. It can return errors related to the
 // conversion of the algorithm, when it is out of range
 func (d *DSRequest) toDSModel() (model.DS, error) {
@@ -73,6 +60,19 @@ func toDSSetModel(dsSetRequest []DSRequest) ([]model.DS, error) {
 	}
 
 	return dsSet, nil
+}
+
+// DS object used in the protocol to determinate what the user can see. The status was
+// converted to text format for easy interpretation
+type DSResponse struct {
+	Keytag      uint16    `json:"keytag,omitempty"`      // DNSKEY's identification number
+	Algorithm   uint8     `json:"algorithm,omitempty"`   // DNSKEY's algorithm
+	Digest      string    `json:"digest,omitempty"`      // Hash of the DNSKEY content
+	DigestType  uint8     `json:"digestType,omitempty"`  // Hash type decided by user when generating the DS
+	ExpiresAt   time.Time `json:"expiresAt,omitempty"`   // DNSKEY's signature expiration date
+	LastStatus  string    `json:"lastStatus,omitempty"`  // Result of the last configuration check
+	LastCheckAt time.Time `json:"lastCheckAt,omitempty"` // Time of the last configuration check
+	LastOKAt    time.Time `json:"lastOKAt,omitempty"`    // Last time that the DNSSEC configuration was OK
 }
 
 // Convert a DS of the system into a format with limited information to return it to the
