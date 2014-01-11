@@ -68,6 +68,18 @@ func main() {
 }
 
 func createDomain(mux *rest.Mux) {
+	r, err := http.NewRequest("GET", "/xxx/example.com.br.", nil)
+	if err != nil {
+		utils.Fatalln("Error creting the HTTP request", err)
+	}
+
+	w := httptest.NewRecorder()
+	mux.ServeHTTP(w, r)
+
+	if w.Code != http.StatusServiceUnavailable {
+		utils.Fatalln("Not returning HTTP Service Unavailable when the URI is not registered", nil)
+	}
+
 	content := []byte(`{
       "Nameservers": [
         { "Host": "ns1.example.com.br.", "ipv4": "127.0.0.1" },
@@ -78,7 +90,7 @@ func createDomain(mux *rest.Mux) {
       ]
     }`)
 
-	r, err := http.NewRequest("PUT", "/domain/example.com.br.",
+	r, err = http.NewRequest("PUT", "/domain/example.com.br.",
 		bytes.NewReader(content))
 	if err != nil {
 		utils.Fatalln("Error creting the HTTP request", err)
@@ -86,7 +98,7 @@ func createDomain(mux *rest.Mux) {
 
 	buildHTTPHeader(r, content)
 
-	w := httptest.NewRecorder()
+	w = httptest.NewRecorder()
 	mux.ServeHTTP(w, r)
 
 	if w.Code != http.StatusCreated {
