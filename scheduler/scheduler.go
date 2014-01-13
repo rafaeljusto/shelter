@@ -6,27 +6,16 @@ import (
 )
 
 const (
-	SchedulerExecutionInterval = 1 // Number that defines the inetrval that the scheduler will be executed
+	// Number of minutes that the scheduler will before it check again all jobs
+	SchedulerExecutionInterval = 1
 )
 
 var (
-	jobsMutex sync.Mutex
-	jobs      []Job
+	jobsMutex sync.Mutex // Lock to make it possible to add jobs after the scheduler already started
+	jobs      []Job      // List of jobs that are going to be executed
 )
 
-type Job struct {
-	NextExecution time.Time
-	Interval      time.Duration
-	Task          func()
-}
-
-func Register(job Job) {
-	jobsMutex.Lock()
-	defer jobsMutex.Unlock()
-	jobs = append(jobs, job)
-}
-
-func Start() {
+func init() {
 	ticker := time.NewTicker(1 * time.Minute)
 	go func() {
 		for {
@@ -43,4 +32,16 @@ func Start() {
 			}
 		}
 	}()
+}
+
+type Job struct {
+	NextExecution time.Time
+	Interval      time.Duration
+	Task          func()
+}
+
+func Register(job Job) {
+	jobsMutex.Lock()
+	defer jobsMutex.Unlock()
+	jobs = append(jobs, job)
 }
