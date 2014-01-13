@@ -13,7 +13,7 @@ import (
 
 // Function created to run the listeners before dropping privileges in the main binary, so
 // that we can listen in low ports without keeping the program as a super user
-func Listen() error {
+func Listen() ([]net.Listener, error) {
 	listeners := make([]net.Listener, 0, len(config.ShelterConfig.RESTServer.Listeners))
 
 	for _, v := range config.ShelterConfig.RESTServer.Listeners {
@@ -24,14 +24,14 @@ func Listen() error {
 				config.ShelterConfig.RESTServer.TLS.PrivateKeyPath)
 
 			if err != nil {
-				return err
+				return nil, err
 			}
 
 			tlsConfig := tls.Config{Certificates: []tls.Certificate{cert}}
 
 			ln, err := tls.Listen("tcp", ipAndPort, &tlsConfig)
 			if err != nil {
-				return err
+				return nil, err
 			}
 
 			listeners = append(listeners, ln)
@@ -39,14 +39,14 @@ func Listen() error {
 		} else {
 			ln, err := net.Listen("tcp", ipAndPort)
 			if err != nil {
-				return err
+				return nil, err
 			}
 
 			listeners = append(listeners, ln)
 		}
 	}
 
-	return nil
+	return listeners, nil
 }
 
 func Start(listeners []net.Listener) error {
