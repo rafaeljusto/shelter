@@ -9,7 +9,10 @@ import (
 	"runtime"
 	"shelter/config"
 	"shelter/net/http/rest"
+	"shelter/net/scan"
+	"shelter/scheduler"
 	"syscall"
+	"time"
 )
 
 // We store all listeners to make it easier later to stop all in a system SIGTERM event
@@ -61,6 +64,14 @@ func main() {
 			os.Exit(ErrStartingRESTServer)
 		}
 	}
+
+	if config.ShelterConfig.Scan.Enabled {
+		// TODO: Scan time must be configurable
+		scheduler.Register(scheduler.Job{
+			Interval: 24 * time.Hour,
+			Task:     scan.ScanDomains,
+		})
+	}
 }
 
 func manageSystemSignals() {
@@ -82,6 +93,7 @@ func manageSystemSignals() {
 						// TODO!
 					}
 				}
+
 				os.Exit(NoError)
 			}
 		}
@@ -89,5 +101,6 @@ func manageSystemSignals() {
 }
 
 func loadSettings() error {
+	// TODO: Possible concurrent access problem while reloading the configuration file
 	return config.LoadConfig(flag.Arg(0))
 }

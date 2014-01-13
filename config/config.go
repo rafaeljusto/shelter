@@ -17,6 +17,7 @@ type Config struct {
 	}
 
 	Scan struct {
+		Enabled           bool
 		NumberOfQueriers  int
 		DomainsBufferSize int
 		ErrorsBufferSize  int
