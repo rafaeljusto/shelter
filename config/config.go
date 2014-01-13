@@ -11,10 +11,6 @@ var (
 )
 
 type Config struct {
-	Shelter struct {
-		UID int
-	}
-
 	Database struct {
 		Name string
 		URI  string
