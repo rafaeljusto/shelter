@@ -72,6 +72,8 @@ func main() {
 			Task:     scan.ScanDomains,
 		})
 	}
+
+	scheduler.Start()
 }
 
 func manageSystemSignals() {

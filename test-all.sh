@@ -1,8 +1,17 @@
 #!/bin/sh
 
 : ${GOPATH:?"Need to set GOPATH"}
-current_dir=$PWD
 option=$1
+
+# Main binary must build
+cd $GOPATH/src/shelter && go build shelter.go
+return_code=$?
+cd $GOPATH/src/shelter && rm -f shelter
+
+# If there was any error building the main binary, we shouldn't continue
+if [ $return_code -ne 0 ]; then
+  exit $return_code
+fi
 
 # Unit tests
 echo "\n[[ UNIT TESTS ]]\n"
@@ -13,7 +22,6 @@ return_code=$?
 # If there was any error in the unit tests, we shouldn't run
 # the integration tests!
 if [ $return_code -ne 0 ]; then
-  cd $current_dir
   exit $return_code
 fi
 
@@ -29,5 +37,4 @@ cd $GOPATH/src/shelter && find . -type f -wholename './testing/*.go' | grep -v '
 return_code=$?
 rm -f scan.log
 
-cd $current_dir
 exit $return_code
