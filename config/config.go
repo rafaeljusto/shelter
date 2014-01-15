@@ -11,6 +11,9 @@ var (
 )
 
 type Config struct {
+	BasePath    string
+	LogFilename string
+
 	Database struct {
 		Name string
 		URI  string
@@ -54,12 +57,6 @@ type Config struct {
 		}
 
 		Secrets map[string]string
-	}
-
-	Log struct {
-		BasePath     string
-		ScanFilename string
-		RESTFilename string
 	}
 }
 

@@ -2,11 +2,9 @@ package rest
 
 import (
 	"crypto/tls"
-	"fmt"
 	"net"
 	"net/http"
 	"shelter/config"
-	"shelter/net/http/rest/log"
 	"shelter/net/http/rest/messages"
 	"strconv"
 )
@@ -52,15 +50,6 @@ func Listen() ([]net.Listener, error) {
 func Start(listeners []net.Listener) error {
 	// Initialize language configuration file
 	if err := messages.LoadConfig(config.ShelterConfig.RESTServer.LanguageConfigPath); err != nil {
-		return err
-	}
-
-	// Initialize REST server log
-	restLogPath := fmt.Sprintf("%s/%s",
-		config.ShelterConfig.Log.BasePath,
-		config.ShelterConfig.Log.RESTFilename,
-	)
-	if err := log.SetOutput(restLogPath); err != nil {
 		return err
 	}
 

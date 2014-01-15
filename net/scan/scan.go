@@ -1,10 +1,9 @@
 package scan
 
 import (
-	"fmt"
 	"shelter/config"
 	"shelter/database/mongodb"
-	"shelter/net/scan/log"
+	"shelter/log"
 	"sync"
 	"time"
 )
@@ -13,17 +12,6 @@ import (
 // each domain in the database according to an algorithm. This method is synchronous and
 // will return only after the scan proccess is done
 func ScanDomains() {
-	scanLogPath := fmt.Sprintf("%s/%s",
-		config.ShelterConfig.Log.BasePath,
-		config.ShelterConfig.Log.ScanFilename,
-	)
-
-	if err := log.SetOutput(scanLogPath); err != nil {
-		log.Println(err)
-		return
-	}
-	defer log.Close()
-
 	database, err := mongodb.Open(
 		config.ShelterConfig.Database.URI,
 		config.ShelterConfig.Database.Name,

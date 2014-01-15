@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"runtime"
 	"shelter/config"
+	"shelter/log"
 	"shelter/net/http/rest"
 	"shelter/net/scan"
 	"shelter/scheduler"
@@ -39,7 +40,7 @@ func init() {
 	}
 
 	if err := loadSettings(); err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		os.Exit(ErrLoadingConfig)
 	}
 }
@@ -47,11 +48,22 @@ func init() {
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
+	logPath := fmt.Sprintf("%s/%s",
+		config.ShelterConfig.BasePath,
+		config.ShelterConfig.LogFilename,
+	)
+
+	if err := log.SetOutput(logPath); err != nil {
+		log.Println(err)
+		return
+	}
+	defer log.Close()
+
 	if config.ShelterConfig.RESTServer.Enabled {
 		var err error
 		restListeners, err = rest.Listen()
 		if err != nil {
-			fmt.Println("Error while aquiring interfaces for REST server. Details:", err)
+			log.Println("Error while aquiring interfaces for REST server. Details:", err)
 			os.Exit(ErrListeningRESTInterfaces)
 		}
 	}
@@ -60,7 +72,7 @@ func main() {
 
 	if config.ShelterConfig.RESTServer.Enabled {
 		if err := rest.Start(restListeners); err != nil {
-			fmt.Println("Error starting the REST server. Details:", err)
+			log.Println("Error starting the REST server. Details:", err)
 			os.Exit(ErrStartingRESTServer)
 		}
 	}
@@ -86,13 +98,13 @@ func manageSystemSignals() {
 
 			if sig == syscall.SIGHUP {
 				if err := loadSettings(); err != nil {
-					// TODO!
+					log.Println("Error reloading confirguration file. Details:", err)
 				}
 
 			} else if sig == syscall.SIGTERM {
 				for _, listener := range restListeners {
 					if err := listener.Close(); err != nil {
-						// TODO!
+						log.Println("Error closing listener. Details:", err)
 					}
 				}
 
