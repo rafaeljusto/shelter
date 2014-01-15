@@ -34,6 +34,15 @@ type Mux struct{}
 
 // Main function of the REST server
 func (mux Mux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	defer func() {
+		// Something went really wrong while processing a request. Just send a HTTP status 500
+		// to the client and log the error stacktrace
+		if r := recover(); r != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			log.Println("REST panic detected. Details:", r)
+		}
+	}()
+
 	handler := mux.findRoute(r.URL.Path)
 	if handler == nil {
 		w.WriteHeader(http.StatusServiceUnavailable)

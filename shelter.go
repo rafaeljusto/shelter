@@ -86,6 +86,8 @@ func main() {
 	}
 
 	scheduler.Start()
+
+	select {}
 }
 
 func manageSystemSignals() {

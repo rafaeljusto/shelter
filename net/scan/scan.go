@@ -12,6 +12,14 @@ import (
 // each domain in the database according to an algorithm. This method is synchronous and
 // will return only after the scan proccess is done
 func ScanDomains() {
+	defer func() {
+		// Something went really wrong while scanning the domains. Log the error stacktrace
+		// and move out
+		if r := recover(); r != nil {
+			log.Println("Panic detected while scanning domains. Details:", r)
+		}
+	}()
+
 	database, err := mongodb.Open(
 		config.ShelterConfig.Database.URI,
 		config.ShelterConfig.Database.Name,
