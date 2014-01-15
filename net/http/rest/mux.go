@@ -13,6 +13,7 @@ import (
 	"shelter/net/http/rest/context"
 	"shelter/net/http/rest/handler"
 	"shelter/net/http/rest/messages"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -182,7 +183,7 @@ func (mux Mux) writeResponse(w http.ResponseWriter,
 
 	if len(context.ResponseContent) > 0 {
 		w.Header().Add("Content-Type", fmt.Sprintf("application/vnd.shelter+json; charset=%s", check.SupportedCharset))
-		w.Header().Add("Content-Length", fmt.Sprintf("%d", len(context.ResponseContent)))
+		w.Header().Add("Content-Length", strconv.Itoa(len(context.ResponseContent)))
 
 		if context.Language != nil {
 			w.Header().Add("Content-Language", context.Language.Name())

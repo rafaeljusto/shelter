@@ -1,13 +1,13 @@
 package handler
 
 import (
-	"fmt"
 	"net/http"
 	"shelter/dao"
 	"shelter/log"
 	"shelter/net/http/rest/check"
 	"shelter/net/http/rest/context"
 	"shelter/net/http/rest/protocol"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -132,7 +132,7 @@ func retrieveDomain(r *http.Request, context *context.Context, fqdn string, doma
 		// 304 (Not Modified) response, including the cache-related header fields
 		// (particularly ETag) of one of the entities that matched. For all other request
 		// methods, the server MUST respond with a status of 412 (Precondition Failed)
-		context.AddHeader("ETag", fmt.Sprintf("%d", domain.Revision))
+		context.AddHeader("ETag", strconv.Itoa(domain.Revision))
 		if err := context.MessageResponse(http.StatusNotModified,
 			"if-match-none-failed", r.URL.RequestURI()); err != nil {
 
@@ -142,7 +142,7 @@ func retrieveDomain(r *http.Request, context *context.Context, fqdn string, doma
 		return
 	}
 
-	context.AddHeader("ETag", fmt.Sprintf("%d", domain.Revision))
+	context.AddHeader("ETag", strconv.Itoa(domain.Revision))
 	context.AddHeader("Last-Modified", domain.LastModifiedAt.Format(time.RFC1123))
 
 	if domainInResponse {
@@ -289,7 +289,7 @@ func createUpdateDomain(r *http.Request, context *context.Context, fqdn string) 
 		return
 	}
 
-	context.AddHeader("ETag", fmt.Sprintf("%d", domain.Revision))
+	context.AddHeader("ETag", strconv.Itoa(domain.Revision))
 	context.AddHeader("Last-Modified", domain.LastModifiedAt.Format(time.RFC1123))
 	context.AddHeader("Location", "/domain/"+domain.FQDN)
 

@@ -1,7 +1,6 @@
 package model
 
 import (
-	"fmt"
 	"labix.org/v2/mgo/bson"
 	"math"
 	"math/rand"
@@ -134,7 +133,5 @@ func (d Domain) isNearDNSSECExpirationDate(daysBefore int) bool {
 
 	// Now we can check if this expiration date is already in the alert period. The alert
 	// period is defined by the function parameter in days
-	daysInHours := fmt.Sprintf("%dh", daysBefore*24)
-	expirationMinimumAlertPeriod, _ := time.ParseDuration(daysInHours)
-	return time.Now().Add(expirationMinimumAlertPeriod).After(expiresAt)
+	return time.Now().Add(time.Duration(daysBefore*24) * time.Hour).After(expiresAt)
 }
