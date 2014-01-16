@@ -2,9 +2,9 @@ package rest
 
 import (
 	"crypto/tls"
-	"fmt"
 	"net"
 	"net/http"
+	"path/filepath"
 	"shelter/config"
 	"shelter/net/http/rest/messages"
 	"strconv"
@@ -19,12 +19,12 @@ func Listen() ([]net.Listener, error) {
 		ipAndPort := net.JoinHostPort(v.IP, strconv.Itoa(v.Port))
 
 		if v.TLS {
-			certificatePath := fmt.Sprintf("%s/%s",
+			certificatePath := filepath.Join(
 				config.ShelterConfig.BasePath,
 				config.ShelterConfig.RESTServer.TLS.CertificatePath,
 			)
 
-			privateKeyPath := fmt.Sprintf("%s/%s",
+			privateKeyPath := filepath.Join(
 				config.ShelterConfig.BasePath,
 				config.ShelterConfig.RESTServer.TLS.PrivateKeyPath,
 			)
@@ -75,7 +75,7 @@ func Start(listeners []net.Listener) error {
 }
 
 func loadMessages() error {
-	messagePath := fmt.Sprintf("%s/%s",
+	messagePath := filepath.Join(
 		config.ShelterConfig.BasePath,
 		config.ShelterConfig.RESTServer.LanguageConfigPath,
 	)

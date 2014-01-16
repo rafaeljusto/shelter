@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"runtime"
 	"shelter/config"
 	"shelter/log"
@@ -55,7 +56,7 @@ func init() {
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
-	logPath := fmt.Sprintf("%s/%s",
+	logPath := filepath.Join(
 		config.ShelterConfig.BasePath,
 		config.ShelterConfig.LogFilename,
 	)
