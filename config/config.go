@@ -56,6 +56,7 @@ type Config struct {
 			TLS  bool
 		}
 
+		ACL     []string
 		Secrets map[string]string
 	}
 }

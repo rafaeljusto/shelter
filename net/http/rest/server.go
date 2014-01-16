@@ -53,8 +53,23 @@ func Start(listeners []net.Listener) error {
 		return err
 	}
 
+	// Initialize CIDR whitelist
+	loadACL()
+
 	for _, v := range listeners {
 		go http.Serve(v, mux)
+	}
+
+	return nil
+}
+
+func loadACL() error {
+	for _, cidrStr := range config.ShelterConfig.RESTServer.ACL {
+		if _, cidr, err := net.ParseCIDR(cidrStr); err == nil {
+			mux.ACL = append(mux.ACL, cidr)
+		} else {
+			return err
+		}
 	}
 
 	return nil

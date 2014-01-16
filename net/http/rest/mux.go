@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"shelter/config"
 	"shelter/database/mongodb"
@@ -21,7 +22,8 @@ import (
 // List of possible errors that can occur when calling functions from this file. Other
 // erros can also occurs from low level layers
 var (
-	ErrSecretNotFound = errors.New("Secret related to Authorization's secret id not found")
+	ErrInvalidRemoteIP = errors.New("Remote IP address could not be parsed")
+	ErrSecretNotFound  = errors.New("Secret related to Authorization's secret id not found")
 )
 
 // Main router used by the Shelter REST system to manage the requests
@@ -31,7 +33,9 @@ var (
 
 // Mux is responsable for all initial HTTP checks before calling a specific handler, and
 // for adding the system HTTP headers on each response
-type Mux struct{}
+type Mux struct {
+	ACL []*net.IPNet // Network allowed ranges to send requests to the REST server
+}
 
 // Main function of the REST server
 func (mux Mux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -44,6 +48,18 @@ func (mux Mux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
+	// Verify if the user can send requests to this REST server
+	if allowed, err := mux.checkACL(r); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Println("Error checking CIDR whitelist. Details:", err)
+		return
+
+	} else if !allowed {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+
+	// Check if the URI exists in our system
 	handler := mux.findRoute(r.URL.Path)
 	if handler == nil {
 		w.WriteHeader(http.StatusServiceUnavailable)
@@ -87,6 +103,31 @@ func (mux Mux) findRoute(uri string) handler.Handler {
 	}
 
 	return selectedHandler
+}
+
+// checkACL is responsable for checking if the user is allowed to send requests to the
+// REST server
+func (mux Mux) checkACL(r *http.Request) (bool, error) {
+	// When there's nobody in the whitelist, everybody is allowed
+	if len(mux.ACL) == 0 {
+		return true, nil
+	}
+
+	ip := net.ParseIP(r.RemoteAddr)
+	if ip == nil {
+		// Something wrong, because the REST server could not identify the remote address
+		// properly. This is really awkward, because this is a responsability of the server,
+		// maybe this error will never be throw
+		return false, ErrInvalidRemoteIP
+	}
+
+	for _, cidr := range mux.ACL {
+		if cidr.Contains(ip) {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
 
 // Verify HTTP headers and fill context with user preferences

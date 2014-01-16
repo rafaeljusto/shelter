@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"flag"
 	"fmt"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"shelter/config"
@@ -64,6 +65,7 @@ func main() {
 	var mux rest.Mux
 	checkHeaders(&mux)
 	createDomain(&mux)
+	checkWrongACL(mux)
 	deleteDomain(&mux)
 
 	utils.Println("SUCCESS!")
@@ -72,7 +74,7 @@ func main() {
 func checkHeaders(mux *rest.Mux) {
 	r, err := http.NewRequest("GET", "/xxx/example.com.br.", nil)
 	if err != nil {
-		utils.Fatalln("Error creting the HTTP request", err)
+		utils.Fatalln("Error creating the HTTP request", err)
 	}
 
 	w := httptest.NewRecorder()
@@ -163,7 +165,7 @@ func checkHeaders(mux *rest.Mux) {
 		r, err = http.NewRequest("PUT", "/domain/example.com.br.",
 			bytes.NewReader(content))
 		if err != nil {
-			utils.Fatalln("Error creting the HTTP request", err)
+			utils.Fatalln("Error creating the HTTP request", err)
 		}
 
 		buildHTTPHeader(r, content)
@@ -194,7 +196,7 @@ func createDomain(mux *rest.Mux) {
 	r, err := http.NewRequest("PUT", "/domain/example.com.br.",
 		bytes.NewReader(content))
 	if err != nil {
-		utils.Fatalln("Error creting the HTTP request", err)
+		utils.Fatalln("Error creating the HTTP request", err)
 	}
 
 	buildHTTPHeader(r, content)
@@ -238,10 +240,33 @@ func createDomain(mux *rest.Mux) {
 	}
 }
 
+func checkWrongACL(mux rest.Mux) {
+	r, err := http.NewRequest("GET", "/domain/example.com.br.", nil)
+	if err != nil {
+		utils.Fatalln("Error creating the HTTP request", err)
+	}
+	r.RemoteAddr = "127.0.0.1"
+
+	buildHTTPHeader(r, nil)
+
+	_, cidr, err := net.ParseCIDR("10.0.0.0/8")
+	if err != nil {
+		utils.Fatalln("Error parsing CIDR", err)
+	}
+	mux.ACL = append(mux.ACL, cidr)
+
+	w := httptest.NewRecorder()
+	mux.ServeHTTP(w, r)
+
+	if w.Code != http.StatusForbidden {
+		utils.Fatalln("Not checking ACL", nil)
+	}
+}
+
 func deleteDomain(mux *rest.Mux) {
 	r, err := http.NewRequest("DELETE", "/domain/example.com.br.", nil)
 	if err != nil {
-		utils.Fatalln("Error creting the HTTP request", err)
+		utils.Fatalln("Error creating the HTTP request", err)
 	}
 
 	buildHTTPHeader(r, nil)

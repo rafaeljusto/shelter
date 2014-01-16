@@ -110,6 +110,8 @@ func manageSystemSignals() {
 					}
 				}
 
+				// TODO: Wait the last requests to be processed?
+
 				os.Exit(NoError)
 			}
 		}
