@@ -2,6 +2,7 @@ package rest
 
 import (
 	"crypto/tls"
+	"fmt"
 	"net"
 	"net/http"
 	"shelter/config"
@@ -18,9 +19,17 @@ func Listen() ([]net.Listener, error) {
 		ipAndPort := net.JoinHostPort(v.IP, strconv.Itoa(v.Port))
 
 		if v.TLS {
-			cert, err := tls.LoadX509KeyPair(config.ShelterConfig.RESTServer.TLS.CertificatePath,
-				config.ShelterConfig.RESTServer.TLS.PrivateKeyPath)
+			certificatePath := fmt.Sprintf("%s/%s",
+				config.ShelterConfig.BasePath,
+				config.ShelterConfig.RESTServer.TLS.CertificatePath,
+			)
 
+			privateKeyPath := fmt.Sprintf("%s/%s",
+				config.ShelterConfig.BasePath,
+				config.ShelterConfig.RESTServer.TLS.PrivateKeyPath,
+			)
+
+			cert, err := tls.LoadX509KeyPair(certificatePath, privateKeyPath)
 			if err != nil {
 				return nil, err
 			}
@@ -49,15 +58,30 @@ func Listen() ([]net.Listener, error) {
 
 func Start(listeners []net.Listener) error {
 	// Initialize language configuration file
-	if err := messages.LoadConfig(config.ShelterConfig.RESTServer.LanguageConfigPath); err != nil {
+	if err := loadMessages(); err != nil {
 		return err
 	}
 
 	// Initialize CIDR whitelist
-	loadACL()
+	if err := loadACL(); err != nil {
+		return err
+	}
 
 	for _, v := range listeners {
 		go http.Serve(v, mux)
+	}
+
+	return nil
+}
+
+func loadMessages() error {
+	messagePath := fmt.Sprintf("%s/%s",
+		config.ShelterConfig.BasePath,
+		config.ShelterConfig.RESTServer.LanguageConfigPath,
+	)
+
+	if err := messages.LoadConfig(messagePath); err != nil {
+		return err
 	}
 
 	return nil

@@ -43,7 +43,7 @@ func init() {
 	}
 
 	if err := loadSettings(); err != nil {
-		log.Println(err)
+		log.Println("Error loading the configuration file. Details:", err)
 		os.Exit(ErrLoadingConfig)
 	}
 
