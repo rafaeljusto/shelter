@@ -3,7 +3,6 @@ package config
 import (
 	"encoding/json"
 	"io/ioutil"
-	"time"
 )
 
 var (
@@ -21,6 +20,8 @@ type Config struct {
 
 	Scan struct {
 		Enabled           bool
+		Time              string
+		IntervalHours     int
 		NumberOfQueriers  int
 		DomainsBufferSize int
 		ErrorsBufferSize  int
@@ -29,9 +30,9 @@ type Config struct {
 		ConnectionRetries int
 
 		Timeouts struct {
-			DialSeconds  time.Duration
-			ReadSeconds  time.Duration
-			WriteSeconds time.Duration
+			DialSeconds  int
+			ReadSeconds  int
+			WriteSeconds int
 		}
 
 		VerificationIntervals struct {
