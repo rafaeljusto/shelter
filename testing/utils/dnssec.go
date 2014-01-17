@@ -7,39 +7,51 @@ import (
 )
 
 func GenerateKeyAndSignZone(zone string) (*dns.DNSKEY, *dns.RRSIG, error) {
-	dnskey := &dns.DNSKEY{
-		Hdr: dns.RR_Header{
-			Name:   zone,
-			Rrtype: dns.TypeDNSKEY,
-		},
-		Flags:     257,
-		Protocol:  3,
-		Algorithm: dns.RSASHA1NSEC3SHA1,
+	var globalErr error
+
+	// When creating a lot of keys in a small amount of time, sometimes the systems fails to
+	// generate or sign the key. For that reason we try at least 3 times of failure before
+	// returning the error. Only this method has this feature because the other ones are not
+	// used in performance reports
+	for i := 0; i < 3; i++ {
+		dnskey := &dns.DNSKEY{
+			Hdr: dns.RR_Header{
+				Name:   zone,
+				Rrtype: dns.TypeDNSKEY,
+			},
+			Flags:     257,
+			Protocol:  3,
+			Algorithm: dns.RSASHA1NSEC3SHA1,
+		}
+
+		privateKey, err := dnskey.Generate(1024)
+		if err != nil {
+			globalErr = err
+			continue
+		}
+
+		rrsig := &dns.RRSIG{
+			Hdr: dns.RR_Header{
+				Name:   zone,
+				Rrtype: dns.TypeRRSIG,
+			},
+			TypeCovered: dns.TypeDNSKEY,
+			Algorithm:   dnskey.Algorithm,
+			Expiration:  uint32(time.Now().Add(10 * time.Second).Unix()),
+			Inception:   uint32(time.Now().Unix()),
+			KeyTag:      dnskey.KeyTag(),
+			SignerName:  zone,
+		}
+
+		if err := rrsig.Sign(privateKey, []dns.RR{dnskey}); err != nil {
+			globalErr = err
+			continue
+		}
+
+		return dnskey, rrsig, nil
 	}
 
-	privateKey, err := dnskey.Generate(1024)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	rrsig := &dns.RRSIG{
-		Hdr: dns.RR_Header{
-			Name:   zone,
-			Rrtype: dns.TypeRRSIG,
-		},
-		TypeCovered: dns.TypeDNSKEY,
-		Algorithm:   dnskey.Algorithm,
-		Expiration:  uint32(time.Now().Add(10 * time.Second).Unix()),
-		Inception:   uint32(time.Now().Unix()),
-		KeyTag:      dnskey.KeyTag(),
-		SignerName:  zone,
-	}
-
-	if err := rrsig.Sign(privateKey, []dns.RR{dnskey}); err != nil {
-		return nil, nil, err
-	}
-
-	return dnskey, rrsig, nil
+	return nil, nil, globalErr
 }
 
 func GenerateKeyAndSignZoneWithNoSEPKey(zone string) (*dns.DNSKEY, *dns.RRSIG, error) {

@@ -188,6 +188,10 @@ func domainWithNoErrors(domainDAO dao.DomainDAO) {
 				ds.Keytag), nil)
 		}
 	}
+
+	if err := domainDAO.RemoveByFQDN(domain.FQDN); err != nil {
+		utils.Fatalln(fmt.Sprintf("Error removing domain %s", domain.FQDN), err)
+	}
 }
 
 // Generates a report with the amount of time of a scan
@@ -220,12 +224,12 @@ func scanReport(domainDAO dao.DomainDAO, scanConfig ScanTestConfigFile) {
 						Answer: []dns.RR{
 							&dns.SOA{
 								Hdr: dns.RR_Header{
-									Name:   "br.",
+									Name:   fqdn,
 									Rrtype: dns.TypeSOA,
 									Class:  dns.ClassINET,
 									Ttl:    86400,
 								},
-								Ns:      "ns1.br.",
+								Ns:      fmt.Sprintf("ns1.%s", fqdn),
 								Mbox:    "rafael.justo.net.br.",
 								Serial:  2013112600,
 								Refresh: 86400,
@@ -259,7 +263,7 @@ func scanReport(domainDAO dao.DomainDAO, scanConfig ScanTestConfigFile) {
 			domains = append(domains, domain)
 		}
 
-		println(fmt.Sprintf("Generating report - scale %d", numberOfItems))
+		utils.Println(fmt.Sprintf("Generating report - scale %d", numberOfItems))
 		totalDuration, domainsPerSecond := calculateScanDurations(scanConfig, domains)
 
 		var memStats runtime.MemStats

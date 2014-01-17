@@ -388,7 +388,7 @@ func scanQuerierReport(config ScanQuerierTestConfigFile) {
 			})
 		}
 
-		println(fmt.Sprintf("Generating report - scale %d", numberOfItems))
+		utils.Println(fmt.Sprintf("Generating report - scale %d", numberOfItems))
 		totalDuration, queriesPerSecond, _, _ :=
 			calculateScanQuerierDurations(config, domains)
 
