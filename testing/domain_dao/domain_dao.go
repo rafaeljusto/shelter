@@ -198,6 +198,25 @@ func domainsLifeCycle(domainDAO dao.DomainDAO) {
 			len(domains), len(allDomains)), nil)
 	}
 
+	// Detected a problem in FindAsync method on 2014-01-17 where we were returning the same
+	// object many times because we were reusing the same pointer. For that reason we are
+	// going to add a test to check if the items returned are the same set of the inserted
+	// ones
+	for _, domain := range domains {
+		found := false
+		for _, domainRetrieved := range allDomains {
+			if domainRetrieved.Id.Hex() == domain.Id.Hex() {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			utils.Fatalln("FindAll method is not returning all objects "+
+				"that were inserted, apparently there are duplicated objects in the result set", nil)
+		}
+	}
+
 	// Remove domains
 	domainResults = domainDAO.RemoveMany(domains)
 
@@ -337,7 +356,6 @@ func domainsPagination(domainDAO dao.DomainDAO) {
 	}
 
 	if pagination.NumberOfItems != numberOfItems {
-		println(pagination.NumberOfItems)
 		utils.Errorln("Number of items not calculated correctly", nil)
 	}
 

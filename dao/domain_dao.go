@@ -268,13 +268,13 @@ func (dao DomainDAO) FindAllAsync() (chan DomainResult, error) {
 		// Gets the database result iterator
 		it := dao.Database.C(domainDAOCollection).Find(bson.M{}).Iter()
 
-		domain := new(model.Domain)
-		for it.Next(domain) {
+		var domainIt model.Domain
+		for it.Next(&domainIt) {
+			domain := domainIt // Copy the domainIt object to send it to the channel
 			domainChannel <- DomainResult{
-				Domain: domain,
+				Domain: &domain,
 				Error:  nil,
 			}
-
 		}
 
 		err := it.Close()
