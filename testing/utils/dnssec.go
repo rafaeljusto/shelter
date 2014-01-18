@@ -54,6 +54,41 @@ func GenerateKeyAndSignZone(zone string) (*dns.DNSKEY, *dns.RRSIG, error) {
 	return nil, nil, globalErr
 }
 
+// We don't specify a zone for the DNSKEY because we want to reuse the same key in many different
+// zones (performance tests)
+func GenerateKey() (*dns.DNSKEY, dns.PrivateKey, error) {
+	dnskey := &dns.DNSKEY{
+		Hdr: dns.RR_Header{
+			Name:   "",
+			Rrtype: dns.TypeDNSKEY,
+		},
+		Flags:     257,
+		Protocol:  3,
+		Algorithm: dns.RSASHA1NSEC3SHA1,
+	}
+
+	privateKey, err := dnskey.Generate(1024)
+	return dnskey, privateKey, err
+}
+
+func SignKey(zone string, dnskey *dns.DNSKEY, privateKey dns.PrivateKey) (*dns.RRSIG, error) {
+	rrsig := &dns.RRSIG{
+		Hdr: dns.RR_Header{
+			Name:   zone,
+			Rrtype: dns.TypeRRSIG,
+		},
+		TypeCovered: dns.TypeDNSKEY,
+		Algorithm:   dnskey.Algorithm,
+		Expiration:  uint32(time.Now().Add(10 * time.Second).Unix()),
+		Inception:   uint32(time.Now().Unix()),
+		KeyTag:      dnskey.KeyTag(),
+		SignerName:  zone,
+	}
+
+	err := rrsig.Sign(privateKey, []dns.RR{dnskey})
+	return rrsig, err
+}
+
 func GenerateKeyAndSignZoneWithNoSEPKey(zone string) (*dns.DNSKEY, *dns.RRSIG, error) {
 	dnskey := &dns.DNSKEY{
 		Hdr: dns.RR_Header{

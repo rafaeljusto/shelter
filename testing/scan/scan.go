@@ -203,11 +203,20 @@ func scanReport(domainDAO dao.DomainDAO, scanConfig ScanTestConfigFile) {
 	scale := []int{10, 50, 100, 500, 1000, 5000,
 		10000, 50000, 100000, 500000, 1000000, 5000000}
 
+	dnskey, privateKey, err := utils.GenerateKey()
+	if err != nil {
+		utils.Fatalln("Error generating DNSKEY", err)
+	}
+
 	for _, numberOfItems := range scale {
-		var domains []model.Domain
+		var domains []*model.Domain
 		for i := 0; i < numberOfItems; i++ {
 			fqdn := fmt.Sprintf("domain%d.br.", i)
-			domain, dnskey, rrsig, _, _ := generateAndSaveDomain(fqdn, domainDAO)
+
+			myDNSKEY := *dnskey
+			myDNSKEY.Header().Name = fqdn
+
+			domain, rrsig := generateDomain(fqdn, &myDNSKEY, privateKey)
 
 			dns.HandleFunc(fqdn, func(w dns.ResponseWriter, dnsRequestMessage *dns.Msg) {
 				defer w.Close()
@@ -250,7 +259,7 @@ func scanReport(domainDAO dao.DomainDAO, scanConfig ScanTestConfigFile) {
 						},
 						Question: dnsRequestMessage.Question,
 						Answer: []dns.RR{
-							dnskey,
+							&myDNSKEY,
 							rrsig,
 						},
 					}
@@ -260,11 +269,18 @@ func scanReport(domainDAO dao.DomainDAO, scanConfig ScanTestConfigFile) {
 				}
 			})
 
-			domains = append(domains, domain)
+			domains = append(domains, &domain)
+		}
+
+		domainsResult := domainDAO.SaveMany(domains)
+		for _, domainResult := range domainsResult {
+			if domainResult.Error != nil {
+				utils.Fatalln(fmt.Sprintf("Fail to save domain %s", domainResult.Domain.FQDN), domainResult.Error)
+			}
 		}
 
 		utils.Println(fmt.Sprintf("Generating report - scale %d", numberOfItems))
-		totalDuration, domainsPerSecond := calculateScanDurations(scanConfig, domains)
+		totalDuration, domainsPerSecond := calculateScanDurations(scanConfig, len(domains))
 
 		var memStats runtime.MemStats
 		runtime.ReadMemStats(&memStats)
@@ -276,9 +292,10 @@ func scanReport(domainDAO dao.DomainDAO, scanConfig ScanTestConfigFile) {
 			float64(memStats.Alloc)/float64(MB),
 		)
 
-		for _, domain := range domains {
-			if err := domainDAO.RemoveByFQDN(domain.FQDN); err != nil {
-				utils.Fatalln(fmt.Sprintf("Error removing domain %s during report", domain.FQDN), err)
+		domainsResult = domainDAO.RemoveMany(domains)
+		for _, domainResult := range domainsResult {
+			if domainResult.Error != nil {
+				utils.Fatalln(fmt.Sprintf("Fail to remove domain %s", domainResult.Domain.FQDN), domainResult.Error)
 			}
 		}
 	}
@@ -287,7 +304,7 @@ func scanReport(domainDAO dao.DomainDAO, scanConfig ScanTestConfigFile) {
 }
 
 func calculateScanDurations(scanConfig ScanTestConfigFile,
-	domains []model.Domain) (totalDuration time.Duration, domainsPerSecond int64) {
+	numberOfDomains int) (totalDuration time.Duration, domainsPerSecond int64) {
 
 	beginTimer := time.Now()
 	scan.ScanDomains()
@@ -295,10 +312,10 @@ func calculateScanDurations(scanConfig ScanTestConfigFile,
 
 	totalDurationSeconds := int64(totalDuration / time.Second)
 	if totalDurationSeconds > 0 {
-		domainsPerSecond = int64(len(domains)) / totalDurationSeconds
+		domainsPerSecond = int64(numberOfDomains) / totalDurationSeconds
 
 	} else {
-		domainsPerSecond = int64(len(domains))
+		domainsPerSecond = int64(numberOfDomains)
 	}
 
 	return
@@ -359,6 +376,57 @@ func generateAndSaveDomain(fqdn string, domainDAO dao.DomainDAO) (
 	}
 
 	return domain, dnskey, rrsig, lastCheckAt, lastOKAt
+}
+
+// Function to mock a domain
+func generateDomain(fqdn string, dnskey *dns.DNSKEY, privateKey dns.PrivateKey) (model.Domain, *dns.RRSIG) {
+	rrsig, err := utils.SignKey(fqdn, dnskey, privateKey)
+	if err != nil {
+		utils.Fatalln(fmt.Sprintf("Error signing zone %s", fqdn), err)
+	}
+	ds := dnskey.ToDS(int(model.DSDigestTypeSHA1))
+
+	domain := model.Domain{
+		FQDN: fqdn,
+		Nameservers: []model.Nameserver{
+			{
+				Host: fmt.Sprintf("ns1.%s", fqdn),
+				IPv4: net.ParseIP("127.0.0.1"),
+			},
+		},
+		DSSet: []model.DS{
+			{
+				Keytag:     dnskey.KeyTag(),
+				Algorithm:  utils.ConvertKeyAlgorithm(dnskey.Algorithm),
+				DigestType: model.DSDigestTypeSHA1,
+				Digest:     ds.Digest,
+			},
+		},
+	}
+
+	owner, _ := mail.ParseAddress("test@rafael.net.br")
+	domain.Owners = []*mail.Address{owner}
+
+	lastCheckAt := time.Now().Add(-72 * time.Hour)
+	lastOKAt := lastCheckAt.Add(-24 * time.Hour)
+
+	// Set all nameservers with error and the last check equal of the error check interval,
+	// this will force the domain to be checked
+	for index, _ := range domain.Nameservers {
+		domain.Nameservers[index].LastCheckAt = lastCheckAt
+		domain.Nameservers[index].LastOKAt = lastOKAt
+		domain.Nameservers[index].LastStatus = model.NameserverStatusServerFailure
+	}
+
+	// Set all DS records with error and the last check equal of the error check interval,
+	// this will force the domain to be checked
+	for index, _ := range domain.DSSet {
+		domain.DSSet[index].LastCheckAt = lastCheckAt
+		domain.DSSet[index].LastOKAt = lastOKAt
+		domain.DSSet[index].LastStatus = model.DSStatusTimeout
+	}
+
+	return domain, rrsig
 }
 
 func startDNSServer(port int, udpMaxSize uint16) {
