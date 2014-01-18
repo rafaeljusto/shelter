@@ -53,6 +53,12 @@ func (h hostCache) timeoutsPerHostExceeded() bool {
 
 // Mehtod to check if the number of queries per second on this host was exceeded
 func (h hostCache) queriesPerSecondExceeded() bool {
+	// If the parameter that indicates if the host has to many requests is zero, we assume that the
+	// user wants to turn off this feature
+	if MaxQPSPerHost == 0 {
+		return false
+	}
+
 	return time.Now().Unix() == h.lastEpoch && h.queriesPerSecond > MaxQPSPerHost
 }
 
