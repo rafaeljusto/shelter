@@ -17,6 +17,17 @@ func Println(message string) {
 	log.Println(message)
 }
 
+// Function to allow printing a percentage inline, that is, replacing the last percentage
+// with the new one. You should always use this method until we got 100%, or you will miss
+// the breaking line and the text after the percentage will be mess up
+func PrintProgress(label string, percentage int) {
+	if percentage == 100 {
+		fmt.Printf("\r... %s: %d%%\n", label, percentage)
+	} else {
+		fmt.Printf("\r... %s: %d%%", label, percentage)
+	}
+}
+
 // Function only to add the test name before the log message. This is useful when you have
 // many tests running and logging in the same file, like in a continuous deployment
 // scenario. Prints an error message without ending the test

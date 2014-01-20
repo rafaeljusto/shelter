@@ -6,7 +6,9 @@ import (
 	"github.com/miekg/dns"
 	"net"
 	"net/mail"
+	"os"
 	"runtime"
+	"runtime/pprof"
 	"shelter/config"
 	"shelter/dao"
 	"shelter/database/mongodb"
@@ -17,8 +19,12 @@ import (
 )
 
 var (
-	configFilePath string // Path for the configuration file with all the query parameters
-	report         bool   // Flag to generate the scan performance report file
+	configFilePath string     // Path for the configuration file with all the query parameters
+	report         bool       // Flag to generate the scan performance report file
+	cpuProfile     bool       // Write profile about the CPU when executing the report
+	goProfile      bool       // Write profile about the Go routines when executing the report
+	memoryProfile  bool       // Write profile about the memory usage when executing the report
+	server         dns.Server // DNS server used to simulate DNS requests
 )
 
 const (
@@ -40,13 +46,23 @@ type ScanTestConfigFile struct {
 	config.Config
 
 	DNSServerPort int
-	ReportFile    string
+	Report        struct {
+		File    string
+		Profile struct {
+			CPUFile        string
+			GoRoutinesFile string
+			MemoryFile     string
+		}
+	}
 }
 
 func init() {
 	utils.TestName = "Scan"
 	flag.StringVar(&configFilePath, "config", "", "Configuration file for ScanQuerier test")
 	flag.BoolVar(&report, "report", false, "Report flag for ScanQuerier performance")
+	flag.BoolVar(&cpuProfile, "cpuprofile", false, "Report flag to enable CPU profile")
+	flag.BoolVar(&goProfile, "goprofile", false, "Report flag to enable Go routines profile")
+	flag.BoolVar(&memoryProfile, "memprofile", false, "Report flag to enable memory profile")
 }
 
 func main() {
@@ -87,6 +103,47 @@ func main() {
 	// Scan performance report is optional and only generated when the report file
 	// path parameter is given
 	if report {
+		if cpuProfile {
+			profileFile, err := os.Create(scanConfig.Report.Profile.CPUFile)
+			if err != nil {
+				utils.Fatalln("Error creating CPU profile file", err)
+			}
+
+			if err := pprof.StartCPUProfile(profileFile); err != nil {
+				utils.Fatalln("Error starting CPU profile file", err)
+			}
+
+			defer pprof.StopCPUProfile()
+		}
+
+		defer func() {
+			if memoryProfile {
+				runtime.GC()
+
+				profileFile, err := os.Create(scanConfig.Report.Profile.MemoryFile)
+				if err != nil {
+					utils.Fatalln("Error creating memory profile file", err)
+				}
+
+				if err := pprof.Lookup("heap").WriteTo(profileFile, 1); err != nil {
+					utils.Fatalln("Error writing to memory profile file", err)
+				}
+				profileFile.Close()
+			}
+
+			if goProfile {
+				profileFile, err := os.Create(scanConfig.Report.Profile.GoRoutinesFile)
+				if err != nil {
+					utils.Fatalln("Error creating Go routines profile file", err)
+				}
+
+				if err := pprof.Lookup("goroutine").WriteTo(profileFile, 2); err != nil {
+					utils.Fatalln("Error writing to Go routines profile file", err)
+				}
+				profileFile.Close()
+			}
+		}()
+
 		scanReport(domainDAO, scanConfig)
 	}
 
@@ -94,7 +151,7 @@ func main() {
 }
 
 func domainWithNoErrors(domainDAO dao.DomainDAO) {
-	domain, dnskey, rrsig, lastCheckAt, lastOKAt := generateAndSaveDomain("br.", domainDAO)
+	domain, dnskey, rrsig, lastCheckAt, lastOKAt := generateSignAndSaveDomain("br.", domainDAO)
 
 	dns.HandleFunc("br.", func(w dns.ResponseWriter, dnsRequestMessage *dns.Msg) {
 		defer w.Close()
@@ -194,6 +251,67 @@ func domainWithNoErrors(domainDAO dao.DomainDAO) {
 	}
 }
 
+type ReportHandler struct {
+	DNSKEY     *dns.DNSKEY
+	PrivateKey dns.PrivateKey
+}
+
+func (r ReportHandler) ServeDNS(w dns.ResponseWriter, dnsRequestMessage *dns.Msg) {
+	dnsResponseMessage := new(dns.Msg)
+	defer w.WriteMsg(dnsResponseMessage)
+
+	fqdn := dnsRequestMessage.Question[0].Name
+
+	if dnsRequestMessage.Question[0].Qtype == dns.TypeSOA {
+		dnsResponseMessage = &dns.Msg{
+			MsgHdr: dns.MsgHdr{
+				Authoritative: true,
+			},
+			Question: dnsRequestMessage.Question,
+			Answer: []dns.RR{
+				&dns.SOA{
+					Hdr: dns.RR_Header{
+						Name:   fqdn,
+						Rrtype: dns.TypeSOA,
+						Class:  dns.ClassINET,
+						Ttl:    86400,
+					},
+					Ns:      fmt.Sprintf("ns1.%s", fqdn),
+					Mbox:    "rafael.justo.net.br.",
+					Serial:  2013112600,
+					Refresh: 86400,
+					Retry:   86400,
+					Expire:  86400,
+					Minttl:  900,
+				},
+			},
+		}
+		dnsResponseMessage.SetReply(dnsRequestMessage)
+
+		w.WriteMsg(dnsResponseMessage)
+
+	} else if dnsRequestMessage.Question[0].Qtype == dns.TypeDNSKEY {
+		rrsig, err := utils.SignKey(fqdn, r.DNSKEY, r.PrivateKey)
+		if err != nil {
+			utils.Fatalln(fmt.Sprintf("Error signing zone %s", fqdn), err)
+		}
+
+		dnsResponseMessage = &dns.Msg{
+			MsgHdr: dns.MsgHdr{
+				Authoritative: true,
+			},
+			Question: dnsRequestMessage.Question,
+			Answer: []dns.RR{
+				r.DNSKEY,
+				rrsig,
+			},
+		}
+		dnsResponseMessage.SetReply(dnsRequestMessage)
+
+		w.WriteMsg(dnsResponseMessage)
+	}
+}
+
 // Generates a report with the amount of time of a scan
 func scanReport(domainDAO dao.DomainDAO, scanConfig ScanTestConfigFile) {
 	report := " #       | Total            | DPS  | Memory (MB)\n" +
@@ -208,79 +326,28 @@ func scanReport(domainDAO dao.DomainDAO, scanConfig ScanTestConfigFile) {
 		utils.Fatalln("Error generating DNSKEY", err)
 	}
 
+	reportHandler := ReportHandler{
+		DNSKEY:     dnskey,
+		PrivateKey: privateKey,
+	}
+
+	server.Handler = reportHandler
+	dns.DefaultServeMux = nil
+
 	for _, numberOfItems := range scale {
-		var domains []*model.Domain
-		for i := 0; i < numberOfItems; i++ {
-			fqdn := fmt.Sprintf("domain%d.br.", i)
-
-			myDNSKEY := *dnskey
-			myDNSKEY.Header().Name = fqdn
-
-			domain, rrsig := generateDomain(fqdn, &myDNSKEY, privateKey)
-
-			dns.HandleFunc(fqdn, func(w dns.ResponseWriter, dnsRequestMessage *dns.Msg) {
-				defer w.Close()
-
-				dnsResponseMessage := new(dns.Msg)
-				defer w.WriteMsg(dnsResponseMessage)
-
-				if dnsRequestMessage.Question[0].Qtype == dns.TypeSOA {
-					dnsResponseMessage = &dns.Msg{
-						MsgHdr: dns.MsgHdr{
-							Authoritative: true,
-						},
-						Question: dnsRequestMessage.Question,
-						Answer: []dns.RR{
-							&dns.SOA{
-								Hdr: dns.RR_Header{
-									Name:   fqdn,
-									Rrtype: dns.TypeSOA,
-									Class:  dns.ClassINET,
-									Ttl:    86400,
-								},
-								Ns:      fmt.Sprintf("ns1.%s", fqdn),
-								Mbox:    "rafael.justo.net.br.",
-								Serial:  2013112600,
-								Refresh: 86400,
-								Retry:   86400,
-								Expire:  86400,
-								Minttl:  900,
-							},
-						},
-					}
-					dnsResponseMessage.SetReply(dnsRequestMessage)
-
-					w.WriteMsg(dnsResponseMessage)
-
-				} else if dnsRequestMessage.Question[0].Qtype == dns.TypeDNSKEY {
-					dnsResponseMessage = &dns.Msg{
-						MsgHdr: dns.MsgHdr{
-							Authoritative: true,
-						},
-						Question: dnsRequestMessage.Question,
-						Answer: []dns.RR{
-							&myDNSKEY,
-							rrsig,
-						},
-					}
-					dnsResponseMessage.SetReply(dnsRequestMessage)
-
-					w.WriteMsg(dnsResponseMessage)
-				}
-			})
-
-			domains = append(domains, &domain)
-		}
-
-		domainsResult := domainDAO.SaveMany(domains)
-		for _, domainResult := range domainsResult {
-			if domainResult.Error != nil {
-				utils.Fatalln(fmt.Sprintf("Fail to save domain %s", domainResult.Domain.FQDN), domainResult.Error)
-			}
-		}
-
 		utils.Println(fmt.Sprintf("Generating report - scale %d", numberOfItems))
-		totalDuration, domainsPerSecond := calculateScanDurations(scanConfig, len(domains))
+
+		for i := 0; i < numberOfItems; i++ {
+			if i%1000 == 0 {
+				utils.PrintProgress("building scenario", (i*100)/numberOfItems)
+			}
+
+			fqdn := fmt.Sprintf("domain%d.br.", i)
+			generateAndSaveDomain(fqdn, domainDAO, dnskey)
+		}
+
+		utils.PrintProgress("building scenario", 100)
+		totalDuration, domainsPerSecond := calculateScanDurations(scanConfig, numberOfItems)
 
 		var memStats runtime.MemStats
 		runtime.ReadMemStats(&memStats)
@@ -292,15 +359,14 @@ func scanReport(domainDAO dao.DomainDAO, scanConfig ScanTestConfigFile) {
 			float64(memStats.Alloc)/float64(MB),
 		)
 
-		domainsResult = domainDAO.RemoveMany(domains)
-		for _, domainResult := range domainsResult {
-			if domainResult.Error != nil {
-				utils.Fatalln(fmt.Sprintf("Fail to remove domain %s", domainResult.Domain.FQDN), domainResult.Error)
-			}
+		if err := domainDAO.RemoveAll(); err != nil {
+			// When the result set is too big to remove, we got a timeout error from the
+			// connection, but it's ok
+			//utils.Fatalln("Error removing domains generated for report", err)
 		}
 	}
 
-	utils.WriteReport(scanConfig.ReportFile, report)
+	utils.WriteReport(scanConfig.Report.File, report)
 }
 
 func calculateScanDurations(scanConfig ScanTestConfigFile,
@@ -322,7 +388,7 @@ func calculateScanDurations(scanConfig ScanTestConfigFile,
 }
 
 // Function to mock a domain
-func generateAndSaveDomain(fqdn string, domainDAO dao.DomainDAO) (
+func generateSignAndSaveDomain(fqdn string, domainDAO dao.DomainDAO) (
 	model.Domain, *dns.DNSKEY, *dns.RRSIG, time.Time, time.Time,
 ) {
 	dnskey, rrsig, err := utils.GenerateKeyAndSignZone(fqdn)
@@ -372,18 +438,14 @@ func generateAndSaveDomain(fqdn string, domainDAO dao.DomainDAO) (
 	}
 
 	if err := domainDAO.Save(&domain); err != nil {
-		utils.Fatalln("Error saving domain for scan scenario", err)
+		utils.Fatalln("Error saving domain", err)
 	}
 
 	return domain, dnskey, rrsig, lastCheckAt, lastOKAt
 }
 
 // Function to mock a domain
-func generateDomain(fqdn string, dnskey *dns.DNSKEY, privateKey dns.PrivateKey) (model.Domain, *dns.RRSIG) {
-	rrsig, err := utils.SignKey(fqdn, dnskey, privateKey)
-	if err != nil {
-		utils.Fatalln(fmt.Sprintf("Error signing zone %s", fqdn), err)
-	}
+func generateAndSaveDomain(fqdn string, domainDAO dao.DomainDAO, dnskey *dns.DNSKEY) {
 	ds := dnskey.ToDS(int(model.DSDigestTypeSHA1))
 
 	domain := model.Domain{
@@ -426,14 +488,16 @@ func generateDomain(fqdn string, dnskey *dns.DNSKEY, privateKey dns.PrivateKey) 
 		domain.DSSet[index].LastStatus = model.DSStatusTimeout
 	}
 
-	return domain, rrsig
+	if err := domainDAO.Save(&domain); err != nil {
+		utils.Fatalln(fmt.Sprintf("Fail to save domain %s", domain.FQDN), err)
+	}
 }
 
 func startDNSServer(port int, udpMaxSize uint16) {
 	// Change the querier DNS port for the scan
 	scan.DNSPort = port
 
-	server := dns.Server{
+	server = dns.Server{
 		Net:     "udp",
 		Addr:    fmt.Sprintf("localhost:%d", port),
 		UDPSize: int(udpMaxSize),
