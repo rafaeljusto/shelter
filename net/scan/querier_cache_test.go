@@ -59,6 +59,8 @@ func TestQueriesPerSecondExceeded(t *testing.T) {
 }
 
 func TestQuerierCacheGet(t *testing.T) {
+	querierCache.hosts = make(map[string]*hostCache)
+
 	addresses, err := querierCache.Get("localhost")
 	if err != nil {
 		t.Fatal("Not resolving a valid nameserver")
@@ -81,6 +83,11 @@ func TestQuerierCacheGet(t *testing.T) {
 		}
 	}
 
+	_, err = querierCache.Get("localhost")
+	if err != nil {
+		t.Fatal("Not recovering correctly from local cache")
+	}
+
 	h, exists := querierCache.hosts["localhost"]
 
 	if !exists {
@@ -90,9 +97,36 @@ func TestQuerierCacheGet(t *testing.T) {
 	if len(h.addresses) != len(addresses) {
 		t.Error("Storing different data from the returned one")
 	}
+
+	h.lastEpoch = time.Now().Unix()
+	h.queriesPerSecond = MaxQPSPerHost + 1
+	h.timeouts = 0
+	querierCache.hosts["localhost"] = h
+
+	addresses, err = querierCache.Get("localhost")
+	if err != ErrHostQPSExceeded {
+		t.Error("Not returning error when maximum QPS per host is exceeded")
+	}
+
+	h.lastEpoch = 0
+	h.queriesPerSecond = 0
+	h.timeouts = maxTimeoutsPerHost + 1
+	querierCache.hosts["localhost"] = h
+
+	addresses, err = querierCache.Get("localhost")
+	if err != ErrHostTimeout {
+		t.Error("Not returning error when maximum timeouts in the host is exceeded")
+	}
+
+	_, err = querierCache.Get("abc123idontexist321cba.com.br")
+	if err == nil {
+		t.Error("Resolving an unknown name")
+	}
 }
 
 func TestQuerierCacheTimeout(t *testing.T) {
+	querierCache.hosts = make(map[string]*hostCache)
+
 	_, err := querierCache.Get("localhost")
 	if err != nil {
 		t.Fatal("Not resolving a valid nameserver")
@@ -108,5 +142,79 @@ func TestQuerierCacheTimeout(t *testing.T) {
 
 	if h.timeouts != 1 {
 		t.Error("Not working well with timeouts counter")
+	}
+}
+
+func TestQuerierCacheQuery(t *testing.T) {
+	querierCache.hosts = make(map[string]*hostCache)
+
+	querierCache.Query("localhost")
+
+	if _, exists := querierCache.hosts["localhost"]; exists {
+		t.Error("Creating cache entry when alerting about a query")
+	}
+
+	_, err := querierCache.Get("localhost")
+	if err != nil {
+		t.Fatal("Not resolving a valid nameserver")
+	}
+
+	querierCache.Query("localhost")
+
+	h, exists := querierCache.hosts["localhost"]
+
+	if !exists {
+		t.Fatal("Not creating cache entries when necessary")
+	}
+
+	if h.lastEpoch != time.Now().Unix() {
+		t.Error("Not setting epoch correctly")
+	}
+
+	if h.queriesPerSecond != 1 {
+		t.Error("Not counting QPS correctly")
+	}
+
+	querierCache.Query("localhost")
+
+	h, exists = querierCache.hosts["localhost"]
+
+	if !exists {
+		t.Fatal("Removing cache entry in an awkward moment")
+	}
+
+	if h.queriesPerSecond != 2 {
+		t.Error("Not counting QPS correctly")
+	}
+
+	time.Sleep(1 * time.Second)
+
+	querierCache.Query("localhost")
+
+	if !exists {
+		t.Fatal("Removing cache entry in an awkward moment")
+	}
+
+	if h.lastEpoch != time.Now().Unix() {
+		t.Error("Not replacing epoch correctly")
+	}
+
+	if h.queriesPerSecond != 1 {
+		t.Error("Not counting QPS correctly")
+	}
+}
+
+func TestQuerierCacheClear(t *testing.T) {
+	querierCache.hosts = make(map[string]*hostCache)
+
+	_, err := querierCache.Get("localhost")
+	if err != nil {
+		t.Fatal("Not resolving a valid nameserver")
+	}
+
+	querierCache.Clear()
+
+	if querierCache.hosts == nil || len(querierCache.hosts) > 0 {
+		t.Error("Not clearing the cache correctly")
 	}
 }

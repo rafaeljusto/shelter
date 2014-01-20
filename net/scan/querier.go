@@ -153,11 +153,11 @@ func (q *querier) checkNameserver(domain *model.Domain,
 	dnsRequestMessage.RecursionDesired = false
 
 	host, err := getHost(domain.FQDN, nameserver)
-	if err == HostTimeoutErr {
+	if err == ErrHostTimeout {
 		domain.Nameservers[index].ChangeStatus(model.NameserverStatusTimeout)
 		return QuerierResultContinue
 
-	} else if err == HostQPSExceededErr {
+	} else if err == ErrHostQPSExceeded {
 		postponedDomains = append(postponedDomains, postponedDomain{
 			domain: domain,
 			index:  index,
@@ -206,13 +206,13 @@ func (q *querier) checkDS(domain *model.Domain, index int, udpMaxSize uint16,
 	dnsRequestMessage.SetEdns0(udpMaxSize, true)
 
 	host, err := getHost(domain.FQDN, nameserver)
-	if err == HostTimeoutErr {
+	if err == ErrHostTimeout {
 		for index, _ := range domain.DSSet {
 			domain.DSSet[index].ChangeStatus(model.DSStatusTimeout)
 		}
 		return QuerierResultStop
 
-	} else if err == HostQPSExceededErr {
+	} else if err == ErrHostQPSExceeded {
 		postponedDomains = append(postponedDomains, postponedDomain{
 			domain: domain,
 			index:  index,
@@ -318,7 +318,7 @@ func getHost(fqdn string, nameserver model.Nameserver) (string, error) {
 		// Found information in cache, lets use it to speed up the scan
 		return "[" + addresses[0].String() + "]:" + strconv.Itoa(DNSPort), nil
 
-	} else if err == HostTimeoutErr || err == HostQPSExceededErr {
+	} else if err == ErrHostTimeout || err == ErrHostQPSExceeded {
 		// Control errors were returned, we need to return them to take an action
 		return "", err
 	}

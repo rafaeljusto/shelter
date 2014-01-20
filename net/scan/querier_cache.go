@@ -22,11 +22,11 @@ var (
 	MaxQPSPerHost = uint64(500)
 
 	// Error to identify a nameserver that had too many timeouts and is probably down
-	HostTimeoutErr = errors.New("Nameserver down after too many timeouts detected")
+	ErrHostTimeout = errors.New("Nameserver down after too many timeouts detected")
 
 	// Error to alert about too many queries only for one host. If we didn't have this, the
 	// server could be added to a rate limit algorithm that could timeout all other queries
-	HostQPSExceededErr = errors.New("Maximum number of queries per second for this host")
+	ErrHostQPSExceeded = errors.New("Maximum number of queries per second for this host")
 )
 
 func init() {
@@ -78,10 +78,10 @@ func (q *QuerierCache) Get(name string) ([]net.IP, error) {
 
 	if found {
 		if host.timeoutsPerHostExceeded() {
-			return nil, HostTimeoutErr
+			return nil, ErrHostTimeout
 
 		} else if host.queriesPerSecondExceeded() {
-			return nil, HostQPSExceededErr
+			return nil, ErrHostQPSExceeded
 
 		} else {
 			return host.addresses, nil
