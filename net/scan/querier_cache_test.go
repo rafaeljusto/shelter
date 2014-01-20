@@ -29,10 +29,10 @@ func TestQueriesPerSecondExceeded(t *testing.T) {
 		queriesPerSecond: MaxQPSPerHost + 1,
 	}
 
-	// This test is really fast, but there's a little chance to fail when the epoch from the created
-	// object is different from the current epoch. This will happen if we are creating the object in
-	// the end of a second. After some tests using shell scripts a saw that this scenario is not
-	// frequent, so I will stay with this strategy
+	// This test is really fast, but there's a little chance to fail when the epoch from the
+	// created object is different from the current epoch. This will happen if we are
+	// creating the object in the end of a second. After some tests using shell scripts a
+	// saw that this scenario is not frequent, so I will stay with this strategy
 	if !h.queriesPerSecondExceeded() {
 		t.Error("Not checking when QPS per host exceeded")
 	}
@@ -98,6 +98,11 @@ func TestQuerierCacheGet(t *testing.T) {
 		t.Error("Storing different data from the returned one")
 	}
 
+	// The tests bellow are really fast, but there's a little chance to fail when the epoch
+	// from the created object is different from the current epoch. This will happen if we
+	// are creating the object in the end of a second. After some tests using shell scripts
+	// a saw that this scenario is not frequent, so I will stay with this strategy
+
 	h.lastEpoch = time.Now().Unix()
 	h.queriesPerSecond = MaxQPSPerHost + 1
 	h.timeouts = 0
@@ -148,6 +153,11 @@ func TestQuerierCacheTimeout(t *testing.T) {
 func TestQuerierCacheQuery(t *testing.T) {
 	querierCache.hosts = make(map[string]*hostCache)
 
+	// The tests bellow are really fast, but there's a little chance to fail when the epoch
+	// from the created object is different from the current epoch. This will happen if we
+	// are creating the object in the end of a second. After some tests using shell scripts
+	// a saw that this scenario is not frequent, so I will stay with this strategy
+
 	querierCache.Query("localhost")
 
 	if _, exists := querierCache.hosts["localhost"]; exists {
@@ -187,6 +197,7 @@ func TestQuerierCacheQuery(t *testing.T) {
 		t.Error("Not counting QPS correctly")
 	}
 
+	// Forcing epoch change
 	time.Sleep(1 * time.Second)
 
 	querierCache.Query("localhost")
