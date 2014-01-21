@@ -1,0 +1,25 @@
+language: go
+
+go:
+  - 1.2
+
+before_install:
+  - sudo apt-get install bzr mercurial git
+
+install:
+  - go get labix.org/v2/mgo
+  - go get github.com/miekg/dns
+  - go get code.google.com/p/go.net/idna
+
+script:
+  - ./test-all.sh
+
+notifications:
+  email:
+    recipients:
+      - rafael@justo.net.br
+    on_success: change
+    on_failure: always
+
+services:
+  - mongodb
