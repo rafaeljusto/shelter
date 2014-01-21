@@ -9,7 +9,7 @@ install:
   - go get code.google.com/p/go.net/idna
 
 script:
-  - ./test-all.sh
+  - ./test-all.sh -github
 
 notifications:
   email:
