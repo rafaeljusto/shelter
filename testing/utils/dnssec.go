@@ -2,7 +2,7 @@ package utils
 
 import (
 	"github.com/miekg/dns"
-	"shelter/model"
+	"github.com/rafaeljusto/shelter/model"
 	"time"
 )
 

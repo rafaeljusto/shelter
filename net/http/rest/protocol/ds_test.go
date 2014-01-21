@@ -1,7 +1,7 @@
 package protocol
 
 import (
-	"shelter/model"
+	"github.com/rafaeljusto/shelter/model"
 	"testing"
 	"time"
 )

@@ -2,8 +2,8 @@ package protocol
 
 import (
 	"fmt"
-	"shelter/dao"
-	"shelter/model"
+	"github.com/rafaeljusto/shelter/dao"
+	"github.com/rafaeljusto/shelter/model"
 )
 
 // DomainsResponse store multiple domains objects with pagination support

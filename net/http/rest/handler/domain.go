@@ -1,12 +1,12 @@
 package handler
 
 import (
+	"github.com/rafaeljusto/shelter/dao"
+	"github.com/rafaeljusto/shelter/log"
+	"github.com/rafaeljusto/shelter/net/http/rest/check"
+	"github.com/rafaeljusto/shelter/net/http/rest/context"
+	"github.com/rafaeljusto/shelter/net/http/rest/protocol"
 	"net/http"
-	"shelter/dao"
-	"shelter/log"
-	"shelter/net/http/rest/check"
-	"shelter/net/http/rest/context"
-	"shelter/net/http/rest/protocol"
 	"strconv"
 	"strings"
 	"time"

@@ -1,8 +1,8 @@
 package protocol
 
 import (
+	"github.com/rafaeljusto/shelter/model"
 	"net/mail"
-	"shelter/model"
 	"strings"
 	"testing"
 )

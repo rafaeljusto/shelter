@@ -2,9 +2,9 @@ package dspolicy
 
 import (
 	"github.com/miekg/dns"
+	"github.com/rafaeljusto/shelter/model"
+	"github.com/rafaeljusto/shelter/net/scan/dnsutils"
 	"net"
-	"shelter/model"
-	"shelter/net/scan/dnsutils"
 	"strings"
 	"time"
 )

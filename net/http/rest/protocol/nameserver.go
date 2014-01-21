@@ -2,8 +2,8 @@ package protocol
 
 import (
 	"errors"
+	"github.com/rafaeljusto/shelter/model"
 	"net"
-	"shelter/model"
 	"time"
 )
 

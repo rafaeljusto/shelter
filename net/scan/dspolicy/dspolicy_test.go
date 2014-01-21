@@ -2,8 +2,8 @@ package dspolicy
 
 import (
 	"github.com/miekg/dns"
-	"shelter/model"
-	"shelter/testing/utils"
+	"github.com/rafaeljusto/shelter/model"
+	"github.com/rafaeljusto/shelter/testing/utils"
 	"testing"
 	"time"
 )

@@ -3,14 +3,14 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/rafaeljusto/shelter/dao"
+	"github.com/rafaeljusto/shelter/database/mongodb"
+	"github.com/rafaeljusto/shelter/model"
+	"github.com/rafaeljusto/shelter/net/scan"
+	"github.com/rafaeljusto/shelter/testing/utils"
 	"labix.org/v2/mgo"
 	"net"
 	"net/mail"
-	"shelter/dao"
-	"shelter/database/mongodb"
-	"shelter/model"
-	"shelter/net/scan"
-	"shelter/testing/utils"
 	"sync"
 )
 

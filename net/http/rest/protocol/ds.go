@@ -2,7 +2,7 @@ package protocol
 
 import (
 	"errors"
-	"shelter/model"
+	"github.com/rafaeljusto/shelter/model"
 	"time"
 )
 

@@ -3,7 +3,7 @@ package protocol
 import (
 	"errors"
 	"github.com/miekg/dns"
-	"shelter/model"
+	"github.com/rafaeljusto/shelter/model"
 	"strings"
 )
 

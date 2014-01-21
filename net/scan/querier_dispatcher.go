@@ -1,7 +1,7 @@
 package scan
 
 import (
-	"shelter/model"
+	"github.com/rafaeljusto/shelter/model"
 	"sync"
 	"time"
 )

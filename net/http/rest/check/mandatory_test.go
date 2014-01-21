@@ -2,9 +2,9 @@ package check
 
 import (
 	"errors"
+	"github.com/rafaeljusto/shelter/net/http/rest/context"
+	"github.com/rafaeljusto/shelter/net/http/rest/messages"
 	"net/http"
-	"shelter/net/http/rest/context"
-	"shelter/net/http/rest/messages"
 	"strings"
 	"testing"
 	"time"

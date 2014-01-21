@@ -1,8 +1,8 @@
 package protocol
 
 import (
-	"shelter/dao"
-	"shelter/model"
+	"github.com/rafaeljusto/shelter/dao"
+	"github.com/rafaeljusto/shelter/model"
 	"testing"
 )
 

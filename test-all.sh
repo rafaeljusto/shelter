@@ -3,7 +3,7 @@
 : ${GOPATH:?"Need to set GOPATH"}
 option=$1
 
-path="$GOPATH/src/shelter/"
+path="$GOPATH/src/github.com/rafaeljusto/shelter/"
 if [ "$option" = "-github" ]; then
   path="./"
 fi

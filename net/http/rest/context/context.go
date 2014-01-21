@@ -3,12 +3,12 @@ package context
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/rafaeljusto/shelter/net/http/rest/messages"
+	"github.com/rafaeljusto/shelter/net/http/rest/protocol"
 	"io/ioutil"
 	"labix.org/v2/mgo"
 	"net/http"
 	"net/url"
-	"shelter/net/http/rest/messages"
-	"shelter/net/http/rest/protocol"
 )
 
 // Context is responsable to store a state of a request during the request

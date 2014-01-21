@@ -2,10 +2,10 @@ package scan
 
 import (
 	"github.com/miekg/dns"
+	"github.com/rafaeljusto/shelter/model"
+	"github.com/rafaeljusto/shelter/net/scan/dspolicy"
+	"github.com/rafaeljusto/shelter/net/scan/nspolicy"
 	"net"
-	"shelter/model"
-	"shelter/net/scan/dspolicy"
-	"shelter/net/scan/nspolicy"
 	"strconv"
 	"sync"
 	"time"

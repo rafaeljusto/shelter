@@ -1,8 +1,8 @@
 package handler
 
 import (
+	"github.com/rafaeljusto/shelter/net/http/rest/context"
 	"net/http"
-	"shelter/net/http/rest/context"
 )
 
 // Routes is responsable for storing the link beteween an URI and a handler

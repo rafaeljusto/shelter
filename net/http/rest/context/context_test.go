@@ -2,9 +2,9 @@ package context
 
 import (
 	"errors"
+	"github.com/rafaeljusto/shelter/net/http/rest/messages"
 	"math"
 	"net/http"
-	"shelter/net/http/rest/messages"
 	"strings"
 	"testing"
 )

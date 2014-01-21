@@ -2,10 +2,10 @@ package dao
 
 import (
 	"errors"
+	"github.com/rafaeljusto/shelter/database/mongodb"
+	"github.com/rafaeljusto/shelter/model"
 	"labix.org/v2/mgo"
 	"labix.org/v2/mgo/bson"
-	"shelter/database/mongodb"
-	"shelter/model"
 	"strings"
 	"time"
 )

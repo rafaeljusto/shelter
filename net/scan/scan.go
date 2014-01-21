@@ -1,9 +1,9 @@
 package scan
 
 import (
-	"shelter/config"
-	"shelter/database/mongodb"
-	"shelter/log"
+	"github.com/rafaeljusto/shelter/config"
+	"github.com/rafaeljusto/shelter/database/mongodb"
+	"github.com/rafaeljusto/shelter/log"
 	"sync"
 	"time"
 )

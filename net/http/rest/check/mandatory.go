@@ -4,9 +4,9 @@ import (
 	"crypto/md5"
 	"encoding/base64"
 	"errors"
+	"github.com/rafaeljusto/shelter/net/http/rest/context"
+	"github.com/rafaeljusto/shelter/net/http/rest/messages"
 	"net/http"
-	"shelter/net/http/rest/context"
-	"shelter/net/http/rest/messages"
 	"strings"
 	"time"
 )

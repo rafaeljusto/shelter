@@ -2,11 +2,11 @@ package rest
 
 import (
 	"crypto/tls"
+	"github.com/rafaeljusto/shelter/config"
+	"github.com/rafaeljusto/shelter/net/http/rest/messages"
 	"net"
 	"net/http"
 	"path/filepath"
-	"shelter/config"
-	"shelter/net/http/rest/messages"
 	"strconv"
 )
 
