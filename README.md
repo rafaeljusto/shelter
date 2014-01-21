@@ -103,33 +103,28 @@ DS Status
            NOKEY:  2.00%
 ```
 
-REST
-====
+Finally, the full scan performance using a local DNS server that always answers with
+authority, but takes a time to answer, because it signs the zones on-the-fly for the RRSIG
+records. On the results bellow "#" represents the number of domains used in the round of
+scan and DPS is the number of domains per second that the system could process. For this
+results were used 400 concurrent queriers (go routines) each one with an input wait list
+that can store 100 domains. The hardware used was an Intel Core i7-2600 3.40GHz with 8GiB
+of memory, using the Ubuntu 12.10 (amd64) operational system. All the requests were sent
+to a local DNS server.
 
-Supported HTTP headers in request:
-*  Method (PUT, GET, DELETE)
-*  Date (PUT, GET, DELETE)
-*  Content-type (PUT, GET, DELETE)
-*  Content-Length (PUT, GET, DELETE)
-*  Content-MD5 (PUT, GET, DELETE)
-*  Accept (PUT, GET, DELETE)
-*  Accept-Charset (PUT, GET, DELETE)
-*  Accept-Language (PUT, GET, DELETE)
-*  Authorization (PUT, GET, DELETE)
-*  If-Modified-Since (PUT, GET, DELETE)
-*  If-Unmodified-Since (PUT, GET, DELETE)
-*  If-Match (PUT, GET, DELETE)
-*  If-None-Match (PUT, GET, DELETE)
-
-Supported HTTP headers in response:
-*  Status (PUT, GET, DELETE)
-*  Content-Encoding (GET)
-*  Content-Language (GET)
-*  Content-Length (GET)
-*  Content-MD5 (GET)
-*  Content-Type (GET)
-*  Accept-Language (PUT, GET, DELETE)
-*  Accept (PUT, GET, DELETE)
-*  Date (PUT, GET, DELETE)
-*  ETag (PUT, GET)
-*  Last-Modified (PUT, GET)
+```
+ #       | Total             | DPS  | Memory (MB)
+----------------------------------------------------
+ 10      |       4.727656ms  |   10 |           1.33
+ 50      |      21.922581ms  |   50 |           2.44
+ 100     |      38.108105ms  |  100 |           2.28
+ 500     |     1.063928826s  |  500 |           6.36
+ 1000    |     1.094325568s  | 1000 |           4.79
+ 5000    |     1.790971925s  | 5000 |           8.84
+ 10000   |     9.532850519s  | 1111 |           7.55
+ 50000   |    33.772397502s  | 1515 |           9.78
+ 100000  |   1m27.57901475s  | 1149 |          12.64
+ 500000  |  6m44.081205086s  | 1237 |           9.24
+ 1000000 | 13m32.216240243s  | 1231 |          19.04
+ 5000000 | 1h9m48.514012263s | 1193 |           9.25
+```
