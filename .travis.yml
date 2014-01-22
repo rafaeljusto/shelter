@@ -3,20 +3,13 @@ language: go
 go:
   - 1.2
 
-before_install:
-  - sudo apt-get update
-  - sudo apt-get install python
-  - which python
-  - pwd
-  - ls -l
-
 install:
   - go get labix.org/v2/mgo
   - go get github.com/miekg/dns
   - go get code.google.com/p/go.net/idna
 
 script:
-  - ./ci-tests.sh
+  - ./test-all.sh
 
 notifications:
   email:
