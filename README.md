@@ -1,7 +1,7 @@
 shelter
 =======
 
-[![Build Status](https://travis-ci.org/rafaeljusto/shelter.png?branch=master)](https://travis-ci.org/rafaeljusto/shelter)
+[![Build Status](https://travis-ci.org/rafaeljusto/shelter.png?branch=rest)](https://travis-ci.org/rafaeljusto/shelter)
 
 Program created for registries to periodically validate and alert domains about DNS or
 DNSSEC misconfiguration
