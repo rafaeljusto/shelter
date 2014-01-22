@@ -1,5 +1,10 @@
 #!/bin/sh
 
+# Travis CI tool doesn't support python scripts in a Go project,
+# so this script was created thinking on the limited enviroment
+# of the CI tool, if you're testing the project, please use the
+# Python script (test-all.py)
+
 : ${GOPATH:?"Need to set GOPATH"}
 
 # Main binary must build
