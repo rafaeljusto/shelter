@@ -113,7 +113,13 @@ func (mux Mux) checkACL(r *http.Request) (bool, error) {
 		return true, nil
 	}
 
-	ip := net.ParseIP(r.RemoteAddr)
+	remoteAddrParts := strings.Split(r.RemoteAddr, ":")
+	if len(remoteAddrParts) != 2 {
+		// Remote address without port
+		return false, ErrInvalidRemoteIP
+	}
+
+	ip := net.ParseIP(remoteAddrParts[0])
 	if ip == nil {
 		// Something wrong, because the REST server could not identify the remote address
 		// properly. This is really awkward, because this is a responsability of the server,

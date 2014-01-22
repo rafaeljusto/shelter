@@ -245,7 +245,7 @@ func checkWrongACL(mux rest.Mux) {
 	if err != nil {
 		utils.Fatalln("Error creating the HTTP request", err)
 	}
-	r.RemoteAddr = "127.0.0.1"
+	r.RemoteAddr = "127.0.0.1:1234"
 
 	buildHTTPHeader(r, nil)
 
@@ -260,6 +260,19 @@ func checkWrongACL(mux rest.Mux) {
 
 	if w.Code != http.StatusForbidden {
 		utils.Fatalln("Not checking ACL", nil)
+	}
+
+	_, cidr, err = net.ParseCIDR("127.0.0.0/8")
+	if err != nil {
+		utils.Fatalln("Error parsing CIDR", err)
+	}
+	mux.ACL = append(mux.ACL, cidr)
+
+	w = httptest.NewRecorder()
+	mux.ServeHTTP(w, r)
+
+	if w.Code != http.StatusOK {
+		utils.Fatalln("Not allowing a valid ACL", nil)
 	}
 }
 
