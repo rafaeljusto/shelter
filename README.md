@@ -1,6 +1,8 @@
 shelter
 =======
 
+[![Build Status](https://travis-ci.org/rafaeljusto/shelter.png?branch=master)](https://travis-ci.org/rafaeljusto/shelter)
+
 Program created for registries to periodically validate and alert domains about DNS or
 DNSSEC misconfiguration
 
@@ -8,6 +10,7 @@ installation
 ============
 
 Shelter project depends on the following packages:
+* code.google.com/p/go.tools/cmd/cover
 * labix.org/v2/mgo
 * github.com/miekg/dns
 * code.google.com/p/go.net/idna
