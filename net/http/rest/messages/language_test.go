@@ -49,7 +49,7 @@ func TestNames(t *testing.T) {
 		},
 	}
 
-	if languagePacks.Names() != "en-US,pt" {
+	if languagePacks.Names() != "en-us,pt" {
 		t.Error("Not building language names properly")
 	}
 }
@@ -60,7 +60,7 @@ func TestName(t *testing.T) {
 		SpecificName: "en-US",
 	}
 
-	if languagePack.Name() != "en-US" {
+	if languagePack.Name() != "en-us" {
 		t.Error("Not building specific language name properly")
 	}
 
