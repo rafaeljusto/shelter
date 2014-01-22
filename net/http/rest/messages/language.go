@@ -67,13 +67,14 @@ type LanguagePack struct {
 	Messages     map[string]string // List of messages with identifiers
 }
 
-// Return the language name to be add to HTTP header response
+// Return the language name to be add to HTTP header response. We are going to normalize
+// all the names in lower case
 func (l *LanguagePack) Name() string {
 	if len(l.SpecificName) > 0 {
-		return l.SpecificName
+		return strings.ToLower(l.SpecificName)
 	}
 
-	return l.GenericName
+	return strings.ToLower(l.GenericName)
 }
 
 // Load the language packs from the configuration file
