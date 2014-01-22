@@ -12,7 +12,7 @@ install:
   - go get code.google.com/p/go.net/idna
 
 script:
-  - python3 ./test-all.py
+  - ./test-all.py
 
 notifications:
   email:
