@@ -28,7 +28,7 @@ func TestFlexibleTimeJobExecution(t *testing.T) {
 	// Job will not execute exactly in time, but after this amount of time we expect two
 	// executions of our job. We assume a duration of 1 milisecond to execute the job two
 	// times
-	time.Sleep((SchedulerExecutionInterval * 2) + 1*time.Millisecond)
+	time.Sleep((SchedulerExecutionInterval * 2) + 10*time.Millisecond)
 
 	if ValueToChange != 2 {
 		t.Error(fmt.Sprintf("Not executing a flexible time job properly. "+
