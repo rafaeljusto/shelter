@@ -5,7 +5,10 @@ go:
 
 before_install:
   - sudo apt-get update
-  - sudo apt-get install python3
+  - sudo apt-get install python
+  - which python
+  - pwd
+  - ls -l
 
 install:
   - go get labix.org/v2/mgo
