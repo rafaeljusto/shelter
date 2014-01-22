@@ -4,6 +4,7 @@ go:
   - 1.2
 
 before_install:
+  - sudo apt-get update
   - sudo apt-get install python3
 
 install:
@@ -12,7 +13,7 @@ install:
   - go get code.google.com/p/go.net/idna
 
 script:
-  - ./test-all.py
+  - ./ci-tests.sh
 
 notifications:
   email:
