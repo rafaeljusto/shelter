@@ -66,6 +66,8 @@ func main() {
 	checkHeaders(&mux)
 	createDomain(&mux)
 	checkWrongACL(mux)
+	retrieveDomainMetadata(mux)
+	retrieveDomainsMetadata(mux)
 	deleteDomain(&mux)
 
 	utils.Println("SUCCESS!")
@@ -273,6 +275,60 @@ func checkWrongACL(mux rest.Mux) {
 
 	if w.Code != http.StatusOK {
 		utils.Fatalln("Not allowing a valid ACL", nil)
+	}
+}
+
+func retrieveDomainMetadata(mux rest.Mux) {
+	r, err := http.NewRequest("HEAD", "/domain/example.com.br.", nil)
+	if err != nil {
+		utils.Fatalln("Error creting the HTTP request", err)
+	}
+	r.RemoteAddr = "127.0.0.1:1234"
+
+	buildHTTPHeader(r, nil)
+
+	_, cidr, err := net.ParseCIDR("127.0.0.0/8")
+	if err != nil {
+		utils.Fatalln("Error parsing CIDR", err)
+	}
+	mux.ACL = append(mux.ACL, cidr)
+
+	w := httptest.NewRecorder()
+	mux.ServeHTTP(w, r)
+
+	if w.Code != http.StatusOK {
+		utils.Fatalln("Not retrieving a valid domain", nil)
+	}
+
+	if len(w.Body.Bytes()) > 0 {
+		utils.Fatalln("HEAD method should not return body", nil)
+	}
+}
+
+func retrieveDomainsMetadata(mux rest.Mux) {
+	r, err := http.NewRequest("HEAD", "/domains", nil)
+	if err != nil {
+		utils.Fatalln("Error creting the HTTP request", err)
+	}
+	r.RemoteAddr = "127.0.0.1:1234"
+
+	buildHTTPHeader(r, nil)
+
+	_, cidr, err := net.ParseCIDR("127.0.0.0/8")
+	if err != nil {
+		utils.Fatalln("Error parsing CIDR", err)
+	}
+	mux.ACL = append(mux.ACL, cidr)
+
+	w := httptest.NewRecorder()
+	mux.ServeHTTP(w, r)
+
+	if w.Code != http.StatusOK {
+		utils.Fatalln("Not retrieving valid domains", nil)
+	}
+
+	if len(w.Body.Bytes()) > 0 {
+		utils.Fatalln("HEAD method should not return body", nil)
 	}
 }
 

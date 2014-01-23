@@ -74,7 +74,6 @@ func main() {
 	createDomain(database)
 	updateDomain(database)
 	retrieveDomain(database)
-	retrieveDomainMetadata(database)
 	retrieveDomainIfModifiedSince(database)
 	retrieveDomainIfUnmodifiedSince(database)
 	retrieveDomainIfMatch(database)
@@ -236,37 +235,6 @@ func retrieveDomain(database *mgo.Database) {
 		domainResponse.Owners[0] != "administrator@example.com.br." {
 
 		utils.Fatalln("Domain's owners were not persisted correctly", nil)
-	}
-}
-
-func retrieveDomainMetadata(database *mgo.Database) {
-	r, err := http.NewRequest("HEAD", "/domain/example.com.br.", nil)
-	if err != nil {
-		utils.Fatalln("Error creting the HTTP request", err)
-	}
-
-	context, err := context.NewContext(r, database)
-	if err != nil {
-		utils.Fatalln("Error creating context", err)
-	}
-
-	handler.HandleDomain(r, &context)
-
-	if context.ResponseHTTPStatus != http.StatusOK {
-		utils.Fatalln("Error retrieving domain",
-			errors.New(string(context.ResponseContent)))
-	}
-
-	if len(context.ResponseContent) > 0 {
-		utils.Fatalln("HEAD method should not return body", nil)
-	}
-
-	if context.HTTPHeader["ETag"] != "2" {
-		utils.Fatalln("Not setting ETag in domain head response", nil)
-	}
-
-	if len(context.HTTPHeader["Last-Modified"]) == 0 {
-		utils.Fatalln("Not setting Last-Modified in domain head response", nil)
 	}
 }
 

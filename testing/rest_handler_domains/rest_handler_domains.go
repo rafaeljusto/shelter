@@ -66,7 +66,6 @@ func main() {
 
 	createDomains(database)
 	retrieveDomains(database)
-	retrieveDomainsMetadata(database)
 	deleteDomains(database)
 
 	utils.Println("SUCCESS!")
@@ -160,29 +159,6 @@ func retrieveDomains(database *mgo.Database) {
 		if item.ContentCheck != nil {
 			item.ContentCheck(context.ResponseContent)
 		}
-	}
-}
-
-func retrieveDomainsMetadata(database *mgo.Database) {
-	r, err := http.NewRequest("HEAD", "/domains/?orderby=fqdn:desc&pagesize=10&page=1", nil)
-	if err != nil {
-		utils.Fatalln("Error creting the HTTP request", err)
-	}
-
-	context, err := context.NewContext(r, database)
-	if err != nil {
-		utils.Fatalln("Error creating context", err)
-	}
-
-	handler.HandleDomains(r, &context)
-
-	if context.ResponseHTTPStatus != http.StatusOK {
-		utils.Fatalln("Error retrieving domains",
-			errors.New(string(context.ResponseContent)))
-	}
-
-	if len(context.ResponseContent) > 0 {
-		utils.Fatalln("HEAD method should not return body", nil)
 	}
 }
 
