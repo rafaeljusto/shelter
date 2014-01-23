@@ -28,8 +28,8 @@ func HandleDomain(r *http.Request, context *context.Context) {
 		return
 	}
 
-	if r.Method == "GET" {
-		retrieveDomain(r, context, fqdn, true)
+	if r.Method == "GET" || r.Method == "HEAD" {
+		retrieveDomain(r, context, fqdn)
 
 	} else if r.Method == "PUT" {
 		createUpdateDomain(r, context, fqdn)
@@ -37,17 +37,15 @@ func HandleDomain(r *http.Request, context *context.Context) {
 	} else if r.Method == "DELETE" {
 		removeDomain(r, context, fqdn)
 
-	} else if r.Method == "HEAD" {
-		retrieveDomain(r, context, fqdn, false)
-
 	} else {
 		context.Response(http.StatusMethodNotAllowed)
 	}
 }
 
 // The HEAD method is identical to GET except that the server MUST NOT return a message-
-// body in the response. For that reason we have the domainInResponseParameter
-func retrieveDomain(r *http.Request, context *context.Context, fqdn string, domainInResponse bool) {
+// body in the response. But now the responsability for don't adding the body is from the
+// mux while writing the response
+func retrieveDomain(r *http.Request, context *context.Context, fqdn string) {
 	domainDAO := dao.DomainDAO{
 		Database: context.Database,
 	}
@@ -145,15 +143,11 @@ func retrieveDomain(r *http.Request, context *context.Context, fqdn string, doma
 	context.AddHeader("ETag", strconv.Itoa(domain.Revision))
 	context.AddHeader("Last-Modified", domain.LastModifiedAt.Format(time.RFC1123))
 
-	if domainInResponse {
-		if err := context.JSONResponse(http.StatusOK,
-			protocol.ToDomainResponse(domain)); err != nil {
+	if err := context.JSONResponse(http.StatusOK,
+		protocol.ToDomainResponse(domain)); err != nil {
 
-			log.Println("Error while writing response. Details:", err)
-			context.Response(http.StatusInternalServerError)
-		}
-	} else {
-		context.Response(http.StatusOK)
+		log.Println("Error while writing response. Details:", err)
+		context.Response(http.StatusInternalServerError)
 	}
 }
 

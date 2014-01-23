@@ -15,11 +15,8 @@ func init() {
 }
 
 func HandleDomains(r *http.Request, context *context.Context) {
-	if r.Method == "GET" {
-		retrieveDomains(r, context, true)
-
-	} else if r.Method == "HEAD" {
-		retrieveDomains(r, context, false)
+	if r.Method == "GET" || r.Method == "HEAD" {
+		retrieveDomains(r, context)
 
 	} else {
 		context.Response(http.StatusMethodNotAllowed)
@@ -27,8 +24,9 @@ func HandleDomains(r *http.Request, context *context.Context) {
 }
 
 // The HEAD method is identical to GET except that the server MUST NOT return a message-
-// body in the response. For that reason we have the domainInResponseParameter
-func retrieveDomains(r *http.Request, context *context.Context, domainsInResponse bool) {
+// body in the response. But now the responsability for don't adding the body is from the
+// mux while writing the response
+func retrieveDomains(r *http.Request, context *context.Context) {
 	var pagination dao.DomainDAOPagination
 
 	for key, values := range r.URL.Query() {
@@ -144,14 +142,10 @@ func retrieveDomains(r *http.Request, context *context.Context, domainsInRespons
 		return
 	}
 
-	if domainsInResponse {
-		if err := context.JSONResponse(http.StatusOK,
-			protocol.ToDomainsResponse(domains, pagination)); err != nil {
+	if err := context.JSONResponse(http.StatusOK,
+		protocol.ToDomainsResponse(domains, pagination)); err != nil {
 
-			log.Println("Error while writing response. Details:", err)
-			context.Response(http.StatusInternalServerError)
-		}
-	} else {
-		context.Response(http.StatusOK)
+		log.Println("Error while writing response. Details:", err)
+		context.Response(http.StatusInternalServerError)
 	}
 }

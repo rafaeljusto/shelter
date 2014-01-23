@@ -78,11 +78,11 @@ func (mux Mux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if mux.checkHTTPHeaders(w, r, &context) {
+	if mux.checkHTTPHeaders(r, &context) {
 		handler(r, &context)
 	}
 
-	mux.writeResponse(w, context)
+	mux.writeResponse(w, r, context)
 }
 
 // Find the best handler for the given URI. The best handler is the most specific one
@@ -137,9 +137,7 @@ func (mux Mux) checkACL(r *http.Request) (bool, error) {
 }
 
 // Verify HTTP headers and fill context with user preferences
-func (mux Mux) checkHTTPHeaders(w http.ResponseWriter,
-	r *http.Request, context *context.Context) bool {
-
+func (mux Mux) checkHTTPHeaders(r *http.Request, context *context.Context) bool {
 	// We first check the language header, because if it's acceptable the next messages are
 	// going to be returned in the language choosen by the user
 	if !check.HTTPAcceptLanguage(r, context) {
@@ -225,17 +223,19 @@ func (mux Mux) checkHTTPHeaders(w http.ResponseWriter,
 }
 
 // Write response with the defaults HTTP response headers
-func (mux Mux) writeResponse(w http.ResponseWriter,
+func (mux Mux) writeResponse(w http.ResponseWriter, r *http.Request,
 	context context.Context) {
 
+	// We are going to always send the content HTTP header fields even if we don't have a
+	// content, because if we don't set the GoLang HTTP server will add "text/plain"
+	w.Header().Add("Content-Type", fmt.Sprintf("application/vnd.shelter+json; charset=%s", check.SupportedCharset))
+	w.Header().Add("Content-Length", strconv.Itoa(len(context.ResponseContent)))
+
+	if context.Language != nil {
+		w.Header().Add("Content-Language", context.Language.Name())
+	}
+
 	if len(context.ResponseContent) > 0 {
-		w.Header().Add("Content-Type", fmt.Sprintf("application/vnd.shelter+json; charset=%s", check.SupportedCharset))
-		w.Header().Add("Content-Length", strconv.Itoa(len(context.ResponseContent)))
-
-		if context.Language != nil {
-			w.Header().Add("Content-Language", context.Language.Name())
-		}
-
 		hash := md5.New()
 		hash.Write(context.ResponseContent)
 		hashBytes := hash.Sum(nil)
@@ -254,7 +254,9 @@ func (mux Mux) writeResponse(w http.ResponseWriter,
 
 	w.WriteHeader(context.ResponseHTTPStatus)
 
-	if len(context.ResponseContent) > 0 {
+	// For HTTP HEAD method we never add the body, but we add the other header as a normal
+	// GET method. For more information check the RFC 2616 - 14.13.
+	if len(context.ResponseContent) > 0 && r.Method != "HEAD" {
 		w.Write(context.ResponseContent)
 	}
 }
