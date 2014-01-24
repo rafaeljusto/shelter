@@ -285,9 +285,9 @@ func createUpdateDomain(r *http.Request, context *context.Context, fqdn string) 
 
 	context.AddHeader("ETag", strconv.Itoa(domain.Revision))
 	context.AddHeader("Last-Modified", domain.LastModifiedAt.Format(time.RFC1123))
-	context.AddHeader("Location", "/domain/"+domain.FQDN)
 
 	if domain.Revision == 1 {
+		context.AddHeader("Location", "/domain/"+domain.FQDN)
 		context.Response(http.StatusCreated)
 	} else {
 		context.Response(http.StatusNoContent)

@@ -74,6 +74,7 @@ func main() {
 	createDomain(database)
 	updateDomain(database)
 	retrieveDomain(database)
+	retrieveDomainMetadata(database)
 	retrieveDomainIfModifiedSince(database)
 	retrieveDomainIfUnmodifiedSince(database)
 	retrieveDomainIfMatch(database)
@@ -185,8 +186,8 @@ func updateDomain(database *mgo.Database) {
 		utils.Fatalln("Not setting Last-Modified in domain update response", nil)
 	}
 
-	if len(context.HTTPHeader["Location"]) == 0 {
-		utils.Fatalln("Not setting Location in domain update response", nil)
+	if len(context.HTTPHeader["Location"]) > 0 {
+		utils.Fatalln("Setting Location in domain update response", nil)
 	}
 }
 
@@ -235,6 +236,47 @@ func retrieveDomain(database *mgo.Database) {
 		domainResponse.Owners[0] != "administrator@example.com.br." {
 
 		utils.Fatalln("Domain's owners were not persisted correctly", nil)
+	}
+}
+
+func retrieveDomainMetadata(database *mgo.Database) {
+	r, err := http.NewRequest("GET", "/domain/example.com.br.", nil)
+	if err != nil {
+		utils.Fatalln("Error creting the HTTP request", err)
+	}
+
+	context1, err := context.NewContext(r, database)
+	if err != nil {
+		utils.Fatalln("Error creating context", err)
+	}
+
+	handler.HandleDomain(r, &context1)
+
+	if context1.ResponseHTTPStatus != http.StatusOK {
+		utils.Fatalln("Error retrieving domain",
+			errors.New(string(context1.ResponseContent)))
+	}
+
+	r, err = http.NewRequest("HEAD", "/domain/example.com.br.", nil)
+	if err != nil {
+		utils.Fatalln("Error creting the HTTP request", err)
+	}
+
+	context2, err := context.NewContext(r, database)
+	if err != nil {
+		utils.Fatalln("Error creating context", err)
+	}
+
+	handler.HandleDomain(r, &context2)
+
+	if context2.ResponseHTTPStatus != http.StatusOK {
+		utils.Fatalln("Error retrieving domain",
+			errors.New(string(context2.ResponseContent)))
+	}
+
+	if string(context1.ResponseContent) != string(context2.ResponseContent) {
+		utils.Fatalln("At this point the GET and HEAD method should "+
+			"return the same body content", nil)
 	}
 }
 

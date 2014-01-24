@@ -66,6 +66,7 @@ func main() {
 
 	createDomains(database)
 	retrieveDomains(database)
+	retrieveDomainsMetadata(database)
 	deleteDomains(database)
 
 	utils.Println("SUCCESS!")
@@ -159,6 +160,47 @@ func retrieveDomains(database *mgo.Database) {
 		if item.ContentCheck != nil {
 			item.ContentCheck(context.ResponseContent)
 		}
+	}
+}
+
+func retrieveDomainsMetadata(database *mgo.Database) {
+	r, err := http.NewRequest("GET", "/domains/?orderby=fqdn:desc&pagesize=10&page=1", nil)
+	if err != nil {
+		utils.Fatalln("Error creting the HTTP request", err)
+	}
+
+	context1, err := context.NewContext(r, database)
+	if err != nil {
+		utils.Fatalln("Error creating context", err)
+	}
+
+	handler.HandleDomains(r, &context1)
+
+	if context1.ResponseHTTPStatus != http.StatusOK {
+		utils.Fatalln("Error retrieving domains",
+			errors.New(string(context1.ResponseContent)))
+	}
+
+	r, err = http.NewRequest("HEAD", "/domains/?orderby=fqdn:desc&pagesize=10&page=1", nil)
+	if err != nil {
+		utils.Fatalln("Error creting the HTTP request", err)
+	}
+
+	context2, err := context.NewContext(r, database)
+	if err != nil {
+		utils.Fatalln("Error creating context", err)
+	}
+
+	handler.HandleDomains(r, &context2)
+
+	if context2.ResponseHTTPStatus != http.StatusOK {
+		utils.Fatalln("Error retrieving domains",
+			errors.New(string(context2.ResponseContent)))
+	}
+
+	if string(context1.ResponseContent) != string(context2.ResponseContent) {
+		utils.Fatalln("At this point the GET and HEAD method should "+
+			"return the same body content", nil)
 	}
 }
 
