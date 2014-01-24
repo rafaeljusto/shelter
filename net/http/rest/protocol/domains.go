@@ -47,14 +47,22 @@ func ToDomainsResponse(domains []model.Domain, pagination dao.DomainDAOPaginatio
 			Types: []LinkType{LinkTypeLast},
 			HRef:  fmt.Sprintf("/domains/?pagesize=%d&page=%d&orderby=%s", pagination.PageSize, pagination.NumberOfPages, orderBy),
 		},
-		{
+	}
+
+	// Only add next if there's a next page
+	if pagination.Page+1 <= pagination.NumberOfPages {
+		links = append(links, Link{
 			Types: []LinkType{LinkTypeNext},
 			HRef:  fmt.Sprintf("/domains/?pagesize=%d&page=%d&orderby=%s", pagination.PageSize, pagination.Page+1, orderBy),
-		},
-		{
+		})
+	}
+
+	// Only add previous if theres a previous page
+	if pagination.Page-1 >= 1 {
+		links = append(links, Link{
 			Types: []LinkType{LinkTypePrev},
 			HRef:  fmt.Sprintf("/domains/?pagesize=%d&page=%d&orderby=%s", pagination.PageSize, pagination.Page-1, orderBy),
-		},
+		})
 	}
 
 	return DomainsResponse{
