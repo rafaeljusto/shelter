@@ -119,6 +119,21 @@ func DomainDAOOrderByDirectionToString(value DomainDAOOrderByDirection) string {
 	return ""
 }
 
+// Default values when the user don't define pagination. After watching a presentation
+// from layer7 at http://www.layer7tech.com/tutorials/api-pagination-tutorial I agree that
+// when the user don't define the pagination we shouldn't return all the result set,
+// instead we assume default pagination values
+var (
+	defaultPaginationOrderBy = []DomainDAOSort{
+		{
+			Field:     DomainDAOOrderByFieldFQDN,          // Default ordering is by FQDN
+			Direction: DomainDAOOrderByDirectionAscending, // Default ordering is ascending
+		},
+	}
+	defaultPaginationPageSize = 20 // By default we show 20 items per page
+	defaultPaginationPage     = 1  // By default we show the first page
+)
+
 func init() {
 	// Add index on FQDN to speed up searchs. FQDN will be a unique field in database
 	mongodb.RegisterIndexFunction(func(database *mgo.Database) error {
@@ -181,10 +196,9 @@ func (dao DomainDAO) SaveMany(domains []*model.Domain) []DomainResult {
 }
 
 // Retrieve all domains using pagination control. This method is used by an end user to
-// see all domains that are alredy registered in the system, except for a B2B integration
-// systems the user will probably want pagination so that it can analyze the data in
-// amounts. For the user that wants all records without pagination for a B2B
-// integration need to pass zero in the page size
+// see all domains that are already registered in the system, the user will probably want
+// pagination so that it can analyze the data in amounts. When pagination values are not
+// informed, default values are adopted
 func (dao DomainDAO) FindAll(pagination *DomainDAOPagination) ([]model.Domain, error) {
 	// Check if the programmer forgot to set the database in DomainDAO object
 	if dao.Database == nil {
@@ -197,47 +211,49 @@ func (dao DomainDAO) FindAll(pagination *DomainDAOPagination) ([]model.Domain, e
 
 	var query *mgo.Query
 
-	if pagination.PageSize == 0 {
-		query = dao.Database.C(domainDAOCollection).Find(bson.M{})
-
-		var err error
-		if pagination.NumberOfItems, err = query.Count(); err != nil {
-			return nil, err
-		}
-
-	} else {
-		var sortList []string
-		for _, sort := range pagination.OrderBy {
-			var sortTmp string
-
-			if sort.Direction == DomainDAOOrderByDirectionDescending {
-				sortTmp = "-"
-			}
-
-			switch sort.Field {
-			case DomainDAOOrderByFieldFQDN:
-				sortTmp += "fqdn"
-			case DomainDAOOrderByFieldLastModifiedAt:
-				sortTmp += "lastModifiedAt"
-			}
-
-			sortList = append(sortList, sortTmp)
-		}
-
-		query = dao.Database.C(domainDAOCollection).Find(bson.M{})
-
-		// We store the number of items before applying pagination, if we do this after we get only the
-		// number of items of a page size
-		var err error
-		if pagination.NumberOfItems, err = query.Count(); err != nil {
-			return nil, err
-		}
-
-		query.
-			Sort(sortList...).
-			Skip(pagination.PageSize * (pagination.Page - 1)).
-			Limit(pagination.PageSize)
+	if len(pagination.OrderBy) == 0 {
+		pagination.OrderBy = defaultPaginationOrderBy
 	}
+
+	if pagination.PageSize == 0 {
+		pagination.PageSize = defaultPaginationPageSize
+	}
+
+	if pagination.Page == 0 {
+		pagination.Page = defaultPaginationPage
+	}
+
+	var sortList []string
+	for _, sort := range pagination.OrderBy {
+		var sortTmp string
+
+		if sort.Direction == DomainDAOOrderByDirectionDescending {
+			sortTmp = "-"
+		}
+
+		switch sort.Field {
+		case DomainDAOOrderByFieldFQDN:
+			sortTmp += "fqdn"
+		case DomainDAOOrderByFieldLastModifiedAt:
+			sortTmp += "lastModifiedAt"
+		}
+
+		sortList = append(sortList, sortTmp)
+	}
+
+	query = dao.Database.C(domainDAOCollection).Find(bson.M{})
+
+	// We store the number of items before applying pagination, if we do this after we get only the
+	// number of items of a page size
+	var err error
+	if pagination.NumberOfItems, err = query.Count(); err != nil {
+		return nil, err
+	}
+
+	query.
+		Sort(sortList...).
+		Skip(pagination.PageSize * (pagination.Page - 1)).
+		Limit(pagination.PageSize)
 
 	var domains []model.Domain
 	if err := query.All(&domains); err != nil {
@@ -246,6 +262,9 @@ func (dao DomainDAO) FindAll(pagination *DomainDAOPagination) ([]model.Domain, e
 
 	if pagination.PageSize > 0 {
 		pagination.NumberOfPages = pagination.NumberOfItems / pagination.PageSize
+		if pagination.NumberOfItems%pagination.PageSize > 0 {
+			pagination.NumberOfPages += 1
+		}
 	}
 
 	return domains, nil

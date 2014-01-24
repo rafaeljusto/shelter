@@ -367,6 +367,26 @@ func domainsPagination(domainDAO dao.DomainDAO) {
 		utils.Errorln("Number of domains not following page size", nil)
 	}
 
+	pagination = dao.DomainDAOPagination{
+		PageSize: 10000,
+		Page:     1,
+		OrderBy: []dao.DomainDAOSort{
+			{
+				Field:     dao.DomainDAOOrderByFieldFQDN,
+				Direction: dao.DomainDAOOrderByDirectionAscending,
+			},
+		},
+	}
+
+	domains, err = domainDAO.FindAll(&pagination)
+	if err != nil {
+		utils.Fatalln("Error retrieving domains", err)
+	}
+
+	if pagination.NumberOfPages != 1 {
+		utils.Fatalln("Calculating wrong number of pages when there's only one page", nil)
+	}
+
 	for i := 0; i < numberOfItems; i++ {
 		fqdn := fmt.Sprintf("example%d.com.br", i)
 		if err := domainDAO.RemoveByFQDN(fqdn); err != nil {
