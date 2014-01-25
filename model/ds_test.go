@@ -25,6 +25,10 @@ func TestDSChangeStatus(t *testing.T) {
 }
 
 func TestDSStatusToString(t *testing.T) {
+	if DSStatusToString(DSStatusNotChecked) != "NOTCHECKED" {
+		t.Error("DS status NOTCHECKED not converting correctly to string")
+	}
+
 	if DSStatusToString(DSStatusOK) != "OK" {
 		t.Error("DS status OK not converting correctly to string")
 	}

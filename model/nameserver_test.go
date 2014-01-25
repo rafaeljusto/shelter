@@ -65,6 +65,10 @@ func TestNameserverChangeStatus(t *testing.T) {
 }
 
 func TestNameserverStatusToString(t *testing.T) {
+	if NameserverStatusToString(NameserverStatusNotChecked) != "NOTCHECKED" {
+		t.Error("Nameserver status NOTCHECKED not converting correctly to string")
+	}
+
 	if NameserverStatusToString(NameserverStatusOK) != "OK" {
 		t.Error("Nameserver status OK not converting correctly to string")
 	}

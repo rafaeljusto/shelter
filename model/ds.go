@@ -45,7 +45,8 @@ type DSDigestType uint8
 
 // List of possible DS status
 const (
-	DSStatusOK               = iota // DNSSEC configuration for this DS is OK
+	DSStatusNotChecked       = iota // DS record not checked yet
+	DSStatusOK                      // DNSSEC configuration for this DS is OK
 	DSStatusTimeout                 // Network timeout while trying to retrieve the DNSKEY
 	DSStatusNoSignature             // No RRSIG records found for the related DNSKEY
 	DSStatusExpiredSignature        // At least one RRSIG record was expired
@@ -88,6 +89,8 @@ func (d *DS) ChangeStatus(status DSStatus) {
 // Convert the DS status enum to text for printing in reports or debugging
 func DSStatusToString(status DSStatus) string {
 	switch status {
+	case DSStatusNotChecked:
+		return "NOTCHECKED"
 	case DSStatusOK:
 		return "OK"
 	case DSStatusTimeout:

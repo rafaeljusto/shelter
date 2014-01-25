@@ -8,7 +8,8 @@ import (
 
 // List of possible nameserver status
 const (
-	NameserverStatusOK                = iota // DNS configuration for this DS is OK
+	NameserverStatusNotChecked        = iota // Nameserver not checked yet
+	NameserverStatusOK                       // DNS configuration for this DS is OK
 	NameserverStatusTimeout                  // Network timeout while trying to reach the nameserver
 	NameserverStatusNoAuthority              // Nameserver does not have authority for this domain
 	NameserverStatusUnknownDomainName        // Domain does not exists for this nameserver
@@ -59,6 +60,8 @@ func (n *Nameserver) ChangeStatus(status NameserverStatus) {
 // Convert the nameserver status enum to text for printing in reports or debugging
 func NameserverStatusToString(status NameserverStatus) string {
 	switch status {
+	case NameserverStatusNotChecked:
+		return "NOTCHECKED"
 	case NameserverStatusOK:
 		return "OK"
 	case NameserverStatusTimeout:
