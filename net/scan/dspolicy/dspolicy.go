@@ -152,7 +152,7 @@ func (d *DomainDSPolicy) checkDS(ds model.DS,
 	signatureExpiration := time.Unix(int64(selectedRRSIG.Expiration), 0)
 
 	// Check signature expiration
-	if !selectedRRSIG.ValidityPeriod() {
+	if !selectedRRSIG.ValidityPeriod(time.Now()) {
 		return model.DSStatusExpiredSignature, signatureExpiration
 	}
 
