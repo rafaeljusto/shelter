@@ -226,13 +226,22 @@ func (mux Mux) checkHTTPHeaders(r *http.Request, context *context.Context) bool 
 func (mux Mux) writeResponse(w http.ResponseWriter, r *http.Request,
 	context context.Context) {
 
+	// We are going to store first the custom HTTP headers, because if there's any header
+	// here that is used by the mux, we will replace them, because here we use "Set" instead
+	// of "Add". We still have a safety check in context for headers that are optional in
+	// mux, such as Content-MD5, this is necessary to avoid adding a HTTP header on the
+	// context when it should not be sent in the response
+	for key, value := range context.HTTPHeader {
+		w.Header().Add(key, value)
+	}
+
 	// We are going to always send the content HTTP header fields even if we don't have a
 	// content, because if we don't set the GoLang HTTP server will add "text/plain"
-	w.Header().Add("Content-Type", fmt.Sprintf("application/vnd.shelter+json; charset=%s", check.SupportedCharset))
-	w.Header().Add("Content-Length", strconv.Itoa(len(context.ResponseContent)))
+	w.Header().Set("Content-Type", fmt.Sprintf("application/vnd.shelter+json; charset=%s", check.SupportedCharset))
+	w.Header().Set("Content-Length", strconv.Itoa(len(context.ResponseContent)))
 
 	if context.Language != nil {
-		w.Header().Add("Content-Language", context.Language.Name())
+		w.Header().Set("Content-Language", context.Language.Name())
 	}
 
 	if len(context.ResponseContent) > 0 {
@@ -240,23 +249,22 @@ func (mux Mux) writeResponse(w http.ResponseWriter, r *http.Request,
 		hash.Write(context.ResponseContent)
 		hashBytes := hash.Sum(nil)
 		hashBase64 := base64.StdEncoding.EncodeToString(hashBytes)
-		w.Header().Add("Content-MD5", hashBase64)
+		w.Header().Set("Content-MD5", hashBase64)
 	}
 
-	w.Header().Add("Accept", check.SupportedContentType)
-	w.Header().Add("Accept-Language", messages.ShelterRESTLanguagePacks.Names())
-	w.Header().Add("Accept-Charset", "utf-8")
-	w.Header().Add("Date", time.Now().UTC().Format(time.RFC1123))
-
-	for key, value := range context.HTTPHeader {
-		w.Header().Add(key, value)
-	}
-
+	w.Header().Set("Accept", check.SupportedContentType)
+	w.Header().Set("Accept-Language", messages.ShelterRESTLanguagePacks.Names())
+	w.Header().Set("Accept-Charset", "utf-8")
+	w.Header().Set("Accept-Encoding", "gzip")
+	w.Header().Set("Date", time.Now().UTC().Format(time.RFC1123))
 	w.WriteHeader(context.ResponseHTTPStatus)
 
 	// For HTTP HEAD method we never add the body, but we add the other header as a normal
 	// GET method. For more information check the RFC 2616 - 14.13.
 	if len(context.ResponseContent) > 0 && r.Method != "HEAD" {
-		w.Write(context.ResponseContent)
+		if _, err := w.Write(context.ResponseContent); err != nil {
+			log.Println("Error writing message response. Details:", err)
+			return
+		}
 	}
 }

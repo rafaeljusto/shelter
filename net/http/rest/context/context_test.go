@@ -184,8 +184,8 @@ func TestAddHeader(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	context.AddHeader("Content-Type", "text/plain")
-	if _, ok := context.HTTPHeader["Content-Type"]; ok {
+	context.AddHeader("content-language", "en-us")
+	if _, ok := context.HTTPHeader["Content-Language"]; ok {
 		t.Error("Allowing fixed HTTP headers to be replaced")
 	}
 

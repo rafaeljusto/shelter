@@ -9,6 +9,7 @@ import (
 	"labix.org/v2/mgo"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 // Context is responsable to store a state of a request during the request
@@ -104,17 +105,11 @@ func (c *Context) JSONResponse(httpStatus int, object interface{}) error {
 // Add a custom HTTP header. Used for some types of response where you need to set ETag or
 // LastModified fields
 func (c *Context) AddHeader(key, value string) {
-	// Avoid adding headers that are automatically generated at the end of the request. We
-	// don't allow header overwrite because in the low level MIMEHeader the HTTP header
+	// Avoid adding headers that could be automatically generated at the end of the request.
+	// We don't allow header overwrite because in the low level MIMEHeader the HTTP header
 	// value is appended instead of replaced
-	if key == "Content-Type" ||
-		key == "Content-Language" ||
-		key == "Content-Length" ||
-		key == "Content-MD5" ||
-		key == "Accept" ||
-		key == "Accept-Language" ||
-		key == "Accept-Charset" ||
-		key == "Date" {
+	key = strings.Title(key)
+	if key == "Content-Language" || key == "Content-Md5" {
 		return
 	}
 

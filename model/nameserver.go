@@ -9,7 +9,7 @@ import (
 // List of possible nameserver status
 const (
 	NameserverStatusNotChecked        = iota // Nameserver not checked yet
-	NameserverStatusOK                       // DNS configuration for this DS is OK
+	NameserverStatusOK                       // DNS configuration for this nameserver is OK
 	NameserverStatusTimeout                  // Network timeout while trying to reach the nameserver
 	NameserverStatusNoAuthority              // Nameserver does not have authority for this domain
 	NameserverStatusUnknownDomainName        // Domain does not exists for this nameserver
