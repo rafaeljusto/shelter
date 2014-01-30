@@ -10,14 +10,15 @@ var (
 	indexFunctions []func(*mgo.Database) error
 )
 
-// Open a new connection to a MongoDB database. For now we are using all
-// default timeout values. The production database for the project will be
-// shelter, but for tests purpouses we make this parameter configurable
-func Open(uri, databaseName string) (*mgo.Database, error) {
+// Open a new connection to a MongoDB database. For now we are using all default timeout
+// values. The production database for the project will be shelter, but for tests
+// purpouses we make this parameter configurable. We are also returning the session,
+// because the caller must close it after use
+func Open(uri, databaseName string) (*mgo.Database, *mgo.Session, error) {
 	// Connect to the database
 	session, err := mgo.Dial(uri)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// Choose the database
@@ -29,11 +30,12 @@ func Open(uri, databaseName string) (*mgo.Database, error) {
 		// Depending on how the DAO add the index the operation can block until it ends or
 		// not
 		if err := indexFunction(database); err != nil {
-			return nil, err
+			session.Close()
+			return nil, nil, err
 		}
 	}
 
-	return database, nil
+	return database, session, nil
 }
 
 // RegisterIndexFunction is the public function where the DAOs can register the indexes in

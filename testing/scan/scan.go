@@ -82,11 +82,12 @@ func main() {
 		utils.Fatalln("Error reading configuration file", err)
 	}
 
-	database, err := mongodb.Open(scanConfig.Database.URI,
+	database, databaseSession, err := mongodb.Open(scanConfig.Database.URI,
 		scanConfig.Database.Name)
 	if err != nil {
 		utils.Fatalln("Error connecting the database", err)
 	}
+	defer databaseSession.Close()
 
 	domainDAO := dao.DomainDAO{
 		Database: database,

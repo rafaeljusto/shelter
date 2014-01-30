@@ -57,6 +57,11 @@ type Config struct {
 			TLS  bool
 		}
 
+		Timeouts struct {
+			ReadSeconds  int
+			WriteSeconds int
+		}
+
 		ACL     []string
 		Secrets map[string]string
 	}

@@ -66,10 +66,17 @@ func (mux Mux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	database, err := mongodb.Open(
+	database, databaseSession, err := mongodb.Open(
 		config.ShelterConfig.Database.URI,
 		config.ShelterConfig.Database.Name,
 	)
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Println("Error creating database connection. Details:", err)
+		return
+	}
+	defer databaseSession.Close()
 
 	context, err := context.NewContext(r, database)
 	if err != nil {

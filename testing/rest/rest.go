@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/md5"
 	"encoding/base64"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"github.com/rafaeljusto/shelter/config"
@@ -14,8 +15,8 @@ import (
 	"github.com/rafaeljusto/shelter/net/http/rest/messages"
 	"github.com/rafaeljusto/shelter/testing/utils"
 	"net/http"
-	"net/http/httptest"
 	"os"
+	"path/filepath"
 	"runtime"
 	"runtime/pprof"
 	"time"
@@ -83,7 +84,7 @@ func main() {
 		utils.Fatalln("Error reading configuration file", err)
 	}
 
-	database, err := mongodb.Open(
+	database, databaseSession, err := mongodb.Open(
 		config.ShelterConfig.Database.URI,
 		config.ShelterConfig.Database.Name,
 	)
@@ -91,6 +92,7 @@ func main() {
 	if err != nil {
 		utils.Fatalln("Error connecting the database", err)
 	}
+	defer databaseSession.Close()
 
 	domainDAO := dao.DomainDAO{
 		Database: database,
@@ -102,7 +104,20 @@ func main() {
 	// insert
 	domainDAO.RemoveAll()
 
-	var mux rest.Mux
+	createMessagesFile()
+	defer removeMessagesFile()
+
+	listeners, err := rest.Listen()
+	if err != nil {
+		utils.Fatalln("Error listening to interfaces", err)
+	}
+
+	if err := rest.Start(listeners); err != nil {
+		utils.Fatalln("Error starting the REST server", err)
+	}
+
+	// Wait the REST server to start before testing
+	time.Sleep(1 * time.Second)
 
 	// REST performance report is optional and only generated when the report file path parameter is
 	// given
@@ -148,33 +163,19 @@ func main() {
 			}
 		}()
 
-		restReport(mux, restConfig)
+		restReport(restConfig)
 	}
 
 	utils.Println("SUCCESS!")
 }
 
-func restReport(mux rest.Mux, restConfig RESTTestConfigFile) {
+func restReport(restConfig RESTTestConfigFile) {
 	report := " #       | Operation | Total            | DPS  | Memory (MB)\n" +
 		"---------------------------------------------------------------\n"
 
 	// Report variables
 	scale := []int{10, 50, 100, 500, 1000, 5000,
 		10000, 50000, 100000, 500000, 1000000, 5000000}
-
-	messages.ShelterRESTLanguagePacks = messages.LanguagePacks{
-		Default: "en-us",
-		Packs: []messages.LanguagePack{
-			{
-				GenericName:  "en",
-				SpecificName: "en-us",
-			},
-			{
-				GenericName:  "pt",
-				SpecificName: "pt-br",
-			},
-		},
-	}
 
 	content := []byte(`{
       "Nameservers": [
@@ -186,35 +187,46 @@ func restReport(mux rest.Mux, restConfig RESTTestConfigFile) {
       ]
     }`)
 
+	url := ""
+	if len(config.ShelterConfig.RESTServer.Listeners) > 0 {
+		url = fmt.Sprintf("http://%s:%d", config.ShelterConfig.RESTServer.Listeners[0].IP,
+			config.ShelterConfig.RESTServer.Listeners[0].Port)
+	}
+
+	if len(url) == 0 {
+		utils.Fatalln("There's no interface to connect to", nil)
+	}
+
 	for _, numberOfItems := range scale {
 		utils.Println(fmt.Sprintf("Generating report - scale %d", numberOfItems))
 
 		// Generate domains
-		report += restActionReport(mux, numberOfItems, content, func(i int) (*http.Request, error) {
-			return http.NewRequest("PUT", fmt.Sprintf("/domain/example%d.com.br.", i),
+		report += restActionReport(numberOfItems, content, func(i int) (*http.Request, error) {
+			return http.NewRequest("PUT", fmt.Sprintf("%s/domain/example%d.com.br.", url, i),
 				bytes.NewReader(content))
 		}, http.StatusCreated, "CREATE")
 
 		// Retrieve domains
-		report += restActionReport(mux, numberOfItems, content, func(i int) (*http.Request, error) {
-			return http.NewRequest("GET", fmt.Sprintf("/domain/example%d.com.br.", i), nil)
+		report += restActionReport(numberOfItems, content, func(i int) (*http.Request, error) {
+			return http.NewRequest("GET", fmt.Sprintf("%s/domain/example%d.com.br.", url, i), nil)
 		}, http.StatusOK, "RETRIEVE")
 
 		// Delete domains
-		report += restActionReport(mux, numberOfItems, content, func(i int) (*http.Request, error) {
-			return http.NewRequest("DELETE", fmt.Sprintf("/domain/example%d.com.br.", i), nil)
+		report += restActionReport(numberOfItems, content, func(i int) (*http.Request, error) {
+			return http.NewRequest("DELETE", fmt.Sprintf("%s/domain/example%d.com.br.", url, i), nil)
 		}, http.StatusNoContent, "DELETE")
 	}
 
 	utils.WriteReport(restConfig.Report.File, report)
 }
 
-func restActionReport(mux rest.Mux,
-	numberOfItems int,
+func restActionReport(numberOfItems int,
 	content []byte,
 	requestBuilder func(int) (*http.Request, error),
 	expectedStatus int,
 	action string) string {
+
+	var client http.Client
 
 	totalDuration, domainsPerSecond := calculateRESTDurations(func() {
 		for i := 0; i < numberOfItems; i++ {
@@ -225,13 +237,16 @@ func restActionReport(mux rest.Mux,
 
 			buildHTTPHeader(r, content)
 
-			w := httptest.NewRecorder()
-			mux.ServeHTTP(w, r)
+			response, err := client.Do(r)
+			if err != nil {
+				utils.Fatalln("Error while sending request", err)
+			}
+			defer response.Body.Close()
 
-			if w.Code != expectedStatus {
+			if response.StatusCode != expectedStatus {
 				utils.Fatalln(fmt.Sprintf("Error with the domain object in the action %s. "+
 					"Expected HTTP status %d and got %d",
-					action, expectedStatus, w.Code), nil)
+					action, expectedStatus, response.StatusCode), nil)
 			}
 		}
 	}, numberOfItems)
@@ -285,4 +300,46 @@ func buildHTTPHeader(r *http.Request, content []byte) {
 
 	signature := check.GenerateSignature(stringToSign, config.ShelterConfig.RESTServer.Secrets["1"])
 	r.Header.Set("Authorization", fmt.Sprintf("%s %d:%s", check.SupportedNamespace, 1, signature))
+}
+
+func createMessagesFile() {
+	languagePacks := messages.LanguagePacks{
+		Default: "en-us",
+		Packs: []messages.LanguagePack{
+			{
+				GenericName:  "en",
+				SpecificName: "en-us",
+			},
+			{
+				GenericName:  "pt",
+				SpecificName: "pt-br",
+			},
+		},
+	}
+
+	messagePath := filepath.Join(
+		config.ShelterConfig.BasePath,
+		config.ShelterConfig.RESTServer.LanguageConfigPath,
+	)
+
+	file, err := os.Create(messagePath)
+	if err != nil {
+		utils.Fatalln("Error creating messages file", err)
+	}
+	defer file.Close()
+
+	encoder := json.NewEncoder(file)
+	if err := encoder.Encode(languagePacks); err != nil {
+		utils.Fatalln("Error encoding messages structure", err)
+	}
+}
+
+func removeMessagesFile() {
+	messagePath := filepath.Join(
+		config.ShelterConfig.BasePath,
+		config.ShelterConfig.RESTServer.LanguageConfigPath,
+	)
+
+	// We don't care if the file doesn't exists anymore, so we ignore the returned error
+	os.Remove(messagePath)
 }

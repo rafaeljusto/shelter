@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"path/filepath"
 	"strconv"
+	"time"
 )
 
 // Function created to run the listeners before dropping privileges in the main binary, so
@@ -67,8 +68,14 @@ func Start(listeners []net.Listener) error {
 		return err
 	}
 
+	server := http.Server{
+		Handler:      mux,
+		ReadTimeout:  time.Duration(config.ShelterConfig.RESTServer.Timeouts.ReadSeconds) * time.Second,
+		WriteTimeout: time.Duration(config.ShelterConfig.RESTServer.Timeouts.WriteSeconds) * time.Second,
+	}
+
 	for _, v := range listeners {
-		go http.Serve(v, mux)
+		go server.Serve(v)
 	}
 
 	return nil

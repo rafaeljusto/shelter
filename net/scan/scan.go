@@ -20,7 +20,7 @@ func ScanDomains() {
 		}
 	}()
 
-	database, err := mongodb.Open(
+	database, databaseSession, err := mongodb.Open(
 		config.ShelterConfig.Database.URI,
 		config.ShelterConfig.Database.Name,
 	)
@@ -29,6 +29,7 @@ func ScanDomains() {
 		log.Println("Error while initializing database. Details:", err)
 		return
 	}
+	defer databaseSession.Close()
 
 	injector := NewInjector(
 		database,
