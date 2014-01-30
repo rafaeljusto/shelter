@@ -16,7 +16,7 @@ contributed with ideas for the project.
 installation
 ============
 
-Shelter project depends on the following packages:
+The Shelter project depends on the following packages:
 * code.google.com/p/go.net/idna
 * code.google.com/p/go.tools/cmd/cover
 * github.com/miekg/dns
@@ -28,5 +28,5 @@ All the above packages can be installed using the command:
 go get -u <package_name>
 ```
 
-All system objects are persisted using a MongoDB database.
+The objects are persisted using a MongoDB database.
 To install it check the webpage http://www.mongodb.org/
