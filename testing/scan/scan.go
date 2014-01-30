@@ -59,7 +59,7 @@ type ScanTestConfigFile struct {
 func init() {
 	utils.TestName = "Scan"
 	flag.StringVar(&configFilePath, "config", "", "Configuration file for ScanQuerier test")
-	flag.BoolVar(&report, "report", false, "Report flag for ScanQuerier performance")
+	flag.BoolVar(&report, "report", false, "Report flag for Scan performance")
 	flag.BoolVar(&cpuProfile, "cpuprofile", false, "Report flag to enable CPU profile")
 	flag.BoolVar(&goProfile, "goprofile", false, "Report flag to enable Go routines profile")
 	flag.BoolVar(&memoryProfile, "memprofile", false, "Report flag to enable memory profile")
@@ -347,7 +347,7 @@ func scanReport(domainDAO dao.DomainDAO, scanConfig ScanTestConfigFile) {
 		}
 
 		utils.PrintProgress("building scenario", 100)
-		totalDuration, domainsPerSecond := calculateScanDurations(scanConfig, numberOfItems)
+		totalDuration, domainsPerSecond := calculateScanDurations(numberOfItems)
 
 		var memStats runtime.MemStats
 		runtime.ReadMemStats(&memStats)
@@ -369,8 +369,7 @@ func scanReport(domainDAO dao.DomainDAO, scanConfig ScanTestConfigFile) {
 	utils.WriteReport(scanConfig.Report.File, report)
 }
 
-func calculateScanDurations(scanConfig ScanTestConfigFile,
-	numberOfDomains int) (totalDuration time.Duration, domainsPerSecond int64) {
+func calculateScanDurations(numberOfDomains int) (totalDuration time.Duration, domainsPerSecond int64) {
 
 	beginTimer := time.Now()
 	scan.ScanDomains()
