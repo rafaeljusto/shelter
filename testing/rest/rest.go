@@ -229,8 +229,11 @@ func restActionReport(numberOfItems int,
 
 			response, err := client.Do(r)
 			if err != nil {
-				utils.Fatalln("Error while sending request", err)
+				utils.Println(fmt.Sprintf("Error \"%s\" detected when sending request for action %s, "+
+					"ignoring it...", err.Error(), action))
+				continue
 			}
+
 			ioutil.ReadAll(response.Body)
 			response.Body.Close()
 
