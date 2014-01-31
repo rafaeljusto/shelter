@@ -107,18 +107,7 @@ func main() {
 
 	createMessagesFile()
 	defer removeMessagesFile()
-
-	listeners, err := rest.Listen()
-	if err != nil {
-		utils.Fatalln("Error listening to interfaces", err)
-	}
-
-	if err := rest.Start(listeners); err != nil {
-		utils.Fatalln("Error starting the REST server", err)
-	}
-
-	// Wait the REST server to start before testing
-	time.Sleep(1 * time.Second)
+	startRESTServer()
 
 	// REST performance report is optional and only generated when the report file path parameter is
 	// given
@@ -344,4 +333,18 @@ func removeMessagesFile() {
 
 	// We don't care if the file doesn't exists anymore, so we ignore the returned error
 	os.Remove(messagePath)
+}
+
+func startRESTServer() {
+	listeners, err := rest.Listen()
+	if err != nil {
+		utils.Fatalln("Error listening to interfaces", err)
+	}
+
+	if err := rest.Start(listeners); err != nil {
+		utils.Fatalln("Error starting the REST server", err)
+	}
+
+	// Wait the REST server to start before testing
+	time.Sleep(1 * time.Second)
 }
