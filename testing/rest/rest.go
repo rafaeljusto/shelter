@@ -14,6 +14,7 @@ import (
 	"github.com/rafaeljusto/shelter/net/http/rest/check"
 	"github.com/rafaeljusto/shelter/net/http/rest/messages"
 	"github.com/rafaeljusto/shelter/testing/utils"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -241,7 +242,8 @@ func restActionReport(numberOfItems int,
 			if err != nil {
 				utils.Fatalln("Error while sending request", err)
 			}
-			defer response.Body.Close()
+			ioutil.ReadAll(response.Body)
+			response.Body.Close()
 
 			if response.StatusCode != expectedStatus {
 				utils.Fatalln(fmt.Sprintf("Error with the domain object in the action %s. "+
