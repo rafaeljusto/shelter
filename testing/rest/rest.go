@@ -19,7 +19,6 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"runtime/pprof"
 	"time"
 )
 
@@ -113,45 +112,19 @@ func main() {
 	// given
 	if report {
 		if cpuProfile {
-			profileFile, err := os.Create(restConfig.Report.Profile.CPUFile)
-			if err != nil {
-				utils.Fatalln("Error creating CPU profile file", err)
-			}
-
-			if err := pprof.StartCPUProfile(profileFile); err != nil {
-				utils.Fatalln("Error starting CPU profile file", err)
-			}
-
-			defer pprof.StopCPUProfile()
+			f := utils.StartCPUProfile(restConfig.Report.Profile.CPUFile)
+			defer f()
 		}
 
-		defer func() {
-			if memoryProfile {
-				runtime.GC()
+		if memoryProfile {
+			f := utils.StartMemoryProfile(restConfig.Report.Profile.MemoryFile)
+			defer f()
+		}
 
-				profileFile, err := os.Create(restConfig.Report.Profile.MemoryFile)
-				if err != nil {
-					utils.Fatalln("Error creating memory profile file", err)
-				}
-
-				if err := pprof.Lookup("heap").WriteTo(profileFile, 1); err != nil {
-					utils.Fatalln("Error writing to memory profile file", err)
-				}
-				profileFile.Close()
-			}
-
-			if goProfile {
-				profileFile, err := os.Create(restConfig.Report.Profile.GoRoutinesFile)
-				if err != nil {
-					utils.Fatalln("Error creating Go routines profile file", err)
-				}
-
-				if err := pprof.Lookup("goroutine").WriteTo(profileFile, 2); err != nil {
-					utils.Fatalln("Error writing to Go routines profile file", err)
-				}
-				profileFile.Close()
-			}
-		}()
+		if goProfile {
+			f := utils.StartGoRoutinesProfile(restConfig.Report.Profile.GoRoutinesFile)
+			defer f()
+		}
 
 		restReport(restConfig)
 	}
@@ -229,12 +202,15 @@ func restActionReport(numberOfItems int,
 
 			response, err := client.Do(r)
 			if err != nil {
-				utils.Println(fmt.Sprintf("Error \"%s\" detected when sending request for action %s, "+
-					"ignoring it...", err.Error(), action))
-				continue
+				utils.Fatalln(fmt.Sprintf("Error detected when sending request for action %s"+
+					" and URI \"%s\"", action, r.URL.RequestURI()), err)
 			}
 
-			ioutil.ReadAll(response.Body)
+			_, err = ioutil.ReadAll(response.Body)
+			if err != nil {
+				utils.Fatalln(fmt.Sprintf("Error detected when reading the response body for action %s"+
+					" and URI \"%s\"", action, r.URL.RequestURI()), err)
+			}
 			response.Body.Close()
 
 			if response.StatusCode != expectedStatus {

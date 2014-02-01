@@ -12,9 +12,7 @@ import (
 	"github.com/rafaeljusto/shelter/testing/utils"
 	"net"
 	"net/mail"
-	"os"
 	"runtime"
-	"runtime/pprof"
 	"time"
 )
 
@@ -105,45 +103,19 @@ func main() {
 	// path parameter is given
 	if report {
 		if cpuProfile {
-			profileFile, err := os.Create(scanConfig.Report.Profile.CPUFile)
-			if err != nil {
-				utils.Fatalln("Error creating CPU profile file", err)
-			}
-
-			if err := pprof.StartCPUProfile(profileFile); err != nil {
-				utils.Fatalln("Error starting CPU profile file", err)
-			}
-
-			defer pprof.StopCPUProfile()
+			f := utils.StartCPUProfile(scanConfig.Report.Profile.CPUFile)
+			defer f()
 		}
 
-		defer func() {
-			if memoryProfile {
-				runtime.GC()
+		if memoryProfile {
+			f := utils.StartMemoryProfile(scanConfig.Report.Profile.MemoryFile)
+			defer f()
+		}
 
-				profileFile, err := os.Create(scanConfig.Report.Profile.MemoryFile)
-				if err != nil {
-					utils.Fatalln("Error creating memory profile file", err)
-				}
-
-				if err := pprof.Lookup("heap").WriteTo(profileFile, 1); err != nil {
-					utils.Fatalln("Error writing to memory profile file", err)
-				}
-				profileFile.Close()
-			}
-
-			if goProfile {
-				profileFile, err := os.Create(scanConfig.Report.Profile.GoRoutinesFile)
-				if err != nil {
-					utils.Fatalln("Error creating Go routines profile file", err)
-				}
-
-				if err := pprof.Lookup("goroutine").WriteTo(profileFile, 2); err != nil {
-					utils.Fatalln("Error writing to Go routines profile file", err)
-				}
-				profileFile.Close()
-			}
-		}()
+		if goProfile {
+			f := utils.StartGoRoutinesProfile(scanConfig.Report.Profile.GoRoutinesFile)
+			defer f()
+		}
 
 		scanReport(domainDAO, scanConfig)
 	}

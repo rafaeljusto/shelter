@@ -3,6 +3,8 @@ package utils
 import (
 	"io/ioutil"
 	"os"
+	"runtime"
+	"runtime/pprof"
 	"time"
 )
 
@@ -28,4 +30,53 @@ func WriteReport(reportFile string, report string) {
 	}
 
 	ioutil.WriteFile(reportFile, []byte(report), 0444)
+}
+
+// Initialize CPU profile. This function will return a function that MUST be defered to the end of
+// the report test. If something goes wrong, the funciton will abort the program
+func StartCPUProfile(name string) func() {
+	profileFile, err := os.Create(name)
+	if err != nil {
+		Fatalln("Error creating CPU profile file", err)
+	}
+
+	if err := pprof.StartCPUProfile(profileFile); err != nil {
+		Fatalln("Error starting CPU profile file", err)
+	}
+
+	return pprof.StopCPUProfile
+}
+
+// Initialize Memory profile. This function will return a function that MUST be defered to the end
+// of the report test. If something goes wrong, the funciton will abort the program
+func StartMemoryProfile(name string) func() {
+	return func() {
+		runtime.GC()
+
+		profileFile, err := os.Create(name)
+		if err != nil {
+			Fatalln("Error creating memory profile file", err)
+		}
+
+		if err := pprof.Lookup("heap").WriteTo(profileFile, 1); err != nil {
+			Fatalln("Error writing to memory profile file", err)
+		}
+		profileFile.Close()
+	}
+}
+
+// Initialize Go Routines profile. This function will return a function that MUST be defered to the
+// end of the report test. If something goes wrong, the funciton will abort the program
+func StartGoRoutinesProfile(name string) func() {
+	return func() {
+		profileFile, err := os.Create(name)
+		if err != nil {
+			Fatalln("Error creating Go routines profile file", err)
+		}
+
+		if err := pprof.Lookup("goroutine").WriteTo(profileFile, 2); err != nil {
+			Fatalln("Error writing to Go routines profile file", err)
+		}
+		profileFile.Close()
+	}
 }
