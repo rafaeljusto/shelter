@@ -48,7 +48,7 @@ def buildMainBinary():
   #       generated as shelter.exe, we should also
   #        remove it
 
-def runUnitTests():
+def runUnitTests(benchmark):
   print("\n[[ UNIT TESTS ]]\n")
 
   goPackages = []
@@ -67,7 +67,11 @@ def runUnitTests():
   for goPackage in goPackages:
     try:
       subprocess.check_call(["go", "install", goPackage])
-      subprocess.check_call(["go", "test", "-cover", goPackage])
+
+      if benchmark:
+        subprocess.check_call(["go", "test", "-cover", "-bench", ".", "-benchmem", goPackage])
+      else:
+        subprocess.check_call(["go", "test", "-cover", goPackage])
 
     except subprocess.CalledProcessError:
       success = False
@@ -118,13 +122,14 @@ def runIntegrationTests():
 
 def usage():
   print("")
-  print("Usage: " + sys.argv[0] + " [-h|--help] [-u|--unit]")
+  print("Usage: " + sys.argv[0] + " [-h|--help] [-u|--unit] [-b|--bench]")
   print("  Where -h or --help is for showing this usage")
   print("        -u or --unit is to run only the unit tests")
+  print("        -b or --bench is to run unit tests with benchmark")
 
 def main(argv):
   try:
-    opts, args = getopt.getopt(argv, "u", ["unit"])
+    opts, args = getopt.getopt(argv, "ub", ["unit", "bench"])
 
   except getopt.GetoptError as err:
     print(str(err))
@@ -132,9 +137,14 @@ def main(argv):
     sys.exit(1)
 
   unitTestOnly = False
+  benchmark = False
+
   for key, value in opts:
     if key in ("-u", "--unit"):
       unitTestOnly = True
+
+    elif key in ("-b", "--bench"):
+      benchmark = True
 
     elif key in ("-h", "--help"):
       usage()
@@ -144,7 +154,7 @@ def main(argv):
     initialChecks()
     changePath()
     buildMainBinary()
-    runUnitTests()
+    runUnitTests(benchmark)
 
     if not unitTestOnly:
       runIntegrationTests()

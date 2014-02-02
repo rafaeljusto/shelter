@@ -6,12 +6,13 @@ import (
 	"github.com/rafaeljusto/shelter/net/http/rest/context"
 	"github.com/rafaeljusto/shelter/net/http/rest/protocol"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 )
 
 func init() {
-	HandleFunc("/domains", HandleDomains)
+	HandleFunc(regexp.MustCompile("^/domains$"), HandleDomains)
 }
 
 func HandleDomains(r *http.Request, context *context.Context) {

@@ -94,22 +94,13 @@ func (mux Mux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // Find the best handler for the given URI. The best handler is the most specific one
 func (mux Mux) findRoute(uri string) handler.Handler {
-	var selectedRoute string
-	var selectedHandler handler.Handler
-
 	for route, handler := range handler.Routes {
-		if !strings.HasPrefix(uri, route) {
-			continue
-		}
-
-		// Try to find the most specific route
-		if len(selectedRoute) == 0 || strings.HasPrefix(route, selectedRoute) {
-			selectedRoute = route
-			selectedHandler = handler
+		if route.MatchString(uri) {
+			return handler
 		}
 	}
 
-	return selectedHandler
+	return nil
 }
 
 // checkACL is responsable for checking if the user is allowed to send requests to the

@@ -7,13 +7,14 @@ import (
 	"github.com/rafaeljusto/shelter/net/http/rest/context"
 	"github.com/rafaeljusto/shelter/net/http/rest/protocol"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
 )
 
 func init() {
-	HandleFunc("/domain/", HandleDomain)
+	HandleFunc(regexp.MustCompile(`^/domain/([[:alnum:]]|\-|\.)+$`), HandleDomain)
 }
 
 func HandleDomain(r *http.Request, context *context.Context) {
