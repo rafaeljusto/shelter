@@ -4,13 +4,14 @@ import (
 	"github.com/rafaeljusto/shelter/config"
 	"github.com/rafaeljusto/shelter/database/mongodb"
 	"github.com/rafaeljusto/shelter/log"
+	"github.com/rafaeljusto/shelter/model"
 	"sync"
 	"time"
 )
 
-// Function responsable for running the domain scan system, checking the configuration of
-// each domain in the database according to an algorithm. This method is synchronous and
-// will return only after the scan proccess is done
+// Function responsible for running the domain scan system, checking the configuration of each
+// domain in the database according to an algorithm. This method is synchronous and will return only
+// after the scan proccess is done
 func ScanDomains() {
 	defer func() {
 		// Something went really wrong while scanning the domains. Log the error stacktrace
@@ -81,4 +82,30 @@ func ScanDomains() {
 
 	// Finish the error listener sending a poison pill
 	errorsChannel <- nil
+}
+
+// Function created to check a single domain without persisting in database. Useful for online
+// domain checking. As we update the same object, we update the parameter pointer and don't return
+// nothing
+func ScanDomain(domain *model.Domain) {
+	querierDispatcher := NewQuerierDispatcher(
+		config.ShelterConfig.Scan.NumberOfQueriers,
+		config.ShelterConfig.Scan.DomainsBufferSize,
+		config.ShelterConfig.Scan.UDPMaxSize,
+		time.Duration(config.ShelterConfig.Scan.Timeouts.DialSeconds)*time.Second,
+		time.Duration(config.ShelterConfig.Scan.Timeouts.ReadSeconds)*time.Second,
+		time.Duration(config.ShelterConfig.Scan.Timeouts.WriteSeconds)*time.Second,
+		config.ShelterConfig.Scan.ConnectionRetries,
+	)
+
+	var scanGroup sync.WaitGroup
+	domainsToQueryChannel := make(chan *model.Domain)
+	domainsToSaveChannel := querierDispatcher.Start(&scanGroup, domainsToQueryChannel)
+
+	domainsToQueryChannel <- domain
+	domainsToQueryChannel <- nil // Poison pill
+	domain = <-domainsToSaveChannel
+
+	// Wait for all parts of the scan to finish their job
+	scanGroup.Wait()
 }

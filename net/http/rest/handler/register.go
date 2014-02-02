@@ -6,7 +6,9 @@ import (
 	"regexp"
 )
 
-// Routes is responsable for storing the link beteween an URI and a handler
+// Routes is responsable for storing the link beteween an URI and a handler. It uses regular
+// expression to match the URI because it's faster and allows more complex URI matchs, like
+// /domain/<something>/verification
 var (
 	Routes map[*regexp.Regexp]Handler
 )

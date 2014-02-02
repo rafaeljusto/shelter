@@ -98,6 +98,7 @@ func main() {
 	startDNSServer(scanConfig.DNSServerPort, scanConfig.Scan.UDPMaxSize)
 
 	domainWithNoErrors(domainDAO)
+	domainWithNoErrorsOnTheFly()
 
 	// Scan performance report is optional and only generated when the report file
 	// path parameter is given
@@ -187,7 +188,7 @@ func domainWithNoErrors(domainDAO dao.DomainDAO) {
 	for _, nameserver := range domain.Nameservers {
 		if nameserver.LastStatus != model.NameserverStatusOK {
 			utils.Fatalln(fmt.Sprintf("Fail to validate a supposedly well configured nameserver '%s'. Found status: %s",
-				nameserver.Host, model.NameserverStatusToString(nameserver.LastStatus)), err)
+				nameserver.Host, model.NameserverStatusToString(nameserver.LastStatus)), nil)
 		}
 
 		if nameserver.LastCheckAt.Before(lastCheckAt) ||
@@ -205,7 +206,7 @@ func domainWithNoErrors(domainDAO dao.DomainDAO) {
 	for _, ds := range domain.DSSet {
 		if ds.LastStatus != model.DSStatusOK {
 			utils.Fatalln(fmt.Sprintf("Fail to validate a supposedly well configured DS %d. "+
-				"Found status: %s", ds.Keytag, model.DSStatusToString(ds.LastStatus)), err)
+				"Found status: %s", ds.Keytag, model.DSStatusToString(ds.LastStatus)), nil)
 		}
 
 		if ds.LastCheckAt.Before(lastCheckAt) || ds.LastCheckAt.Equal(lastCheckAt) {
@@ -221,6 +222,98 @@ func domainWithNoErrors(domainDAO dao.DomainDAO) {
 
 	if err := domainDAO.RemoveByFQDN(domain.FQDN); err != nil {
 		utils.Fatalln(fmt.Sprintf("Error removing domain %s", domain.FQDN), err)
+	}
+}
+
+func domainWithNoErrorsOnTheFly() {
+	domain, dnskey, rrsig, lastCheckAt, lastOKAt := generateAndSignDomain("br.")
+
+	dns.HandleFunc("br.", func(w dns.ResponseWriter, dnsRequestMessage *dns.Msg) {
+		defer w.Close()
+
+		dnsResponseMessage := new(dns.Msg)
+		defer w.WriteMsg(dnsResponseMessage)
+
+		if dnsRequestMessage.Question[0].Qtype == dns.TypeSOA {
+			dnsResponseMessage = &dns.Msg{
+				MsgHdr: dns.MsgHdr{
+					Authoritative: true,
+				},
+				Question: dnsRequestMessage.Question,
+				Answer: []dns.RR{
+					&dns.SOA{
+						Hdr: dns.RR_Header{
+							Name:   "br.",
+							Rrtype: dns.TypeSOA,
+							Class:  dns.ClassINET,
+							Ttl:    86400,
+						},
+						Ns:      "ns1.br.",
+						Mbox:    "rafael.justo.net.br.",
+						Serial:  2013112600,
+						Refresh: 86400,
+						Retry:   86400,
+						Expire:  86400,
+						Minttl:  900,
+					},
+				},
+			}
+			dnsResponseMessage.SetReply(dnsRequestMessage)
+
+			w.WriteMsg(dnsResponseMessage)
+
+		} else if dnsRequestMessage.Question[0].Qtype == dns.TypeDNSKEY {
+			dnsResponseMessage = &dns.Msg{
+				MsgHdr: dns.MsgHdr{
+					Authoritative: true,
+				},
+				Question: dnsRequestMessage.Question,
+				Answer: []dns.RR{
+					dnskey,
+					rrsig,
+				},
+			}
+			dnsResponseMessage.SetReply(dnsRequestMessage)
+
+			w.WriteMsg(dnsResponseMessage)
+		}
+	})
+
+	scan.ScanDomain(&domain)
+
+	for _, nameserver := range domain.Nameservers {
+		if nameserver.LastStatus != model.NameserverStatusOK {
+			utils.Fatalln(fmt.Sprintf("Fail to validate a supposedly well configured nameserver '%s'. Found status: %s",
+				nameserver.Host, model.NameserverStatusToString(nameserver.LastStatus)), nil)
+		}
+
+		if nameserver.LastCheckAt.Before(lastCheckAt) ||
+			nameserver.LastCheckAt.Equal(lastCheckAt) {
+			utils.Fatalln(fmt.Sprintf("Last check date was not updated in nameserver '%s'",
+				nameserver.Host), nil)
+		}
+
+		if nameserver.LastOKAt.Before(lastOKAt) || nameserver.LastOKAt.Equal(lastOKAt) {
+			utils.Fatalln(fmt.Sprintf("Last OK date was not updated in nameserver '%s'",
+				nameserver.Host), nil)
+		}
+	}
+
+	for _, ds := range domain.DSSet {
+		if ds.LastStatus != model.DSStatusOK {
+			utils.Fatalln(fmt.Sprintf("Fail to validate a supposedly well configured DS %d. "+
+				"Found status: %s", ds.Keytag, model.DSStatusToString(ds.LastStatus)), nil)
+		}
+
+		if ds.LastCheckAt.Before(lastCheckAt) || ds.LastCheckAt.Equal(lastCheckAt) {
+			utils.Fatalln(fmt.Sprintf("Last check date was not updated in DS %d",
+				ds.Keytag), nil)
+		}
+
+		if ds.LastOKAt.Before(lastOKAt) || ds.LastOKAt.Equal(lastOKAt) {
+			utils.Fatalln(fmt.Sprintf("Last OK date was not updated in DS %d",
+				ds.Keytag), nil)
+		}
 	}
 }
 
@@ -359,8 +452,7 @@ func calculateScanDurations(numberOfDomains int) (totalDuration time.Duration, d
 	return
 }
 
-// Function to mock a domain
-func generateSignAndSaveDomain(fqdn string, domainDAO dao.DomainDAO) (
+func generateAndSignDomain(fqdn string) (
 	model.Domain, *dns.DNSKEY, *dns.RRSIG, time.Time, time.Time,
 ) {
 	dnskey, rrsig, err := utils.GenerateKeyAndSignZone(fqdn)
@@ -408,6 +500,15 @@ func generateSignAndSaveDomain(fqdn string, domainDAO dao.DomainDAO) (
 		domain.DSSet[index].LastOKAt = lastOKAt
 		domain.DSSet[index].LastStatus = model.DSStatusTimeout
 	}
+
+	return domain, dnskey, rrsig, lastCheckAt, lastOKAt
+}
+
+// Function to mock a domain
+func generateSignAndSaveDomain(fqdn string, domainDAO dao.DomainDAO) (
+	model.Domain, *dns.DNSKEY, *dns.RRSIG, time.Time, time.Time,
+) {
+	domain, dnskey, rrsig, lastCheckAt, lastOKAt := generateAndSignDomain(fqdn)
 
 	if err := domainDAO.Save(&domain); err != nil {
 		utils.Fatalln("Error saving domain", err)

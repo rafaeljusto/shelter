@@ -97,7 +97,7 @@ func main() {
 func invalidFQDN(database *mgo.Database) {
 	r, err := http.NewRequest("GET", "/domain/", nil)
 	if err != nil {
-		utils.Fatalln("Error creting the HTTP request", err)
+		utils.Fatalln("Error creating the HTTP request", err)
 	}
 
 	context, err := context.NewContext(r, database)
@@ -124,7 +124,7 @@ func createDomain(database *mgo.Database) {
       ]
     }`))
 	if err != nil {
-		utils.Fatalln("Error creting the HTTP request", err)
+		utils.Fatalln("Error creating the HTTP request", err)
 	}
 
 	context, err := context.NewContext(r, database)
@@ -164,7 +164,7 @@ func updateDomain(database *mgo.Database) {
       ]
     }`))
 	if err != nil {
-		utils.Fatalln("Error creting the HTTP request", err)
+		utils.Fatalln("Error creating the HTTP request", err)
 	}
 
 	context, err := context.NewContext(r, database)
@@ -195,7 +195,7 @@ func updateDomain(database *mgo.Database) {
 func retrieveDomain(database *mgo.Database) {
 	r, err := http.NewRequest("GET", "/domain/example.com.br.", nil)
 	if err != nil {
-		utils.Fatalln("Error creting the HTTP request", err)
+		utils.Fatalln("Error creating the HTTP request", err)
 	}
 
 	context, err := context.NewContext(r, database)
@@ -243,7 +243,7 @@ func retrieveDomain(database *mgo.Database) {
 func retrieveDomainMetadata(database *mgo.Database) {
 	r, err := http.NewRequest("GET", "/domain/example.com.br.", nil)
 	if err != nil {
-		utils.Fatalln("Error creting the HTTP request", err)
+		utils.Fatalln("Error creating the HTTP request", err)
 	}
 
 	context1, err := context.NewContext(r, database)
@@ -260,7 +260,7 @@ func retrieveDomainMetadata(database *mgo.Database) {
 
 	r, err = http.NewRequest("HEAD", "/domain/example.com.br.", nil)
 	if err != nil {
-		utils.Fatalln("Error creting the HTTP request", err)
+		utils.Fatalln("Error creating the HTTP request", err)
 	}
 
 	context2, err := context.NewContext(r, database)
@@ -284,7 +284,7 @@ func retrieveDomainMetadata(database *mgo.Database) {
 func retrieveDomainIfModifiedSince(database *mgo.Database) {
 	r, err := http.NewRequest("GET", "/domain/example.com.br.", nil)
 	if err != nil {
-		utils.Fatalln("Error creting the HTTP request", err)
+		utils.Fatalln("Error creating the HTTP request", err)
 	}
 
 	domainCacheTest(database, r, "If-Modified-Since", []DomainCacheTestData{
@@ -302,7 +302,7 @@ func retrieveDomainIfModifiedSince(database *mgo.Database) {
 func retrieveDomainIfUnmodifiedSince(database *mgo.Database) {
 	r, err := http.NewRequest("GET", "/domain/example.com.br.", nil)
 	if err != nil {
-		utils.Fatalln("Error creting the HTTP request", err)
+		utils.Fatalln("Error creating the HTTP request", err)
 	}
 
 	domainCacheTest(database, r, "If-Unmodified-Since", []DomainCacheTestData{
@@ -320,7 +320,7 @@ func retrieveDomainIfUnmodifiedSince(database *mgo.Database) {
 func retrieveDomainIfMatch(database *mgo.Database) {
 	r, err := http.NewRequest("GET", "/domain/example.com.br.", nil)
 	if err != nil {
-		utils.Fatalln("Error creting the HTTP request", err)
+		utils.Fatalln("Error creating the HTTP request", err)
 	}
 
 	domainCacheTest(database, r, "If-Match", []DomainCacheTestData{
@@ -338,7 +338,7 @@ func retrieveDomainIfMatch(database *mgo.Database) {
 func retrieveDomainIfNoneMatch(database *mgo.Database) {
 	r, err := http.NewRequest("GET", "/domain/example.com.br.", nil)
 	if err != nil {
-		utils.Fatalln("Error creting the HTTP request", err)
+		utils.Fatalln("Error creating the HTTP request", err)
 	}
 
 	domainCacheTest(database, r, "If-None-Match", []DomainCacheTestData{
@@ -365,7 +365,7 @@ func updateDomainIfModifiedSince(database *mgo.Database) {
       ]
     }`))
 	if err != nil {
-		utils.Fatalln("Error creting the HTTP request", err)
+		utils.Fatalln("Error creating the HTTP request", err)
 	}
 
 	domainCacheTest(database, r, "If-Modified-Since", []DomainCacheTestData{
@@ -392,7 +392,7 @@ func updateDomainIfUnmodifiedSince(database *mgo.Database) {
       ]
     }`))
 	if err != nil {
-		utils.Fatalln("Error creting the HTTP request", err)
+		utils.Fatalln("Error creating the HTTP request", err)
 	}
 
 	domainCacheTest(database, r, "If-Unmodified-Since", []DomainCacheTestData{
@@ -419,7 +419,7 @@ func updateDomainIfMatch(database *mgo.Database) {
       ]
     }`))
 	if err != nil {
-		utils.Fatalln("Error creting the HTTP request", err)
+		utils.Fatalln("Error creating the HTTP request", err)
 	}
 
 	domainCacheTest(database, r, "If-Match", []DomainCacheTestData{
@@ -446,7 +446,7 @@ func updateDomainIfNoneMatch(database *mgo.Database) {
       ]
     }`))
 	if err != nil {
-		utils.Fatalln("Error creting the HTTP request", err)
+		utils.Fatalln("Error creating the HTTP request", err)
 	}
 
 	domainCacheTest(database, r, "If-None-Match", []DomainCacheTestData{
@@ -464,7 +464,7 @@ func updateDomainIfNoneMatch(database *mgo.Database) {
 func deleteDomainIfModifiedSince(database *mgo.Database) {
 	r, err := http.NewRequest("DELETE", "/domain/example.com.br.", nil)
 	if err != nil {
-		utils.Fatalln("Error creting the HTTP request", err)
+		utils.Fatalln("Error creating the HTTP request", err)
 	}
 
 	domainCacheTest(database, r, "If-Modified-Since", []DomainCacheTestData{
@@ -482,7 +482,7 @@ func deleteDomainIfModifiedSince(database *mgo.Database) {
 func deleteDomainIfUnmodifiedSince(database *mgo.Database) {
 	r, err := http.NewRequest("DELETE", "/domain/example.com.br.", nil)
 	if err != nil {
-		utils.Fatalln("Error creting the HTTP request", err)
+		utils.Fatalln("Error creating the HTTP request", err)
 	}
 
 	domainCacheTest(database, r, "If-Unmodified-Since", []DomainCacheTestData{
@@ -500,7 +500,7 @@ func deleteDomainIfUnmodifiedSince(database *mgo.Database) {
 func deleteDomainIfMatch(database *mgo.Database) {
 	r, err := http.NewRequest("DELETE", "/domain/example.com.br.", nil)
 	if err != nil {
-		utils.Fatalln("Error creting the HTTP request", err)
+		utils.Fatalln("Error creating the HTTP request", err)
 	}
 
 	domainCacheTest(database, r, "If-Match", []DomainCacheTestData{
@@ -518,7 +518,7 @@ func deleteDomainIfMatch(database *mgo.Database) {
 func deleteDomainIfNoneMatch(database *mgo.Database) {
 	r, err := http.NewRequest("DELETE", "/domain/example.com.br.", nil)
 	if err != nil {
-		utils.Fatalln("Error creting the HTTP request", err)
+		utils.Fatalln("Error creating the HTTP request", err)
 	}
 
 	domainCacheTest(database, r, "If-None-Match", []DomainCacheTestData{
@@ -536,7 +536,7 @@ func deleteDomainIfNoneMatch(database *mgo.Database) {
 func deleteDomain(database *mgo.Database) {
 	r, err := http.NewRequest("DELETE", "/domain/example.com.br.", nil)
 	if err != nil {
-		utils.Fatalln("Error creting the HTTP request", err)
+		utils.Fatalln("Error creating the HTTP request", err)
 	}
 
 	context, err := context.NewContext(r, database)
@@ -555,7 +555,7 @@ func deleteDomain(database *mgo.Database) {
 func retrieveUnknownDomain(database *mgo.Database) {
 	r, err := http.NewRequest("GET", "/domain/example.com.br.", nil)
 	if err != nil {
-		utils.Fatalln("Error creting the HTTP request", err)
+		utils.Fatalln("Error creating the HTTP request", err)
 	}
 
 	context, err := context.NewContext(r, database)
