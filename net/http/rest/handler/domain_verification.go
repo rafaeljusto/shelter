@@ -36,6 +36,8 @@ func HandleDomainVerification(r *http.Request, context *context.Context) {
 func scanDomain(r *http.Request, context *context.Context, fqdn string) {
 	var domainRequest protocol.DomainRequest
 	if err := context.JSONRequest(&domainRequest); err != nil {
+		log.Println("Received an invalid JSON. Details:", err)
+
 		if err := context.MessageResponse(http.StatusBadRequest,
 			"invalid-json-content", r.URL.RequestURI()); err != nil {
 

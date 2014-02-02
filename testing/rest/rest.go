@@ -5,6 +5,7 @@ import (
 	"crypto/md5"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"github.com/rafaeljusto/shelter/config"
@@ -108,6 +109,8 @@ func main() {
 	defer removeMessagesFile()
 	startRESTServer()
 
+	domainLifeCycle()
+
 	// REST performance report is optional and only generated when the report file path parameter is
 	// given
 	if report {
@@ -130,6 +133,105 @@ func main() {
 	}
 
 	utils.Println("SUCCESS!")
+}
+
+func domainLifeCycle() {
+	data := []struct {
+		method         string
+		uri            string
+		expectedStatus int
+		content        string
+	}{
+		{
+			method:         "PUT",
+			uri:            "/domain/example.com.br.",
+			expectedStatus: http.StatusCreated,
+			content: `{
+  "Nameservers": [
+    { "Host": "ns1.example.com.br.", "ipv4": "127.0.0.1" },
+    { "Host": "ns2.example.com.br.", "ipv6": "::1" }
+  ],
+  "Owners": [
+    "admin@example.com.br."
+  ]
+}`,
+		},
+		{
+			method:         "PUT",
+			uri:            "/domain/example.com.br.",
+			expectedStatus: http.StatusNoContent,
+			content: `{
+  "Nameservers": [
+    { "Host": "ns1.example.com.br.", "ipv4": "127.0.0.1" }
+  ],
+  "Owners": [
+    "admin2@example.com.br."
+  ]
+}`,
+		},
+		{
+			method:         "GET",
+			uri:            "/domain/example.com.br.",
+			expectedStatus: http.StatusOK,
+			content:        "",
+		},
+		{
+			method:         "DELETE",
+			uri:            "/domain/example.com.br.",
+			expectedStatus: http.StatusNoContent,
+			content:        "",
+		},
+	}
+
+	var client http.Client
+
+	url := ""
+	if len(config.ShelterConfig.RESTServer.Listeners) > 0 {
+		url = fmt.Sprintf("http://%s:%d", config.ShelterConfig.RESTServer.Listeners[0].IP,
+			config.ShelterConfig.RESTServer.Listeners[0].Port)
+	}
+
+	if len(url) == 0 {
+		utils.Fatalln("There's no interface to connect to", nil)
+	}
+
+	for _, item := range data {
+		var r *http.Request
+		var err error
+
+		if len(item.content) > 0 {
+			r, err = http.NewRequest(item.method, fmt.Sprintf("%s%s", url, item.uri),
+				bytes.NewReader([]byte(item.content)))
+
+		} else {
+			r, err = http.NewRequest(item.method, fmt.Sprintf("%s%s", url, item.uri), nil)
+		}
+
+		if err != nil {
+			utils.Fatalln("Error creating the HTTP request", err)
+		}
+
+		buildHTTPHeader(r, []byte(item.content))
+
+		response, err := client.Do(r)
+		if err != nil {
+			utils.Fatalln("Error sending request", err)
+		}
+
+		if response.StatusCode != item.expectedStatus {
+			responseContent, err := ioutil.ReadAll(response.Body)
+
+			if err == nil {
+				utils.Fatalln(fmt.Sprintf("Expected HTTP status %d and got %d for method %s and URI %s",
+					item.expectedStatus, response.StatusCode, item.method, item.uri),
+					errors.New(string(responseContent)),
+				)
+			} else {
+				utils.Fatalln(fmt.Sprintf("Expected HTTP status %d and got %d for method %s and URI %s",
+					item.expectedStatus, response.StatusCode, item.method, item.uri), nil)
+			}
+		}
+	}
 }
 
 func restReport(restConfig RESTTestConfigFile) {
