@@ -19,18 +19,20 @@ const (
 // executio. This is useful for reports and a richer interface
 type ScanStatus int
 
-// Store all data related to a scan executed on the system
+// Store all data related to a scan executed on the system. The statistics attributes cannot use the
+// ENUM format because we cannot have a non-string key in the JSON format when saving into the
+// database
 type Scan struct {
-	Id                      bson.ObjectId            `bson:"_id"` // Database identification
-	Revision                int                      // Version of the object
-	Status                  ScanStatus               // Status of the scan
-	StartedAt               time.Time                // Date and time that the scan started
-	FinishedAt              time.Time                // Date and time that the scan finished
-	LastModifiedAt          time.Time                // Last time the object was modified
-	DomainsScanned          int                      // Number of domains scanned
-	DomainsWihDNSSECScanned int                      // Number of domains with DS recods scanned
-	NameserverStatistics    map[NameserverStatus]int // Statistics from nameserver status
-	DSStatistics            map[DSStatus]int         // Statistics from DS records' status
+	Id                      bson.ObjectId  `bson:"_id"` // Database identification
+	Revision                int            // Version of the object
+	Status                  ScanStatus     // Status of the scan
+	StartedAt               time.Time      // Date and time that the scan started
+	FinishedAt              time.Time      // Date and time that the scan finished
+	LastModifiedAt          time.Time      // Last time the object was modified
+	DomainsScanned          int            // Number of domains scanned
+	DomainsWihDNSSECScanned int            // Number of domains with DS recods scanned
+	NameserverStatistics    map[string]int // Statistics from nameserver status (text format) in percentage
+	DSStatistics            map[string]int // Statistics from DS records' status (text format) in percentage
 }
 
 // CurrentScan is a Scan that is the next to be executed or is executing at this moment. The data
