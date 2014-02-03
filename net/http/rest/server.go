@@ -3,7 +3,6 @@ package rest
 import (
 	"crypto/tls"
 	"github.com/rafaeljusto/shelter/config"
-	"github.com/rafaeljusto/shelter/log"
 	"github.com/rafaeljusto/shelter/net/http/rest/messages"
 	"net"
 	"net/http"
@@ -76,11 +75,9 @@ func Start(listeners []net.Listener) error {
 	}
 
 	for _, v := range listeners {
-		go func() {
-			if err := server.Serve(v); err != nil {
-				log.Println("Error detected on REST server. Details:", err)
-			}
-		}()
+		// We are not checking the error returned by Serve, because if we check for some
+		// reason the HTTP server stop answering the requests
+		go server.Serve(v)
 	}
 
 	return nil
