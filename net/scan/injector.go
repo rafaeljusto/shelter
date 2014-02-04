@@ -61,6 +61,10 @@ func (i *Injector) Start(scanGroup *sync.WaitGroup, errorsChannel chan error) ch
 		if err != nil {
 			errorsChannel <- err
 			domainsToQueryChannel <- nil
+
+			// Tells the scan information structure that the injector is done
+			model.FinishLoadingDomainsForScan()
+
 			scanGroup.Done()
 			return
 		}
@@ -81,6 +85,10 @@ func (i *Injector) Start(scanGroup *sync.WaitGroup, errorsChannel chan error) ch
 			// the poison pill to alert the querier
 			if domainResult.Error != nil || domainResult.Domain == nil {
 				domainsToQueryChannel <- nil
+
+				// Tells the scan information structure that the injector is done
+				model.FinishLoadingDomainsForScan()
+
 				scanGroup.Done()
 				return
 			}
@@ -91,6 +99,9 @@ func (i *Injector) Start(scanGroup *sync.WaitGroup, errorsChannel chan error) ch
 				i.MaxErrorVerificationDays, i.MaxExpirationAlertDays) {
 				// Send to the querier
 				domainsToQueryChannel <- domainResult.Domain
+
+				// Count domain for the scan information to estimate the scan progress
+				model.LoadedDomainForScan()
 			}
 		}
 	}()

@@ -49,7 +49,9 @@ func (c *Collector) Start(scanGroup *sync.WaitGroup,
 		for {
 			finished := false
 
-			var domains []*model.Domain
+			// Using make for faster allocation
+			domains := make([]*model.Domain, 0, c.SaveAtOnce)
+
 			for i := 0; i < c.SaveAtOnce; i++ {
 				domain := <-domainsToSaveChannel
 
@@ -59,6 +61,9 @@ func (c *Collector) Start(scanGroup *sync.WaitGroup,
 					finished = true
 					break
 				}
+
+				// Count this domain for the scan information to estimate the scan progress
+				model.FinishAnalyzingDomain(len(domain.DSSet) > 0)
 
 				domains = append(domains, domain)
 			}

@@ -2,6 +2,7 @@ package scan
 
 import (
 	"github.com/rafaeljusto/shelter/config"
+	"github.com/rafaeljusto/shelter/dao"
 	"github.com/rafaeljusto/shelter/database/mongodb"
 	"github.com/rafaeljusto/shelter/log"
 	"github.com/rafaeljusto/shelter/model"
@@ -55,11 +56,17 @@ func ScanDomains() {
 		config.ShelterConfig.Scan.SaveAtOnce,
 	)
 
+	// Create a new scan information
+	model.StartNewScan()
+
 	var scanGroup sync.WaitGroup
 	errorsChannel := make(chan error, config.ShelterConfig.Scan.ErrorsBufferSize)
 	domainsToQueryChannel := injector.Start(&scanGroup, errorsChannel)
 	domainsToSaveChannel := querierDispatcher.Start(&scanGroup, domainsToQueryChannel)
 	collector.Start(&scanGroup, domainsToSaveChannel, errorsChannel)
+
+	// Keep track of errors for the scan information structure
+	errorDetected := false
 
 	go func() {
 		for {
@@ -70,7 +77,9 @@ func ScanDomains() {
 				// we don't have any error to log anymore
 				if err == nil {
 					return
+
 				} else {
+					errorDetected = true
 					log.Println("Error detected while executing the scan. Details:", err)
 				}
 			}
@@ -82,6 +91,15 @@ func ScanDomains() {
 
 	// Finish the error listener sending a poison pill
 	errorsChannel <- nil
+
+	scanDAO := dao.ScanDAO{
+		Database: database,
+	}
+
+	// Save the scan information for future reports
+	if err := model.FinishAndSaveScan(errorDetected, scanDAO.Save); err != nil {
+		log.Println("Error while saving scan information. Details:", err)
+	}
 }
 
 // Function created to check a single domain without persisting in database. Useful for online
