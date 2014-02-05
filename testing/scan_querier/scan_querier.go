@@ -164,7 +164,9 @@ func domainWithNoDNSErrors(config ScanQuerierTestConfigFile) {
 	for _, domain := range domains {
 		if domain.FQDN != "br." ||
 			domain.Nameservers[0].LastStatus != model.NameserverStatusOK {
-			utils.Fatalln("Error checking a well configured DNS domain", nil)
+			utils.Fatalln(fmt.Sprintf("Error checking a well configured DNS domain. "+
+				"Expected FQDN 'br.' with status %d and got FQDN '%s' with status %d",
+				model.NameserverStatusOK, domain.FQDN, domain.Nameservers[0].LastStatus), nil)
 		}
 	}
 }
@@ -251,7 +253,9 @@ func domainWithNoDNSSECErrors(config ScanQuerierTestConfigFile) {
 	for _, domain := range domains {
 		if domain.FQDN != "br." ||
 			domain.DSSet[0].LastStatus != model.DSStatusOK {
-			utils.Fatalln("Error checking a well configured DNSSEC domain", nil)
+			utils.Fatalln(fmt.Sprintf("Error checking a well configured DNSSEC domain. "+
+				"Expected FQDN 'br.' with status %d and got FQDN '%s' with status %d",
+				model.DSStatusOK, domain.FQDN, domain.DSSet[0].LastStatus), nil)
 		}
 	}
 }
