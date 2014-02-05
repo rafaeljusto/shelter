@@ -155,8 +155,8 @@ func newScan() model.Scan {
 		LastModifiedAt:          time.Now().Add(-5 * time.Minute),
 		DomainsScanned:          50,
 		DomainsWihDNSSECScanned: 10,
-		NameserverStatistics:    make(map[string]int),
-		DSStatistics:            make(map[string]int),
+		NameserverStatistics:    make(map[string]uint64),
+		DSStatistics:            make(map[string]uint64),
 	}
 }
 
