@@ -61,8 +61,8 @@ func (dao ScanDAO) Save(scan *model.Scan) error {
 // Try to find the scan using the Id attribute
 func (dao ScanDAO) FindById(id bson.ObjectId) (model.Scan, error) {
 	scan := model.Scan{
-		NameserverStatistics: make(map[string]int),
-		DSStatistics:         make(map[string]int),
+		NameserverStatistics: make(map[string]uint64),
+		DSStatistics:         make(map[string]uint64),
 	}
 
 	// Check if the programmer forgot to set the database in ScanDAO object

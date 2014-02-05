@@ -116,3 +116,26 @@ func TestFinishAnalyzingDomainForScan(t *testing.T) {
 			"scanned in a concurrent enviroment")
 	}
 }
+
+func TestStoreStatisticsOfTheScan(t *testing.T) {
+	StartNewScan()
+
+	nameserverStatistics := make(map[string]uint64)
+	nameserverStatistics[NameserverStatusToString(NameserverStatusOK)] = 534
+	nameserverStatistics[NameserverStatusToString(NameserverStatusTimeout)] = 19
+	nameserverStatistics[NameserverStatusToString(NameserverStatusUnknownHost)] = 3
+
+	dsStatistics := make(map[string]uint64)
+	dsStatistics[DSStatusToString(DSStatusOK)] = 32
+	dsStatistics[DSStatusToString(DSStatusExpiredSignature)] = 7
+
+	StoreStatisticsOfTheScan(nameserverStatistics, dsStatistics)
+
+	if len(shelterCurrentScan.NameserverStatistics) != 3 {
+		t.Error("Not storing namserver statistics")
+	}
+
+	if len(shelterCurrentScan.DSStatistics) != 2 {
+		t.Error("Not storing DS statistics")
+	}
+}

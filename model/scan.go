@@ -32,16 +32,16 @@ type ScanStatus int
 // ENUM format because we cannot have a non-string key in the JSON format when saving into the
 // database
 type Scan struct {
-	Id                      bson.ObjectId  `bson:"_id"` // Database identification
-	Revision                int            // Version of the object
-	Status                  ScanStatus     // Status of the scan
-	StartedAt               time.Time      // Date and time that the scan started
-	FinishedAt              time.Time      // Date and time that the scan finished
-	LastModifiedAt          time.Time      // Last time the object was modified
-	DomainsScanned          uint64         // Number of domains scanned
-	DomainsWihDNSSECScanned uint64         // Number of domains with DS recods scanned
-	NameserverStatistics    map[string]int // Statistics from nameserver status (text format) in percentage
-	DSStatistics            map[string]int // Statistics from DS records' status (text format) in percentage
+	Id                      bson.ObjectId     `bson:"_id"` // Database identification
+	Revision                int               // Version of the object
+	Status                  ScanStatus        // Status of the scan
+	StartedAt               time.Time         // Date and time that the scan started
+	FinishedAt              time.Time         // Date and time that the scan finished
+	LastModifiedAt          time.Time         // Last time the object was modified
+	DomainsScanned          uint64            // Number of domains scanned
+	DomainsWihDNSSECScanned uint64            // Number of domains with DS recods scanned
+	NameserverStatistics    map[string]uint64 // Statistics from nameserver status (text format) in number of hosts
+	DSStatistics            map[string]uint64 // Statistics from DS records' status (text format) in number of DS records
 }
 
 // CurrentScan is a Scan that is the next to be executed or is executing at this moment. The data
@@ -50,7 +50,6 @@ type Scan struct {
 type CurrentScan struct {
 	Scan                      // CurrentScan is a Scan
 	DomainsToBeScanned uint64 // Domains selected to be scanned
-	Progress           int    // Current progress, in percentage, of the scan execution
 }
 
 // Function to alert that a new scan is going to be started. This function is necessary to
@@ -63,8 +62,8 @@ func StartNewScan() {
 		Scan: Scan{
 			Status:               ScanStatusLoadingData,
 			StartedAt:            time.Now().UTC(),
-			NameserverStatistics: make(map[string]int),
-			DSStatistics:         make(map[string]int),
+			NameserverStatistics: make(map[string]uint64),
+			DSStatistics:         make(map[string]uint64),
 		},
 	}
 }
@@ -93,8 +92,8 @@ func FinishAndSaveScan(hadErrors bool, f func(*Scan) error) error {
 	shelterCurrentScan = CurrentScan{
 		Scan: Scan{
 			Status:               ScanStatusWaitingExecution,
-			NameserverStatistics: make(map[string]int),
-			DSStatistics:         make(map[string]int),
+			NameserverStatistics: make(map[string]uint64),
+			DSStatistics:         make(map[string]uint64),
 		},
 	}
 
@@ -126,4 +125,16 @@ func FinishAnalyzingDomainForScan(withDNSSEC bool) {
 	if withDNSSEC {
 		atomic.AddUint64(&shelterCurrentScan.DomainsWihDNSSECScanned, 1)
 	}
+}
+
+// Function to store scan result statistics. It can be accessed concurrently because it
+// use a general lock to access the global structure
+func StoreStatisticsOfTheScan(nameserverStatistics map[string]uint64,
+	dsStatistics map[string]uint64) {
+
+	shelterCurrentScanLock.Lock()
+	defer shelterCurrentScanLock.Unlock()
+
+	shelterCurrentScan.NameserverStatistics = nameserverStatistics
+	shelterCurrentScan.DSStatistics = dsStatistics
 }

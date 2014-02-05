@@ -46,9 +46,11 @@ func (c *Collector) Start(scanGroup *sync.WaitGroup,
 			c.SaveAtOnce = 1
 		}
 
-		for {
-			finished := false
+		finished := false
+		nameserverStatistics := make(map[string]uint64)
+		dsStatistics := make(map[string]uint64)
 
+		for {
 			// Using make for faster allocation
 			domains := make([]*model.Domain, 0, c.SaveAtOnce)
 
@@ -64,6 +66,18 @@ func (c *Collector) Start(scanGroup *sync.WaitGroup,
 
 				// Count this domain for the scan information to estimate the scan progress
 				model.FinishAnalyzingDomainForScan(len(domain.DSSet) > 0)
+
+				// Keep track of nameservers statistics
+				for _, nameserver := range domain.Nameservers {
+					status := model.NameserverStatusToString(nameserver.LastStatus)
+					nameserverStatistics[status] += 1
+				}
+
+				// Keep track of DS statistics
+				for _, ds := range domain.DSSet {
+					status := model.DSStatusToString(ds.LastStatus)
+					dsStatistics[status] += 1
+				}
 
 				domains = append(domains, domain)
 			}
@@ -81,6 +95,7 @@ func (c *Collector) Start(scanGroup *sync.WaitGroup,
 
 			// Now that everything is done, check if we received a poison pill
 			if finished {
+				model.StoreStatisticsOfTheScan(nameserverStatistics, dsStatistics)
 				scanGroup.Done()
 				return
 			}
