@@ -95,6 +95,7 @@ func domainWithErrors(config ScanCollectorTestConfigFile, database *mgo.Database
 	}
 	domainsToSave <- nil
 
+	model.StartNewScan()
 	runScan(config, database, domainsToSave)
 
 	domainDAO := dao.DomainDAO{
@@ -125,6 +126,16 @@ func domainWithErrors(config ScanCollectorTestConfigFile, database *mgo.Database
 	if err := domainDAO.RemoveByFQDN("br."); err != nil {
 		utils.Fatalln("Error removing test domain", err)
 	}
+
+	currentScan := model.GetCurrentScan()
+	if currentScan.DomainsScanned != 1 || currentScan.DomainsWihDNSSECScanned != 1 {
+		utils.Fatalln("Not counting domains for scan progress when there're errors", nil)
+	}
+
+	if currentScan.NameserverStatistics[model.NameserverStatusToString(model.NameserverStatusTimeout)] != 1 ||
+		currentScan.DSStatistics[model.DSStatusToString(model.DSStatusExpiredSignature)] != 1 {
+		utils.Fatalln("Not counting statistics properly when there're errors", nil)
+	}
 }
 
 func domainWithNoErrors(config ScanCollectorTestConfigFile, database *mgo.Database) {
@@ -150,6 +161,7 @@ func domainWithNoErrors(config ScanCollectorTestConfigFile, database *mgo.Databa
 	}
 	domainsToSave <- nil
 
+	model.StartNewScan()
 	runScan(config, database, domainsToSave)
 
 	domainDAO := dao.DomainDAO{
@@ -179,6 +191,16 @@ func domainWithNoErrors(config ScanCollectorTestConfigFile, database *mgo.Databa
 
 	if err := domainDAO.RemoveByFQDN("br."); err != nil {
 		utils.Fatalln("Error removing test domain", err)
+	}
+
+	currentScan := model.GetCurrentScan()
+	if currentScan.DomainsScanned != 1 || currentScan.DomainsWihDNSSECScanned != 1 {
+		utils.Fatalln("Not counting domains for scan progress when there're no errors", nil)
+	}
+
+	if currentScan.NameserverStatistics[model.NameserverStatusToString(model.NameserverStatusOK)] != 1 ||
+		currentScan.DSStatistics[model.DSStatusToString(model.DSStatusOK)] != 1 {
+		utils.Fatalln("Not counting statistics properly when there're no errors", nil)
 	}
 }
 

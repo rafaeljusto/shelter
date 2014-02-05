@@ -102,9 +102,19 @@ func domainWithDNSErrors(config ScanInjectorTestConfigFile, domainDAO dao.Domain
 		utils.Fatalln("Error saving domain for scan scenario", err)
 	}
 
+	model.StartNewScan()
 	if domains := runScan(config, domainDAO); len(domains) != 1 {
 		utils.Fatalln(fmt.Sprintf("Couldn't load a domain with DNS errors for scan. "+
 			"Expected 1 got %d", len(domains)), nil)
+	}
+
+	currentScan := model.GetCurrentScan()
+	if currentScan.Status != model.ScanStatusRunning {
+		utils.Fatalln("Not changing the scan info status with DNS errors", nil)
+	}
+
+	if currentScan.DomainsToBeScanned != 1 {
+		utils.Fatalln("Not counting the domains to be scanned with DNS errors", nil)
 	}
 
 	if err := domainDAO.RemoveByFQDN(domain.FQDN); err != nil {
@@ -129,9 +139,19 @@ func domainWithDNSSECErrors(config ScanInjectorTestConfigFile, domainDAO dao.Dom
 		utils.Fatalln("Error saving domain for scan scenario", err)
 	}
 
+	model.StartNewScan()
 	if domains := runScan(config, domainDAO); len(domains) != 1 {
 		utils.Fatalln(fmt.Sprintf("Couldn't load a domain with DNSSEC errors for scan. "+
 			"Expected 1 got %d", len(domains)), nil)
+	}
+
+	currentScan := model.GetCurrentScan()
+	if currentScan.Status != model.ScanStatusRunning {
+		utils.Fatalln("Not changing the scan info status for domain with DNSSEC errors", nil)
+	}
+
+	if currentScan.DomainsToBeScanned != 1 {
+		utils.Fatalln("Not counting the domains to be scanned for domain with DNSSEC errors", nil)
 	}
 
 	if err := domainDAO.RemoveByFQDN(domain.FQDN); err != nil {
@@ -160,9 +180,19 @@ func domainWithNoErrors(config ScanInjectorTestConfigFile, domainDAO dao.DomainD
 		utils.Fatalln("Error saving domain for scan scenario", err)
 	}
 
+	model.StartNewScan()
 	if domains := runScan(config, domainDAO); len(domains) > 0 {
 		utils.Fatalln(fmt.Sprintf("Selected a domain configured correctly for the scan. "+
 			"Expected 0 got %d", len(domains)), nil)
+	}
+
+	currentScan := model.GetCurrentScan()
+	if currentScan.Status != model.ScanStatusRunning {
+		utils.Fatalln("Not changing the scan info status for domain with no errors", nil)
+	}
+
+	if currentScan.DomainsToBeScanned > 0 {
+		utils.Fatalln("Not counting the domains to be scanned for domain with no errors", nil)
 	}
 
 	if err := domainDAO.RemoveByFQDN(domain.FQDN); err != nil {

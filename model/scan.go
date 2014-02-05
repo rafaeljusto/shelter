@@ -138,3 +138,16 @@ func StoreStatisticsOfTheScan(nameserverStatistics map[string]uint64,
 	shelterCurrentScan.NameserverStatistics = nameserverStatistics
 	shelterCurrentScan.DSStatistics = dsStatistics
 }
+
+// Function to copy the global variable and return it to allow other parts of the system
+// to read it. It is necessary because the global variable needs locks for read/write
+// access
+func GetCurrentScan() CurrentScan {
+	shelterCurrentScanLock.Lock()
+	defer shelterCurrentScanLock.Unlock()
+
+	// Copying the object
+	currentScan := shelterCurrentScan
+
+	return currentScan
+}

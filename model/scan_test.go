@@ -139,3 +139,28 @@ func TestStoreStatisticsOfTheScan(t *testing.T) {
 		t.Error("Not storing DS statistics")
 	}
 }
+
+func TestGetCurrentScan(t *testing.T) {
+	StartNewScan()
+
+	LoadedDomainForScan()
+	LoadedDomainForScan()
+
+	FinishLoadingDomainsForScan()
+
+	FinishAnalyzingDomainForScan(false)
+	FinishAnalyzingDomainForScan(true)
+
+	currentScan := GetCurrentScan()
+	if &currentScan == &shelterCurrentScan {
+		t.Error("Not copying scan information object")
+	}
+
+	if currentScan.DomainsScanned != 2 ||
+		currentScan.DomainsWihDNSSECScanned != 1 ||
+		currentScan.DomainsToBeScanned != 2 ||
+		currentScan.Status != ScanStatusRunning {
+
+		t.Error("Scan information retrieved doesn't have the correct information")
+	}
+}
