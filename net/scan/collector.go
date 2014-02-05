@@ -63,7 +63,7 @@ func (c *Collector) Start(scanGroup *sync.WaitGroup,
 				}
 
 				// Count this domain for the scan information to estimate the scan progress
-				model.FinishAnalyzingDomain(len(domain.DSSet) > 0)
+				model.FinishAnalyzingDomainForScan(len(domain.DSSet) > 0)
 
 				domains = append(domains, domain)
 			}

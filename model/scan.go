@@ -120,7 +120,7 @@ func FinishLoadingDomainsForScan() {
 
 // When the collector receives a domain it tells the scan information structure to help
 // predicting when the scan will ends
-func FinishAnalyzingDomain(withDNSSEC bool) {
+func FinishAnalyzingDomainForScan(withDNSSEC bool) {
 	atomic.AddUint64(&shelterCurrentScan.DomainsScanned, 1)
 
 	if withDNSSEC {
