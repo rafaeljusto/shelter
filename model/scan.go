@@ -28,6 +28,24 @@ const (
 // executio. This is useful for reports and a richer interface
 type ScanStatus int
 
+// Convert the scan status enum to text for printing in reports or debugging
+func ScanStatusToString(status ScanStatus) string {
+	switch status {
+	case ScanStatusWaitingExecution:
+		return "WAITINGEXECUTION"
+	case ScanStatusLoadingData:
+		return "LOADINGDATA"
+	case ScanStatusRunning:
+		return "RUNNING"
+	case ScanStatusExecuted:
+		return "EXECUTED"
+	case ScanStatusExecutedWithErrors:
+		return "EXECUTEDWITHERRORS"
+	}
+
+	return ""
+}
+
 // Store all data related to a scan executed on the system. The statistics attributes cannot use the
 // ENUM format because we cannot have a non-string key in the JSON format when saving into the
 // database

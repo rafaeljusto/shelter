@@ -28,90 +28,6 @@ const (
 // constant group above
 type DSAlgorithm uint8
 
-// List of possible digest types according to RFCs 3658, 4034, 4035
-const (
-	DSDigestTypeReserved DSDigestType = 0
-	DSDigestTypeSHA1     DSDigestType = 1 // Digest with 20 bytes (RFC 4034)
-	DSDigestTypeSHA256   DSDigestType = 2 // Digest with 32 bytes (RFC 4509)
-	DSDigestTypeGOST94   DSDigestType = 3 // Digest with 32 bytes (RFC 5933)
-	DSDigestTypeSHA384   DSDigestType = 4 // Digest with 96 bytes (Experimental)
-	DSDigestTypeSHA512   DSDigestType = 5 // Digest with 128 bytes (Experimental)
-)
-
-// DSDigestType is a number that represents one of the possible DS digest's types listed
-// in the constant group above. It is useful when generating a DS from a DNSKEY for
-// comparisson validation
-type DSDigestType uint8
-
-// List of possible DS status
-const (
-	DSStatusNotChecked       = iota // DS record not checked yet
-	DSStatusOK                      // DNSSEC configuration for this DS is OK
-	DSStatusTimeout                 // Network timeout while trying to retrieve the DNSKEY
-	DSStatusNoSignature             // No RRSIG records found for the related DNSKEY
-	DSStatusExpiredSignature        // At least one RRSIG record was expired
-	DSStatusNoKey                   // No DNSKEY was found with the keytag of the DS
-	DSStatusNoSEP                   // DNSKEY related to DS does not have the bit SEP on
-	DSStatusSignatureError          // Error while checking DNSKEY signatures
-	DSStatusDNSError                // DNS error (check nameserver status)
-)
-
-// DSStatus is a number that represents one of the possible DS status listed in the
-// constant group above
-type DSStatus int
-
-// DS store the information necessary to validate if a domain is configured correctly with
-// DNSSEC, and it also stores the results of the validations. When the hosts have multiple
-// DNSSEC problems, the worst problem (using a priority algorithm) will be stored in the
-// DS
-type DS struct {
-	Keytag      uint16       // DNSKEY's identification number
-	Algorithm   DSAlgorithm  // DNSKEY's algorithm
-	Digest      string       // Hash of the DNSKEY content
-	DigestType  DSDigestType // Hash type decided by user when generating the DS
-	ExpiresAt   time.Time    // DNSKEY's signature expiration date
-	LastStatus  DSStatus     // Result of the last configuration check
-	LastCheckAt time.Time    // Time of the last configuration check
-	LastOKAt    time.Time    // Last time that the DNSSEC configuration was OK
-}
-
-// ChangeStatus is a easy way to change the status of a DS because it also updates the
-// last check date
-func (d *DS) ChangeStatus(status DSStatus) {
-	d.LastStatus = status
-	d.LastCheckAt = time.Now()
-
-	if status == DSStatusOK {
-		d.LastOKAt = d.LastCheckAt
-	}
-}
-
-// Convert the DS status enum to text for printing in reports or debugging
-func DSStatusToString(status DSStatus) string {
-	switch status {
-	case DSStatusNotChecked:
-		return "NOTCHECKED"
-	case DSStatusOK:
-		return "OK"
-	case DSStatusTimeout:
-		return "TIMEOUT"
-	case DSStatusNoSignature:
-		return "NOSIG"
-	case DSStatusExpiredSignature:
-		return "EXPSIG"
-	case DSStatusNoKey:
-		return "NOKEY"
-	case DSStatusNoSEP:
-		return "NOSEP"
-	case DSStatusSignatureError:
-		return "SIGERR"
-	case DSStatusDNSError:
-		return "DNSERR"
-	}
-
-	return ""
-}
-
 // When converting from user input a number to a DS algorithm, we need to check if this
 // number is one of the supported algorithms from the system, so we use this function to
 // check it. It will be probably called in the protocol layer
@@ -139,6 +55,21 @@ func IsValidDSAlgorithm(algorithm uint8) bool {
 	}
 }
 
+// List of possible digest types according to RFCs 3658, 4034, 4035
+const (
+	DSDigestTypeReserved DSDigestType = 0
+	DSDigestTypeSHA1     DSDigestType = 1 // Digest with 20 bytes (RFC 4034)
+	DSDigestTypeSHA256   DSDigestType = 2 // Digest with 32 bytes (RFC 4509)
+	DSDigestTypeGOST94   DSDigestType = 3 // Digest with 32 bytes (RFC 5933)
+	DSDigestTypeSHA384   DSDigestType = 4 // Digest with 96 bytes (Experimental)
+	DSDigestTypeSHA512   DSDigestType = 5 // Digest with 128 bytes (Experimental)
+)
+
+// DSDigestType is a number that represents one of the possible DS digest's types listed
+// in the constant group above. It is useful when generating a DS from a DNSKEY for
+// comparisson validation
+type DSDigestType uint8
+
 // When converting from user input a number to a DS digest type, we need to check if this
 // number is one of the supported digest types from the system, so we use this function to
 // check it. It will be probably called in the protocol layer
@@ -154,5 +85,74 @@ func IsValidDSDigestType(digestType uint8) bool {
 
 	default:
 		return false
+	}
+}
+
+// List of possible DS status
+const (
+	DSStatusNotChecked       = iota // DS record not checked yet
+	DSStatusOK                      // DNSSEC configuration for this DS is OK
+	DSStatusTimeout                 // Network timeout while trying to retrieve the DNSKEY
+	DSStatusNoSignature             // No RRSIG records found for the related DNSKEY
+	DSStatusExpiredSignature        // At least one RRSIG record was expired
+	DSStatusNoKey                   // No DNSKEY was found with the keytag of the DS
+	DSStatusNoSEP                   // DNSKEY related to DS does not have the bit SEP on
+	DSStatusSignatureError          // Error while checking DNSKEY signatures
+	DSStatusDNSError                // DNS error (check nameserver status)
+)
+
+// DSStatus is a number that represents one of the possible DS status listed in the
+// constant group above
+type DSStatus int
+
+// Convert the DS status enum to text for printing in reports or debugging
+func DSStatusToString(status DSStatus) string {
+	switch status {
+	case DSStatusNotChecked:
+		return "NOTCHECKED"
+	case DSStatusOK:
+		return "OK"
+	case DSStatusTimeout:
+		return "TIMEOUT"
+	case DSStatusNoSignature:
+		return "NOSIG"
+	case DSStatusExpiredSignature:
+		return "EXPSIG"
+	case DSStatusNoKey:
+		return "NOKEY"
+	case DSStatusNoSEP:
+		return "NOSEP"
+	case DSStatusSignatureError:
+		return "SIGERR"
+	case DSStatusDNSError:
+		return "DNSERR"
+	}
+
+	return ""
+}
+
+// DS store the information necessary to validate if a domain is configured correctly with
+// DNSSEC, and it also stores the results of the validations. When the hosts have multiple
+// DNSSEC problems, the worst problem (using a priority algorithm) will be stored in the
+// DS
+type DS struct {
+	Keytag      uint16       // DNSKEY's identification number
+	Algorithm   DSAlgorithm  // DNSKEY's algorithm
+	Digest      string       // Hash of the DNSKEY content
+	DigestType  DSDigestType // Hash type decided by user when generating the DS
+	ExpiresAt   time.Time    // DNSKEY's signature expiration date
+	LastStatus  DSStatus     // Result of the last configuration check
+	LastCheckAt time.Time    // Time of the last configuration check
+	LastOKAt    time.Time    // Last time that the DNSSEC configuration was OK
+}
+
+// ChangeStatus is a easy way to change the status of a DS because it also updates the
+// last check date
+func (d *DS) ChangeStatus(status DSStatus) {
+	d.LastStatus = status
+	d.LastCheckAt = time.Now()
+
+	if status == DSStatusOK {
+		d.LastOKAt = d.LastCheckAt
 	}
 }

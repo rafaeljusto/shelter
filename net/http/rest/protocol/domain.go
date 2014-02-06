@@ -113,7 +113,7 @@ type DomainResponse struct {
 	Nameservers []NameserverResponse `json:"nameservers,omitempty"` // Nameservers that asnwer with authority for this domain
 	DSSet       []DSResponse         `json:"dsset,omitempty"`       // Records for the DNS tree chain of trust
 	Owners      []string             `json:"owners,omitempty"`      // E-mails that will be alerted on any problem
-	Links       []Link               `json:"links"`                 // Links to manipulate object
+	Links       []Link               `json:"links,omitempty"`       // Links to manipulate object
 }
 
 // Convert the domain system object to a limited information user format

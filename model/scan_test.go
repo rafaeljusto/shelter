@@ -164,3 +164,29 @@ func TestGetCurrentScan(t *testing.T) {
 		t.Error("Scan information retrieved doesn't have the correct information")
 	}
 }
+
+func TestScanStatusToString(t *testing.T) {
+	if ScanStatusToString(ScanStatusExecuted) != "EXECUTED" {
+		t.Error("Scan status EXECUTED not converting correctly to string")
+	}
+
+	if ScanStatusToString(ScanStatusExecutedWithErrors) != "EXECUTEDWITHERRORS" {
+		t.Error("Scan status EXECUTEDWITHERRORS not converting correctly to string")
+	}
+
+	if ScanStatusToString(ScanStatusRunning) != "RUNNING" {
+		t.Error("Scan status RUNNING not converting correctly to string")
+	}
+
+	if ScanStatusToString(ScanStatusLoadingData) != "LOADINGDATA" {
+		t.Error("Scan status LOADINGDATA not converting correctly to string")
+	}
+
+	if ScanStatusToString(ScanStatusWaitingExecution) != "WAITINGEXECUTION" {
+		t.Error("Scan status WAITINGEXECUTION not converting correctly to string")
+	}
+
+	if ScanStatusToString(999999) != "" {
+		t.Error("Unknown scan status associated to some existing status")
+	}
+}
