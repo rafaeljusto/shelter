@@ -1,6 +1,7 @@
 package protocol
 
 import (
+	"fmt"
 	"github.com/rafaeljusto/shelter/model"
 	"time"
 )
@@ -9,9 +10,8 @@ import (
 // object the user can retrieve information about executed scans or current progress of a specific
 // scan
 type ScanResponse struct {
-	Id                      int32             `json:"id"`                                 // Unique id to identify this scan
 	Status                  string            `json:"status"`                             // Current scan situation
-	StartedAt               time.Time         `json:"startedAt,omitempty"`                // Start date and time of the scan
+	StartedAt               time.Time         `json:"startedAt,omitempty"`                // Start date and time of the scan, is also used to identify the scan
 	FinishedAt              time.Time         `json:"finishedAt,omitempty"`               // Finish date and time of the scan
 	DomainsToBeScanned      uint64            `json:"domainsTOBeScanned,omitempty"`       // Number of domains to verify (scan is executing)
 	DomainsScanned          uint64            `json:"domainsScanned,omitempty"`           // Number of domains already verified
@@ -24,7 +24,6 @@ type ScanResponse struct {
 // Convert a scan object data of the system into a format easy to interpret by the user
 func ScanToScanResponse(scan model.Scan) ScanResponse {
 	return ScanResponse{
-		Id:                      scan.Id.Counter(),
 		Status:                  model.ScanStatusToString(scan.Status),
 		StartedAt:               scan.StartedAt,
 		FinishedAt:              scan.FinishedAt,
@@ -33,16 +32,19 @@ func ScanToScanResponse(scan model.Scan) ScanResponse {
 		DomainsWihDNSSECScanned: scan.DomainsWihDNSSECScanned,
 		NameserverStatistics:    scan.NameserverStatistics,
 		DSStatistics:            scan.DSStatistics,
+		Links: []Link{
+			{
+				Types: []LinkType{LinkTypeSelf},
+				HRef:  fmt.Sprintf("/scan/%s", scan.StartedAt.Format(time.RFC3339Nano)),
+			},
+		},
 	}
-
-	// TODO: Add links
 }
 
 // Convert a current scan object data being executed of the system into a format easy to interpret
 // by the user
 func CurrentScanToScanResponse(currentScan model.CurrentScan) ScanResponse {
 	return ScanResponse{
-		Id:                      0,
 		Status:                  model.ScanStatusToString(currentScan.Status),
 		StartedAt:               currentScan.StartedAt,
 		FinishedAt:              currentScan.FinishedAt,
@@ -51,7 +53,11 @@ func CurrentScanToScanResponse(currentScan model.CurrentScan) ScanResponse {
 		DomainsWihDNSSECScanned: currentScan.DomainsWihDNSSECScanned,
 		NameserverStatistics:    currentScan.NameserverStatistics,
 		DSStatistics:            currentScan.DSStatistics,
+		Links: []Link{
+			{
+				Types: []LinkType{LinkTypeSelf},
+				HRef:  "/scan/current",
+			},
+		},
 	}
-
-	// TODO: Add links
 }

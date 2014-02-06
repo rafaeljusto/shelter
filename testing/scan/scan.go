@@ -87,15 +87,15 @@ func main() {
 	}
 	defer databaseSession.Close()
 
+	// Remove all data before starting the test. This is necessary because maybe in the last
+	// test there was an error and the data wasn't removed from the database
+	utils.ClearDatabase(database)
+
+	startDNSServer(scanConfig.DNSServerPort, scanConfig.Scan.UDPMaxSize)
+
 	domainDAO := dao.DomainDAO{
 		Database: database,
 	}
-
-	// Remove all data before starting the test. This is necessary because maybe in the last
-	// test there was an error and the data wasn't removed from the database
-	domainDAO.RemoveAll()
-
-	startDNSServer(scanConfig.DNSServerPort, scanConfig.Scan.UDPMaxSize)
 
 	domainWithNoErrors(domainDAO)
 	domainWithNoErrorsOnTheFly()
@@ -118,7 +118,11 @@ func main() {
 			defer f()
 		}
 
-		scanReport(domainDAO, scanConfig)
+		scanDAO := dao.ScanDAO{
+			Database: database,
+		}
+
+		scanReport(domainDAO, scanDAO, scanConfig)
 	}
 
 	utils.Println("SUCCESS!")
@@ -379,7 +383,7 @@ func (r ReportHandler) ServeDNS(w dns.ResponseWriter, dnsRequestMessage *dns.Msg
 }
 
 // Generates a report with the amount of time of a scan
-func scanReport(domainDAO dao.DomainDAO, scanConfig ScanTestConfigFile) {
+func scanReport(domainDAO dao.DomainDAO, scanDAO dao.ScanDAO, scanConfig ScanTestConfigFile) {
 	report := " #       | Total            | DPS  | Memory (MB)\n" +
 		"-----------------------------------------------------\n"
 
@@ -413,7 +417,7 @@ func scanReport(domainDAO dao.DomainDAO, scanConfig ScanTestConfigFile) {
 		}
 
 		utils.PrintProgress("building scenario", 100)
-		totalDuration, domainsPerSecond := calculateScanDurations(numberOfItems)
+		totalDuration, domainsPerSecond := calculateScanDurations(numberOfItems, scanDAO)
 
 		var memStats runtime.MemStats
 		runtime.ReadMemStats(&memStats)
@@ -435,7 +439,9 @@ func scanReport(domainDAO dao.DomainDAO, scanConfig ScanTestConfigFile) {
 	utils.WriteReport(scanConfig.Report.File, report)
 }
 
-func calculateScanDurations(numberOfDomains int) (totalDuration time.Duration, domainsPerSecond int64) {
+func calculateScanDurations(numberOfDomains int, scanDAO dao.ScanDAO) (
+	totalDuration time.Duration, domainsPerSecond int64,
+) {
 
 	beginTimer := time.Now()
 	scan.ScanDomains()
@@ -448,6 +454,11 @@ func calculateScanDurations(numberOfDomains int) (totalDuration time.Duration, d
 	} else {
 		domainsPerSecond = int64(numberOfDomains)
 	}
+
+	// As we are running a lot of scans at the same time, and the scan information unique
+	// key is the start time of the scan, we must clear the database to avoid log messages
+	// of scan insert errors
+	scanDAO.RemoveAll()
 
 	return
 }

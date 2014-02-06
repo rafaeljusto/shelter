@@ -70,13 +70,13 @@ func main() {
 	}
 	defer databaseSession.Close()
 
+	// Remove all data before starting the test. This is necessary because maybe in the last
+	// test there was an error and the data wasn't removed from the database
+	utils.ClearDatabase(database)
+
 	domainDAO := dao.DomainDAO{
 		Database: database,
 	}
-
-	// Remove all data before starting the test. This is necessary because maybe in the last
-	// test there was an error and the data wasn't removed from the database
-	domainDAO.RemoveAll()
 
 	domainWithDNSErrors(config, domainDAO)
 	domainWithDNSSECErrors(config, domainDAO)

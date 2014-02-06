@@ -7,7 +7,6 @@ import (
 	"flag"
 	"fmt"
 	"github.com/rafaeljusto/shelter/config"
-	"github.com/rafaeljusto/shelter/dao"
 	"github.com/rafaeljusto/shelter/database/mongodb"
 	"github.com/rafaeljusto/shelter/net/http/rest"
 	"github.com/rafaeljusto/shelter/net/http/rest/check"
@@ -53,15 +52,11 @@ func main() {
 	}
 	defer databaseSession.Close()
 
-	domainDAO := dao.DomainDAO{
-		Database: database,
-	}
-
 	// If there was some problem in the last test, there could be some data in the
 	// database, so let's clear it to don't affect this test. We avoid checking the error,
 	// because if the collection does not exist yet, it will be created in the first
 	// insert
-	domainDAO.RemoveAll()
+	utils.ClearDatabase(database)
 
 	var mux rest.Mux
 	checkHeaders(&mux)

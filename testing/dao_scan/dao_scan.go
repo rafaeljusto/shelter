@@ -80,7 +80,7 @@ func scanLifeCycle(scanDAO dao.ScanDAO) {
 	}
 
 	// Search and compare created scan
-	if scanRetrieved, err := scanDAO.FindById(scan.Id); err != nil {
+	if scanRetrieved, err := scanDAO.FindByStartedAt(scan.StartedAt); err != nil {
 		utils.Fatalln("Couldn't find created scan in database", err)
 
 	} else if !compareScans(scan, scanRetrieved) {
@@ -94,7 +94,7 @@ func scanLifeCycle(scanDAO dao.ScanDAO) {
 	}
 
 	// Search and compare updated scan
-	if scanRetrieved, err := scanDAO.FindById(scan.Id); err != nil {
+	if scanRetrieved, err := scanDAO.FindByStartedAt(scan.StartedAt); err != nil {
 		utils.Fatalln("Couldn't find updated scan in database", err)
 
 	} else if !compareScans(scan, scanRetrieved) {
@@ -102,12 +102,12 @@ func scanLifeCycle(scanDAO dao.ScanDAO) {
 	}
 
 	// Remove scan
-	if err := scanDAO.RemoveById(scan.Id); err != nil {
+	if err := scanDAO.RemoveByStartedAt(scan.StartedAt); err != nil {
 		utils.Fatalln("Error while trying to remove a scan", err)
 	}
 
 	// Check removal
-	if _, err := scanDAO.FindById(scan.Id); err == nil {
+	if _, err := scanDAO.FindByStartedAt(scan.StartedAt); err == nil {
 		utils.Fatalln("Scan was not removed from database", nil)
 	}
 }
@@ -122,12 +122,12 @@ func scanConcurrency(scanDAO dao.ScanDAO) {
 		utils.Fatalln("Couldn't save scan in database", err)
 	}
 
-	scan1, err := scanDAO.FindById(scan.Id)
+	scan1, err := scanDAO.FindByStartedAt(scan.StartedAt)
 	if err != nil {
 		utils.Fatalln("Couldn't find created scan in database", err)
 	}
 
-	scan2, err := scanDAO.FindById(scan.Id)
+	scan2, err := scanDAO.FindByStartedAt(scan.StartedAt)
 	if err != nil {
 		utils.Fatalln("Couldn't find created scan in database", err)
 	}
@@ -141,7 +141,7 @@ func scanConcurrency(scanDAO dao.ScanDAO) {
 	}
 
 	// Remove scan
-	if err := scanDAO.RemoveById(scan.Id); err != nil {
+	if err := scanDAO.RemoveByStartedAt(scan.StartedAt); err != nil {
 		utils.Fatalln("Error while trying to remove a scan", err)
 	}
 }

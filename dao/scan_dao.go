@@ -2,6 +2,7 @@ package dao
 
 import (
 	"errors"
+	"github.com/rafaeljusto/shelter/database/mongodb"
 	"github.com/rafaeljusto/shelter/model"
 	"labix.org/v2/mgo"
 	"labix.org/v2/mgo/bson"
@@ -19,6 +20,22 @@ var (
 const (
 	scanDAOCollection = "scan" // Collection used to store all scan objects in the MongoDB database
 )
+
+func init() {
+	// Add index on StartedAt to speed up searchs. StartedAt will be a unique field in
+	// database, so we cannot have two scans starting at the same time. One problem is that
+	// the scan is only going to realize the problem after scanning all domains
+	mongodb.RegisterIndexFunction(func(database *mgo.Database) error {
+		index := mgo.Index{
+			Name:     "startedat",
+			Key:      []string{"startedat"},
+			Unique:   true,
+			DropDups: true,
+		}
+
+		return database.C(scanDAOCollection).EnsureIndex(index)
+	})
+}
 
 // ScanDAO is the structure responsible for keeping the database connection to save a new scan
 // object after every execution
@@ -58,8 +75,8 @@ func (dao ScanDAO) Save(scan *model.Scan) error {
 	return err
 }
 
-// Try to find the scan using the Id attribute
-func (dao ScanDAO) FindById(id bson.ObjectId) (model.Scan, error) {
+// Try to find the scan using the startedAt time attribute
+func (dao ScanDAO) FindByStartedAt(startedAt time.Time) (model.Scan, error) {
 	scan := model.Scan{
 		NameserverStatistics: make(map[string]uint64),
 		DSStatistics:         make(map[string]uint64),
@@ -70,13 +87,15 @@ func (dao ScanDAO) FindById(id bson.ObjectId) (model.Scan, error) {
 		return scan, ErrScanDAOUndefinedDatabase
 	}
 
-	err := dao.Database.C(scanDAOCollection).FindId(id).One(&scan)
+	err := dao.Database.C(scanDAOCollection).Find(bson.M{
+		"startedat": startedAt,
+	}).One(&scan)
 
 	return scan, err
 }
 
-// Remove a database entry that have a given id
-func (dao ScanDAO) RemoveById(id bson.ObjectId) error {
+// Remove a database entry that have a given startedAt time
+func (dao ScanDAO) RemoveByStartedAt(startedAt time.Time) error {
 	// Check if the programmer forgot to set the database in ScanDAO object
 	if dao.Database == nil {
 		return ErrScanDAOUndefinedDatabase
@@ -84,7 +103,9 @@ func (dao ScanDAO) RemoveById(id bson.ObjectId) error {
 
 	// We must create a BSON object to be compared with MongoDB database entries to
 	// determinate wich one is going to be removed
-	return dao.Database.C(scanDAOCollection).RemoveId(id)
+	return dao.Database.C(scanDAOCollection).Remove(bson.M{
+		"startedat": startedAt,
+	})
 }
 
 // Remove all scan entries from the database. This is a DANGEROUS method, use with

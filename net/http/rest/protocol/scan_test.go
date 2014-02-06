@@ -1,20 +1,17 @@
 package protocol
 
 import (
+	"fmt"
 	"github.com/rafaeljusto/shelter/model"
-	"labix.org/v2/mgo/bson"
 	"testing"
 	"time"
 )
 
 func TestScanToScanResponse(t *testing.T) {
-	scanResponse := ScanToScanResponse(model.Scan{
-		Id:                      bson.NewObjectId(),
-		Revision:                1,
+	scan := model.Scan{
 		Status:                  model.ScanStatusExecuted,
 		StartedAt:               time.Now().Add(-1 * time.Hour),
 		FinishedAt:              time.Now().Add(-30 * time.Minute),
-		LastModifiedAt:          time.Now().Add(-30 * time.Minute),
 		DomainsScanned:          10,
 		DomainsWihDNSSECScanned: 4,
 		NameserverStatistics: map[string]uint64{
@@ -25,17 +22,52 @@ func TestScanToScanResponse(t *testing.T) {
 			model.DSStatusToString(model.DSStatusOK):               3,
 			model.DSStatusToString(model.DSStatusExpiredSignature): 1,
 		},
-	})
+	}
+
+	scanResponse := ScanToScanResponse(scan)
 
 	if scanResponse.Status != "EXECUTED" {
 		t.Error("Status is not being translated correctly for a scan")
 	}
 
-	// TODO
+	if scanResponse.DomainsToBeScanned != 0 {
+		t.Error("Domains to be scanned field was not converted correctly")
+	}
+
+	if scanResponse.DomainsScanned != 10 {
+		t.Error("Domains scanned field was not converted correctly")
+	}
+
+	if scanResponse.DomainsWihDNSSECScanned != 4 {
+		t.Error("Domains with DNSSEC scanned field was not converted correctly")
+	}
+
+	if !scanResponse.StartedAt.Equal(scan.StartedAt) {
+		t.Error("Started time was not converted correctly")
+	}
+
+	if !scanResponse.FinishedAt.Equal(scan.FinishedAt) {
+		t.Error("Finished time was not converted correctly")
+	}
+
+	if scanResponse.NameserverStatistics["OK"] != 16 ||
+		scanResponse.NameserverStatistics["TIMEOUT"] != 4 {
+		t.Error("Nameserver statistics weren't converted correctly")
+	}
+
+	if scanResponse.DSStatistics["OK"] != 3 ||
+		scanResponse.DSStatistics["EXPSIG"] != 1 {
+		t.Error("DS statistics weren't converted correctly")
+	}
+
+	if len(scanResponse.Links) != 1 ||
+		scanResponse.Links[0].HRef != fmt.Sprintf("/scan/%s", scan.StartedAt.Format(time.RFC3339Nano)) {
+		t.Error("Links weren't added correctly")
+	}
 }
 
 func TestCurrentScanToScanResponse(t *testing.T) {
-	scanResponse := CurrentScanToScanResponse(model.CurrentScan{
+	currentScan := model.CurrentScan{
 		DomainsToBeScanned: 4,
 		Scan: model.Scan{
 			Status:                  model.ScanStatusRunning,
@@ -43,11 +75,44 @@ func TestCurrentScanToScanResponse(t *testing.T) {
 			DomainsScanned:          2,
 			DomainsWihDNSSECScanned: 0,
 		},
-	})
+	}
+
+	scanResponse := CurrentScanToScanResponse(currentScan)
 
 	if scanResponse.Status != "RUNNING" {
 		t.Error("Status is not being translated correctly for a current scan")
 	}
 
-	// TODO
+	if scanResponse.DomainsToBeScanned != 4 {
+		t.Error("Domains to be scanned field was not converted correctly")
+	}
+
+	if scanResponse.DomainsScanned != 2 {
+		t.Error("Domains scanned field was not converted correctly")
+	}
+
+	if scanResponse.DomainsWihDNSSECScanned != 0 {
+		t.Error("Domains with DNSSEC scanned field was not converted correctly")
+	}
+
+	if !scanResponse.StartedAt.Equal(currentScan.StartedAt) {
+		t.Error("Started time was not converted correctly")
+	}
+
+	if !scanResponse.FinishedAt.IsZero() {
+		t.Error("Finished time was not converted correctly")
+	}
+
+	if len(scanResponse.NameserverStatistics) > 0 {
+		t.Error("Nameserver statistics weren't converted correctly")
+	}
+
+	if len(scanResponse.DSStatistics) > 0 {
+		t.Error("DS statistics weren't converted correctly")
+	}
+
+	if len(scanResponse.Links) != 1 ||
+		scanResponse.Links[0].HRef != "/scan/current" {
+		t.Error("Links weren't added correctly")
+	}
 }
