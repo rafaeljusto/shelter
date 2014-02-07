@@ -295,7 +295,8 @@ func domainDNSUnknownHost(config ScanQuerierTestConfigFile) {
 	domains := runScan(config, domainsToQueryChannel)
 	for _, domain := range domains {
 		if domain.Nameservers[0].LastStatus != model.NameserverStatusUnknownHost {
-			utils.Fatalln("Error checking a unknown host", nil)
+			utils.Fatalln(fmt.Sprintf("Error checking a unknown host. Expected status %d "+
+				"and found status %d", model.NameserverStatusUnknownHost, domain.Nameservers[0].LastStatus), nil)
 		}
 	}
 }
