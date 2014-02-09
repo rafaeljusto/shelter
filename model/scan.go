@@ -50,16 +50,16 @@ func ScanStatusToString(status ScanStatus) string {
 // ENUM format because we cannot have a non-string key in the JSON format when saving into the
 // database
 type Scan struct {
-	Id                      bson.ObjectId     `bson:"_id"` // Database identification
-	Revision                int               // Version of the object
-	Status                  ScanStatus        // Status of the scan
-	StartedAt               time.Time         // Date and time that the scan started
-	FinishedAt              time.Time         // Date and time that the scan finished
-	LastModifiedAt          time.Time         // Last time the object was modified
-	DomainsScanned          uint64            // Number of domains scanned
-	DomainsWihDNSSECScanned uint64            // Number of domains with DS recods scanned
-	NameserverStatistics    map[string]uint64 // Statistics from nameserver status (text format) in number of hosts
-	DSStatistics            map[string]uint64 // Statistics from DS records' status (text format) in number of DS records
+	Id                       bson.ObjectId     `bson:"_id"` // Database identification
+	Revision                 int               // Version of the object
+	Status                   ScanStatus        // Status of the scan
+	StartedAt                time.Time         // Date and time that the scan started
+	FinishedAt               time.Time         // Date and time that the scan finished
+	LastModifiedAt           time.Time         // Last time the object was modified
+	DomainsScanned           uint64            // Number of domains scanned
+	DomainsWithDNSSECScanned uint64            // Number of domains with DS recods scanned
+	NameserverStatistics     map[string]uint64 // Statistics from nameserver status (text format) in number of hosts
+	DSStatistics             map[string]uint64 // Statistics from DS records' status (text format) in number of DS records
 }
 
 // CurrentScan is a Scan that is the next to be executed or is executing at this moment. The data
@@ -141,7 +141,7 @@ func FinishAnalyzingDomainForScan(withDNSSEC bool) {
 	atomic.AddUint64(&shelterCurrentScan.DomainsScanned, 1)
 
 	if withDNSSEC {
-		atomic.AddUint64(&shelterCurrentScan.DomainsWihDNSSECScanned, 1)
+		atomic.AddUint64(&shelterCurrentScan.DomainsWithDNSSECScanned, 1)
 	}
 }
 

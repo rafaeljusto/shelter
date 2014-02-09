@@ -124,7 +124,7 @@ func domainWithErrors(config ScanCollectorTestConfigFile, database *mgo.Database
 	}
 
 	currentScan := model.GetCurrentScan()
-	if currentScan.DomainsScanned != 1 || currentScan.DomainsWihDNSSECScanned != 1 {
+	if currentScan.DomainsScanned != 1 || currentScan.DomainsWithDNSSECScanned != 1 {
 		utils.Fatalln("Not counting domains for scan progress when there're errors", nil)
 	}
 
@@ -190,7 +190,7 @@ func domainWithNoErrors(config ScanCollectorTestConfigFile, database *mgo.Databa
 	}
 
 	currentScan := model.GetCurrentScan()
-	if currentScan.DomainsScanned != 1 || currentScan.DomainsWihDNSSECScanned != 1 {
+	if currentScan.DomainsScanned != 1 || currentScan.DomainsWithDNSSECScanned != 1 {
 		utils.Fatalln("Not counting domains for scan progress when there're no errors", nil)
 	}
 

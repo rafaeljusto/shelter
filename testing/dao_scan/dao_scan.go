@@ -149,14 +149,14 @@ func scanConcurrency(scanDAO dao.ScanDAO) {
 // Function to mock a scan object
 func newScan() model.Scan {
 	return model.Scan{
-		Status:                  model.ScanStatusExecuted,
-		StartedAt:               time.Now().Add(-10 * time.Minute),
-		FinishedAt:              time.Now().Add(-5 * time.Minute),
-		LastModifiedAt:          time.Now().Add(-5 * time.Minute),
-		DomainsScanned:          50,
-		DomainsWihDNSSECScanned: 10,
-		NameserverStatistics:    make(map[string]uint64),
-		DSStatistics:            make(map[string]uint64),
+		Status:                   model.ScanStatusExecuted,
+		StartedAt:                time.Now().Add(-10 * time.Minute),
+		FinishedAt:               time.Now().Add(-5 * time.Minute),
+		LastModifiedAt:           time.Now().Add(-5 * time.Minute),
+		DomainsScanned:           50,
+		DomainsWithDNSSECScanned: 10,
+		NameserverStatistics:     make(map[string]uint64),
+		DSStatistics:             make(map[string]uint64),
 	}
 }
 
@@ -169,7 +169,7 @@ func compareScans(s1, s2 model.Scan) bool {
 		s1.StartedAt.Unix() != s2.StartedAt.Unix() ||
 		s1.FinishedAt.Unix() != s2.FinishedAt.Unix() ||
 		s1.DomainsScanned != s2.DomainsScanned ||
-		s1.DomainsWihDNSSECScanned != s2.DomainsWihDNSSECScanned {
+		s1.DomainsWithDNSSECScanned != s2.DomainsWithDNSSECScanned {
 		return false
 	}
 

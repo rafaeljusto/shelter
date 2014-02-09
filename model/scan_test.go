@@ -7,14 +7,14 @@ import (
 
 func TestStartNewScan(t *testing.T) {
 	shelterCurrentScan.DomainsScanned = 5
-	shelterCurrentScan.DomainsWihDNSSECScanned = 2
+	shelterCurrentScan.DomainsWithDNSSECScanned = 2
 	shelterCurrentScan.DomainsToBeScanned = 10
 	shelterCurrentScan.Status = ScanStatusRunning
 
 	StartNewScan()
 
 	if shelterCurrentScan.DomainsScanned == 0 &&
-		shelterCurrentScan.DomainsWihDNSSECScanned == 0 &&
+		shelterCurrentScan.DomainsWithDNSSECScanned == 0 &&
 		shelterCurrentScan.DomainsToBeScanned == 0 &&
 		shelterCurrentScan.Status != ScanStatusLoadingData {
 
@@ -110,8 +110,8 @@ func TestFinishAnalyzingDomainForScan(t *testing.T) {
 			"a concurrent enviroment")
 	}
 
-	if shelterCurrentScan.DomainsWihDNSSECScanned != 500 {
-		println(shelterCurrentScan.DomainsWihDNSSECScanned)
+	if shelterCurrentScan.DomainsWithDNSSECScanned != 500 {
+		println(shelterCurrentScan.DomainsWithDNSSECScanned)
 		t.Error("Not counting correctly the domains with DNSSEC " +
 			"scanned in a concurrent enviroment")
 	}
@@ -157,7 +157,7 @@ func TestGetCurrentScan(t *testing.T) {
 	}
 
 	if currentScan.DomainsScanned != 2 ||
-		currentScan.DomainsWihDNSSECScanned != 1 ||
+		currentScan.DomainsWithDNSSECScanned != 1 ||
 		currentScan.DomainsToBeScanned != 2 ||
 		currentScan.Status != ScanStatusRunning {
 

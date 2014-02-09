@@ -9,11 +9,11 @@ import (
 
 func TestScanToScanResponse(t *testing.T) {
 	scan := model.Scan{
-		Status:                  model.ScanStatusExecuted,
-		StartedAt:               time.Now().Add(-1 * time.Hour),
-		FinishedAt:              time.Now().Add(-30 * time.Minute),
-		DomainsScanned:          10,
-		DomainsWihDNSSECScanned: 4,
+		Status:                   model.ScanStatusExecuted,
+		StartedAt:                time.Now().Add(-1 * time.Hour),
+		FinishedAt:               time.Now().Add(-30 * time.Minute),
+		DomainsScanned:           10,
+		DomainsWithDNSSECScanned: 4,
 		NameserverStatistics: map[string]uint64{
 			model.NameserverStatusToString(model.NameserverStatusOK):      16,
 			model.NameserverStatusToString(model.NameserverStatusTimeout): 4,
@@ -38,7 +38,7 @@ func TestScanToScanResponse(t *testing.T) {
 		t.Error("Domains scanned field was not converted correctly")
 	}
 
-	if scanResponse.DomainsWihDNSSECScanned != 4 {
+	if scanResponse.DomainsWithDNSSECScanned != 4 {
 		t.Error("Domains with DNSSEC scanned field was not converted correctly")
 	}
 
@@ -70,10 +70,10 @@ func TestCurrentScanToScanResponse(t *testing.T) {
 	currentScan := model.CurrentScan{
 		DomainsToBeScanned: 4,
 		Scan: model.Scan{
-			Status:                  model.ScanStatusRunning,
-			StartedAt:               time.Now().Add(-1 * time.Hour),
-			DomainsScanned:          2,
-			DomainsWihDNSSECScanned: 0,
+			Status:                   model.ScanStatusRunning,
+			StartedAt:                time.Now().Add(-1 * time.Hour),
+			DomainsScanned:           2,
+			DomainsWithDNSSECScanned: 0,
 		},
 	}
 
@@ -91,7 +91,7 @@ func TestCurrentScanToScanResponse(t *testing.T) {
 		t.Error("Domains scanned field was not converted correctly")
 	}
 
-	if scanResponse.DomainsWihDNSSECScanned != 0 {
+	if scanResponse.DomainsWithDNSSECScanned != 0 {
 		t.Error("Domains with DNSSEC scanned field was not converted correctly")
 	}
 
