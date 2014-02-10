@@ -16,7 +16,7 @@ func TestFindRoute(t *testing.T) {
 		caller = 1
 	})
 
-	handler.HandleFunc(regexp.MustCompile("^/domains$"), func(r *http.Request, context *context.Context) {
+	handler.HandleFunc(regexp.MustCompile("^/domains(/)?.*$"), func(r *http.Request, context *context.Context) {
 		caller = 2
 	})
 
@@ -30,6 +30,8 @@ func TestFindRoute(t *testing.T) {
 	}{
 		{URI: "/domain/example.com.br.", CallerId: 1},
 		{URI: "/domains", CallerId: 2},
+		{URI: "/domains/", CallerId: 2},
+		{URI: "/domains/?page=1&pagesize=10&orderby=fqdn:desc@lastmodified:asc", CallerId: 2},
 		{URI: "/domain/example.com.br./verification", CallerId: 3},
 	}
 

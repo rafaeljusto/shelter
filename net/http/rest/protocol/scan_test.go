@@ -111,7 +111,7 @@ func TestCurrentScanToScanResponse(t *testing.T) {
 		t.Error("DS statistics weren't converted correctly")
 	}
 
-	if len(scanResponse.Links) != 1 ||
+	if len(scanResponse.Links) != 2 ||
 		scanResponse.Links[0].HRef != "/scan/current" {
 		t.Error("Links weren't added correctly")
 	}

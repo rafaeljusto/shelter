@@ -58,6 +58,10 @@ func CurrentScanToScanResponse(currentScan model.CurrentScan) ScanResponse {
 				Types: []LinkType{LinkTypeSelf},
 				HRef:  "/scan/current",
 			},
+			{
+				Types: []LinkType{LinkTypeNext},
+				HRef:  fmt.Sprintf("/scans"),
+			},
 		},
 	}
 }

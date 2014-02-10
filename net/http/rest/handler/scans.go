@@ -12,12 +12,12 @@ import (
 )
 
 func init() {
-	HandleFunc(regexp.MustCompile("^/domains(/)?.*$"), HandleDomains)
+	HandleFunc(regexp.MustCompile("^/scans(/)?.*$"), HandleScans)
 }
 
-func HandleDomains(r *http.Request, context *context.Context) {
+func HandleScans(r *http.Request, context *context.Context) {
 	if r.Method == "GET" || r.Method == "HEAD" {
-		retrieveDomains(r, context)
+		retrieveScans(r, context)
 
 	} else {
 		context.Response(http.StatusMethodNotAllowed)
@@ -27,8 +27,8 @@ func HandleDomains(r *http.Request, context *context.Context) {
 // The HEAD method is identical to GET except that the server MUST NOT return a message-
 // body in the response. But now the responsability for don't adding the body is from the
 // mux while writing the response
-func retrieveDomains(r *http.Request, context *context.Context) {
-	var pagination dao.DomainDAOPagination
+func retrieveScans(r *http.Request, context *context.Context) {
+	var pagination dao.ScanDAOPagination
 
 	for key, values := range r.URL.Query() {
 		key = strings.TrimSpace(key)
@@ -72,7 +72,7 @@ func retrieveDomains(r *http.Request, context *context.Context) {
 						return
 					}
 
-					orderByField, err := dao.DomainDAOOrderByFieldFromString(field)
+					orderByField, err := dao.ScanDAOOrderByFieldFromString(field)
 					if err != nil {
 						if err := context.MessageResponse(http.StatusBadRequest,
 							"invalid-query-order-by", ""); err != nil {
@@ -94,7 +94,7 @@ func retrieveDomains(r *http.Request, context *context.Context) {
 						return
 					}
 
-					pagination.OrderBy = append(pagination.OrderBy, dao.DomainDAOSort{
+					pagination.OrderBy = append(pagination.OrderBy, dao.ScanDAOSort{
 						Field:     orderByField,
 						Direction: orderByDirection,
 					})
@@ -129,19 +129,19 @@ func retrieveDomains(r *http.Request, context *context.Context) {
 		}
 	}
 
-	domainDAO := dao.DomainDAO{
+	scanDAO := dao.ScanDAO{
 		Database: context.Database,
 	}
 
-	domains, err := domainDAO.FindAll(&pagination)
+	scans, err := scanDAO.FindAll(&pagination)
 	if err != nil {
-		log.Println("Error while searching domains objects. Details:", err)
+		log.Println("Error while searching scans objects. Details:", err)
 		context.Response(http.StatusInternalServerError)
 		return
 	}
 
 	if err := context.JSONResponse(http.StatusOK,
-		protocol.ToDomainsResponse(domains, pagination)); err != nil {
+		protocol.ScansToScansResponse(scans, pagination)); err != nil {
 
 		log.Println("Error while writing response. Details:", err)
 		context.Response(http.StatusInternalServerError)

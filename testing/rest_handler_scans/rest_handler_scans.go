@@ -5,22 +5,24 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"github.com/rafaeljusto/shelter/dao"
 	"github.com/rafaeljusto/shelter/database/mongodb"
+	"github.com/rafaeljusto/shelter/model"
 	"github.com/rafaeljusto/shelter/net/http/rest/context"
 	"github.com/rafaeljusto/shelter/net/http/rest/handler"
 	"github.com/rafaeljusto/shelter/net/http/rest/protocol"
 	"github.com/rafaeljusto/shelter/testing/utils"
 	"labix.org/v2/mgo"
 	"net/http"
-	"strings"
+	"time"
 )
 
 var (
 	configFilePath string // Path for the config file with the connection information
 )
 
-// RESTHandlerDomainsTestConfigFile is a structure to store the test configuration file data
-type RESTHandlerDomainsTestConfigFile struct {
+// RESTHandlerScansTestConfigFile is a structure to store the test configuration file data
+type RESTHandlerScansTestConfigFile struct {
 	Database struct {
 		URI  string
 		Name string
@@ -28,14 +30,14 @@ type RESTHandlerDomainsTestConfigFile struct {
 }
 
 func init() {
-	utils.TestName = "RESTHandlerDomains"
-	flag.StringVar(&configFilePath, "config", "", "Configuration file for RESTHandlerDomains test")
+	utils.TestName = "RESTHandlerScans"
+	flag.StringVar(&configFilePath, "config", "", "Configuration file for RESTHandlerScans test")
 }
 
 func main() {
 	flag.Parse()
 
-	var config RESTHandlerDomainsTestConfigFile
+	var config RESTHandlerScansTestConfigFile
 	err := utils.ReadConfigFile(configFilePath, &config)
 
 	if err == utils.ErrConfigFileUndefined {
@@ -60,75 +62,73 @@ func main() {
 	// insert
 	utils.ClearDatabase(database)
 
-	createDomains(database)
-	retrieveDomains(database)
-	retrieveDomainsMetadata(database)
-	deleteDomains(database)
+	createScans(database)
+	retrieveScans(database)
+	retrieveScansMetadata(database)
+	deleteScans(database)
 
 	utils.Println("SUCCESS!")
 }
 
-func createDomains(database *mgo.Database) {
+func createScans(database *mgo.Database) {
+	scanDAO := dao.ScanDAO{
+		Database: database,
+	}
+
 	for i := 0; i < 100; i++ {
-		r, err := http.NewRequest("PUT", fmt.Sprintf("/domain/example%d.com.br.", i),
-			strings.NewReader(`{
-      "Nameservers": [
-        { "Host": "ns1.example.com.br." },
-        { "Host": "ns2.example.com.br." }
-      ],
-      "Owners": [
-        "admin@example.com.br."
-      ]
-    }`))
-		if err != nil {
-			utils.Fatalln("Error creating the HTTP request", err)
+		scan := model.Scan{
+			Status:                   model.ScanStatusExecuted,
+			StartedAt:                time.Now().Add(time.Duration(-i*2) * time.Minute),
+			FinishedAt:               time.Now().Add(time.Duration(-i) * time.Minute),
+			DomainsScanned:           5000000,
+			DomainsWithDNSSECScanned: 250000,
+			NameserverStatistics: map[string]uint64{
+				"OK":      4800000,
+				"TIMEOUT": 200000,
+			},
+			DSStatistics: map[string]uint64{
+				"OK":     220000,
+				"EXPSIG": 30000,
+			},
 		}
 
-		context, err := context.NewContext(r, database)
-		if err != nil {
-			utils.Fatalln("Error creating context", err)
-		}
-
-		handler.HandleDomain(r, &context)
-
-		if context.ResponseHTTPStatus != http.StatusCreated {
-			utils.Fatalln("Error creating domain",
-				errors.New(string(context.ResponseContent)))
+		if err := scanDAO.Save(&scan); err != nil {
+			utils.Fatalln("Error creating scan", err)
 		}
 	}
 }
 
-func retrieveDomains(database *mgo.Database) {
+func retrieveScans(database *mgo.Database) {
 	data := []struct {
 		URI                string
 		ExpectedHTTPStatus int
 		ContentCheck       func([]byte)
 	}{
 		{
-			URI:                "/domains/?orderby=xxx:desc&pagesize=10&page=1",
+			URI:                "/scans/?orderby=xxx:desc&pagesize=10&page=1",
 			ExpectedHTTPStatus: http.StatusBadRequest,
 		},
 		{
-			URI:                "/domains/?orderby=fqdn:xxx&pagesize=10&page=1",
+			URI:                "/scans/?orderby=startedat:xxx&pagesize=10&page=1",
 			ExpectedHTTPStatus: http.StatusBadRequest,
 		},
 		{
-			URI:                "/domains/?orderby=fqdn:desc&pagesize=xxx&page=1",
+			URI:                "/scans/?orderby=startedat:desc&pagesize=xxx&page=1",
 			ExpectedHTTPStatus: http.StatusBadRequest,
 		},
 		{
-			URI:                "/domains/?orderby=fqdn:desc&pagesize=10&page=xxx",
+			URI:                "/scans/?orderby=startedat:desc&pagesize=10&page=xxx",
 			ExpectedHTTPStatus: http.StatusBadRequest,
 		},
 		{
-			URI:                "/domains/?orderby=fqdn:desc&pagesize=10&page=1",
+			URI:                "/scans/?orderby=startedat:desc&pagesize=10&page=1",
 			ExpectedHTTPStatus: http.StatusOK,
 			ContentCheck: func(content []byte) {
-				var domainsResponse protocol.DomainsResponse
-				json.Unmarshal(content, &domainsResponse)
+				var scansResponse protocol.ScansResponse
+				json.Unmarshal(content, &scansResponse)
 
-				if len(domainsResponse.Domains) != 10 {
-					utils.Fatalln("Error retrieving the wrong number of domains", nil)
+				if len(scansResponse.Scans) != 10 {
+					utils.Fatalln("Error retrieving the wrong number of scans", nil)
 				}
 			},
 		},
@@ -145,10 +145,10 @@ func retrieveDomains(database *mgo.Database) {
 			utils.Fatalln("Error creating context", err)
 		}
 
-		handler.HandleDomains(r, &context)
+		handler.HandleScans(r, &context)
 
 		if context.ResponseHTTPStatus != item.ExpectedHTTPStatus {
-			utils.Fatalln(fmt.Sprintf("Error when requesting domains using the URI [%s]. "+
+			utils.Fatalln(fmt.Sprintf("Error when requesting scans using the URI [%s]. "+
 				"Expected HTTP status code %d but got %d", item.URI,
 				item.ExpectedHTTPStatus, context.ResponseHTTPStatus), nil)
 		}
@@ -159,8 +159,8 @@ func retrieveDomains(database *mgo.Database) {
 	}
 }
 
-func retrieveDomainsMetadata(database *mgo.Database) {
-	r, err := http.NewRequest("GET", "/domains/?orderby=fqdn:desc&pagesize=10&page=1", nil)
+func retrieveScansMetadata(database *mgo.Database) {
+	r, err := http.NewRequest("GET", "/scans/?orderby=startedat:desc&pagesize=10&page=1", nil)
 	if err != nil {
 		utils.Fatalln("Error creating the HTTP request", err)
 	}
@@ -170,14 +170,14 @@ func retrieveDomainsMetadata(database *mgo.Database) {
 		utils.Fatalln("Error creating context", err)
 	}
 
-	handler.HandleDomains(r, &context1)
+	handler.HandleScans(r, &context1)
 
 	if context1.ResponseHTTPStatus != http.StatusOK {
-		utils.Fatalln("Error retrieving domains",
+		utils.Fatalln("Error retrieving scans",
 			errors.New(string(context1.ResponseContent)))
 	}
 
-	r, err = http.NewRequest("HEAD", "/domains/?orderby=fqdn:desc&pagesize=10&page=1", nil)
+	r, err = http.NewRequest("HEAD", "/scans/?orderby=startedat:desc&pagesize=10&page=1", nil)
 	if err != nil {
 		utils.Fatalln("Error creating the HTTP request", err)
 	}
@@ -187,10 +187,10 @@ func retrieveDomainsMetadata(database *mgo.Database) {
 		utils.Fatalln("Error creating context", err)
 	}
 
-	handler.HandleDomains(r, &context2)
+	handler.HandleScans(r, &context2)
 
 	if context2.ResponseHTTPStatus != http.StatusOK {
-		utils.Fatalln("Error retrieving domains",
+		utils.Fatalln("Error retrieving scans",
 			errors.New(string(context2.ResponseContent)))
 	}
 
@@ -200,23 +200,12 @@ func retrieveDomainsMetadata(database *mgo.Database) {
 	}
 }
 
-func deleteDomains(database *mgo.Database) {
-	for i := 0; i < 100; i++ {
-		r, err := http.NewRequest("DELETE", fmt.Sprintf("/domain/example%d.com.br.", i), nil)
-		if err != nil {
-			utils.Fatalln("Error creating the HTTP request", err)
-		}
+func deleteScans(database *mgo.Database) {
+	scanDAO := dao.ScanDAO{
+		Database: database,
+	}
 
-		context, err := context.NewContext(r, database)
-		if err != nil {
-			utils.Fatalln("Error creating context", err)
-		}
-
-		handler.HandleDomain(r, &context)
-
-		if context.ResponseHTTPStatus != http.StatusNoContent {
-			utils.Fatalln("Error removing domain",
-				errors.New(string(context.ResponseContent)))
-		}
+	if err := scanDAO.RemoveAll(); err != nil {
+		utils.Fatalln("Error removing scans", err)
 	}
 }
