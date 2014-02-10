@@ -25,10 +25,6 @@ var (
 	// An invalid order by field was given to be converted in one of the known order by
 	// fields of the Domain DAO
 	ErrDomainDAOOrderByFieldUnknown = errors.New("Unknown order by field")
-
-	// An invalid order by direction was given to be converted in one of the known order by
-	// fields of the Domain DAO
-	ErrDomainDAOOrderByDirectionUnknown = errors.New("Unknown order by direction")
 )
 
 const (
@@ -76,62 +72,17 @@ func DomainDAOOrderByFieldToString(value DomainDAOOrderByField) string {
 	return ""
 }
 
-// List of possible directions of each field in an order by query
-const (
-	DomainDAOOrderByDirectionAscending  DomainDAOOrderByDirection = 1  // From lower to higher
-	DomainDAOOrderByDirectionDescending DomainDAOOrderByDirection = -1 // From Higher to lower
-)
-
-// Enumerate definition for the OrderBy so that we can make it easy to determinate the
-// direction of an order by field. This is good to hide low level database interfaces.
-// Maybe we can move this enum to a more generic DAO because it can be used by other DAOs
-// too
-type DomainDAOOrderByDirection int
-
-// Convert the DomainDAO order by direction from string into enum. If the string is
-// unknown an error will be returned. The string is case insensitive and spaces around it
-// are ignored
-func DomainDAOOrderByDirectionFromString(value string) (DomainDAOOrderByDirection, error) {
-	value = strings.ToLower(value)
-	value = strings.TrimSpace(value)
-
-	switch value {
-	case "asc":
-		return DomainDAOOrderByDirectionAscending, nil
-	case "desc":
-		return DomainDAOOrderByDirectionDescending, nil
-	}
-
-	return DomainDAOOrderByDirectionAscending, ErrDomainDAOOrderByDirectionUnknown
-}
-
-// Convert the DomainDAO order by direction from enum into string. If the enum is unknown
-// this method will return an empty string
-func DomainDAOOrderByDirectionToString(value DomainDAOOrderByDirection) string {
-	switch value {
-	case DomainDAOOrderByDirectionAscending:
-		return "asc"
-
-	case DomainDAOOrderByDirectionDescending:
-		return "desc"
-	}
-
-	return ""
-}
-
 // Default values when the user don't define pagination. After watching a presentation
 // from layer7 at http://www.layer7tech.com/tutorials/api-pagination-tutorial I agree that
 // when the user don't define the pagination we shouldn't return all the result set,
 // instead we assume default pagination values
 var (
-	defaultPaginationOrderBy = []DomainDAOSort{
+	domainDAODefaultPaginationOrderBy = []DomainDAOSort{
 		{
-			Field:     DomainDAOOrderByFieldFQDN,          // Default ordering is by FQDN
-			Direction: DomainDAOOrderByDirectionAscending, // Default ordering is ascending
+			Field:     DomainDAOOrderByFieldFQDN,    // Default ordering is by FQDN
+			Direction: DAOOrderByDirectionAscending, // Default ordering is ascending
 		},
 	}
-	defaultPaginationPageSize = 20 // By default we show 20 items per page
-	defaultPaginationPage     = 1  // By default we show the first page
 )
 
 func init() {
@@ -195,10 +146,9 @@ func (dao DomainDAO) SaveMany(domains []*model.Domain) []DomainResult {
 	return dao.executeMany(domains, dao.Save)
 }
 
-// Retrieve all domains using pagination control. This method is used by an end user to
-// see all domains that are already registered in the system, the user will probably want
-// pagination so that it can analyze the data in amounts. When pagination values are not
-// informed, default values are adopted
+// Retrieve all domains using pagination control. This method is used by an end user to see all
+// domains that are already registered in the system. The user will probably wants pagination to
+// analyze the data in amounts. When pagination values are not informed, default values are adopted
 func (dao DomainDAO) FindAll(pagination *DomainDAOPagination) ([]model.Domain, error) {
 	// Check if the programmer forgot to set the database in DomainDAO object
 	if dao.Database == nil {
@@ -212,7 +162,7 @@ func (dao DomainDAO) FindAll(pagination *DomainDAOPagination) ([]model.Domain, e
 	var query *mgo.Query
 
 	if len(pagination.OrderBy) == 0 {
-		pagination.OrderBy = defaultPaginationOrderBy
+		pagination.OrderBy = domainDAODefaultPaginationOrderBy
 	}
 
 	if pagination.PageSize == 0 {
@@ -227,7 +177,7 @@ func (dao DomainDAO) FindAll(pagination *DomainDAOPagination) ([]model.Domain, e
 	for _, sort := range pagination.OrderBy {
 		var sortTmp string
 
-		if sort.Direction == DomainDAOOrderByDirectionDescending {
+		if sort.Direction == DAOOrderByDirectionDescending {
 			sortTmp = "-"
 		}
 
@@ -454,6 +404,6 @@ type DomainDAOPagination struct {
 // DomainDAOSort is an object responsable to relate the order by field and direction. Each
 // field used for sort, can be sorted in both directions
 type DomainDAOSort struct {
-	Field     DomainDAOOrderByField     // Field to be sorted
-	Direction DomainDAOOrderByDirection // Direction used in the sort
+	Field     DomainDAOOrderByField // Field to be sorted
+	Direction DAOOrderByDirection   // Direction used in the sort
 }

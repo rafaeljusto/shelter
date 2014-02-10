@@ -86,7 +86,7 @@ func retrieveDomains(r *http.Request, context *context.Context) {
 						return
 					}
 
-					orderByDirection, err := dao.DomainDAOOrderByDirectionFromString(direction)
+					orderByDirection, err := dao.DAOOrderByDirectionFromString(direction)
 					if err != nil {
 						if err := context.MessageResponse(http.StatusBadRequest,
 							"invalid-query-order-by", ""); err != nil {

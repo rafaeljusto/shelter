@@ -6,6 +6,7 @@ import (
 	"github.com/rafaeljusto/shelter/model"
 	"labix.org/v2/mgo"
 	"labix.org/v2/mgo/bson"
+	"strings"
 	"time"
 )
 
@@ -15,10 +16,78 @@ var (
 	// Programmer must set the Database attribute from ScanDAO with a valid connection before using
 	// this object
 	ErrScanDAOUndefinedDatabase = errors.New("No database defined for ScanDAO")
+
+	// Pagination attribute is mandatory, and it's a pointer only to fill some query
+	// informations in it. For the user that wants all records without pagination for a B2B
+	// integration need to pass zero in the page size
+	ErrScanDAOPaginationUndefined = errors.New("Pagination was not defined")
+
+	// An invalid order by field was given to be converted in one of the known order by
+	// fields of the Scan DAO
+	ErrScanDAOOrderByFieldUnknown = errors.New("Unknown order by field")
 )
 
 const (
 	scanDAOCollection = "scan" // Collection used to store all scan objects in the MongoDB database
+)
+
+// List of possible fields that can be used to order a result set
+const (
+	ScanDAOOrderByFieldStartedAt                ScanDAOOrderByField = 0 // Order by scan's begin time
+	ScanDAOOrderByFieldDomainsScanned           ScanDAOOrderByField = 1 // Order by the number of domains scanned
+	ScanDAOOrderByFieldDomainsWithDNSSECScanned ScanDAOOrderByField = 2 // Order by the number of domains with DNSSEC scanned
+)
+
+// Enumerate definition for the OrderBy so that we can limit the fields that the user can
+// use in a query
+type ScanDAOOrderByField int
+
+// Convert the ScanDAO order by field from string into enum. If the string is unknown an
+// error will be returned. The string is case insensitive and spaces around it are ignored
+func ScanDAOOrderByFieldFromString(value string) (ScanDAOOrderByField, error) {
+	value = strings.ToLower(value)
+	value = strings.TrimSpace(value)
+
+	switch value {
+	case "startedat":
+		return ScanDAOOrderByFieldStartedAt, nil
+	case "domainsscanned":
+		return ScanDAOOrderByFieldDomainsScanned, nil
+	case "domainswithdnssecscanned":
+		return ScanDAOOrderByFieldDomainsWithDNSSECScanned, nil
+	}
+
+	return ScanDAOOrderByFieldStartedAt, ErrScanDAOOrderByFieldUnknown
+}
+
+// Convert the ScanDAO order by field from enum into string. If the enum is unknown this
+// method will return an empty string
+func ScanDAOOrderByFieldToString(value ScanDAOOrderByField) string {
+	switch value {
+	case ScanDAOOrderByFieldStartedAt:
+		return "startedat"
+
+	case ScanDAOOrderByFieldDomainsScanned:
+		return "domainsscanned"
+
+	case ScanDAOOrderByFieldDomainsWithDNSSECScanned:
+		return "domainswithdnssecscanned"
+	}
+
+	return ""
+}
+
+// Default values when the user don't define pagination. After watching a presentation
+// from layer7 at http://www.layer7tech.com/tutorials/api-pagination-tutorial I agree that
+// when the user don't define the pagination we shouldn't return all the result set,
+// instead we assume default pagination values
+var (
+	scanDAODefaultPaginationOrderBy = []ScanDAOSort{
+		{
+			Field:     ScanDAOOrderByFieldStartedAt, // Default ordering is by begin time
+			Direction: DAOOrderByDirectionAscending, // Default ordering is ascending
+		},
+	}
 )
 
 func init() {
@@ -94,6 +163,82 @@ func (dao ScanDAO) FindByStartedAt(startedAt time.Time) (model.Scan, error) {
 	return scan, err
 }
 
+// Retrieve all scans using pagination control. This method is used by an end user to see all scans
+// that were executed in the system. The user will probably wants pagination to analyze the data in
+// amounts. When pagination values are not informed, default values are adopted
+func (dao ScanDAO) FindAll(pagination *ScanDAOPagination) ([]model.Scan, error) {
+	// Check if the programmer forgot to set the database in ScanDAO object
+	if dao.Database == nil {
+		return nil, ErrScanDAOUndefinedDatabase
+	}
+
+	if pagination == nil {
+		return nil, ErrScanDAOPaginationUndefined
+	}
+
+	var query *mgo.Query
+
+	if len(pagination.OrderBy) == 0 {
+		pagination.OrderBy = scanDAODefaultPaginationOrderBy
+	}
+
+	if pagination.PageSize == 0 {
+		pagination.PageSize = defaultPaginationPageSize
+	}
+
+	if pagination.Page == 0 {
+		pagination.Page = defaultPaginationPage
+	}
+
+	var sortList []string
+	for _, sort := range pagination.OrderBy {
+		var sortTmp string
+
+		if sort.Direction == DAOOrderByDirectionDescending {
+			sortTmp = "-"
+		}
+
+		switch sort.Field {
+		case ScanDAOOrderByFieldStartedAt:
+			sortTmp += "startedAt"
+		case ScanDAOOrderByFieldDomainsScanned:
+			sortTmp += "domainsScanned"
+		case ScanDAOOrderByFieldDomainsWithDNSSECScanned:
+			sortTmp += "domainsWithDNSSECScanned"
+		}
+
+		sortList = append(sortList, sortTmp)
+	}
+
+	query = dao.Database.C(scanDAOCollection).Find(bson.M{})
+
+	// We store the number of items before applying pagination, if we do this after we get only the
+	// number of items of a page size
+	var err error
+	if pagination.NumberOfItems, err = query.Count(); err != nil {
+		return nil, err
+	}
+
+	query.
+		Sort(sortList...).
+		Skip(pagination.PageSize * (pagination.Page - 1)).
+		Limit(pagination.PageSize)
+
+	var scans []model.Scan
+	if err := query.All(&scans); err != nil {
+		return nil, err
+	}
+
+	if pagination.PageSize > 0 {
+		pagination.NumberOfPages = pagination.NumberOfItems / pagination.PageSize
+		if pagination.NumberOfItems%pagination.PageSize > 0 {
+			pagination.NumberOfPages += 1
+		}
+	}
+
+	return scans, nil
+}
+
 // Remove a database entry that have a given startedAt time
 func (dao ScanDAO) RemoveByStartedAt(startedAt time.Time) error {
 	// Check if the programmer forgot to set the database in ScanDAO object
@@ -117,4 +262,22 @@ func (dao ScanDAO) RemoveByStartedAt(startedAt time.Time) error {
 func (dao ScanDAO) RemoveAll() error {
 	_, err := dao.Database.C(scanDAOCollection).RemoveAll(bson.M{})
 	return err
+}
+
+// ScanDAOPagination was created as a necessity for big result sets that needs to be
+// sent for an end-user. With pagination we can control the size of the data and make it
+// faster for the user to interact with it in a web interface as example
+type ScanDAOPagination struct {
+	OrderBy       []ScanDAOSort // Sort the list before the pagination
+	PageSize      int           // Number of items that are going to be considered in one page
+	Page          int           // Current page that will be returned
+	NumberOfItems int           // Total number of items in the result set
+	NumberOfPages int           // Total number of pages calculated for the current result set
+}
+
+// ScanDAOSort is an object responsable to relate the order by field and direction. Each
+// field used for sort, can be sorted in both directions
+type ScanDAOSort struct {
+	Field     ScanDAOOrderByField // Field to be sorted
+	Direction DAOOrderByDirection // Direction used in the sort
 }

@@ -31,7 +31,7 @@ func ToDomainsResponse(domains []model.Domain, pagination dao.DomainDAOPaginatio
 
 		orderBy += fmt.Sprintf("%s:%s",
 			dao.DomainDAOOrderByFieldToString(sort.Field),
-			dao.DomainDAOOrderByDirectionToString(sort.Direction),
+			dao.DAOOrderByDirectionToString(sort.Direction),
 		)
 	}
 

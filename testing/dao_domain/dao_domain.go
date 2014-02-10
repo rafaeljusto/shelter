@@ -346,7 +346,7 @@ func domainsPagination(domainDAO dao.DomainDAO) {
 		OrderBy: []dao.DomainDAOSort{
 			{
 				Field:     dao.DomainDAOOrderByFieldFQDN,
-				Direction: dao.DomainDAOOrderByDirectionAscending,
+				Direction: dao.DAOOrderByDirectionAscending,
 			},
 		},
 	}
@@ -374,7 +374,7 @@ func domainsPagination(domainDAO dao.DomainDAO) {
 		OrderBy: []dao.DomainDAOSort{
 			{
 				Field:     dao.DomainDAOOrderByFieldFQDN,
-				Direction: dao.DomainDAOOrderByDirectionAscending,
+				Direction: dao.DAOOrderByDirectionAscending,
 			},
 		},
 	}

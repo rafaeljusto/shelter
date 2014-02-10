@@ -31,11 +31,11 @@ func TestToDomainsResponse(t *testing.T) {
 		OrderBy: []dao.DomainDAOSort{
 			{
 				Field:     dao.DomainDAOOrderByFieldFQDN,
-				Direction: dao.DomainDAOOrderByDirectionAscending,
+				Direction: dao.DAOOrderByDirectionAscending,
 			},
 			{
 				Field:     dao.DomainDAOOrderByFieldLastModifiedAt,
-				Direction: dao.DomainDAOOrderByDirectionDescending,
+				Direction: dao.DAOOrderByDirectionDescending,
 			},
 		},
 		NumberOfItems: len(domains),
@@ -95,11 +95,11 @@ func TestToDomainsResponseLinks(t *testing.T) {
 		OrderBy: []dao.DomainDAOSort{
 			{
 				Field:     dao.DomainDAOOrderByFieldFQDN,
-				Direction: dao.DomainDAOOrderByDirectionAscending,
+				Direction: dao.DAOOrderByDirectionAscending,
 			},
 			{
 				Field:     dao.DomainDAOOrderByFieldLastModifiedAt,
-				Direction: dao.DomainDAOOrderByDirectionDescending,
+				Direction: dao.DAOOrderByDirectionDescending,
 			},
 		},
 		NumberOfItems: len(domains),
@@ -119,11 +119,11 @@ func TestToDomainsResponseLinks(t *testing.T) {
 		OrderBy: []dao.DomainDAOSort{
 			{
 				Field:     dao.DomainDAOOrderByFieldFQDN,
-				Direction: dao.DomainDAOOrderByDirectionAscending,
+				Direction: dao.DAOOrderByDirectionAscending,
 			},
 			{
 				Field:     dao.DomainDAOOrderByFieldLastModifiedAt,
-				Direction: dao.DomainDAOOrderByDirectionDescending,
+				Direction: dao.DAOOrderByDirectionDescending,
 			},
 		},
 		NumberOfItems: len(domains),
@@ -143,11 +143,11 @@ func TestToDomainsResponseLinks(t *testing.T) {
 		OrderBy: []dao.DomainDAOSort{
 			{
 				Field:     dao.DomainDAOOrderByFieldFQDN,
-				Direction: dao.DomainDAOOrderByDirectionAscending,
+				Direction: dao.DAOOrderByDirectionAscending,
 			},
 			{
 				Field:     dao.DomainDAOOrderByFieldLastModifiedAt,
-				Direction: dao.DomainDAOOrderByDirectionDescending,
+				Direction: dao.DAOOrderByDirectionDescending,
 			},
 		},
 		NumberOfItems: len(domains),

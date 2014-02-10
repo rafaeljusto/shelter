@@ -66,6 +66,7 @@ func main() {
 
 	scanLifeCycle(scanDAO)
 	scanConcurrency(scanDAO)
+	scansPagination(scanDAO)
 
 	utils.Println("SUCCESS!")
 }
@@ -143,6 +144,72 @@ func scanConcurrency(scanDAO dao.ScanDAO) {
 	// Remove scan
 	if err := scanDAO.RemoveByStartedAt(scan.StartedAt); err != nil {
 		utils.Fatalln("Error while trying to remove a scan", err)
+	}
+}
+
+func scansPagination(scanDAO dao.ScanDAO) {
+	numberOfItems := 1000
+
+	for i := 0; i < numberOfItems; i++ {
+		scan := model.Scan{
+			StartedAt: time.Now().Add(time.Duration(-i) * time.Minute),
+		}
+
+		if err := scanDAO.Save(&scan); err != nil {
+			utils.Fatalln("Error saving scan in database", err)
+		}
+	}
+
+	pagination := dao.ScanDAOPagination{
+		PageSize: 10,
+		Page:     5,
+		OrderBy: []dao.ScanDAOSort{
+			{
+				Field:     dao.ScanDAOOrderByFieldStartedAt,
+				Direction: dao.DAOOrderByDirectionAscending,
+			},
+		},
+	}
+
+	scans, err := scanDAO.FindAll(&pagination)
+	if err != nil {
+		utils.Fatalln("Error retrieving scans", err)
+	}
+
+	if pagination.NumberOfItems != numberOfItems {
+		utils.Errorln("Number of items not calculated correctly", nil)
+	}
+
+	if pagination.NumberOfPages != numberOfItems/pagination.PageSize {
+		utils.Errorln("Number of pages not calculated correctly", nil)
+	}
+
+	if len(scans) != pagination.PageSize {
+		utils.Errorln("Number of scans not following page size", nil)
+	}
+
+	pagination = dao.ScanDAOPagination{
+		PageSize: 10000,
+		Page:     1,
+		OrderBy: []dao.ScanDAOSort{
+			{
+				Field:     dao.ScanDAOOrderByFieldStartedAt,
+				Direction: dao.DAOOrderByDirectionAscending,
+			},
+		},
+	}
+
+	scans, err = scanDAO.FindAll(&pagination)
+	if err != nil {
+		utils.Fatalln("Error retrieving scans", err)
+	}
+
+	if pagination.NumberOfPages != 1 {
+		utils.Fatalln("Calculating wrong number of pages when there's only one page", nil)
+	}
+
+	if err := scanDAO.RemoveAll(); err != nil {
+		utils.Fatalln("Error removing scans from database", err)
 	}
 }
 
