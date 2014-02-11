@@ -40,13 +40,26 @@ func ScansToScansResponse(scans []model.Scan, pagination dao.ScanDAOPagination) 
 	// handler because we are going to have a cross-reference problem
 	links := []Link{
 		{
+			Types: []LinkType{LinkTypeCurrent},
+			HRef:  "/scans/current",
+		},
+		{
 			Types: []LinkType{LinkTypeFirst},
 			HRef:  fmt.Sprintf("/scans/?pagesize=%d&page=%d&orderby=%s", pagination.PageSize, 1, orderBy),
 		},
-		{
+	}
+
+	// When there're no items, the first and the last page are the same
+	if pagination.NumberOfPages == 0 {
+		links = append(links, Link{
+			Types: []LinkType{LinkTypeLast},
+			HRef:  fmt.Sprintf("/scans/?pagesize=%d&page=%d&orderby=%s", pagination.PageSize, 1, orderBy),
+		})
+	} else {
+		links = append(links, Link{
 			Types: []LinkType{LinkTypeLast},
 			HRef:  fmt.Sprintf("/scans/?pagesize=%d&page=%d&orderby=%s", pagination.PageSize, pagination.NumberOfPages, orderBy),
-		},
+		})
 	}
 
 	// Only add next if there's a next page
@@ -57,16 +70,11 @@ func ScansToScansResponse(scans []model.Scan, pagination dao.ScanDAOPagination) 
 		})
 	}
 
-	// Only add previous if theres a previous page, otherwise use current scan as first page
+	// Only add previous if theres a previous page
 	if pagination.Page-1 >= 1 {
 		links = append(links, Link{
 			Types: []LinkType{LinkTypePrev},
 			HRef:  fmt.Sprintf("/scans/?pagesize=%d&page=%d&orderby=%s", pagination.PageSize, pagination.Page-1, orderBy),
-		})
-	} else {
-		links = append(links, Link{
-			Types: []LinkType{LinkTypePrev},
-			HRef:  fmt.Sprintf("/scan/current"),
 		})
 	}
 

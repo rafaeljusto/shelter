@@ -118,7 +118,7 @@ func TestScansToScansResponseLinks(t *testing.T) {
 	scansResponse := ScansToScansResponse(scans, pagination)
 
 	// Show all actions when navigating in the middle of the pagination
-	if len(scansResponse.Links) != 4 {
+	if len(scansResponse.Links) != 5 {
 		t.Error("Response not adding the necessary links when we are navigating")
 	}
 
@@ -174,7 +174,7 @@ func TestScansToScansResponseLinks(t *testing.T) {
 	scansResponse = ScansToScansResponse(scans, pagination)
 
 	// Don't show next when we are in the last page
-	if len(scansResponse.Links) != 3 {
+	if len(scansResponse.Links) != 4 {
 		t.Error("Response not adding the necessary links when we are in the last page")
 	}
 }

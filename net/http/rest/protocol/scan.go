@@ -13,7 +13,7 @@ type ScanResponse struct {
 	Status                   string            `json:"status"`                             // Current scan situation
 	StartedAt                time.Time         `json:"startedAt,omitempty"`                // Start date and time of the scan, is also used to identify the scan
 	FinishedAt               time.Time         `json:"finishedAt,omitempty"`               // Finish date and time of the scan
-	DomainsToBeScanned       uint64            `json:"domainsTOBeScanned,omitempty"`       // Number of domains to verify (scan is executing)
+	DomainsToBeScanned       uint64            `json:"domainsToBeScanned,omitempty"`       // Number of domains to verify (scan is executing)
 	DomainsScanned           uint64            `json:"domainsScanned,omitempty"`           // Number of domains already verified
 	DomainsWithDNSSECScanned uint64            `json:"domainsWithDNSSECScanned,omitempty"` // Number of domains with DNSSEC already verified
 	NameserverStatistics     map[string]uint64 `json:"nameserverStatistics,omitempty"`     // Domains' nameservers statistics (status and quantity)
@@ -59,7 +59,7 @@ func CurrentScanToScanResponse(currentScan model.CurrentScan) ScanResponse {
 				HRef:  "/scan/current",
 			},
 			{
-				Types: []LinkType{LinkTypeNext},
+				Types: []LinkType{LinkTypeArchives},
 				HRef:  fmt.Sprintf("/scans"),
 			},
 		},

@@ -43,10 +43,19 @@ func ToDomainsResponse(domains []model.Domain, pagination dao.DomainDAOPaginatio
 			Types: []LinkType{LinkTypeFirst},
 			HRef:  fmt.Sprintf("/domains/?pagesize=%d&page=%d&orderby=%s", pagination.PageSize, 1, orderBy),
 		},
-		{
+	}
+
+	// When there're no items, the first and the last page are the same
+	if pagination.NumberOfPages == 0 {
+		links = append(links, Link{
+			Types: []LinkType{LinkTypeLast},
+			HRef:  fmt.Sprintf("/domains/?pagesize=%d&page=%d&orderby=%s", pagination.PageSize, 1, orderBy),
+		})
+	} else {
+		links = append(links, Link{
 			Types: []LinkType{LinkTypeLast},
 			HRef:  fmt.Sprintf("/domains/?pagesize=%d&page=%d&orderby=%s", pagination.PageSize, pagination.NumberOfPages, orderBy),
-		},
+		})
 	}
 
 	// Only add next if there's a next page
