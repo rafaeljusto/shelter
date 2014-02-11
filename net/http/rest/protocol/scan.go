@@ -11,8 +11,8 @@ import (
 // scan
 type ScanResponse struct {
 	Status                   string            `json:"status"`                             // Current scan situation
-	StartedAt                time.Time         `json:"startedAt,omitempty"`                // Start date and time of the scan, is also used to identify the scan
-	FinishedAt               time.Time         `json:"finishedAt,omitempty"`               // Finish date and time of the scan
+	StartedAt                PreciseTime       `json:"startedAt,omitempty"`                // Start date and time of the scan, is also used to identify the scan
+	FinishedAt               PreciseTime       `json:"finishedAt,omitempty"`               // Finish date and time of the scan
 	DomainsToBeScanned       uint64            `json:"domainsToBeScanned,omitempty"`       // Number of domains to verify (scan is executing)
 	DomainsScanned           uint64            `json:"domainsScanned,omitempty"`           // Number of domains already verified
 	DomainsWithDNSSECScanned uint64            `json:"domainsWithDNSSECScanned,omitempty"` // Number of domains with DNSSEC already verified
@@ -25,8 +25,8 @@ type ScanResponse struct {
 func ScanToScanResponse(scan model.Scan) ScanResponse {
 	return ScanResponse{
 		Status:                   model.ScanStatusToString(scan.Status),
-		StartedAt:                scan.StartedAt,
-		FinishedAt:               scan.FinishedAt,
+		StartedAt:                PreciseTime{scan.StartedAt},
+		FinishedAt:               PreciseTime{scan.FinishedAt},
 		DomainsToBeScanned:       0,
 		DomainsScanned:           scan.DomainsScanned,
 		DomainsWithDNSSECScanned: scan.DomainsWithDNSSECScanned,
@@ -46,8 +46,8 @@ func ScanToScanResponse(scan model.Scan) ScanResponse {
 func CurrentScanToScanResponse(currentScan model.CurrentScan) ScanResponse {
 	return ScanResponse{
 		Status:                   model.ScanStatusToString(currentScan.Status),
-		StartedAt:                currentScan.StartedAt,
-		FinishedAt:               currentScan.FinishedAt,
+		StartedAt:                PreciseTime{currentScan.StartedAt},
+		FinishedAt:               PreciseTime{currentScan.FinishedAt},
 		DomainsToBeScanned:       currentScan.DomainsToBeScanned,
 		DomainsScanned:           currentScan.DomainsScanned,
 		DomainsWithDNSSECScanned: currentScan.DomainsWithDNSSECScanned,
