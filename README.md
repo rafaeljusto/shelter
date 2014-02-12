@@ -13,9 +13,10 @@ The roundtable was leaded by Hugo Salgado (.cl); Rafael Dantas Justo (.br); Robe
 Legene (PCH). Many others participants from other registries of Latin America also
 contributed with ideas for the project.
 
+For more information check the [Wiki](https://github.com/rafaeljusto/shelter/wiki).
 
-installation
-============
+building
+========
 
 The Shelter project depends on the following packages:
 * code.google.com/p/go.net/idna
