@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/rafaeljusto/shelter/config"
 	"github.com/rafaeljusto/shelter/log"
+	"github.com/rafaeljusto/shelter/model"
 	"github.com/rafaeljusto/shelter/net/http/rest"
 	"github.com/rafaeljusto/shelter/net/scan"
 	"github.com/rafaeljusto/shelter/scheduler"
@@ -31,6 +32,7 @@ const (
 	ErrListeningRESTInterfaces
 	ErrStartingRESTServer
 	ErrScanTimeFormat
+	ErrCurrentScanInitialize
 )
 
 // We are going to use the initialization function to read command line arguments, load
@@ -103,10 +105,16 @@ func main() {
 		)
 
 		scheduler.Register(scheduler.Job{
+			Type:          scheduler.JobTypeScan,
 			NextExecution: nextExecution,
 			Interval:      time.Duration(config.ShelterConfig.Scan.IntervalHours) * time.Hour,
 			Task:          scan.ScanDomains,
 		})
+
+		if err := model.InitializeCurrentScan(); err != nil {
+			log.Println("Current scan information got an error while initializing. Details:", err)
+			os.Exit(ErrCurrentScanInitialize)
+		}
 	}
 
 	scheduler.Start()

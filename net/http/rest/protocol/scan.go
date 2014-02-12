@@ -11,6 +11,7 @@ import (
 // scan
 type ScanResponse struct {
 	Status                   string            `json:"status"`                             // Current scan situation
+	ScheduledAt              PreciseTime       `json:"scheduledAt,omitempty"`              // Scheduled date and time that the scan will be executed
 	StartedAt                PreciseTime       `json:"startedAt,omitempty"`                // Start date and time of the scan, is also used to identify the scan
 	FinishedAt               PreciseTime       `json:"finishedAt,omitempty"`               // Finish date and time of the scan
 	DomainsToBeScanned       uint64            `json:"domainsToBeScanned,omitempty"`       // Number of domains to verify (scan is executing)
@@ -46,6 +47,7 @@ func ScanToScanResponse(scan model.Scan) ScanResponse {
 func CurrentScanToScanResponse(currentScan model.CurrentScan) ScanResponse {
 	return ScanResponse{
 		Status:                   model.ScanStatusToString(currentScan.Status),
+		ScheduledAt:              PreciseTime{currentScan.ScheduledAt},
 		StartedAt:                PreciseTime{currentScan.StartedAt},
 		FinishedAt:               PreciseTime{currentScan.FinishedAt},
 		DomainsToBeScanned:       currentScan.DomainsToBeScanned,

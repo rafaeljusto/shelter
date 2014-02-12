@@ -9,6 +9,7 @@ import (
 	"github.com/rafaeljusto/shelter/database/mongodb"
 	"github.com/rafaeljusto/shelter/model"
 	"github.com/rafaeljusto/shelter/net/scan"
+	"github.com/rafaeljusto/shelter/scheduler"
 	"github.com/rafaeljusto/shelter/testing/utils"
 	"net"
 	"net/mail"
@@ -96,6 +97,13 @@ func main() {
 	domainDAO := dao.DomainDAO{
 		Database: database,
 	}
+
+	// Register a scan only to avoid warning messages in the integration test execution
+	scheduler.Register(scheduler.Job{
+		Type:          scheduler.JobTypeScan,
+		NextExecution: time.Now().Add(10 * time.Minute),
+		Task:          func() {},
+	})
 
 	domainWithNoErrors(domainDAO)
 	domainWithNoErrorsOnTheFly()

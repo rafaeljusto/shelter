@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/rafaeljusto/shelter/scheduler"
 	"labix.org/v2/mgo/bson"
 	"sync"
 	"sync/atomic"
@@ -66,8 +67,32 @@ type Scan struct {
 // from this struct is not stored until the scan is finished and become only a Scan struct. This
 // should be used to tell the user (using a service) how is a progress of a scan on-the-fly
 type CurrentScan struct {
-	Scan                      // CurrentScan is a Scan
-	DomainsToBeScanned uint64 // Domains selected to be scanned
+	Scan                         // CurrentScan is a Scan
+	ScheduledAt        time.Time // Initial date and time that the scan was schedule to execute
+	DomainsToBeScanned uint64    // Domains selected to be scanned
+}
+
+// Function to fill current scan variable for the first time. Should run after the
+// scheduler registered the scan job, to determinate the next execution time. Returns an
+// error if this function is executed before the scheduler register the scan job
+func InitializeCurrentScan() error {
+	shelterCurrentScanLock.Lock()
+	defer shelterCurrentScanLock.Unlock()
+
+	nextExecution, err := scheduler.NextExecutionByType(scheduler.JobTypeScan)
+
+	shelterCurrentScan = CurrentScan{
+		Scan: Scan{
+			Status:               ScanStatusWaitingExecution,
+			NameserverStatistics: make(map[string]uint64),
+			DSStatistics:         make(map[string]uint64),
+		},
+		ScheduledAt: nextExecution,
+	}
+
+	// If err from different from nil we didn't find a scan job in the scheduler! Propably
+	// this function was executed before the scheduler registered the scan job
+	return err
 }
 
 // Function to alert that a new scan is going to be started. This function is necessary to
@@ -115,7 +140,24 @@ func FinishAndSaveScan(hadErrors bool, f func(*Scan) error) error {
 		},
 	}
 
-	return err
+	// We only check the err after reseting the shelterCurrentScan variable because we want
+	// to change the variable even if we had an error
+	if err != nil {
+		return err
+	}
+
+	// Retrieve the scan next execution. We only do this here because we want to be the last
+	// thing from the method, avoiding that an error of this action prevent other actions to
+	// run
+	nextExecution, err := scheduler.NextExecutionByType(scheduler.JobTypeScan)
+	if err != nil {
+		// Didn't find a scan job in the scheduler, really strange! Return the error to report
+		// the problem (probably by log messages)
+		return err
+	}
+	shelterCurrentScan.ScheduledAt = nextExecution
+
+	return nil
 }
 
 // When the injector successfully loaded a domain to be scanned, it will increment the

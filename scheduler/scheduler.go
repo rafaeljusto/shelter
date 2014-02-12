@@ -1,6 +1,7 @@
 package scheduler
 
 import (
+	"errors"
 	"sync"
 	"time"
 )
@@ -11,14 +12,29 @@ var (
 )
 
 var (
+	ErrJobTypeNotFound = errors.New("Job type not found in scheduler")
+)
+
+var (
 	jobsMutex sync.Mutex // Lock to make it possible to add jobs after the scheduler already started
 	jobs      []Job      // List of jobs that are going to be executed
 )
+
+// List of possible job types on the scheduler
+const (
+	JobTypeUnknown JobType = 0 // When the job is not going to be verified later
+	JobTypeScan    JobType = 1 // We usually wants to known when the next scan will start
+)
+
+// Identify the jobs with types to later retrieve information from scheduler to known when
+// a specific job will run
+type JobType int
 
 // Job struct store all necessary information to execute a task periodically in the
 // system. You can define a specific execution time and the interval that it will be
 // executed
 type Job struct {
+	Type          JobType       // Type of the object to be identified later
 	NextExecution time.Time     // Schedule the next execution
 	Interval      time.Duration // Interval of executions of this job
 	Task          func()        // Function that will be executed
@@ -68,4 +84,19 @@ func Start() {
 			}
 		}
 	}()
+}
+
+// Retrieve the next execution of the first occurance of a specific job type. If not found
+// an error is returned
+func NextExecutionByType(jobType JobType) (time.Time, error) {
+	jobsMutex.Lock()
+	defer jobsMutex.Unlock()
+
+	for _, job := range jobs {
+		if job.Type == jobType {
+			return job.NextExecution, nil
+		}
+	}
+
+	return time.Time{}, ErrJobTypeNotFound
 }

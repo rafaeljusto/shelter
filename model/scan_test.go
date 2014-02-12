@@ -1,9 +1,40 @@
 package model
 
 import (
+	"errors"
+	"github.com/rafaeljusto/shelter/scheduler"
 	"sync"
 	"testing"
+	"time"
 )
+
+func TestInitializeCurrentScan(t *testing.T) {
+	if err := InitializeCurrentScan(); err == nil {
+		t.Fatal("Not alerting about scheduler without scan job")
+	}
+
+	nextExecution := time.Now().Add(10 * time.Minute)
+
+	scheduler.Register(scheduler.Job{
+		Type:          scheduler.JobTypeScan,
+		NextExecution: nextExecution,
+		Task:          func() {},
+	})
+
+	if err := InitializeCurrentScan(); err != nil {
+		t.Fatal(err)
+	}
+
+	if shelterCurrentScan.Status != ScanStatusWaitingExecution {
+		t.Error("Wrong initial status of the current scan")
+	}
+
+	if !shelterCurrentScan.ScheduledAt.Equal(nextExecution) {
+		t.Error("Wrong next execution time of the current scan")
+	}
+
+	scheduler.Clear()
+}
 
 func TestStartNewScan(t *testing.T) {
 	shelterCurrentScan.DomainsScanned = 5
@@ -23,16 +54,24 @@ func TestStartNewScan(t *testing.T) {
 }
 
 func TestFinishAndSaveScan(t *testing.T) {
+	scheduler.Register(scheduler.Job{
+		Type:          scheduler.JobTypeScan,
+		NextExecution: time.Now().Add(10 * time.Minute),
+		Task:          func() {},
+	})
+
 	StartNewScan()
 
 	called := false
-	FinishAndSaveScan(false, func(s *Scan) error {
+	if err := FinishAndSaveScan(false, func(s *Scan) error {
 		if s.Status != ScanStatusExecuted {
 			t.Error("Not setting finish scan information correctly")
 		}
 		called = true
 		return nil
-	})
+	}); err != nil {
+		t.Fatal(err)
+	}
 
 	if !called {
 		t.Error("Not calling scan save method")
@@ -43,17 +82,33 @@ func TestFinishAndSaveScan(t *testing.T) {
 	}
 
 	called = false
-	FinishAndSaveScan(true, func(s *Scan) error {
+	if err := FinishAndSaveScan(true, func(s *Scan) error {
 		if s.Status != ScanStatusExecutedWithErrors {
 			t.Error("Not setting finish scan information correctly " +
 				"when we had errors")
 		}
 		called = true
 		return nil
-	})
+	}); err != nil {
+		t.Fatal(err)
+	}
 
 	if !called {
 		t.Error("Not calling scan save method when we had errors")
+	}
+
+	if err := FinishAndSaveScan(true, func(s *Scan) error {
+		return errors.New("Error saving scan!")
+	}); err == nil {
+		t.Error("Not returning err detected by save method")
+	}
+
+	scheduler.Clear()
+
+	if err := FinishAndSaveScan(true, func(s *Scan) error {
+		return nil
+	}); err == nil {
+		t.Error("Not returning err when next scan is not found")
 	}
 }
 
