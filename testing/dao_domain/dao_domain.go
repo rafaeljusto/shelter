@@ -76,6 +76,7 @@ func main() {
 	domainUniqueFQDN(domainDAO)
 	domainConcurrency(domainDAO)
 	domainsPagination(domainDAO)
+	domainsNotification(domainDAO)
 
 	// Domain DAO performance report is optional and only generated when the report file
 	// path parameter is given
@@ -392,6 +393,133 @@ func domainsPagination(domainDAO dao.DomainDAO) {
 		fqdn := fmt.Sprintf("example%d.com.br", i)
 		if err := domainDAO.RemoveByFQDN(fqdn); err != nil {
 			utils.Fatalln("Error removing domain from database", err)
+		}
+	}
+}
+
+// Verify if the method that choose the domains that needs to be verified is correct
+func domainsNotification(domainDAO dao.DomainDAO) {
+	numberOfItemsToBeVerified := 1000
+	numberOfItemsToDontBeVerified := 1000
+	nameserverErrorAlertDays := 7
+	nameserverTimeoutAlertDays := 30
+	dsErrorAlertDays := 1
+	dsTimeoutAlertDays := 7
+
+	data := []struct {
+		name                      string
+		numberOfItems             int
+		nameserverTimeoutLastOKAt time.Time
+		nameserverErrorLastOKAt   time.Time
+		dsTimeoutLastOkAt         time.Time
+		dsErrorLastOkAt           time.Time
+	}{
+		{
+			name:                      "shouldbescanned",
+			numberOfItems:             numberOfItemsToBeVerified,
+			nameserverTimeoutLastOKAt: time.Now().Add(time.Duration(-nameserverTimeoutAlertDays*24) * time.Hour),
+			nameserverErrorLastOKAt:   time.Now().Add(time.Duration(-nameserverErrorAlertDays*24) * time.Hour),
+			dsTimeoutLastOkAt:         time.Now().Add(time.Duration(-dsTimeoutAlertDays*24) * time.Hour),
+			dsErrorLastOkAt:           time.Now().Add(time.Duration(-dsErrorAlertDays*24) * time.Hour),
+		},
+		{
+			name:                      "shouldnotbescanned",
+			numberOfItems:             numberOfItemsToDontBeVerified,
+			nameserverTimeoutLastOKAt: time.Now().Add(time.Duration((-nameserverTimeoutAlertDays+1)*24) * time.Hour),
+			nameserverErrorLastOKAt:   time.Now().Add(time.Duration((-nameserverErrorAlertDays+1)*24) * time.Hour),
+			dsTimeoutLastOkAt:         time.Now().Add(time.Duration((-dsTimeoutAlertDays+1)*24) * time.Hour),
+			dsErrorLastOkAt:           time.Now().Add(time.Duration((-dsErrorAlertDays+1)*24) * time.Hour),
+		},
+	}
+
+	for _, item := range data {
+		for i := 0; i < item.numberOfItems/4; i++ {
+			domain := model.Domain{
+				FQDN: fmt.Sprintf("%s%d.com.br", item.name, i),
+				Nameservers: []model.Nameserver{
+					{
+						LastStatus: model.NameserverStatusTimeout,
+						LastOKAt:   item.nameserverTimeoutLastOKAt,
+					},
+				},
+			}
+
+			if err := domainDAO.Save(&domain); err != nil {
+				utils.Fatalln("Error saving domain in database", err)
+			}
+		}
+
+		for i := item.numberOfItems / 4; i < item.numberOfItems/4*2; i++ {
+			domain := model.Domain{
+				FQDN: fmt.Sprintf("%s%d.com.br", item.name, i),
+				Nameservers: []model.Nameserver{
+					{
+						LastStatus: model.NameserverStatusNoAuthority,
+						LastOKAt:   item.nameserverErrorLastOKAt,
+					},
+				},
+			}
+
+			if err := domainDAO.Save(&domain); err != nil {
+				utils.Fatalln("Error saving domain in database", err)
+			}
+		}
+
+		for i := item.numberOfItems / 4 * 2; i < item.numberOfItems/4*3; i++ {
+			domain := model.Domain{
+				FQDN: fmt.Sprintf("%s%d.com.br", item.name, i),
+				DSSet: []model.DS{
+					{
+						LastStatus: model.DSStatusTimeout,
+						LastOKAt:   item.dsTimeoutLastOkAt,
+					},
+				},
+			}
+
+			if err := domainDAO.Save(&domain); err != nil {
+				utils.Fatalln("Error saving domain in database", err)
+			}
+		}
+
+		for i := item.numberOfItems / 4 * 3; i < item.numberOfItems; i++ {
+			domain := model.Domain{
+				FQDN: fmt.Sprintf("%s%d.com.br", item.name, i),
+				DSSet: []model.DS{
+					{
+						LastStatus: model.DSStatusExpiredSignature,
+						LastOKAt:   item.dsErrorLastOkAt,
+					},
+				},
+			}
+
+			if err := domainDAO.Save(&domain); err != nil {
+				utils.Fatalln("Error saving domain in database", err)
+			}
+		}
+	}
+
+	domains, err := domainDAO.FindAllToBeNotified(
+		nameserverErrorAlertDays,
+		nameserverTimeoutAlertDays,
+		dsErrorAlertDays,
+		dsTimeoutAlertDays,
+	)
+
+	if err != nil {
+		utils.Fatalln("Error retrieving domains to be notified", err)
+	}
+
+	if len(domains) != numberOfItemsToBeVerified {
+		utils.Fatalln(fmt.Sprintf("Did not select all the domains ready for notification. "+
+			"Expected %d and got %d", numberOfItemsToBeVerified, len(domains)), nil)
+	}
+
+	for _, item := range data {
+		for i := 0; i < item.numberOfItems; i++ {
+			fqdn := fmt.Sprintf("%s%d.com.br", item.name, i)
+			if err := domainDAO.RemoveByFQDN(fqdn); err != nil {
+				utils.Fatalln("Error removing domain from database", err)
+			}
 		}
 	}
 }

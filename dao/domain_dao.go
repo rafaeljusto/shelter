@@ -256,6 +256,76 @@ func (dao DomainDAO) FindAllAsync() (chan DomainResult, error) {
 	return domainChannel, nil
 }
 
+// Return all domains that need to be notified due to the error tolerancy policy. The
+// objective is to help the user to configure correctly the nameservers alerting about
+// problems. We are going to have different notification tolerances for nameserver, ds and
+// the type of errors (timeout and others)
+func (dao DomainDAO) FindAllToBeNotified(
+	nameserverErrorAlertDays,
+	nameserverTimeoutAlertDays,
+	dsErrorAlertDays,
+	dsTimeoutAlertDays int,
+) ([]model.Domain, error) {
+
+	query := dao.Database.C(domainDAOCollection).Find(bson.M{
+		"$or": []bson.M{
+			{
+				"nameservers": bson.M{"$elemMatch": bson.M{"$or": []bson.M{
+					{
+						"laststatus": bson.M{"$nin": []model.NameserverStatus{
+							model.NameserverStatusNotChecked,
+							model.NameserverStatusOK,
+							model.NameserverStatusTimeout,
+						},
+						},
+						"lastokat": bson.M{
+							"$lte": time.Now().Add(time.Duration(-nameserverErrorAlertDays*24) * time.Hour),
+						},
+					},
+					{
+						"laststatus": model.NameserverStatusTimeout,
+						"lastokat": bson.M{
+							"$lte": time.Now().Add(time.Duration(-nameserverTimeoutAlertDays*24) * time.Hour),
+						},
+					},
+				},
+				},
+				},
+			},
+			{
+				"dsset": bson.M{"$elemMatch": bson.M{"$or": []bson.M{
+					{
+						"laststatus": bson.M{"$nin": []model.DSStatus{
+							model.DSStatusNotChecked,
+							model.DSStatusOK,
+							model.DSStatusTimeout,
+						},
+						},
+						"lastokat": bson.M{
+							"$lte": time.Now().Add(time.Duration(-dsErrorAlertDays*24) * time.Hour),
+						},
+					},
+					{
+						"laststatus": model.DSStatusTimeout,
+						"lastokat": bson.M{
+							"$lte": time.Now().Add(time.Duration(-dsTimeoutAlertDays*24) * time.Hour),
+						},
+					},
+				},
+				},
+				},
+			},
+		},
+	})
+
+	var domains []model.Domain
+	if err := query.All(&domains); err != nil {
+		return nil, err
+	}
+
+	return domains, nil
+}
+
 // Try to find the domain using the FQDN attribute. The system was designed to have an
 // unique FQDN. The database should be prepared (with indexes) to search faster when using
 // FQDN as condition
