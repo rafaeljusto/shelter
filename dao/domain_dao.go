@@ -97,6 +97,31 @@ func init() {
 
 		return database.C(domainDAOCollection).EnsureIndex(index)
 	})
+
+	// Add index on nameserver.lastokat to speed up the query that check the domains that
+	// need to be notified. We don't use laststatus because the selectivity is low,
+	// according to http://docs.mongodb.org/manual/tutorial/create-queries-that-ensure-
+	// selectivity/
+	mongodb.RegisterIndexFunction(func(database *mgo.Database) error {
+		index := mgo.Index{
+			Name: "nameservers",
+			Key:  []string{"nameservers.lastokat"},
+		}
+
+		return database.C(domainDAOCollection).EnsureIndex(index)
+	})
+
+	// Add index on dsset.lastokat to speed up the query that check the domains that need to
+	// be notified. We don't use laststatus because the selectivity is low, according to
+	// http://docs.mongodb.org/manual/tutorial/create-queries-that-ensure- selectivity/
+	mongodb.RegisterIndexFunction(func(database *mgo.Database) error {
+		index := mgo.Index{
+			Name: "dsset",
+			Key:  []string{"dsset.lastokat"},
+		}
+
+		return database.C(domainDAOCollection).EnsureIndex(index)
+	})
 }
 
 // DomainDAO is the structure responsable for keeping the database connection to save the
@@ -121,7 +146,10 @@ func (dao DomainDAO) Save(domain *model.Domain) error {
 	}
 
 	// Every time we modified a domain object we increase the revision counter to identify
-	// changes in high level structures
+	// changes in high level structures. Maybe a better approach would be doing this on the
+	// MongoDB server side, check out the link http://docs.mongodb.org/manual/tutorial
+	// /optimize-query-performance-with-indexes-and-projections/ - Use the Increment
+	// Operator to Perform Operations Server-Side
 	domain.Revision += 1
 
 	// Store the last time that the object was modified
@@ -267,51 +295,55 @@ func (dao DomainDAO) FindAllToBeNotified(
 	dsTimeoutAlertDays int,
 ) ([]model.Domain, error) {
 
+	// When using indexes with $or queries, remember that each clause of an $or query will
+	// execute in parallel. These clauses can each use their own index. We tried another
+	// query with $or operators inside the main $or but if we do that the "explain" show us
+	// that MongoDB don't use indexes for that sittuation (so avoid it!)
+
 	query := dao.Database.C(domainDAOCollection).Find(bson.M{
 		"$or": []bson.M{
 			{
-				"nameservers": bson.M{"$elemMatch": bson.M{"$or": []bson.M{
-					{
-						"laststatus": bson.M{"$nin": []model.NameserverStatus{
-							model.NameserverStatusNotChecked,
-							model.NameserverStatusOK,
-							model.NameserverStatusTimeout,
-						},
-						},
-						"lastokat": bson.M{
-							"$lte": time.Now().Add(time.Duration(-nameserverErrorAlertDays*24) * time.Hour),
-						},
+				"nameservers": bson.M{"$elemMatch": bson.M{
+					"laststatus": bson.M{"$nin": []model.NameserverStatus{
+						model.NameserverStatusNotChecked,
+						model.NameserverStatusOK,
+						model.NameserverStatusTimeout,
 					},
-					{
-						"laststatus": model.NameserverStatusTimeout,
-						"lastokat": bson.M{
-							"$lte": time.Now().Add(time.Duration(-nameserverTimeoutAlertDays*24) * time.Hour),
-						},
 					},
-				},
+					"lastokat": bson.M{
+						"$lte": time.Now().Add(time.Duration(-nameserverErrorAlertDays*24) * time.Hour),
+					},
 				},
 				},
 			},
 			{
-				"dsset": bson.M{"$elemMatch": bson.M{"$or": []bson.M{
-					{
-						"laststatus": bson.M{"$nin": []model.DSStatus{
-							model.DSStatusNotChecked,
-							model.DSStatusOK,
-							model.DSStatusTimeout,
-						},
-						},
-						"lastokat": bson.M{
-							"$lte": time.Now().Add(time.Duration(-dsErrorAlertDays*24) * time.Hour),
-						},
-					},
-					{
-						"laststatus": model.DSStatusTimeout,
-						"lastokat": bson.M{
-							"$lte": time.Now().Add(time.Duration(-dsTimeoutAlertDays*24) * time.Hour),
-						},
+				"nameservers": bson.M{"$elemMatch": bson.M{
+					"laststatus": model.NameserverStatusTimeout,
+					"lastokat": bson.M{
+						"$lte": time.Now().Add(time.Duration(-nameserverTimeoutAlertDays*24) * time.Hour),
 					},
 				},
+				},
+			},
+			{
+				"dsset": bson.M{"$elemMatch": bson.M{
+					"laststatus": bson.M{"$nin": []model.DSStatus{
+						model.DSStatusNotChecked,
+						model.DSStatusOK,
+						model.DSStatusTimeout,
+					},
+					},
+					"lastokat": bson.M{
+						"$lte": time.Now().Add(time.Duration(-dsErrorAlertDays*24) * time.Hour),
+					},
+				},
+				},
+			},
+			{
+				"dsset": bson.M{"$elemMatch": bson.M{"laststatus": model.DSStatusTimeout,
+					"lastokat": bson.M{
+						"$lte": time.Now().Add(time.Duration(-dsTimeoutAlertDays*24) * time.Hour),
+					},
 				},
 				},
 			},
