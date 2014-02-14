@@ -18,7 +18,8 @@ For more information check the [Wiki](https://github.com/rafaeljusto/shelter/wik
 building
 ========
 
-The Shelter project depends on the following packages:
+The Shelter project was developed using the [Go language](http://golang.org/)
+and it depends on the following Go packages:
 * code.google.com/p/go.net/idna
 * code.google.com/p/go.tools/cmd/cover
 * github.com/miekg/dns
@@ -32,3 +33,9 @@ go get -u <package_name>
 
 The objects are persisted using a MongoDB database.
 To install it check the webpage http://www.mongodb.org/
+
+And finally, to build the project, just run the following command on the project root:
+
+```
+go build shelter.go
+```
