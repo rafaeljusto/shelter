@@ -7,6 +7,7 @@ import (
 	"github.com/rafaeljusto/shelter/log"
 	"github.com/rafaeljusto/shelter/model"
 	"github.com/rafaeljusto/shelter/net/http/rest"
+	"github.com/rafaeljusto/shelter/net/mail/notification"
 	"github.com/rafaeljusto/shelter/net/scan"
 	"github.com/rafaeljusto/shelter/scheduler"
 	"net"
@@ -111,10 +112,41 @@ func main() {
 			Task:          scan.ScanDomains,
 		})
 
+		// Must be called after registering in scheduler, because we retrieve the next execution time
+		// from it
 		if err := model.InitializeCurrentScan(); err != nil {
 			log.Println("Current scan information got an error while initializing. Details:", err)
 			os.Exit(ErrCurrentScanInitialize)
 		}
+	}
+
+	if config.ShelterConfig.Notification.Enabled {
+		notificationTime, err := time.Parse("15:04:05 MST", config.ShelterConfig.Scan.Time)
+		if err != nil {
+			log.Println("Scan time not in a valid format. Details:", err)
+			os.Exit(ErrScanTimeFormat)
+		}
+
+		notificationTime = notificationTime.UTC()
+		now := time.Now().UTC()
+
+		nextExecution := time.Date(
+			now.Year(),
+			now.Month(),
+			now.Day(),
+			notificationTime.Hour(),
+			notificationTime.Minute(),
+			notificationTime.Second(),
+			notificationTime.Nanosecond(),
+			notificationTime.Location(),
+		)
+
+		scheduler.Register(scheduler.Job{
+			Type:          scheduler.JobTypeNotification,
+			NextExecution: nextExecution,
+			Interval:      time.Duration(config.ShelterConfig.Notification.IntervalHours) * time.Hour,
+			Task:          notification.Notify,
+		})
 	}
 
 	scheduler.Start()

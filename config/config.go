@@ -9,6 +9,14 @@ var (
 	ShelterConfig Config
 )
 
+const (
+	AuthenticationTypeNone        AuthenticationType = ""
+	AuthenticationTypePlain       AuthenticationType = "PLAIN"
+	AuthenticationTypeCRAMMD5Auth AuthenticationType = "CRAMMD5AUTH"
+)
+
+type AuthenticationType string
+
 type Config struct {
 	BasePath    string
 	LogFilename string
@@ -64,6 +72,29 @@ type Config struct {
 
 		ACL     []string
 		Secrets map[string]string
+	}
+
+	Notification struct {
+		Enabled                    bool
+		Time                       string
+		IntervalHours              int
+		NameserverErrorAlertDays   int
+		NameserverTimeoutAlertDays int
+		DSErrorAlertDays           int
+		DSTimeoutAlertDays         int
+		From                       string
+		Template                   string
+
+		SMTPServer struct {
+			Server string
+			Port   int
+
+			Auth struct {
+				Type     AuthenticationType
+				Username string
+				Password string
+			}
+		}
 	}
 }
 

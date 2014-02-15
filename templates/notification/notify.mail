@@ -1,0 +1,14 @@
+From: {{.From}}
+To: {{.To}}
+Subject: Misconfiguration on domain {{.FQDN}}
+
+
+Dear Sir/Madam,
+
+During our periodically domain verification, a configuration problem was detected with the domain
+{{.FQDN}}.
+
+{{.Errors}}
+
+Best regards,
+{{.Name}}
