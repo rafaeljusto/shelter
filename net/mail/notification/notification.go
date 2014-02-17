@@ -33,7 +33,7 @@ func Notify() {
 		Database: database,
 	}
 
-	domains, err := domainDAO.FindAllToBeNotified(
+	domainChannel, err := domainDAO.FindAllAsyncToBeNotified(
 		config.ShelterConfig.Notification.NameserverErrorAlertDays,
 		config.ShelterConfig.Notification.NameserverTimeoutAlertDays,
 		config.ShelterConfig.Notification.DSErrorAlertDays,
@@ -41,17 +41,32 @@ func Notify() {
 	)
 
 	if err != nil {
-		log.Println("Error retrieving domain to notify. Details:", err)
+		log.Println("Error retrieving domains to notify. Details:", err)
 		return
 	}
 
-	for _, domain := range domains {
-		// TODO: Is better do this async
-		notifyDomain(domain)
+	// Dispatch the asynchronous part of the method
+	for {
+		// Get domain from the database (one-by-one)
+		domainResult := <-domainChannel
+
+		// Detect errors while retrieving a specific domain. We are not going to stop all the
+		// process when only one domain got an error
+		if domainResult.Error != nil {
+			log.Println("Error retrieving domain to notify. Details:", domainResult.Error)
+			continue
+		}
+
+		// Problem detected while retrieving a domain or we don't have domains anymore
+		if domainResult.Error != nil || domainResult.Domain == nil {
+			break
+		}
+
+		notifyDomain(domainResult.Domain)
 	}
 }
 
-func notifyDomain(domain model.Domain) {
+func notifyDomain(domain *model.Domain) {
 	from := config.ShelterConfig.Notification.From
 
 	var emails []string

@@ -498,7 +498,7 @@ func domainsNotification(domainDAO dao.DomainDAO) {
 		}
 	}
 
-	domains, err := domainDAO.FindAllToBeNotified(
+	domainChannel, err := domainDAO.FindAllAsyncToBeNotified(
 		nameserverErrorAlertDays,
 		nameserverTimeoutAlertDays,
 		dsErrorAlertDays,
@@ -507,6 +507,21 @@ func domainsNotification(domainDAO dao.DomainDAO) {
 
 	if err != nil {
 		utils.Fatalln("Error retrieving domains to be notified", err)
+	}
+
+	var domains []*model.Domain
+	for {
+		domainResult := <-domainChannel
+
+		if domainResult.Error != nil {
+			utils.Fatalln("Error retrieving domain to be notified", domainResult.Error)
+		}
+
+		if domainResult.Error != nil || domainResult.Domain == nil {
+			break
+		}
+
+		domains = append(domains, domainResult.Domain)
 	}
 
 	if len(domains) != numberOfItemsToBeVerified {
