@@ -2,6 +2,7 @@
 
 import getopt
 import sys
+import subprocess
 import urllib.request
 
 class Language:
@@ -72,44 +73,51 @@ def buildLanguages(data):
 
   return languages, regions
 
-def writeLanguages(languages, regions):
-  print("package model")
+def writeLanguages(languages, regions, outputPath):
+  output = open(outputPath, "w")
+
+  print("package model", file=output)
   print("""
 // File generated using the language.py script, that is responsable for parsing the IANA
 // Language Subtag Registry file obtained from 
-// http://www.iana.org/assignments/language-subtag-registry/language-subtag-registry""")
+// http://www.iana.org/assignments/language-subtag-registry/language-subtag-registry""", file=output)
 
   print("""
-// List of possible language types""")
-  print("const (")
+// List of possible language types""", file=output)
+  print("const (", file=output)
 
   for language in languages:
     normalizeName = language.name.upper().replace(".", "")
-    print ("  LanguageType" + normalizeName + " LanguageType = \"" + language.name + "\" // " + language.description)
+    print ("  LanguageType" + normalizeName + " LanguageType = \"" + language.name + "\" "+
+      "// " + language.description, file=output)
 
-  print(")")
+  print(")", file=output)
 
   print("""
 // Used in the system everytime that we need to determinate a preferred language, the LanguageType
-// is an enumerate that describe all possible languages""")
-  print("type LanguageType string")
+// is an enumerate that describe all possible languages""", file=output)
+  print("type LanguageType string", file=output)
 
   print("""
-// List of possible region types, that are a subcategory of the language""")
-  print("const (")
+// List of possible region types, that are a subcategory of the language""", file=output)
+  print("const (", file=output)
 
   i = 1
   for region in regions:
     normalizeName = region.name.upper().replace(".", "")
-    print ("  RegionType" + normalizeName + " RegionType = \"" + region.name + "\" // " + region.description)
+    print ("  RegionType" + normalizeName + " RegionType = \"" + region.name + "\" "+
+      "// " + region.description, file=output)
     i += 1
 
-  print(")")
+  print(")", file=output)
 
   print("""
 // Used to determinate from a given language, what is the specific dialect (region) that we will
-// assume""")
-  print("type RegionType string")
+// assume""", file=output)
+  print("type RegionType string", file=output)
+  output.close()
+
+  subprocess.call(["gofmt", "-w", outputPath])
 
 ###################################################################
 
@@ -117,13 +125,14 @@ defaultURL = "http://www.iana.org/assignments/language-subtag-registry/language-
 
 def usage():
   print("")
-  print("Usage: " + sys.argv[0] + " [-h|--help] [-u|--url]")
+  print("Usage: " + sys.argv[0] + " [-h|--help] [-u|--url] [-o|--output]")
   print("  Where -h or --help is for showing this usage")
   print("        -u or --url is the URL of the source file")
+  print("        -o or --output is the path where the Go code will written")
 
 def main(argv):
   try:
-    opts, args = getopt.getopt(argv, "u", ["url"])
+    opts, args = getopt.getopt(argv, "u:o:", ["url", "output"])
 
   except getopt.GetoptError as err:
     print(str(err))
@@ -131,10 +140,14 @@ def main(argv):
     sys.exit(1)
 
   url = ""
+  outputPath = ""
 
   for key, value in opts:
     if key in ("-u", "--url"):
       url = value
+
+    elif key in ("-o", "--output"):
+      outputPath = value
 
     elif key in ("-h", "--help"):
       usage()
@@ -143,10 +156,15 @@ def main(argv):
   if len(url) == 0:
     url = defaultURL
 
+  if len(outputPath) == 0:
+    print("Output path was not given")
+    usage()
+    sys.exit(1)
+
   try:
     data = retrieveData(url)
     languages, regions = buildLanguages(data)
-    writeLanguages(languages, regions)
+    writeLanguages(languages, regions, outputPath)
 
   except KeyboardInterrupt:
     sys.exit(1)
