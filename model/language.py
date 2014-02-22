@@ -19,11 +19,11 @@ class GroupType:
   Language = 1
   Region = 2
 
-def retrieveFile(url):
+def retrieveData(url):
   response = urllib.request.urlopen(url)
   data = response.read()
   response.close()
-  return data
+  return data.decode()
 
 def buildLanguages(data):
   group = GroupType.Unknown
@@ -33,7 +33,7 @@ def buildLanguages(data):
   currentLanguage = Language()
   currentRegion = Region()
 
-  for line in data.decode().split("\n"):
+  for line in data.split("\n"):
     if line.startswith("Type:"):
       if line[6:] == "language":
         group = GroupType.Language
@@ -146,7 +146,7 @@ def main(argv):
     url = defaultURL
 
   try:
-    data = retrieveFile(url)
+    data = retrieveData(url)
     languages, regions = buildLanguages(data)
     writeLanguages(languages, regions)
 
