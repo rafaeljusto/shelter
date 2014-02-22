@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+# Script responsable for building the language.go file from the IANA Language Subtag Registry file
+# format. We should run this only when we found a new language that should be used in the system and
+# is not yet listed in our Go file
+
 import getopt
 import sys
 import subprocess
