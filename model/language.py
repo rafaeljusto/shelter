@@ -83,18 +83,16 @@ def writeLanguages(languages, regions):
 // List of possible language types""")
   print("const (")
 
-  i = 1
   for language in languages:
     normalizeName = language.name.upper().replace(".", "")
-    print ("  LanguageType" + normalizeName + " LanguageType = " + str(i) + " // " + language.description)
-    i += 1
+    print ("  LanguageType" + normalizeName + " LanguageType = \"" + language.name + "\" // " + language.description)
 
   print(")")
 
   print("""
 // Used in the system everytime that we need to determinate a preferred language, the LanguageType
 // is an enumerate that describe all possible languages""")
-  print("type LanguageType int")
+  print("type LanguageType string")
 
   print("""
 // List of possible region types, that are a subcategory of the language""")
@@ -103,7 +101,7 @@ def writeLanguages(languages, regions):
   i = 1
   for region in regions:
     normalizeName = region.name.upper().replace(".", "")
-    print ("  RegionType" + normalizeName + " RegionType = " + str(i) + " // " + region.description)
+    print ("  RegionType" + normalizeName + " RegionType = \"" + region.name + "\" // " + region.description)
     i += 1
 
   print(")")
@@ -111,7 +109,7 @@ def writeLanguages(languages, regions):
   print("""
 // Used to determinate from a given language, what is the specific dialect (region) that we will
 // assume""")
-  print("type RegionType int")
+  print("type RegionType string")
 
 ###################################################################
 
