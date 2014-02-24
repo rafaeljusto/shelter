@@ -21,7 +21,7 @@ type DomainRequest struct {
 	Nameservers []NameserverRequest `json:"nameservers,omitempty"` // Nameservers that asnwer with authority for this domain
 	DSSet       []DSRequest         `json:"dsset,omitempty"`       // Records for the DNS tree chain of trust
 	DNSKEYS     []DNSKEYRequest     `json:"dnskeys,omitempty"`     // Records that can be converted into DS records
-	Owners      []string            `json:"owners,omitempty"`      // E-mails that will be alerted on any problem
+	Owners      []OwnerRequest      `json:"owners,omitempty"`      // E-mails that will be alerted on any problem
 }
 
 // Merge is used to merge a domain request object sent by the user into a domain object of

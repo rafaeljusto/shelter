@@ -83,8 +83,12 @@ def writeLanguages(languages, regions, outputPath):
   print("package model", file=output)
   print("""
 // File generated using the language.py script, that is responsable for parsing the IANA
-// Language Subtag Registry file obtained from 
+// Language Subtag Registry file obtained from
 // http://www.iana.org/assignments/language-subtag-registry/language-subtag-registry""", file=output)
+
+  print("""import (
+  "strings"
+)""", file=output)
 
   print("""
 // List of possible language types""", file=output)
@@ -103,6 +107,31 @@ def writeLanguages(languages, regions, outputPath):
   print("type LanguageType string", file=output)
 
   print("""
+// Structure used to identify if a language exists or not
+var (
+  languageTypes map[LanguageType]bool = map[LanguageType]bool{""", file=output)
+
+  for language in languages:
+    normalizeName = language.name.upper().replace(".", "")
+    print ("    LanguageType" + normalizeName + ": true,", file=output)
+
+  print("""}
+)""", file=output)
+
+  print("""
+// Used to verify if a language is valid or not. Don't need lock because we have many
+// readers and no writers. Rob Pike sad that it's ok
+// (https://groups.google.com/forum/#!msg/golang-nuts/HpLWnGTp-n8/hyUYmnWJqiQJ)
+func LanguageTypeExists(languageType string) bool {
+  // Normalize input
+  languageType = strings.ToLower(languageType)
+  languageType = strings.TrimSpace(languageType)
+
+  _, ok := languageTypes[LanguageType(languageType)]
+  return ok
+}""", file=output)
+
+  print("""
 // List of possible region types, that are a subcategory of the language""", file=output)
   print("const (", file=output)
 
@@ -119,6 +148,46 @@ def writeLanguages(languages, regions, outputPath):
 // Used to determinate from a given language, what is the specific dialect (region) that we will
 // assume""", file=output)
   print("type RegionType string", file=output)
+
+  print("""
+// Structure used to identify if a region exists or not
+var (
+  regionTypes map[RegionType]bool = map[RegionType]bool{""", file=output)
+
+  for region in regions:
+    normalizeName = region.name.upper().replace(".", "")
+    print ("    RegionType" + normalizeName + ": true,", file=output)
+
+  print("""}
+)""", file=output)
+
+  print("""
+// Used to verify if a region is valid or not. Don't need lock because we have many
+// readers and no writers. Rob Pike sad that it's ok
+// (https://groups.google.com/forum/#!msg/golang-nuts/HpLWnGTp-n8/hyUYmnWJqiQJ)
+func RegionTypeExists(regionType string) bool {
+  // Normalize input
+  regionType = strings.ToUpper(regionType)
+  regionType = strings.TrimSpace(regionType)
+
+  _, ok := regionTypes[RegionType(regionType)]
+  return ok
+}
+
+// Useful function to check if a language with region or not is valid
+func LanguageIsValid(language string) bool {
+  if LanguageTypeExists(language) {
+    return true
+  }
+
+  languageParts := strings.Split(language, "-")
+  if len(languageParts) != 2 {
+    return false
+  }
+
+  return LanguageTypeExists(languageParts[0]) && RegionTypeExists(languageParts[1])
+}""", file=output)
+
   output.close()
 
   subprocess.call(["gofmt", "-w", outputPath])
@@ -126,6 +195,7 @@ def writeLanguages(languages, regions, outputPath):
 ###################################################################
 
 defaultURL = "http://www.iana.org/assignments/language-subtag-registry/language-subtag-registry"
+defaultOutput = "language.go"
 
 def usage():
   print("")
@@ -161,9 +231,7 @@ def main(argv):
     url = defaultURL
 
   if len(outputPath) == 0:
-    print("Output path was not given")
-    usage()
-    sys.exit(1)
+    outputPath = defaultOutput
 
   try:
     data = retrieveData(url)
