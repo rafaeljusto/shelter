@@ -62,3 +62,32 @@ func TestSpecificTimeJobExecution(t *testing.T) {
 			"Expected %d and got %d", 1, ValueToChange))
 	}
 }
+
+func TestNextExecutionByType(t *testing.T) {
+	SchedulerExecutionInterval = 50 * time.Millisecond
+
+	Clear()
+
+	if _, err := NextExecutionByType(JobTypeScan); err == nil {
+		t.Error("Not detecting when there's no next execution")
+	}
+
+	expectedNextExecution := time.Now().Add(10 * time.Second)
+
+	Register(Job{
+		Type:          JobTypeScan,
+		NextExecution: expectedNextExecution,
+		Interval:      1 * time.Minute,
+		Task:          func() {},
+	})
+
+	nextExecution, err := NextExecutionByType(JobTypeScan)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !nextExecution.Equal(expectedNextExecution) {
+		t.Errorf("Expected next execution on %s and got on %s",
+			expectedNextExecution.String(), nextExecution.String())
+	}
+}
