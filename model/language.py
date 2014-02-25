@@ -175,7 +175,7 @@ func RegionTypeExists(regionType string) bool {
 }
 
 // Useful function to check if a language with region or not is valid
-func LanguageIsValid(language string) bool {
+func IsValidLanguage(language string) bool {
   if LanguageTypeExists(language) {
     return true
   }

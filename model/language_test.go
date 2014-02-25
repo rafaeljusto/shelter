@@ -24,24 +24,24 @@ func TestRegionTypeExists(t *testing.T) {
 	}
 }
 
-func TestLanguageIsValid(t *testing.T) {
-	if LanguageIsValid("zz") {
+func TestIsValidLanguage(t *testing.T) {
+	if IsValidLanguage("zz") {
 		t.Error("Validating language that does not exist")
 	}
 
-	if !LanguageIsValid(" pT ") {
+	if !IsValidLanguage(" pT ") {
 		t.Error("Not validating language that is valid with cases and spaces")
 	}
 
-	if LanguageIsValid("pt-zzz") {
+	if IsValidLanguage("pt-zzz") {
 		t.Error("Validating language with region that does not exist")
 	}
 
-	if !LanguageIsValid(" pT-Br ") {
+	if !IsValidLanguage(" pT-Br ") {
 		t.Error("Not validating language with region that is valid with cases and spaces")
 	}
 
-	if LanguageIsValid("pt-br-zzz") {
+	if IsValidLanguage("pt-br-zzz") {
 		t.Error("Validating language with invalid format")
 	}
 }
