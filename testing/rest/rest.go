@@ -142,11 +142,11 @@ func domainLifeCycle() {
 			expectedStatus: http.StatusCreated,
 			content: `{
   "Nameservers": [
-    { "Host": "ns1.example.com.br.", "ipv4": "127.0.0.1" },
-    { "Host": "ns2.example.com.br.", "ipv6": "::1" }
+    { "host": "ns1.example.com.br.", "ipv4": "127.0.0.1" },
+    { "host": "ns2.example.com.br.", "ipv6": "::1" }
   ],
   "Owners": [
-    "admin@example.com.br."
+    { "email": "admin@example.com.br.", "language": "pt-br" }
   ]
 }`,
 		},
@@ -156,10 +156,10 @@ func domainLifeCycle() {
 			expectedStatus: http.StatusNoContent,
 			content: `{
   "Nameservers": [
-    { "Host": "ns1.example.com.br.", "ipv4": "127.0.0.1" }
+    { "host": "ns1.example.com.br.", "ipv4": "127.0.0.1" }
   ],
   "Owners": [
-    "admin2@example.com.br."
+    { "email": "admin2@example.com.br.", "language": "en-us" }
   ]
 }`,
 		},
@@ -238,11 +238,11 @@ func restReport(restConfig RESTTestConfigFile) {
 
 	content := []byte(`{
       "Nameservers": [
-        { "Host": "ns1.example.com.br.", "ipv4": "127.0.0.1" },
-        { "Host": "ns2.example.com.br.", "ipv6": "::1" }
+        { "host": "ns1.example.com.br.", "ipv4": "127.0.0.1" },
+        { "host": "ns2.example.com.br.", "ipv6": "::1" }
       ],
       "Owners": [
-        "admin@example.com.br."
+        { "email": "admin@example.com.br.", "language": "pt-br" }
       ]
     }`)
 

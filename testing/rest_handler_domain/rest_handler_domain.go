@@ -111,11 +111,11 @@ func createDomain(database *mgo.Database) {
 	r, err := http.NewRequest("PUT", "/domain/example.com.br.",
 		strings.NewReader(`{
       "Nameservers": [
-        { "Host": "ns1.example.com.br.", "ipv4": "127.0.0.1" },
-        { "Host": "ns2.example.com.br.", "ipv6": "::1" }
+        { "host": "ns1.example.com.br.", "ipv4": "127.0.0.1" },
+        { "host": "ns2.example.com.br.", "ipv6": "::1" }
       ],
       "Owners": [
-        "admin@example.com.br."
+        { "email": "admin@example.com.br.", "language": "en-us" }
       ]
     }`))
 	if err != nil {
@@ -151,11 +151,11 @@ func updateDomain(database *mgo.Database) {
 	r, err := http.NewRequest("PUT", "/domain/example.com.br.",
 		strings.NewReader(`{
       "Nameservers": [
-        { "Host": "ns1.example.com.br.", "ipv4": "127.0.0.1" },
-        { "Host": "ns3.example.com.br.", "ipv6": "::1" }
+        { "host": "ns1.example.com.br.", "ipv4": "127.0.0.1" },
+        { "host": "ns3.example.com.br.", "ipv6": "::1" }
       ],
       "Owners": [
-        "administrator@example.com.br."
+        { "email": "administrator@example.com.br.", "language": "pt-br" }
       ]
     }`))
 	if err != nil {
@@ -229,7 +229,7 @@ func retrieveDomain(database *mgo.Database) {
 	}
 
 	if len(domainResponse.Owners) != 1 ||
-		domainResponse.Owners[0] != "administrator@example.com.br." {
+		domainResponse.Owners[0].Email != "administrator@example.com.br." {
 
 		utils.Fatalln("Domain's owners were not persisted correctly", nil)
 	}
@@ -352,11 +352,11 @@ func updateDomainIfModifiedSince(database *mgo.Database) {
 	r, err := http.NewRequest("PUT", "/domain/example.com.br.",
 		strings.NewReader(`{
       "Nameservers": [
-        { "Host": "ns1.example.com.br.", "ipv4": "127.0.0.1" },
-        { "Host": "ns3.example.com.br.", "ipv6": "::1" }
+        { "host": "ns1.example.com.br.", "ipv4": "127.0.0.1" },
+        { "host": "ns3.example.com.br.", "ipv6": "::1" }
       ],
       "Owners": [
-        "administrator@example.com.br."
+        { "email": "administrator@example.com.br.", "language": "pt-br" }
       ]
     }`))
 	if err != nil {
@@ -379,11 +379,11 @@ func updateDomainIfUnmodifiedSince(database *mgo.Database) {
 	r, err := http.NewRequest("PUT", "/domain/example.com.br.",
 		strings.NewReader(`{
       "Nameservers": [
-        { "Host": "ns1.example.com.br.", "ipv4": "127.0.0.1" },
-        { "Host": "ns3.example.com.br.", "ipv6": "::1" }
+        { "host": "ns1.example.com.br.", "ipv4": "127.0.0.1" },
+        { "host": "ns3.example.com.br.", "ipv6": "::1" }
       ],
       "Owners": [
-        "administrator@example.com.br."
+        { "email": "administrator@example.com.br.", "language": "pt-br" }
       ]
     }`))
 	if err != nil {
@@ -406,11 +406,11 @@ func updateDomainIfMatch(database *mgo.Database) {
 	r, err := http.NewRequest("PUT", "/domain/example.com.br.",
 		strings.NewReader(`{
       "Nameservers": [
-        { "Host": "ns1.example.com.br.", "ipv4": "127.0.0.1" },
-        { "Host": "ns3.example.com.br.", "ipv6": "::1" }
+        { "host": "ns1.example.com.br.", "ipv4": "127.0.0.1" },
+        { "host": "ns3.example.com.br.", "ipv6": "::1" }
       ],
       "Owners": [
-        "administrator@example.com.br."
+        { "email": "administrator@example.com.br.", "language": "en-us" }
       ]
     }`))
 	if err != nil {
@@ -433,11 +433,11 @@ func updateDomainIfNoneMatch(database *mgo.Database) {
 	r, err := http.NewRequest("PUT", "/domain/example.com.br.",
 		strings.NewReader(`{
       "Nameservers": [
-        { "Host": "ns1.example.com.br.", "ipv4": "127.0.0.1" },
-        { "Host": "ns3.example.com.br.", "ipv6": "::1" }
+        { "host": "ns1.example.com.br.", "ipv4": "127.0.0.1" },
+        { "host": "ns3.example.com.br.", "ipv6": "::1" }
       ],
       "Owners": [
-        "administrator@example.com.br."
+        { "email": "administrator@example.com.br.", "language": "en-us" }
       ]
     }`))
 	if err != nil {

@@ -151,11 +151,11 @@ func checkHeaders(mux *rest.Mux) {
 
 	content := []byte(`{
       "Nameservers": [
-        { "Host": "ns1.example.com.br.", "ipv4": "127.0.0.1" },
-        { "Host": "ns2.example.com.br.", "ipv6": "::1" }
+        { "host": "ns1.example.com.br.", "ipv4": "127.0.0.1" },
+        { "host": "ns2.example.com.br.", "ipv6": "::1" }
       ],
       "Owners": [
-        "admin@example.com.br."
+        { "email": "admin@example.com.br.", "language": "pt-br" }
       ]
     }`)
 
@@ -183,11 +183,11 @@ func checkHeaders(mux *rest.Mux) {
 func createDomain(mux *rest.Mux) {
 	content := []byte(`{
       "Nameservers": [
-        { "Host": "ns1.example.com.br.", "ipv4": "127.0.0.1" },
-        { "Host": "ns2.example.com.br.", "ipv6": "::1" }
+        { "host": "ns1.example.com.br.", "ipv4": "127.0.0.1" },
+        { "host": "ns2.example.com.br.", "ipv6": "::1" }
       ],
       "Owners": [
-        "admin@example.com.br."
+        { "email": "admin@example.com.br.", "language": "en-us" }
       ]
     }`)
 

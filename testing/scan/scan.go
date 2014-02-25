@@ -499,7 +499,12 @@ func generateAndSignDomain(fqdn string) (
 	}
 
 	owner, _ := mail.ParseAddress("test@rafael.net.br")
-	domain.Owners = []*mail.Address{owner}
+	domain.Owners = []model.Owner{
+		{
+			Email:    owner,
+			Language: "pt-BR",
+		},
+	}
 
 	lastCheckAt := time.Now().Add(-72 * time.Hour)
 	lastOKAt := lastCheckAt.Add(-24 * time.Hour)
@@ -559,7 +564,12 @@ func generateAndSaveDomain(fqdn string, domainDAO dao.DomainDAO, dnskey *dns.DNS
 	}
 
 	owner, _ := mail.ParseAddress("test@rafael.net.br")
-	domain.Owners = []*mail.Address{owner}
+	domain.Owners = []model.Owner{
+		{
+			Email:    owner,
+			Language: "pt-BR",
+		},
+	}
 
 	lastCheckAt := time.Now().Add(-72 * time.Hour)
 	lastOKAt := lastCheckAt.Add(-24 * time.Hour)

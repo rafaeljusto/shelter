@@ -105,7 +105,7 @@ func domainLifeCycle(domainDAO dao.DomainDAO) {
 	}
 
 	// Update domain
-	domain.Owners = []*mail.Address{}
+	domain.Owners = []model.Owner{}
 	if err := domainDAO.Save(&domain); err != nil {
 		utils.Fatalln("Couldn't save domain in database", err)
 	}
@@ -155,7 +155,7 @@ func domainsLifeCycle(domainDAO dao.DomainDAO) {
 
 	// Update domains
 	for _, domain := range domains {
-		domain.Owners = []*mail.Address{}
+		domain.Owners = []model.Owner{}
 	}
 
 	domainResults = domainDAO.SaveMany(domains)
@@ -687,7 +687,12 @@ func newDomain() model.Domain {
 	}
 
 	owner, _ := mail.ParseAddress("test@rafael.net.br")
-	domain.Owners = []*mail.Address{owner}
+	domain.Owners = []model.Owner{
+		{
+			Email:    owner,
+			Language: "pt-BR",
+		},
+	}
 
 	return domain
 }
@@ -718,7 +723,12 @@ func newDomains() []*model.Domain {
 					Digest:    "A790A11EA430A85DA77245F091891F73AA7404AA",
 				},
 			},
-			Owners: []*mail.Address{owner1},
+			Owners: []model.Owner{
+				{
+					Email:    owner1,
+					Language: "pt-BR",
+				},
+			},
 		},
 		{
 			FQDN: "test2.com.br",
@@ -740,7 +750,12 @@ func newDomains() []*model.Domain {
 					Digest:    "A790A11EA430A85DA77245F091891F73AA7404BB",
 				},
 			},
-			Owners: []*mail.Address{owner2},
+			Owners: []model.Owner{
+				{
+					Email:    owner2,
+					Language: "en-US",
+				},
+			},
 		},
 	}
 }
@@ -784,7 +799,8 @@ func compareDomains(d1, d2 model.Domain) bool {
 	}
 
 	for i := 0; i < len(d1.Owners); i++ {
-		if d1.Owners[i].String() != d2.Owners[i].String() {
+		if d1.Owners[i].Email.String() != d2.Owners[i].Email.String() ||
+			d1.Owners[i].Language != d2.Owners[i].Language {
 			return false
 		}
 	}

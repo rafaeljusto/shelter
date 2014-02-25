@@ -247,7 +247,12 @@ func newDomain() model.Domain {
 	}
 
 	owner, _ := mail.ParseAddress("test@rafael.net.br")
-	domain.Owners = []*mail.Address{owner}
+	domain.Owners = []model.Owner{
+		{
+			Email:    owner,
+			Language: "pt-BR",
+		},
+	}
 
 	return domain
 }

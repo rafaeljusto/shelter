@@ -73,11 +73,11 @@ func createDomains(database *mgo.Database) {
 		r, err := http.NewRequest("PUT", fmt.Sprintf("/domain/example%d.com.br.", i),
 			strings.NewReader(`{
       "Nameservers": [
-        { "Host": "ns1.example.com.br." },
-        { "Host": "ns2.example.com.br." }
+        { "host": "ns1.example.com.br." },
+        { "host": "ns2.example.com.br." }
       ],
       "Owners": [
-        "admin@example.com.br."
+        { "email": "admin@example.com.br.", "language": "pt-br" }
       ]
     }`))
 		if err != nil {
