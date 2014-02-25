@@ -33,7 +33,7 @@ type Owner struct {
 
 // AddLanguage is a safe way to add a supported language for the owner
 func AddLanguage(language string) error {
-	if !LanguageIsValid(language) {
+	if !IsValidLanguage(language) {
 		return ErrInvalidLanguage
 	}
 
