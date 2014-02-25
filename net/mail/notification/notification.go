@@ -70,8 +70,8 @@ func notifyDomain(domain *model.Domain) {
 	from := config.ShelterConfig.Notification.From
 
 	var emails []string
-	for _, email := range domain.Owners {
-		emails = append(emails, email.String())
+	for _, owner := range domain.Owners {
+		emails = append(emails, owner.Email.String())
 	}
 
 	server := fmt.Sprintf("%s:%d",
