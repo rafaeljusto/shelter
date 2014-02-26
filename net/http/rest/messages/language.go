@@ -3,6 +3,7 @@ package messages
 import (
 	"encoding/json"
 	"errors"
+	"github.com/rafaeljusto/shelter/model"
 	"io/ioutil"
 	"strings"
 )
@@ -19,6 +20,10 @@ var (
 	// is a critical error because the ShelterRESTLanguagePack will be null and can cause
 	// panic when the system try to use it
 	ErrDefaultLanguageNotFound = errors.New("Default language not found in configuration file")
+
+	// All loaded languages are checked to see if they match with the predefined list of
+	// IANA languages, if not this error is returned to alert the administrator
+	ErrInvalidLanguage = errors.New("Language is not valid")
 )
 
 // Structure responsable for storing all messages from the REST server in different idioms
@@ -71,10 +76,10 @@ type LanguagePack struct {
 // all the names in lower case
 func (l *LanguagePack) Name() string {
 	if len(l.SpecificName) > 0 {
-		return strings.ToLower(l.SpecificName)
+		return model.NormalizeLanguage(l.SpecificName)
 	}
 
-	return strings.ToLower(l.GenericName)
+	return model.NormalizeLanguage(l.GenericName)
 }
 
 // Load the language packs from the configuration file
@@ -86,6 +91,18 @@ func LoadConfig(path string) error {
 
 	if err := json.Unmarshal(bytes, &ShelterRESTLanguagePacks); err != nil {
 		return err
+	}
+
+	// Check language formats. They should follow IANA language types
+
+	if !model.IsValidLanguage(ShelterRESTLanguagePacks.Default) {
+		return ErrInvalidLanguage
+	}
+
+	for _, language := range ShelterRESTLanguagePacks.Packs {
+		if !model.IsValidLanguage(language.Name()) {
+			return ErrInvalidLanguage
+		}
 	}
 
 	// Load the default language pack
