@@ -34,6 +34,7 @@ const (
 	ErrStartingRESTServer
 	ErrScanTimeFormat
 	ErrCurrentScanInitialize
+	ErrNotificationTemplates
 )
 
 // We are going to use the initialization function to read command line arguments, load
@@ -121,6 +122,11 @@ func main() {
 	}
 
 	if config.ShelterConfig.Notification.Enabled {
+		if err := notification.LoadTemplates(); err != nil {
+			log.Println("Error loading notification templates. Details:", err)
+			os.Exit(ErrNotificationTemplates)
+		}
+
 		notificationTime, err := time.Parse("15:04:05 MST", config.ShelterConfig.Scan.Time)
 		if err != nil {
 			log.Println("Scan time not in a valid format. Details:", err)

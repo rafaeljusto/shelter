@@ -83,7 +83,7 @@ type Config struct {
 		DSErrorAlertDays           int
 		DSTimeoutAlertDays         int
 		From                       string
-		Template                   string
+		TemplatesPath              string
 
 		SMTPServer struct {
 			Server string

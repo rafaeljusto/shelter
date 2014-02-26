@@ -145,7 +145,68 @@ func TestLoadConfig(t *testing.T) {
 	}
 
 	fmt.Fprint(file, `{
+    "default": "en-us",
+    "packs": [
+      {
+        "GenericName": "en",
+        "SpecificName": "en-zzzz",
+        "Messages": {
+          "test-message": "This is a test!"
+        }
+      }
+    ]
+    }`)
+
+	if err := LoadConfig(file.Name()); err == nil {
+		t.Error("Not detecting when language is invalid!")
+	}
+
+	file.Close()
+	if err := os.Remove(file.Name()); err != nil {
+		t.Fatal(err)
+	}
+
+	file, err = ioutil.TempFile(".", "shelter-lg-test")
+	if err != nil {
+		t.Fatal("Error creating test file")
+	}
+
+	fmt.Fprint(file, `{
     "default": "XXXX",
+    "packs": [
+      {
+        "GenericName": "en",
+        "SpecificName": "en-us",
+        "Messages": {
+          "test-message": "This is a test!"
+        }
+      },
+      {
+        "GenericName": "pt",
+        "SpecificName": "pt-br",
+        "Messages": {
+          "test-message": "This is another test!"
+        }
+      }
+    ]
+    }`)
+
+	if err := LoadConfig(file.Name()); err == nil {
+		t.Error("Not detecting when default language is invalid!")
+	}
+
+	file.Close()
+	if err := os.Remove(file.Name()); err != nil {
+		t.Fatal(err)
+	}
+
+	file, err = ioutil.TempFile(".", "shelter-lg-test")
+	if err != nil {
+		t.Fatal("Error creating test file")
+	}
+
+	fmt.Fprint(file, `{
+    "default": "en-br",
     "packs": [
       {
         "GenericName": "en",

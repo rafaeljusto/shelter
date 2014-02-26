@@ -1,6 +1,7 @@
 package notification
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/rafaeljusto/shelter/config"
 	"github.com/rafaeljusto/shelter/dao"
@@ -10,9 +11,12 @@ import (
 	"net/smtp"
 )
 
+// Notify is responsable for selecting the domains that should be notified in the system.
+// It will send alert e-mails for each owner of a domain
 func Notify() {
 	defer func() {
-		// Something went really wrong while notifying the owners. Log the error stacktrace and move out
+		// Something went really wrong while notifying the owners. Log the error stacktrace
+		// and move out
 		if r := recover(); r != nil {
 			log.Println("Panic detected while notifying the owners. Details:", r)
 		}
@@ -62,16 +66,21 @@ func Notify() {
 			break
 		}
 
-		notifyDomain(domainResult.Domain)
+		if err := notifyDomain(domainResult.Domain); err != nil {
+			log.Println("Error notifying a domain. Details:", err)
+		}
 	}
 }
 
-func notifyDomain(domain *model.Domain) {
+// Function used to notify a single domain. It can return error if there's a problem while
+// filling the template or sending the e-mail
+func notifyDomain(domain *model.Domain) error {
 	from := config.ShelterConfig.Notification.From
 
-	var emails []string
+	emailsPerLanguage := make(map[string][]string)
 	for _, owner := range domain.Owners {
-		emails = append(emails, owner.Email.String())
+		emailsPerLanguage[owner.Language] =
+			append(emailsPerLanguage[owner.Language], owner.Email.String())
 	}
 
 	server := fmt.Sprintf("%s:%d",
@@ -79,26 +88,42 @@ func notifyDomain(domain *model.Domain) {
 		config.ShelterConfig.Notification.SMTPServer.Port,
 	)
 
-	// TODO: Build template message
-	msg := []byte{}
+	for language, emails := range emailsPerLanguage {
+		t := getTemplate(language)
 
-	switch config.ShelterConfig.Notification.SMTPServer.Auth.Type {
-	case config.AuthenticationTypePlain:
-		auth := smtp.PlainAuth("",
-			config.ShelterConfig.Notification.SMTPServer.Auth.Username,
-			config.ShelterConfig.Notification.SMTPServer.Auth.Password,
-			config.ShelterConfig.Notification.SMTPServer.Server,
-		)
-		smtp.SendMail(server, auth, from, emails, msg)
+		var msg bytes.Buffer
+		if err := t.Execute(&msg, domain); err != nil {
+			return err
+		}
 
-	case config.AuthenticationTypeCRAMMD5Auth:
-		auth := smtp.CRAMMD5Auth(
-			config.ShelterConfig.Notification.SMTPServer.Auth.Username,
-			config.ShelterConfig.Notification.SMTPServer.Auth.Password,
-		)
-		smtp.SendMail(server, auth, from, emails, msg)
+		switch config.ShelterConfig.Notification.SMTPServer.Auth.Type {
+		case config.AuthenticationTypePlain:
+			auth := smtp.PlainAuth("",
+				config.ShelterConfig.Notification.SMTPServer.Auth.Username,
+				config.ShelterConfig.Notification.SMTPServer.Auth.Password,
+				config.ShelterConfig.Notification.SMTPServer.Server,
+			)
 
-	default:
-		smtp.SendMail(server, nil, from, emails, msg)
+			if err := smtp.SendMail(server, auth, from, emails, msg.Bytes()); err != nil {
+				return err
+			}
+
+		case config.AuthenticationTypeCRAMMD5Auth:
+			auth := smtp.CRAMMD5Auth(
+				config.ShelterConfig.Notification.SMTPServer.Auth.Username,
+				config.ShelterConfig.Notification.SMTPServer.Auth.Password,
+			)
+
+			if err := smtp.SendMail(server, auth, from, emails, msg.Bytes()); err != nil {
+				return err
+			}
+
+		default:
+			if err := smtp.SendMail(server, nil, from, emails, msg.Bytes()); err != nil {
+				return err
+			}
+		}
 	}
+
+	return nil
 }
