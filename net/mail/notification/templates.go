@@ -1,13 +1,23 @@
 package notification
 
 import (
+	"errors"
 	"fmt"
 	"github.com/rafaeljusto/shelter/config"
 	"github.com/rafaeljusto/shelter/model"
+	"io/ioutil"
 	"path/filepath"
 	"strings"
 	"sync"
 	"text/template"
+)
+
+// List of errors that can be thrown in this functions. Other types of errors from low
+// level layers can also be throw
+var (
+	// When the system do not find the configured language as a template file in the
+	// template path this error is returned
+	ErrTemplateNotFound = errors.New("Template not found")
 )
 
 var (
@@ -19,17 +29,54 @@ var (
 	templatesLock sync.RWMutex
 )
 
+func init() {
+	templatesLock.Lock()
+	defer templatesLock.Unlock()
+	templates = make(map[string]*template.Template)
+}
+
 // Load all templates from disk. The templates files should be in the templates path and
 // must use as filename the language of the template (ex. pt-BR, pt, en-US, en). The
 // language should follow the IANA format
 func LoadTemplates() error {
+	templatesPath := filepath.Join(
+		config.ShelterConfig.BasePath,
+		config.ShelterConfig.Notification.TemplatesPath,
+	)
+
+	// List all files of the directory to make it possible to load a case insensitive
+	// language file
+	filesInfo, err := ioutil.ReadDir(templatesPath)
+	if err != nil {
+		return err
+	}
+
 	// Languages from configuration file were already checked when it was loaded into memory
 	for _, language := range config.ShelterConfig.Languages {
-		templatePath := filepath.Join(
-			config.ShelterConfig.BasePath,
-			config.ShelterConfig.Notification.TemplatesPath,
-			fmt.Sprintf("%s.tmpl", language),
-		)
+		filename := fmt.Sprintf("%s.tmpl", language)
+		templatePath := ""
+
+		for _, fileInfo := range filesInfo {
+			if fileInfo.IsDir() {
+				continue
+			}
+
+			// We are listing all files in the directory to compare with the language file that
+			// we want in a way that this could be case insensitive
+			if strings.ToLower(fileInfo.Name()) == strings.ToLower(filename) {
+				templatePath = filepath.Join(
+					config.ShelterConfig.BasePath,
+					config.ShelterConfig.Notification.TemplatesPath,
+					fileInfo.Name(),
+				)
+
+				break
+			}
+		}
+
+		if len(templatesPath) == 0 {
+			return ErrTemplateNotFound
+		}
 
 		t, err := template.New("notification").Funcs(template.FuncMap{
 			"nsStatusEq": func(nameserverStatus model.NameserverStatus,
