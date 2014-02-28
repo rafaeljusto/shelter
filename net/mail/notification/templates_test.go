@@ -50,6 +50,10 @@ func TestLoadTemplates(t *testing.T) {
 	if err := LoadTemplates(); err == nil && getTemplate("pt-BR") != nil {
 		t.Error("Loading directory as template file")
 	}
+
+	if err := os.RemoveAll("pt-BR"); err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestAddTemplate(t *testing.T) {
