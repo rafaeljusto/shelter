@@ -111,5 +111,9 @@ func LoadConfig(path string) error {
 		return ErrDefaultLanguageNotFound
 	}
 
+	// TODO: Should we check if the configuration file languages are the same of the REST
+	// messages file? Don't known what can we gain with this restriction, maybe system
+	// language consistency.
+
 	return nil
 }

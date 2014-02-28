@@ -405,6 +405,7 @@ func domainsNotification(domainDAO dao.DomainDAO) {
 	nameserverTimeoutAlertDays := 30
 	dsErrorAlertDays := 1
 	dsTimeoutAlertDays := 7
+	maxExpirationAlertDays := 5
 
 	data := []struct {
 		name                      string
@@ -413,27 +414,30 @@ func domainsNotification(domainDAO dao.DomainDAO) {
 		nameserverErrorLastOKAt   time.Time
 		dsTimeoutLastOkAt         time.Time
 		dsErrorLastOkAt           time.Time
+		dsExpiresAt               time.Time
 	}{
 		{
-			name:                      "shouldbescanned",
+			name:                      "shouldbenotified",
 			numberOfItems:             numberOfItemsToBeVerified,
 			nameserverTimeoutLastOKAt: time.Now().Add(time.Duration(-nameserverTimeoutAlertDays*24) * time.Hour),
 			nameserverErrorLastOKAt:   time.Now().Add(time.Duration(-nameserverErrorAlertDays*24) * time.Hour),
 			dsTimeoutLastOkAt:         time.Now().Add(time.Duration(-dsTimeoutAlertDays*24) * time.Hour),
 			dsErrorLastOkAt:           time.Now().Add(time.Duration(-dsErrorAlertDays*24) * time.Hour),
+			dsExpiresAt:               time.Now().Add(time.Duration((maxExpirationAlertDays)*24) * time.Hour),
 		},
 		{
-			name:                      "shouldnotbescanned",
+			name:                      "shouldnotbenotified",
 			numberOfItems:             numberOfItemsToDontBeVerified,
 			nameserverTimeoutLastOKAt: time.Now().Add(time.Duration((-nameserverTimeoutAlertDays+1)*24) * time.Hour),
 			nameserverErrorLastOKAt:   time.Now().Add(time.Duration((-nameserverErrorAlertDays+1)*24) * time.Hour),
 			dsTimeoutLastOkAt:         time.Now().Add(time.Duration((-dsTimeoutAlertDays+1)*24) * time.Hour),
 			dsErrorLastOkAt:           time.Now().Add(time.Duration((-dsErrorAlertDays+1)*24) * time.Hour),
+			dsExpiresAt:               time.Now().Add(time.Duration((maxExpirationAlertDays+1)*24) * time.Hour),
 		},
 	}
 
 	for _, item := range data {
-		for i := 0; i < item.numberOfItems/4; i++ {
+		for i := 0; i < item.numberOfItems/5; i++ {
 			domain := model.Domain{
 				FQDN: fmt.Sprintf("%s%d.com.br", item.name, i),
 				Nameservers: []model.Nameserver{
@@ -449,7 +453,7 @@ func domainsNotification(domainDAO dao.DomainDAO) {
 			}
 		}
 
-		for i := item.numberOfItems / 4; i < item.numberOfItems/4*2; i++ {
+		for i := item.numberOfItems / 5; i < item.numberOfItems/5*2; i++ {
 			domain := model.Domain{
 				FQDN: fmt.Sprintf("%s%d.com.br", item.name, i),
 				Nameservers: []model.Nameserver{
@@ -465,13 +469,14 @@ func domainsNotification(domainDAO dao.DomainDAO) {
 			}
 		}
 
-		for i := item.numberOfItems / 4 * 2; i < item.numberOfItems/4*3; i++ {
+		for i := item.numberOfItems / 5 * 2; i < item.numberOfItems/5*3; i++ {
 			domain := model.Domain{
 				FQDN: fmt.Sprintf("%s%d.com.br", item.name, i),
 				DSSet: []model.DS{
 					{
 						LastStatus: model.DSStatusTimeout,
 						LastOKAt:   item.dsTimeoutLastOkAt,
+						ExpiresAt:  time.Now().Add(time.Duration((maxExpirationAlertDays+1)*24) * time.Hour),
 					},
 				},
 			}
@@ -481,13 +486,31 @@ func domainsNotification(domainDAO dao.DomainDAO) {
 			}
 		}
 
-		for i := item.numberOfItems / 4 * 3; i < item.numberOfItems; i++ {
+		for i := item.numberOfItems / 5 * 3; i < item.numberOfItems/5*4; i++ {
 			domain := model.Domain{
 				FQDN: fmt.Sprintf("%s%d.com.br", item.name, i),
 				DSSet: []model.DS{
 					{
 						LastStatus: model.DSStatusExpiredSignature,
 						LastOKAt:   item.dsErrorLastOkAt,
+						ExpiresAt:  time.Now().Add(time.Duration((maxExpirationAlertDays+1)*24) * time.Hour),
+					},
+				},
+			}
+
+			if err := domainDAO.Save(&domain); err != nil {
+				utils.Fatalln("Error saving domain in database", err)
+			}
+		}
+
+		for i := item.numberOfItems / 5 * 4; i < item.numberOfItems; i++ {
+			domain := model.Domain{
+				FQDN: fmt.Sprintf("%s%d.com.br", item.name, i),
+				DSSet: []model.DS{
+					{
+						LastStatus: model.DSStatusOK,
+						LastOKAt:   time.Now(),
+						ExpiresAt:  item.dsExpiresAt,
 					},
 				},
 			}
@@ -503,6 +526,7 @@ func domainsNotification(domainDAO dao.DomainDAO) {
 		nameserverTimeoutAlertDays,
 		dsErrorAlertDays,
 		dsTimeoutAlertDays,
+		maxExpirationAlertDays,
 	)
 
 	if err != nil {

@@ -198,6 +198,15 @@ func manageSystemSignals() {
 // file. It will be used when the system starts for the first time and when it receives a
 // SIGHUP signal
 func loadSettings() error {
+	// Load languages to model. We don't do this in the configuration package, because we
+	// don't want to create a dependency between the model and the config taht could become
+	// a cross reference
+	for _, language := range config.ShelterConfig.Languages {
+		if err := model.AddLanguage(language); err != nil {
+			return err
+		}
+	}
+
 	// TODO: Possible concurrent access problem while reloading the configuration file. And
 	// we also should reload many structures that could change with the new configuration
 	// files, like the network interfaces

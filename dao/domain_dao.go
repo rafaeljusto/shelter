@@ -294,7 +294,8 @@ func (dao DomainDAO) FindAllAsyncToBeNotified(
 	nameserverErrorAlertDays,
 	nameserverTimeoutAlertDays,
 	dsErrorAlertDays,
-	dsTimeoutAlertDays int,
+	dsTimeoutAlertDays,
+	maxExpirationAlertDays int,
 ) (chan DomainResult, error) {
 
 	// Check if the programmer forgot to set the database in DomainDAO object
@@ -355,6 +356,13 @@ func (dao DomainDAO) FindAllAsyncToBeNotified(
 						"lastokat": bson.M{
 							"$lte": time.Now().Add(time.Duration(-dsTimeoutAlertDays*24) * time.Hour),
 						},
+					},
+					},
+				},
+				{
+					"dsset": bson.M{"$elemMatch": bson.M{"expiresat": bson.M{
+						"$lte": time.Now().Add(time.Duration(maxExpirationAlertDays*24) * time.Hour),
+					},
 					},
 					},
 				},

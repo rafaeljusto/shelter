@@ -42,6 +42,10 @@ func Notify() {
 		config.ShelterConfig.Notification.NameserverTimeoutAlertDays,
 		config.ShelterConfig.Notification.DSErrorAlertDays,
 		config.ShelterConfig.Notification.DSTimeoutAlertDays,
+
+		// TODO: Should we move this configuration parameter to a place were both modules can
+		// access it. This sounds better for configuration deployment
+		config.ShelterConfig.Scan.VerificationIntervals.MaxExpirationAlertDays,
 	)
 
 	if err != nil {

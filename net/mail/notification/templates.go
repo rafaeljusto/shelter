@@ -1,21 +1,13 @@
 package notification
 
 import (
-	"errors"
+	"fmt"
 	"github.com/rafaeljusto/shelter/config"
 	"github.com/rafaeljusto/shelter/model"
-	"io/ioutil"
 	"path/filepath"
+	"strings"
 	"sync"
 	"text/template"
-)
-
-// List of possible errors that can occur in this language controller. There can be also
-// other errors from low level drivers (like unknown templates path)
-var (
-	// All template names are checked to see if they match with the predefined list of IANA
-	// languages, if not this error is returned to alert the administrator
-	ErrInvalidTemplateName = errors.New("Template name does not follow a valid language")
 )
 
 var (
@@ -31,37 +23,38 @@ var (
 // must use as filename the language of the template (ex. pt-BR, pt, en-US, en). The
 // language should follow the IANA format
 func LoadTemplates() error {
-	templatesPath := filepath.Join(
-		config.ShelterConfig.BasePath,
-		config.ShelterConfig.Notification.TemplatesPath,
-	)
-
-	filesInfo, err := ioutil.ReadDir(templatesPath)
-	if err != nil {
-		return err
-	}
-
-	for _, fileInfo := range filesInfo {
-		if fileInfo.IsDir() {
-			continue
-		}
-
-		if !model.IsValidLanguage(fileInfo.Name()) {
-			return ErrInvalidTemplateName
-		}
-
+	// Languages from configuration file were already checked when it was loaded into memory
+	for _, language := range config.ShelterConfig.Languages {
 		templatePath := filepath.Join(
 			config.ShelterConfig.BasePath,
 			config.ShelterConfig.Notification.TemplatesPath,
-			fileInfo.Name(),
+			fmt.Sprintf("%s.tmpl", language),
 		)
 
-		t, err := template.New("notification").ParseFiles(templatePath)
+		t, err := template.New("notification").Funcs(template.FuncMap{
+			"nsStatusEq": func(nameserverStatus model.NameserverStatus,
+				expectedNameserverTextStatus string) bool {
+
+				return strings.ToLower(model.NameserverStatusToString(nameserverStatus)) ==
+					strings.TrimSpace(strings.ToLower(expectedNameserverTextStatus))
+			},
+			"dsStatusEq": func(dsStatus model.DSStatus, expectedDSTextStatus string) bool {
+				return strings.ToLower(model.DSStatusToString(dsStatus)) ==
+					strings.TrimSpace(strings.ToLower(expectedDSTextStatus))
+			},
+			"isExpired": func(ds model.DS) bool {
+				// If the status of the DS record is OK, it was selected because the expiration is
+				// near. If in the future we add some other notification over the well configured
+				// DS we must change this logic
+				return ds.LastStatus == model.DSStatusOK
+			},
+		}).ParseFiles(templatePath)
+
 		if err != nil {
 			return err
 		}
 
-		addTemplate(fileInfo.Name(), t)
+		addTemplate(language, t)
 	}
 
 	return nil

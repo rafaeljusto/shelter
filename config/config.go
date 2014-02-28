@@ -20,6 +20,7 @@ type AuthenticationType string
 type Config struct {
 	BasePath    string
 	LogFilename string
+	Languages   []string
 
 	Database struct {
 		Name string
