@@ -88,7 +88,7 @@ domain {{.FQDN}}.
   * DS with keytag {{$ds.Keytag}} could not be verified due to a problem on the
     nameservers.
 
-  {{else if isExpired $ds}}
+  {{else if isNearExpiration $ds}}
   * DS with keytag {{$ds.Keytag}} references a DNSKEY with signatures that are near the
     expiration date. Please resign the zone before it expires to avoid DNS problems.
 

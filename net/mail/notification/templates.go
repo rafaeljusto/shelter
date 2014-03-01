@@ -1,7 +1,6 @@
 package notification
 
 import (
-	"errors"
 	"fmt"
 	"github.com/rafaeljusto/shelter/config"
 	"github.com/rafaeljusto/shelter/model"
@@ -10,14 +9,6 @@ import (
 	"strings"
 	"sync"
 	"text/template"
-)
-
-// List of errors that can be thrown in this functions. Other types of errors from low
-// level layers can also be throw
-var (
-	// When the system do not find the configured language as a template file in the
-	// template path this error is returned
-	ErrTemplateNotFound = errors.New("Template not found")
 )
 
 var (
@@ -29,9 +20,13 @@ var (
 	templatesLock sync.RWMutex
 )
 
+var (
+	// Extension used in template files. Used as a variable for unit tests that can only predefine
+	// temporary filenames
+	templateExtension string = ".tmpl"
+)
+
 func init() {
-	templatesLock.Lock()
-	defer templatesLock.Unlock()
 	templates = make(map[string]*template.Template)
 }
 
@@ -53,7 +48,7 @@ func LoadTemplates() error {
 
 	// Languages from configuration file were already checked when it was loaded into memory
 	for _, language := range config.ShelterConfig.Languages {
-		filename := fmt.Sprintf("%s.tmpl", language)
+		filename := fmt.Sprintf("%s%s", language, templateExtension)
 		templatePath := ""
 
 		for _, fileInfo := range filesInfo {
@@ -74,27 +69,14 @@ func LoadTemplates() error {
 			}
 		}
 
-		if len(templatesPath) == 0 {
-			return ErrTemplateNotFound
-		}
-
+		// If the administrator did not create a template file for one of the declared languages in the
+		// configuration file and error will be throw by template.New when trying to open an empty
+		// string.
+		// TODO: Should we be more clear about this error?
 		t, err := template.New("notification").Funcs(template.FuncMap{
-			"nsStatusEq": func(nameserverStatus model.NameserverStatus,
-				expectedNameserverTextStatus string) bool {
-
-				return strings.ToLower(model.NameserverStatusToString(nameserverStatus)) ==
-					strings.TrimSpace(strings.ToLower(expectedNameserverTextStatus))
-			},
-			"dsStatusEq": func(dsStatus model.DSStatus, expectedDSTextStatus string) bool {
-				return strings.ToLower(model.DSStatusToString(dsStatus)) ==
-					strings.TrimSpace(strings.ToLower(expectedDSTextStatus))
-			},
-			"isExpired": func(ds model.DS) bool {
-				// If the status of the DS record is OK, it was selected because the expiration is
-				// near. If in the future we add some other notification over the well configured
-				// DS we must change this logic
-				return ds.LastStatus == model.DSStatusOK
-			},
+			"nsStatusEq":       nameserverStatusEquals,
+			"dsStatusEq":       dsStatusEquals,
+			"isNearExpiration": isNearExpirationDS,
 		}).ParseFiles(templatePath)
 
 		if err != nil {
@@ -112,6 +94,8 @@ func LoadTemplates() error {
 // (LoadTemplates) and there's no read while we add them, but for consistency we are using
 // it
 func addTemplate(language string, t *template.Template) {
+	language = model.NormalizeLanguage(language)
+
 	templatesLock.Lock()
 	defer templatesLock.Unlock()
 	templates[language] = t
@@ -120,7 +104,38 @@ func addTemplate(language string, t *template.Template) {
 // While notifing we will use a specific template to send an e-mail for the owner. To
 // allow concurrent access over the templates map we should use this function
 func getTemplate(language string) *template.Template {
+	language = model.NormalizeLanguage(language)
+
 	templatesLock.RLock()
 	defer templatesLock.RUnlock()
 	return templates[language]
+}
+
+// Function created to clear the templates map, for now is used only for unit tests scenarios
+func clearTemplates() {
+	templatesLock.Lock()
+	defer templatesLock.Unlock()
+	templates = make(map[string]*template.Template)
+}
+
+// Auxiliary function for template that compares two nameserver status (case insensitive)
+func nameserverStatusEquals(nameserverStatus model.NameserverStatus,
+	expectedNameserverTextStatus string) bool {
+
+	return strings.ToLower(model.NameserverStatusToString(nameserverStatus)) ==
+		strings.TrimSpace(strings.ToLower(expectedNameserverTextStatus))
+}
+
+// Auxiliary function for template that compares two DS status (case insensitive)
+func dsStatusEquals(dsStatus model.DSStatus, expectedDSTextStatus string) bool {
+	return strings.ToLower(model.DSStatusToString(dsStatus)) ==
+		strings.TrimSpace(strings.ToLower(expectedDSTextStatus))
+}
+
+// Auxiliary function for template that checks if a DS is near expiration or not
+func isNearExpirationDS(ds model.DS) bool {
+	// If the status of the DS record is OK, it was selected because the expiration is
+	// near. If in the future we add some other notification over the well configured
+	// DS we must change this logic
+	return ds.LastStatus == model.DSStatusOK
 }

@@ -90,7 +90,7 @@ domínio {{.FQDN}}.
   * DS com keytag {{$ds.Keytag}} não pode ser verificado por um problema nos servidores
     DNS.
 
-  {{else if isExpired $ds}}
+  {{else if isNearExpiration $ds}}
   * DS com keytag {{$ds.Keytag}} se referencia a um registro DNSKEY que possui assinaturas
     que estão próximas da data de expiração. Por favor reassine a zona antes que as
     assinaturas expirem para evitar problemas de resolução.
