@@ -2,13 +2,22 @@ package notification
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"github.com/rafaeljusto/shelter/config"
 	"github.com/rafaeljusto/shelter/dao"
 	"github.com/rafaeljusto/shelter/database/mongodb"
 	"github.com/rafaeljusto/shelter/log"
 	"github.com/rafaeljusto/shelter/model"
+	"github.com/rafaeljusto/shelter/net/mail/notification/protocol"
 	"net/smtp"
+)
+
+// List of possible errors that can occur when calling functions from this file. Other
+// erros can also occurs from low level layers
+var (
+	// Template needed to send an e-mail not found
+	ErrTemplateNotFound = errors.New("Template not found")
 )
 
 // Notify is responsable for selecting the domains that should be notified in the system.
@@ -94,9 +103,18 @@ func notifyDomain(domain *model.Domain) error {
 
 	for language, emails := range emailsPerLanguage {
 		t := getTemplate(language)
+		if t == nil {
+			return ErrTemplateNotFound
+		}
+
+		domainMail := protocol.Domain{
+			Domain: *domain,
+			From:   config.ShelterConfig.Notification.From,
+			To:     emails,
+		}
 
 		var msg bytes.Buffer
-		if err := t.Execute(&msg, domain); err != nil {
+		if err := t.ExecuteTemplate(&msg, "notification", domainMail); err != nil {
 			return err
 		}
 

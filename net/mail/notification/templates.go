@@ -69,15 +69,16 @@ func LoadTemplates() error {
 			}
 		}
 
-		// If the administrator did not create a template file for one of the declared languages in the
-		// configuration file and error will be throw by template.New when trying to open an empty
-		// string.
-		// TODO: Should we be more clear about this error?
+		templateContent, err := ioutil.ReadFile(templatePath)
+		if err != nil {
+			return err
+		}
+
 		t, err := template.New("notification").Funcs(template.FuncMap{
 			"nsStatusEq":       nameserverStatusEquals,
 			"dsStatusEq":       dsStatusEquals,
 			"isNearExpiration": isNearExpirationDS,
-		}).ParseFiles(templatePath)
+		}).Parse(string(templateContent))
 
 		if err != nil {
 			return err

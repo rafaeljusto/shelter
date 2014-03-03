@@ -9,82 +9,82 @@ During our periodically domain verification, a configuration problem was detecte
 domain {{.FQDN}}.
 
 {{range $nameserver := .Nameservers}}
-  {{if nsStatusEq $nameserver.lastStatus "TIMEOUT"}}
+  {{if nsStatusEq $nameserver.LastStatus "TIMEOUT"}}
   * Nameserver {{$nameserver.Host}} isn't answering the DNS requests.
     Please check your firewalls and DNS server and make sure that the service is up and
     the port 53 via UDP and TCP are allowed.
 
-  {{else if nsStatusEq $nameserver.lastStatus "NOAA"}}
+  {{else if nsStatusEq $nameserver.LastStatus "NOAA"}}
   * Nameserver {{$nameserver.Host}} don't have authority over the domain
     {{.FQDN}}. Please check your nameserver configuration.
 
-  {{else if nsStatusEq $nameserver.lastStatus "UDN"}}
+  {{else if nsStatusEq $nameserver.LastStatus "UDN"}}
   * Nameserver {{$nameserver.Host}} don't have data about the domain {{.FQDN}}.
 
-  {{else if nsStatusEq $nameserver.lastStatus "UH"}}
+  {{else if nsStatusEq $nameserver.LastStatus "UH"}}
   * Nameserver {{$nameserver.Host}} couldn't be resolved. The authoritative DNS server
     could not be found.
 
-  {{else if nsStatusEq $nameserver.lastStatus "SERVFAIL"}}
+  {{else if nsStatusEq $nameserver.LastStatus "SERVFAIL"}}
   * Nameserver {{$nameserver.Host}} got an internal error while receiving the DNS request.
     Please check the DNS server log to detect and solve the problem.
 
-  {{else if nsStatusEq $nameserver.lastStatus "QREFUSED"}}
+  {{else if nsStatusEq $nameserver.LastStatus "QREFUSED"}}
   * Nameserver {{$nameserver.Host}} refused to answer the DNS query. This is probably
     occuring because of an ACL. Authority nameservers cannot restrict requests for
     specific clients, please review the DNS server configuration.
 
-  {{else if nsStatusEq $nameserver.lastStatus "CREFUSED"}}
+  {{else if nsStatusEq $nameserver.LastStatus "CREFUSED"}}
   * Nameserver {{$nameserver.Host}} DNS query connection was refused. This is probably
     occuring because of firewall rule. Firewalls should allow port 53 in TCP and UDP
     protocols.
 
-  {{else if nsStatusEq $nameserver.lastStatus "CNAME"}}
+  {{else if nsStatusEq $nameserver.LastStatus "CNAME"}}
   * Nameserver {{$nameserver.Host}} has a CNAME in the zone APEX. According to RFC 1034 -
     section 3.6.2 and RFC 1912 - section 2.4 the CNAME record cannot exist with other
     resource record with the same name in the zone. As the SOA record is mandatory in the
     zone APEX, the CNAME cannot exist in it.
 
-  {{else if nsStatusEq $nameserver.lastStatus "NOTSYNCH"}}
+  {{else if nsStatusEq $nameserver.LastStatus "NOTSYNCH"}}
   * Nameserver {{$nameserver.Host}} is not synchronized with other nameservers of the
     domain {{.FQDN}}. Check out the serial of the SOA records on each nameserver's zone.
 
-  {{else if nsStatusEq $nameserver.lastStatus "ERROR"}}
+  {{else if nsStatusEq $nameserver.LastStatus "ERROR"}}
   * Nameserver {{$nameserver.Host}} got an unexpected error.
 
   {{end}}
 {{end}}
 
 {{range $ds := .DSSet}}
-  {{if dsStatusEq $ds.lastStatus "TIMEOUT"}}
+  {{if dsStatusEq $ds.LastStatus "TIMEOUT"}}
   * DS with keytag {{$ds.Keytag}} isn't answering the DNS requests.
     Please check your firewalls and DNS server and make sure that the service is up and
     the port 53 via UDP and TCP are allowed. Also, verify if your network supports
     fragmented UDP packagaes and UDP packages above 512 bytes (check EDSN0 for more
     information).
 
-  {{else if dsStatusEq $ds.lastStatus "NOSIG"}}
+  {{else if dsStatusEq $ds.LastStatus "NOSIG"}}
   * DS with keytag {{$ds.Keytag}} references a DNSKEY record that don't have a RRSIG
     record (signature). Please sign the zone file with the DNSKEY record.
 
-  {{else if dsStatusEq $ds.lastStatus "EXPSIG"}}
+  {{else if dsStatusEq $ds.LastStatus "EXPSIG"}}
   * DS with keytag {{$ds.Keytag}} references a DNSKEY record with a expired signature.
     Please, resign the zone as soon as possible.
 
-  {{else if dsStatusEq $ds.lastStatus "NOKEY"}}
+  {{else if dsStatusEq $ds.LastStatus "NOKEY"}}
   * DS with keytag {{$ds.Keytag}} references a DNSKEY record that does not exist in the
     zone
 
-  {{else if dsStatusEq $ds.lastStatus "NOSEP"}}
+  {{else if dsStatusEq $ds.LastStatus "NOSEP"}}
   * DS with keytag {{$ds.Keytag}} references a DNSKEY that is not a security entry point.
     Some recursive DNS servers could invalidate the chain of trust for that reason.
     Please use a DNSKEY record with the bit SEP on.
 
-  {{else if dsStatusEq $ds.lastStatus "SIGERR"}}
+  {{else if dsStatusEq $ds.LastStatus "SIGERR"}}
   * DS with keytag {{$ds.Keytag}} references a DNSKEY that have an invalid signature.
     Please resign your zone to fix this problem.
 
-  {{else if dsStatusEq $ds.lastStatus "DNSERR"}}
+  {{else if dsStatusEq $ds.LastStatus "DNSERR"}}
   * DS with keytag {{$ds.Keytag}} could not be verified due to a problem on the
     nameservers.
 

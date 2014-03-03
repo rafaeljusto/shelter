@@ -44,7 +44,7 @@ const (
 
 type ByteSize float64
 
-// ScanQuerierTestConfigFile is a structure to store the test configuration file data
+// RESTTestConfigFile is a structure to store the test configuration file data
 type RESTTestConfigFile struct {
 	config.Config
 
