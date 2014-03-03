@@ -53,9 +53,9 @@ func TestSpecificTimeJobExecution(t *testing.T) {
 	Start()
 
 	// Job will not execute exactly in time, but after this amount of time we expect one
-	// execution of our job, because it was scheduled for later. We assume a duration of 1
-	// milisecond to execute the job one time
-	time.Sleep((SchedulerExecutionInterval * 2) + 1*time.Millisecond)
+	// execution of our job, because it was scheduled for later. We assume a duration of 10
+	// miliseconds to execute the job one time
+	time.Sleep((SchedulerExecutionInterval * 2) + 10*time.Millisecond)
 
 	if ValueToChange != 1 {
 		t.Error(fmt.Sprintf("Not executing a time specific job properly. "+
