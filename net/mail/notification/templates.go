@@ -21,9 +21,9 @@ var (
 )
 
 var (
-	// Extension used in template files. Used as a variable for unit tests that can only predefine
-	// temporary filenames
-	templateExtension string = ".tmpl"
+	// Extension used in template files. Used for now as a variable for unit tests and integration
+	// tests that can only predefine temporary filenames
+	TemplateExtension string = ".tmpl"
 )
 
 func init() {
@@ -48,7 +48,7 @@ func LoadTemplates() error {
 
 	// Languages from configuration file were already checked when it was loaded into memory
 	for _, language := range config.ShelterConfig.Languages {
-		filename := fmt.Sprintf("%s%s", language, templateExtension)
+		filename := fmt.Sprintf("%s%s", language, TemplateExtension)
 		templatePath := ""
 
 		for _, fileInfo := range filesInfo {

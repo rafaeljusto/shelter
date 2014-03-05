@@ -12,6 +12,7 @@ import (
 	"io/ioutil"
 	"net"
 	"net/mail"
+	"os"
 	"time"
 )
 
@@ -63,16 +64,140 @@ func main() {
 		Database: database,
 	}
 
-	simpleNotification(domainDAO, messageChannel, errorChannel)
+	templateName := createTemplateFile()
+	simpleNotification(domainDAO, templateName, messageChannel, errorChannel)
+	removeTemplateFile(templateName)
 
 	utils.Println("SUCCESS!")
 }
 
-func simpleNotification(domainDAO dao.DomainDAO,
+func createTemplateFile() string {
+	f, err := ioutil.TempFile(".", "shelter-nf-test-template")
+	if err != nil {
+		utils.Fatalln("Error creating template file", err)
+	}
+	defer f.Close()
+
+	_, err = f.WriteString(`From: {{.From}}
+To: {{.To}}
+Subject: Misconfiguration on domain {{.FQDN}}
+
+
+Dear Sir/Madam,
+
+During our periodically domain verification, a configuration problem was detected with the
+domain {{.FQDN}}.
+
+{{range $nameserver := .Nameservers}}
+  {{if nsStatusEq $nameserver.LastStatus "TIMEOUT"}}
+  * Nameserver {{$nameserver.Host}} isn't answering the DNS requests.
+    Please check your firewalls and DNS server and make sure that the service is up and
+    the port 53 via UDP and TCP are allowed.
+
+  {{else if nsStatusEq $nameserver.LastStatus "NOAA"}}
+  * Nameserver {{$nameserver.Host}} don't have authority over the domain
+    {{.FQDN}}. Please check your nameserver configuration.
+
+  {{else if nsStatusEq $nameserver.LastStatus "UDN"}}
+  * Nameserver {{$nameserver.Host}} don't have data about the domain {{.FQDN}}.
+
+  {{else if nsStatusEq $nameserver.LastStatus "UH"}}
+  * Nameserver {{$nameserver.Host}} couldn't be resolved. The authoritative DNS server
+    could not be found.
+
+  {{else if nsStatusEq $nameserver.LastStatus "SERVFAIL"}}
+  * Nameserver {{$nameserver.Host}} got an internal error while receiving the DNS request.
+    Please check the DNS server log to detect and solve the problem.
+
+  {{else if nsStatusEq $nameserver.LastStatus "QREFUSED"}}
+  * Nameserver {{$nameserver.Host}} refused to answer the DNS query. This is probably
+    occuring because of an ACL. Authority nameservers cannot restrict requests for
+    specific clients, please review the DNS server configuration.
+
+  {{else if nsStatusEq $nameserver.LastStatus "CREFUSED"}}
+  * Nameserver {{$nameserver.Host}} DNS query connection was refused. This is probably
+    occuring because of firewall rule. Firewalls should allow port 53 in TCP and UDP
+    protocols.
+
+  {{else if nsStatusEq $nameserver.LastStatus "CNAME"}}
+  * Nameserver {{$nameserver.Host}} has a CNAME in the zone APEX. According to RFC 1034 -
+    section 3.6.2 and RFC 1912 - section 2.4 the CNAME record cannot exist with other
+    resource record with the same name in the zone. As the SOA record is mandatory in the
+    zone APEX, the CNAME cannot exist in it.
+
+  {{else if nsStatusEq $nameserver.LastStatus "NOTSYNCH"}}
+  * Nameserver {{$nameserver.Host}} is not synchronized with other nameservers of the
+    domain {{.FQDN}}. Check out the serial of the SOA records on each nameserver's zone.
+
+  {{else if nsStatusEq $nameserver.LastStatus "ERROR"}}
+  * Nameserver {{$nameserver.Host}} got an unexpected error.
+
+  {{end}}
+{{end}}
+
+{{range $ds := .DSSet}}
+  {{if dsStatusEq $ds.LastStatus "TIMEOUT"}}
+  * DS with keytag {{$ds.Keytag}} isn't answering the DNS requests.
+    Please check your firewalls and DNS server and make sure that the service is up and
+    the port 53 via UDP and TCP are allowed. Also, verify if your network supports
+    fragmented UDP packagaes and UDP packages above 512 bytes (check EDSN0 for more
+    information).
+
+  {{else if dsStatusEq $ds.LastStatus "NOSIG"}}
+  * DS with keytag {{$ds.Keytag}} references a DNSKEY record that don't have a RRSIG
+    record (signature). Please sign the zone file with the DNSKEY record.
+
+  {{else if dsStatusEq $ds.LastStatus "EXPSIG"}}
+  * DS with keytag {{$ds.Keytag}} references a DNSKEY record with a expired signature.
+    Please, resign the zone as soon as possible.
+
+  {{else if dsStatusEq $ds.LastStatus "NOKEY"}}
+  * DS with keytag {{$ds.Keytag}} references a DNSKEY record that does not exist in the
+    zone
+
+  {{else if dsStatusEq $ds.LastStatus "NOSEP"}}
+  * DS with keytag {{$ds.Keytag}} references a DNSKEY that is not a security entry point.
+    Some recursive DNS servers could invalidate the chain of trust for that reason.
+    Please use a DNSKEY record with the bit SEP on.
+
+  {{else if dsStatusEq $ds.LastStatus "SIGERR"}}
+  * DS with keytag {{$ds.Keytag}} references a DNSKEY that have an invalid signature.
+    Please resign your zone to fix this problem.
+
+  {{else if dsStatusEq $ds.LastStatus "DNSERR"}}
+  * DS with keytag {{$ds.Keytag}} could not be verified due to a problem on the
+    nameservers.
+
+  {{else if isNearExpiration $ds}}
+  * DS with keytag {{$ds.Keytag}} references a DNSKEY with signatures that are near the
+    expiration date. Please resign the zone before it expires to avoid DNS problems.
+
+  {{end}}
+{{end}}
+
+Best regards,
+LACTLD`)
+
+	if err != nil {
+		utils.Fatalln("Could not write to template file", err)
+	}
+
+	config.ShelterConfig.Languages = append(config.ShelterConfig.Languages, f.Name())
+	return f.Name()
+}
+
+func removeTemplateFile(templateName string) {
+	if err := os.Remove(templateName); err != nil {
+		utils.Fatalln("Error removing template file", err)
+	}
+}
+
+func simpleNotification(domainDAO dao.DomainDAO, templateName string,
 	messageChannel chan *mail.Message, errorChannel chan error) {
 
-	generateAndSaveDomain("example.com.br.", domainDAO)
+	generateAndSaveDomain("example.com.br.", domainDAO, templateName)
 
+	notification.TemplateExtension = ""
 	if err := notification.LoadTemplates(); err != nil {
 		utils.Fatalln("Error loading templates", err)
 	}
@@ -95,7 +220,7 @@ func simpleNotification(domainDAO dao.DomainDAO,
 			utils.Fatalln("E-mail to header is different", nil)
 		}
 
-		if message.Header.Get("Subject") != "Problema de configuracao com o dominio example.com.br." {
+		if message.Header.Get("Subject") != "Misconfiguration on domain example.com.br." {
 			utils.Fatalln("E-mail subject header is different", nil)
 		}
 
@@ -104,31 +229,29 @@ func simpleNotification(domainDAO dao.DomainDAO,
 			utils.Fatalln("Error reading e-mail body", err)
 		}
 
-		expectedBody := `
-Prezado Sr./Sra.,
-
-Durante a validação periódica de domínio, um problema de configuração foi detectado com o
-domínio example.com.br..
-
-
-  
-  * Servidor DNS ns1.example.com.br. gerou um erro interno enquanto recebia a
-    requisição DNS. Por favor verifique os logs para detectar e resolver o problema.
-
-  
-
-
-
-
-Atenciosamente,
-LACTLD
-.
-`
+		expectedBody := "\r\n" +
+			"Dear Sir/Madam,\r\n" +
+			"\r\n" +
+			"During our periodically domain verification, a configuration problem was detected with the\r\n" +
+			"domain example.com.br..\r\n" +
+			"\r\n" +
+			"\r\n" +
+			"  \r\n" +
+			"  * Nameserver ns1.example.com.br. got an internal error while receiving the DNS request.\r\n" +
+			"    Please check the DNS server log to detect and solve the problem.\r\n" +
+			"\r\n" +
+			"  \r\n" +
+			"\r\n" +
+			"\r\n" +
+			"\r\n" +
+			"\r\n" +
+			"Best regards,\r\n" +
+			"LACTLD\r\n" +
+			".\r\n"
 
 		if string(body) != expectedBody {
-			// TODO: Not validating for now
-			// utils.Fatalln(fmt.Sprintf("E-mail body is different from what we expected. "+
-			// 	"Expected [%s], but found [%s]", expectedBody, body), nil)
+			utils.Fatalln(fmt.Sprintf("E-mail body is different from what we expected. "+
+				"Expected [%s], but found [%s]", expectedBody, body), nil)
 		}
 
 	case err := <-errorChannel:
@@ -144,7 +267,7 @@ LACTLD
 }
 
 // Function to mock a domain
-func generateAndSaveDomain(fqdn string, domainDAO dao.DomainDAO) {
+func generateAndSaveDomain(fqdn string, domainDAO dao.DomainDAO, language string) {
 	lastOKAt := time.Now().Add(time.Duration(-config.ShelterConfig.Notification.NameserverErrorAlertDays*24) * time.Hour)
 	owner, _ := mail.ParseAddress("test@rafael.net.br")
 
@@ -161,7 +284,7 @@ func generateAndSaveDomain(fqdn string, domainDAO dao.DomainDAO) {
 		Owners: []model.Owner{
 			{
 				Email:    owner,
-				Language: "pt-BR",
+				Language: language,
 			},
 		},
 	}

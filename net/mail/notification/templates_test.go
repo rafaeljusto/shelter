@@ -15,7 +15,7 @@ func TestLoadTemplates(t *testing.T) {
 	config.ShelterConfig.BasePath = "."
 
 	// Change extension to empty because we can only set the prefix of temporary files
-	templateExtension = ""
+	TemplateExtension = ""
 
 	config.ShelterConfig.Notification.TemplatesPath = "idontexist"
 	if err := LoadTemplates(); err == nil {
