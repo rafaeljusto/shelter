@@ -65,8 +65,9 @@ func main() {
 	}
 
 	templateName := createTemplateFile()
+	defer removeTemplateFile(templateName)
+
 	simpleNotification(domainDAO, templateName, messageChannel, errorChannel)
-	removeTemplateFile(templateName)
 
 	utils.Println("SUCCESS!")
 }
@@ -84,7 +85,7 @@ Subject: Misconfiguration on domain {{.FQDN}}
 
 
 Dear Sir/Madam,
-
+ 
 During our periodically domain verification, a configuration problem was detected with the
 domain {{.FQDN}}.
 
@@ -213,7 +214,8 @@ func simpleNotification(domainDAO dao.DomainDAO, templateName string,
 	select {
 	case message := <-messageChannel:
 		if message.Header.Get("From") != "shelter@example.com.br." {
-			utils.Fatalln("E-mail from header is different", nil)
+			utils.Fatalln(fmt.Sprintf("E-mail from header is different. Expected "+
+				"shelter@example.com.br. but found %s", message.Header.Get("From")), nil)
 		}
 
 		if message.Header.Get("To") != "[<test@rafael.net.br>]" {
@@ -231,20 +233,13 @@ func simpleNotification(domainDAO dao.DomainDAO, templateName string,
 
 		expectedBody := "\r\n" +
 			"Dear Sir/Madam,\r\n" +
-			"\r\n" +
+			" \r\n" +
 			"During our periodically domain verification, a configuration problem was detected with the\r\n" +
 			"domain example.com.br..\r\n" +
-			"\r\n" +
-			"\r\n" +
 			"  \r\n" +
 			"  * Nameserver ns1.example.com.br. got an internal error while receiving the DNS request.\r\n" +
 			"    Please check the DNS server log to detect and solve the problem.\r\n" +
-			"\r\n" +
 			"  \r\n" +
-			"\r\n" +
-			"\r\n" +
-			"\r\n" +
-			"\r\n" +
 			"Best regards,\r\n" +
 			"LACTLD\r\n" +
 			".\r\n"
