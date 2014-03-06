@@ -76,6 +76,7 @@ func main() {
 	domainUniqueFQDN(domainDAO)
 	domainConcurrency(domainDAO)
 	domainsPagination(domainDAO)
+	domainsNotification(domainDAO)
 
 	// Domain DAO performance report is optional and only generated when the report file
 	// path parameter is given
@@ -104,7 +105,7 @@ func domainLifeCycle(domainDAO dao.DomainDAO) {
 	}
 
 	// Update domain
-	domain.Owners = []*mail.Address{}
+	domain.Owners = []model.Owner{}
 	if err := domainDAO.Save(&domain); err != nil {
 		utils.Fatalln("Couldn't save domain in database", err)
 	}
@@ -154,7 +155,7 @@ func domainsLifeCycle(domainDAO dao.DomainDAO) {
 
 	// Update domains
 	for _, domain := range domains {
-		domain.Owners = []*mail.Address{}
+		domain.Owners = []model.Owner{}
 	}
 
 	domainResults = domainDAO.SaveMany(domains)
@@ -396,6 +397,172 @@ func domainsPagination(domainDAO dao.DomainDAO) {
 	}
 }
 
+// Verify if the method that choose the domains that needs to be verified is correct
+func domainsNotification(domainDAO dao.DomainDAO) {
+	numberOfItemsToBeVerified := 1000
+	numberOfItemsToDontBeVerified := 1000
+	nameserverErrorAlertDays := 7
+	nameserverTimeoutAlertDays := 30
+	dsErrorAlertDays := 1
+	dsTimeoutAlertDays := 7
+	maxExpirationAlertDays := 5
+
+	data := []struct {
+		name                      string
+		numberOfItems             int
+		nameserverTimeoutLastOKAt time.Time
+		nameserverErrorLastOKAt   time.Time
+		dsTimeoutLastOkAt         time.Time
+		dsErrorLastOkAt           time.Time
+		dsExpiresAt               time.Time
+	}{
+		{
+			name:                      "shouldbenotified",
+			numberOfItems:             numberOfItemsToBeVerified,
+			nameserverTimeoutLastOKAt: time.Now().Add(time.Duration(-nameserverTimeoutAlertDays*24) * time.Hour),
+			nameserverErrorLastOKAt:   time.Now().Add(time.Duration(-nameserverErrorAlertDays*24) * time.Hour),
+			dsTimeoutLastOkAt:         time.Now().Add(time.Duration(-dsTimeoutAlertDays*24) * time.Hour),
+			dsErrorLastOkAt:           time.Now().Add(time.Duration(-dsErrorAlertDays*24) * time.Hour),
+			dsExpiresAt:               time.Now().Add(time.Duration((maxExpirationAlertDays)*24) * time.Hour),
+		},
+		{
+			name:                      "shouldnotbenotified",
+			numberOfItems:             numberOfItemsToDontBeVerified,
+			nameserverTimeoutLastOKAt: time.Now().Add(time.Duration((-nameserverTimeoutAlertDays+1)*24) * time.Hour),
+			nameserverErrorLastOKAt:   time.Now().Add(time.Duration((-nameserverErrorAlertDays+1)*24) * time.Hour),
+			dsTimeoutLastOkAt:         time.Now().Add(time.Duration((-dsTimeoutAlertDays+1)*24) * time.Hour),
+			dsErrorLastOkAt:           time.Now().Add(time.Duration((-dsErrorAlertDays+1)*24) * time.Hour),
+			dsExpiresAt:               time.Now().Add(time.Duration((maxExpirationAlertDays+1)*24) * time.Hour),
+		},
+	}
+
+	for _, item := range data {
+		for i := 0; i < item.numberOfItems/5; i++ {
+			domain := model.Domain{
+				FQDN: fmt.Sprintf("%s%d.com.br", item.name, i),
+				Nameservers: []model.Nameserver{
+					{
+						LastStatus: model.NameserverStatusTimeout,
+						LastOKAt:   item.nameserverTimeoutLastOKAt,
+					},
+				},
+			}
+
+			if err := domainDAO.Save(&domain); err != nil {
+				utils.Fatalln("Error saving domain in database", err)
+			}
+		}
+
+		for i := item.numberOfItems / 5; i < item.numberOfItems/5*2; i++ {
+			domain := model.Domain{
+				FQDN: fmt.Sprintf("%s%d.com.br", item.name, i),
+				Nameservers: []model.Nameserver{
+					{
+						LastStatus: model.NameserverStatusNoAuthority,
+						LastOKAt:   item.nameserverErrorLastOKAt,
+					},
+				},
+			}
+
+			if err := domainDAO.Save(&domain); err != nil {
+				utils.Fatalln("Error saving domain in database", err)
+			}
+		}
+
+		for i := item.numberOfItems / 5 * 2; i < item.numberOfItems/5*3; i++ {
+			domain := model.Domain{
+				FQDN: fmt.Sprintf("%s%d.com.br", item.name, i),
+				DSSet: []model.DS{
+					{
+						LastStatus: model.DSStatusTimeout,
+						LastOKAt:   item.dsTimeoutLastOkAt,
+						ExpiresAt:  time.Now().Add(time.Duration((maxExpirationAlertDays+1)*24) * time.Hour),
+					},
+				},
+			}
+
+			if err := domainDAO.Save(&domain); err != nil {
+				utils.Fatalln("Error saving domain in database", err)
+			}
+		}
+
+		for i := item.numberOfItems / 5 * 3; i < item.numberOfItems/5*4; i++ {
+			domain := model.Domain{
+				FQDN: fmt.Sprintf("%s%d.com.br", item.name, i),
+				DSSet: []model.DS{
+					{
+						LastStatus: model.DSStatusExpiredSignature,
+						LastOKAt:   item.dsErrorLastOkAt,
+						ExpiresAt:  time.Now().Add(time.Duration((maxExpirationAlertDays+1)*24) * time.Hour),
+					},
+				},
+			}
+
+			if err := domainDAO.Save(&domain); err != nil {
+				utils.Fatalln("Error saving domain in database", err)
+			}
+		}
+
+		for i := item.numberOfItems / 5 * 4; i < item.numberOfItems; i++ {
+			domain := model.Domain{
+				FQDN: fmt.Sprintf("%s%d.com.br", item.name, i),
+				DSSet: []model.DS{
+					{
+						LastStatus: model.DSStatusOK,
+						LastOKAt:   time.Now(),
+						ExpiresAt:  item.dsExpiresAt,
+					},
+				},
+			}
+
+			if err := domainDAO.Save(&domain); err != nil {
+				utils.Fatalln("Error saving domain in database", err)
+			}
+		}
+	}
+
+	domainChannel, err := domainDAO.FindAllAsyncToBeNotified(
+		nameserverErrorAlertDays,
+		nameserverTimeoutAlertDays,
+		dsErrorAlertDays,
+		dsTimeoutAlertDays,
+		maxExpirationAlertDays,
+	)
+
+	if err != nil {
+		utils.Fatalln("Error retrieving domains to be notified", err)
+	}
+
+	var domains []*model.Domain
+	for {
+		domainResult := <-domainChannel
+
+		if domainResult.Error != nil {
+			utils.Fatalln("Error retrieving domain to be notified", domainResult.Error)
+		}
+
+		if domainResult.Error != nil || domainResult.Domain == nil {
+			break
+		}
+
+		domains = append(domains, domainResult.Domain)
+	}
+
+	if len(domains) != numberOfItemsToBeVerified {
+		utils.Fatalln(fmt.Sprintf("Did not select all the domains ready for notification. "+
+			"Expected %d and got %d", numberOfItemsToBeVerified, len(domains)), nil)
+	}
+
+	for _, item := range data {
+		for i := 0; i < item.numberOfItems; i++ {
+			fqdn := fmt.Sprintf("%s%d.com.br", item.name, i)
+			if err := domainDAO.RemoveByFQDN(fqdn); err != nil {
+				utils.Fatalln("Error removing domain from database", err)
+			}
+		}
+	}
+}
+
 // Generates a report with the amount of time for each operation in the domain DAO. For
 // more realistic values it does the same operation for the same amount of data X number
 // of times to get the average time of the operation. After some results, with indexes we
@@ -544,7 +711,12 @@ func newDomain() model.Domain {
 	}
 
 	owner, _ := mail.ParseAddress("test@rafael.net.br")
-	domain.Owners = []*mail.Address{owner}
+	domain.Owners = []model.Owner{
+		{
+			Email:    owner,
+			Language: "pt-BR",
+		},
+	}
 
 	return domain
 }
@@ -575,7 +747,12 @@ func newDomains() []*model.Domain {
 					Digest:    "A790A11EA430A85DA77245F091891F73AA7404AA",
 				},
 			},
-			Owners: []*mail.Address{owner1},
+			Owners: []model.Owner{
+				{
+					Email:    owner1,
+					Language: "pt-BR",
+				},
+			},
 		},
 		{
 			FQDN: "test2.com.br",
@@ -597,7 +774,12 @@ func newDomains() []*model.Domain {
 					Digest:    "A790A11EA430A85DA77245F091891F73AA7404BB",
 				},
 			},
-			Owners: []*mail.Address{owner2},
+			Owners: []model.Owner{
+				{
+					Email:    owner2,
+					Language: "en-US",
+				},
+			},
 		},
 	}
 }
@@ -641,7 +823,8 @@ func compareDomains(d1, d2 model.Domain) bool {
 	}
 
 	for i := 0; i < len(d1.Owners); i++ {
-		if d1.Owners[i].String() != d2.Owners[i].String() {
+		if d1.Owners[i].Email.String() != d2.Owners[i].Email.String() ||
+			d1.Owners[i].Language != d2.Owners[i].Language {
 			return false
 		}
 	}

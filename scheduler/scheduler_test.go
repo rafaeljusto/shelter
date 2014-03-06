@@ -53,12 +53,41 @@ func TestSpecificTimeJobExecution(t *testing.T) {
 	Start()
 
 	// Job will not execute exactly in time, but after this amount of time we expect one
-	// execution of our job, because it was scheduled for later. We assume a duration of 1
-	// milisecond to execute the job one time
-	time.Sleep((SchedulerExecutionInterval * 2) + 1*time.Millisecond)
+	// execution of our job, because it was scheduled for later. We assume a duration of 10
+	// miliseconds to execute the job one time
+	time.Sleep((SchedulerExecutionInterval * 2) + 10*time.Millisecond)
 
 	if ValueToChange != 1 {
 		t.Error(fmt.Sprintf("Not executing a time specific job properly. "+
 			"Expected %d and got %d", 1, ValueToChange))
+	}
+}
+
+func TestNextExecutionByType(t *testing.T) {
+	SchedulerExecutionInterval = 50 * time.Millisecond
+
+	Clear()
+
+	if _, err := NextExecutionByType(JobTypeScan); err == nil {
+		t.Error("Not detecting when there's no next execution")
+	}
+
+	expectedNextExecution := time.Now().Add(10 * time.Second)
+
+	Register(Job{
+		Type:          JobTypeScan,
+		NextExecution: expectedNextExecution,
+		Interval:      1 * time.Minute,
+		Task:          func() {},
+	})
+
+	nextExecution, err := NextExecutionByType(JobTypeScan)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !nextExecution.Equal(expectedNextExecution) {
+		t.Errorf("Expected next execution on %s and got on %s",
+			expectedNextExecution.String(), nextExecution.String())
 	}
 }

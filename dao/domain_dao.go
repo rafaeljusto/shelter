@@ -97,6 +97,31 @@ func init() {
 
 		return database.C(domainDAOCollection).EnsureIndex(index)
 	})
+
+	// Add index on nameserver.lastokat to speed up the query that check the domains that
+	// need to be notified. We don't use laststatus because the selectivity is low,
+	// according to http://docs.mongodb.org/manual/tutorial/create-queries-that-ensure-
+	// selectivity/
+	mongodb.RegisterIndexFunction(func(database *mgo.Database) error {
+		index := mgo.Index{
+			Name: "nameservers",
+			Key:  []string{"nameservers.lastokat"},
+		}
+
+		return database.C(domainDAOCollection).EnsureIndex(index)
+	})
+
+	// Add index on dsset.lastokat to speed up the query that check the domains that need to
+	// be notified. We don't use laststatus because the selectivity is low, according to
+	// http://docs.mongodb.org/manual/tutorial/create-queries-that-ensure- selectivity/
+	mongodb.RegisterIndexFunction(func(database *mgo.Database) error {
+		index := mgo.Index{
+			Name: "dsset",
+			Key:  []string{"dsset.lastokat"},
+		}
+
+		return database.C(domainDAOCollection).EnsureIndex(index)
+	})
 }
 
 // DomainDAO is the structure responsable for keeping the database connection to save the
@@ -121,7 +146,10 @@ func (dao DomainDAO) Save(domain *model.Domain) error {
 	}
 
 	// Every time we modified a domain object we increase the revision counter to identify
-	// changes in high level structures
+	// changes in high level structures. Maybe a better approach would be doing this on the
+	// MongoDB server side, check out the link http://docs.mongodb.org/manual/tutorial
+	// /optimize-query-performance-with-indexes-and-projections/ - Use the Increment
+	// Operator to Perform Operations Server-Side
 	domain.Revision += 1
 
 	// Store the last time that the object was modified
@@ -236,6 +264,110 @@ func (dao DomainDAO) FindAllAsync() (chan DomainResult, error) {
 	go func() {
 		// Gets the database result iterator
 		it := dao.Database.C(domainDAOCollection).Find(bson.M{}).Iter()
+
+		var domainIt model.Domain
+		for it.Next(&domainIt) {
+			domain := domainIt // Copy the domainIt object to send it to the channel
+			domainChannel <- DomainResult{
+				Domain: &domain,
+				Error:  nil,
+			}
+		}
+
+		err := it.Close()
+		domainChannel <- DomainResult{
+			Domain: nil,
+			Error:  err,
+		}
+	}()
+
+	return domainChannel, nil
+}
+
+// Return all domains that need to be notified due to the error tolerancy policy. The
+// objective is to help the user to configure correctly the nameservers alerting about
+// problems. We are going to have different notification tolerances for nameserver, ds and
+// the type of errors (timeout and others). In the worst case this method can return all
+// the domains from the system, so it will work asynchronously, returning the domain as
+// soon as it is selected
+func (dao DomainDAO) FindAllAsyncToBeNotified(
+	nameserverErrorAlertDays,
+	nameserverTimeoutAlertDays,
+	dsErrorAlertDays,
+	dsTimeoutAlertDays,
+	maxExpirationAlertDays int,
+) (chan DomainResult, error) {
+
+	// Check if the programmer forgot to set the database in DomainDAO object
+	if dao.Database == nil {
+		return nil, ErrDomainDAOUndefinedDatabase
+	}
+
+	// Channel to be used for returning each retrieved domain
+	domainChannel := make(chan DomainResult)
+
+	go func() {
+		// When using indexes with $or queries, remember that each clause of an $or query will
+		// execute in parallel. These clauses can each use their own index. We tried another
+		// query with $or operators inside the main $or but if we do that the "explain" show
+		// us that MongoDB don't use indexes for that sittuation (so avoid it!)
+
+		it := dao.Database.C(domainDAOCollection).Find(bson.M{
+			"$or": []bson.M{
+				{
+					"nameservers": bson.M{"$elemMatch": bson.M{
+						"laststatus": bson.M{"$nin": []model.NameserverStatus{
+							model.NameserverStatusNotChecked,
+							model.NameserverStatusOK,
+							model.NameserverStatusTimeout,
+						},
+						},
+						"lastokat": bson.M{
+							"$lte": time.Now().Add(time.Duration(-nameserverErrorAlertDays*24) * time.Hour),
+						},
+					},
+					},
+				},
+				{
+					"nameservers": bson.M{"$elemMatch": bson.M{
+						"laststatus": model.NameserverStatusTimeout,
+						"lastokat": bson.M{
+							"$lte": time.Now().Add(time.Duration(-nameserverTimeoutAlertDays*24) * time.Hour),
+						},
+					},
+					},
+				},
+				{
+					"dsset": bson.M{"$elemMatch": bson.M{
+						"laststatus": bson.M{"$nin": []model.DSStatus{
+							model.DSStatusNotChecked,
+							model.DSStatusOK,
+							model.DSStatusTimeout,
+						},
+						},
+						"lastokat": bson.M{
+							"$lte": time.Now().Add(time.Duration(-dsErrorAlertDays*24) * time.Hour),
+						},
+					},
+					},
+				},
+				{
+					"dsset": bson.M{"$elemMatch": bson.M{"laststatus": model.DSStatusTimeout,
+						"lastokat": bson.M{
+							"$lte": time.Now().Add(time.Duration(-dsTimeoutAlertDays*24) * time.Hour),
+						},
+					},
+					},
+				},
+				{
+					"dsset": bson.M{"$elemMatch": bson.M{"expiresat": bson.M{
+						"$lte": time.Now().Add(time.Duration(maxExpirationAlertDays*24) * time.Hour),
+					},
+					},
+					},
+				},
+			},
+		}).Iter()
 
 		var domainIt model.Domain
 		for it.Next(&domainIt) {

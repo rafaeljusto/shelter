@@ -22,8 +22,9 @@ var (
 
 // List of possible job types on the scheduler
 const (
-	JobTypeUnknown JobType = 0 // When the job is not going to be verified later
-	JobTypeScan    JobType = 1 // We usually wants to known when the next scan will start
+	JobTypeUnknown      JobType = 0 // When the job is not going to be verified later
+	JobTypeScan         JobType = 1 // We usually wants to known when the next scan will start
+	JobTypeNotification JobType = 2 // Identify notification jobs
 )
 
 // Identify the jobs with types to later retrieve information from scheduler to known when

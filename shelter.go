@@ -7,6 +7,7 @@ import (
 	"github.com/rafaeljusto/shelter/log"
 	"github.com/rafaeljusto/shelter/model"
 	"github.com/rafaeljusto/shelter/net/http/rest"
+	"github.com/rafaeljusto/shelter/net/mail/notification"
 	"github.com/rafaeljusto/shelter/net/scan"
 	"github.com/rafaeljusto/shelter/scheduler"
 	"net"
@@ -33,6 +34,7 @@ const (
 	ErrStartingRESTServer
 	ErrScanTimeFormat
 	ErrCurrentScanInitialize
+	ErrNotificationTemplates
 )
 
 // We are going to use the initialization function to read command line arguments, load
@@ -111,10 +113,46 @@ func main() {
 			Task:          scan.ScanDomains,
 		})
 
+		// Must be called after registering in scheduler, because we retrieve the next execution time
+		// from it
 		if err := model.InitializeCurrentScan(); err != nil {
 			log.Println("Current scan information got an error while initializing. Details:", err)
 			os.Exit(ErrCurrentScanInitialize)
 		}
+	}
+
+	if config.ShelterConfig.Notification.Enabled {
+		if err := notification.LoadTemplates(); err != nil {
+			log.Println("Error loading notification templates. Details:", err)
+			os.Exit(ErrNotificationTemplates)
+		}
+
+		notificationTime, err := time.Parse("15:04:05 MST", config.ShelterConfig.Scan.Time)
+		if err != nil {
+			log.Println("Scan time not in a valid format. Details:", err)
+			os.Exit(ErrScanTimeFormat)
+		}
+
+		notificationTime = notificationTime.UTC()
+		now := time.Now().UTC()
+
+		nextExecution := time.Date(
+			now.Year(),
+			now.Month(),
+			now.Day(),
+			notificationTime.Hour(),
+			notificationTime.Minute(),
+			notificationTime.Second(),
+			notificationTime.Nanosecond(),
+			notificationTime.Location(),
+		)
+
+		scheduler.Register(scheduler.Job{
+			Type:          scheduler.JobTypeNotification,
+			NextExecution: nextExecution,
+			Interval:      time.Duration(config.ShelterConfig.Notification.IntervalHours) * time.Hour,
+			Task:          notification.Notify,
+		})
 	}
 
 	scheduler.Start()
@@ -160,6 +198,15 @@ func manageSystemSignals() {
 // file. It will be used when the system starts for the first time and when it receives a
 // SIGHUP signal
 func loadSettings() error {
+	// Load languages to model. We don't do this in the configuration package, because we
+	// don't want to create a dependency between the model and the config taht could become
+	// a cross reference
+	for _, language := range config.ShelterConfig.Languages {
+		if err := model.AddLanguage(language); err != nil {
+			return err
+		}
+	}
+
 	// TODO: Possible concurrent access problem while reloading the configuration file. And
 	// we also should reload many structures that could change with the new configuration
 	// files, like the network interfaces

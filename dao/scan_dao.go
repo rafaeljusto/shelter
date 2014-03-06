@@ -127,7 +127,10 @@ func (dao ScanDAO) Save(scan *model.Scan) error {
 	}
 
 	// Every time we modified a scan object we increase the revision counter to identify
-	// changes in high level structures
+	// changes in high level structures. Maybe a better approach would be doing this on the
+	// MongoDB server side, check out the link http://docs.mongodb.org/manual/tutorial
+	// /optimize-query-performance-with-indexes-and-projections/ - Use the Increment
+	// Operator to Perform Operations Server-Side
 	scan.Revision += 1
 
 	// Store the last time that the object was modified

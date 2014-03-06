@@ -1,6 +1,7 @@
 package protocol
 
 import (
+	"fmt"
 	"github.com/rafaeljusto/shelter/model"
 	"net/mail"
 	"strings"
@@ -48,9 +49,15 @@ func TestMerge(t *testing.T) {
 				PublicKey: "AwEAAfFQjspE7NgjAPclHrlyVFPRUHrU1p1U6POUXDpuIg8grg/s0lG1 8sjMkpxIvecIePLJw24gx48Ta9g0JJzPy35oGX5rYVJAu9BPqdUEuwIN ScTy3fPUhubvXP2fbyS6LeKNX/ZenihCD4HrViZehJmsKKv5fX8qx+RL 7NXCAAM1Xdet13cqR3LduW6wBzMiaQ==",
 			},
 		},
-		Owners: []string{
-			"example1@example.com.br",
-			"example2@example.com.br",
+		Owners: []OwnerRequest{
+			{
+				Email:    "example1@example.com.br",
+				Language: "pt-br",
+			},
+			{
+				Email:    "example2@example.com.br",
+				Language: "en-us",
+			},
 		},
 	}
 
@@ -76,8 +83,11 @@ func TestMerge(t *testing.T) {
 				LastStatus: model.DSStatusTimeout,
 			},
 		},
-		Owners: []*mail.Address{
-			email,
+		Owners: []model.Owner{
+			{
+				Email:    email,
+				Language: fmt.Sprintf("%s-%s", model.LanguageTypePT, model.RegionTypeBR),
+			},
 		},
 	}
 
@@ -101,7 +111,9 @@ func TestMerge(t *testing.T) {
 		t.Error("Fail to merge DS set correctly")
 	}
 
-	if len(domain.Owners) != 2 {
+	if len(domain.Owners) != 2 ||
+		domain.Owners[0].Email.Address != "example1@example.com.br" ||
+		domain.Owners[0].Language != "pt-BR" {
 		t.Error("Fail to replace owners")
 	}
 
@@ -194,8 +206,11 @@ func TestMerge(t *testing.T) {
 
 	domainRequest = DomainRequest{
 		FQDN: "example.com.br",
-		Owners: []string{
-			"wrongemail.com.br",
+		Owners: []OwnerRequest{
+			{
+				Email:    "wrongemail.com.br",
+				Language: "pt-br",
+			},
 		},
 	}
 
@@ -228,8 +243,11 @@ func TestToDomainResponse(t *testing.T) {
 				LastStatus: model.DSStatusTimeout,
 			},
 		},
-		Owners: []*mail.Address{
-			email,
+		Owners: []model.Owner{
+			{
+				Email:    email,
+				Language: fmt.Sprintf("%s-%s", model.LanguageTypePT, model.RegionTypeBR),
+			},
 		},
 	}
 
@@ -248,7 +266,8 @@ func TestToDomainResponse(t *testing.T) {
 	}
 
 	if len(domainResponse.Owners) != 1 ||
-		domainResponse.Owners[0] != "example@example.com.br." {
+		domainResponse.Owners[0].Email != "example@example.com.br." ||
+		domainResponse.Owners[0].Language != "pt-BR" {
 
 		t.Error("Fail to convert owners")
 	}

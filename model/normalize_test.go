@@ -56,3 +56,21 @@ func TestNormalizeDSDigest(t *testing.T) {
 		t.Error("Not normalizing correctly the DS digest")
 	}
 }
+
+func TestNormalizeLanguage(t *testing.T) {
+	if NormalizeLanguage("") != "" {
+		t.Error("Not normalizing correctly the empty language")
+	}
+
+	if NormalizeLanguage("  Pt  ") != "pt" {
+		t.Error("Not normalizing correctly the language name")
+	}
+
+	if NormalizeLanguage("  Pt  -  bR ") != "pt-BR" {
+		t.Error("Not normalizing correctly the language name with country code")
+	}
+
+	if NormalizeLanguage("  Pt  -  bR - zzzz") != "pt-BR" {
+		t.Error("Not ignoring extra fields")
+	}
+}

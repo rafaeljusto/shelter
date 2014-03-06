@@ -4,8 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/rafaeljusto/shelter/model"
-	"net/mail"
-	"strings"
 )
 
 // List of possible errors that can occur when calling methods from this object. Other
@@ -21,7 +19,7 @@ type DomainRequest struct {
 	Nameservers []NameserverRequest `json:"nameservers,omitempty"` // Nameservers that asnwer with authority for this domain
 	DSSet       []DSRequest         `json:"dsset,omitempty"`       // Records for the DNS tree chain of trust
 	DNSKEYS     []DNSKEYRequest     `json:"dnskeys,omitempty"`     // Records that can be converted into DS records
-	Owners      []string            `json:"owners,omitempty"`      // E-mails that will be alerted on any problem
+	Owners      []OwnerRequest      `json:"owners,omitempty"`      // E-mails that will be alerted on any problem
 }
 
 // Merge is used to merge a domain request object sent by the user into a domain object of
@@ -91,16 +89,10 @@ func Merge(domain model.Domain, domainRequest DomainRequest) (model.Domain, erro
 
 	// We can replace the whole structure of the e-mail every time that a new UPDATE arrives
 	// because there's no extra information in server side that we need to keep
-	var owners []*mail.Address
-	for _, owner := range domainRequest.Owners {
-		email, err := mail.ParseAddress(owner)
-		if err != nil {
-			return domain, err
-		}
-
-		owners = append(owners, email)
+	domain.Owners, err = toOwnersModel(domainRequest.Owners)
+	if err != nil {
+		return domain, err
 	}
-	domain.Owners = owners
 
 	return domain, nil
 }
@@ -112,25 +104,12 @@ type DomainResponse struct {
 	FQDN        string               `json:"fqdn"`                  // Actual domain name
 	Nameservers []NameserverResponse `json:"nameservers,omitempty"` // Nameservers that asnwer with authority for this domain
 	DSSet       []DSResponse         `json:"dsset,omitempty"`       // Records for the DNS tree chain of trust
-	Owners      []string             `json:"owners,omitempty"`      // E-mails that will be alerted on any problem
+	Owners      []OwnerResponse      `json:"owners,omitempty"`      // E-mails that will be alerted on any problem
 	Links       []Link               `json:"links,omitempty"`       // Links to manipulate object
 }
 
 // Convert the domain system object to a limited information user format
 func ToDomainResponse(domain model.Domain) DomainResponse {
-	var owners []string
-	for _, owner := range domain.Owners {
-		// E-mail to string conversion formats the address as a valid RFC 5322 address. If the
-		// address's name contains non-ASCII characters the name will be rendered according to
-		// RFC 2047. We are going to remove the "<" and ">" from the e-mail address for better
-		// look
-		email := owner.String()
-		email = strings.TrimLeft(email, "<")
-		email = strings.TrimRight(email, ">")
-
-		owners = append(owners, email)
-	}
-
 	// We should add more links here for system navigation. For example, we could add links
 	// for object update, delete, list, etc. But I did not found yet in IANA list the
 	// correct link type to be used. Also, the URI is hard coded, I didn't have any idea on
@@ -147,7 +126,7 @@ func ToDomainResponse(domain model.Domain) DomainResponse {
 		FQDN:        domain.FQDN,
 		Nameservers: toNameserversResponse(domain.Nameservers),
 		DSSet:       toDSSetResponse(domain.DSSet),
-		Owners:      owners,
+		Owners:      toOwnersResponse(domain.Owners),
 		Links:       links,
 	}
 }
