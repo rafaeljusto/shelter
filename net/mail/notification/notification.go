@@ -22,12 +22,12 @@ var (
 )
 
 var (
-	// Regular expression to detect two or more line breaks. This is necessary because after the
-	// template execution, the template controllers are removed, but the line breaks that come with
-	// them are not. For that reason we remove them using the strategy to transform two or more
-	// consecutivilly line breaks into one. If the user really wants to put a white line, he can add a
-	// space to the blank line.
-	extraSpaces = regexp.MustCompile("(\n){2,}")
+	// Regular expression to detect two or more line breaks. This is necessary because after
+	// the template execution, the template controllers are removed, but the line breaks
+	// that come with them are not. For that reason we remove them using the strategy to
+	// transform three or more consecutivilly line breaks into one. We ignore white spaces
+	// beteween the line breaks
+	extraSpaces = regexp.MustCompile("(( )*\n){3,}")
 )
 
 // Notify is responsable for selecting the domains that should be notified in the system.
@@ -128,18 +128,10 @@ func notifyDomain(domain *model.Domain) error {
 			return err
 		}
 
-		// Remove extra new lines that can appear because of the template execution. Special lines used
-		// for controlling the templates are removed but the new lines are left behind. We don't remove
-		// the first one, because is the division beteween the e-mail header and body
-		firstOcurrence := true
-		msgBytes := extraSpaces.ReplaceAllFunc(msg.Bytes(), func(match []byte) []byte {
-			if firstOcurrence {
-				firstOcurrence = false
-				return match
-			}
-
-			return []byte("\n")
-		})
+		// Remove extra new lines that can appear because of the template execution. Special
+		// lines used for controlling the templates are removed but the new lines are left
+		// behind
+		msgBytes := extraSpaces.ReplaceAll(msg.Bytes(), []byte("\n\n"))
 
 		switch config.ShelterConfig.Notification.SMTPServer.Auth.Type {
 		case config.AuthenticationTypePlain:

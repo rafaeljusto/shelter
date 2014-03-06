@@ -85,7 +85,7 @@ Subject: Misconfiguration on domain {{.FQDN}}
 
 
 Dear Sir/Madam,
- 
+
 During our periodically domain verification, a configuration problem was detected with the
 domain {{.FQDN}}.
 
@@ -231,15 +231,14 @@ func simpleNotification(domainDAO dao.DomainDAO, templateName string,
 			utils.Fatalln("Error reading e-mail body", err)
 		}
 
-		expectedBody := "\r\n" +
-			"Dear Sir/Madam,\r\n" +
-			" \r\n" +
+		expectedBody := "Dear Sir/Madam,\r\n" +
+			"\r\n" +
 			"During our periodically domain verification, a configuration problem was detected with the\r\n" +
 			"domain example.com.br..\r\n" +
-			"  \r\n" +
+			"\r\n" +
 			"  * Nameserver ns1.example.com.br. got an internal error while receiving the DNS request.\r\n" +
 			"    Please check the DNS server log to detect and solve the problem.\r\n" +
-			"  \r\n" +
+			"\r\n" +
 			"Best regards,\r\n" +
 			"LACTLD\r\n" +
 			".\r\n"
