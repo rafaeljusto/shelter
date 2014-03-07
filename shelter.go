@@ -6,6 +6,7 @@ import (
 	"github.com/rafaeljusto/shelter/config"
 	"github.com/rafaeljusto/shelter/log"
 	"github.com/rafaeljusto/shelter/model"
+	"github.com/rafaeljusto/shelter/net/http/client"
 	"github.com/rafaeljusto/shelter/net/http/rest"
 	"github.com/rafaeljusto/shelter/net/mail/notification"
 	"github.com/rafaeljusto/shelter/net/scan"
@@ -21,7 +22,8 @@ import (
 
 // We store all listeners to make it easier later to stop all in a system SIGTERM event
 var (
-	restListeners []net.Listener
+	restListeners   []net.Listener
+	clientListeners []net.Listener
 )
 
 // List of possible return codes of the program. This will be useful later to build a
@@ -32,6 +34,8 @@ const (
 	ErrLoadingConfig
 	ErrListeningRESTInterfaces
 	ErrStartingRESTServer
+	ErrListeningClientInterfaces
+	ErrStartingClientServer
 	ErrScanTimeFormat
 	ErrCurrentScanInitialize
 	ErrNotificationTemplates
@@ -82,6 +86,20 @@ func main() {
 		if err := rest.Start(restListeners); err != nil {
 			log.Println("Error starting the REST server. Details:", err)
 			os.Exit(ErrStartingRESTServer)
+		}
+	}
+
+	if config.ShelterConfig.ClientServer.Enabled {
+		var err error
+		clientListeners, err = client.Listen()
+		if err != nil {
+			log.Println("Error while aquiring interfaces for Client server. Details:", err)
+			os.Exit(ErrListeningClientInterfaces)
+		}
+
+		if err := client.Start(clientListeners); err != nil {
+			log.Println("Error starting the Client server. Details:", err)
+			os.Exit(ErrStartingClientServer)
 		}
 	}
 
@@ -183,6 +201,13 @@ func manageSystemSignals() {
 					}
 				}
 				restListeners = []net.Listener{}
+
+				for _, listener := range clientListeners {
+					if err := listener.Close(); err != nil {
+						log.Println("Error closing listener. Details:", err)
+					}
+				}
+				clientListeners = []net.Listener{}
 
 				// TODO: Wait the last requests to be processed? On epossibly solution is to
 				// create a request counter in MUX, we wait while this counter is non-zero. If

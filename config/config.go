@@ -75,6 +75,22 @@ type Config struct {
 		Secrets map[string]string
 	}
 
+	ClientServer struct {
+		Enabled    bool
+		StaticPath string
+
+		TLS struct {
+			CertificatePath string
+			PrivateKeyPath  string
+		}
+
+		Listeners []struct {
+			IP   string
+			Port int
+			TLS  bool
+		}
+	}
+
 	Notification struct {
 		Enabled                    bool
 		Time                       string
