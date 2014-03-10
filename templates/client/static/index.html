@@ -11,25 +11,26 @@
     <link rel="stylesheet" type="text/css" href="/css/shelter.css">
   </header>
 
-  <body>
+  <body data-ng-app="shelter">
     <h1>Shelter</h1>
 
-    <section>
+    <section data-ng-controller="domainCtrl">
       <header>
         <h2>Domains</h2>
       </header>
 
-      <domain data-ng-cloak data-ng-repeat="domain in domains"></domain>
+      <domain data-ng-cloak data-ng-repeat="domain in domains" domain="domain"></domain>
     </section>
 
-    <section>
+    <section data-ng-controller="scanCtrl">
       <header>
         <h2>Scans</h2>
       </header>
 
-      <scan data-ng-cloak data-ng-repeat="scan in scans"></scan>
+      <scan data-ng-cloak data-ng-repeat="scan in scans" scan="scan"></scan>
     </section>
 
     <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.14/angular.min.js"></script>
+    <script src="/js/shelter.js"></script>
   </body>
 </html>
