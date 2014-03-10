@@ -1,7 +1,35 @@
-<!DOCTYPE html>
+<!doctype html>
 
-<html>
+<html lang="en">
+  <header>
+    <title>Shelter</title>
+
+    <meta charset="utf-8">
+    <meta name="description" content="Shelter web client">
+    <meta name="author" content="Rafael Dantas Justo">
+
+    <link rel="stylesheet" type="text/css" href="/css/shelter.css">
+  </header>
+
   <body>
     <h1>Shelter</h1>
+
+    <section>
+      <header>
+        <h2>Domains</h2>
+      </header>
+
+      <domain data-ng-cloak data-ng-repeat="domain in domains"></domain>
+    </section>
+
+    <section>
+      <header>
+        <h2>Scans</h2>
+      </header>
+
+      <scan data-ng-cloak data-ng-repeat="scan in scans"></scan>
+    </section>
+
+    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.14/angular.min.js"></script>
   </body>
 </html>
