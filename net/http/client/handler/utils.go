@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"crypto/md5"
 	"crypto/tls"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"github.com/rafaeljusto/shelter/config"
@@ -40,9 +42,9 @@ func retrieveRESTAddress() (string, error) {
 	var restAddresses []string
 	for _, ln := range config.ShelterConfig.RESTServer.Listeners {
 		if ln.TLS {
-			restAddresses = append(restAddresses, fmt.Sprintf("https://%s:%d", ln.IP, ln.Port))
+			restAddresses = append(restAddresses, fmt.Sprintf("https://[%s]:%d", ln.IP, ln.Port))
 		} else {
-			restAddresses = append(restAddresses, fmt.Sprintf("http://%s:%d", ln.IP, ln.Port))
+			restAddresses = append(restAddresses, fmt.Sprintf("http://[%s]:%d", ln.IP, ln.Port))
 		}
 	}
 
@@ -54,8 +56,19 @@ func retrieveRESTAddress() (string, error) {
 	return restAddresses[0], nil
 }
 
-func signAndSend(r *http.Request) (*http.Response, error) {
+func signAndSend(r *http.Request, content []byte) (*http.Response, error) {
 	r.Header.Set("Date", time.Now().Format(time.RFC1123))
+
+	if r.ContentLength > 0 && content != nil {
+		r.Header.Set("Content-Type", check.SupportedContentType)
+
+		hash := md5.New()
+		hash.Write(content)
+		hashBytes := hash.Sum(nil)
+		hashBase64 := base64.StdEncoding.EncodeToString(hashBytes)
+
+		r.Header.Set("Content-MD5", hashBase64)
+	}
 
 	var key, secret string
 	for key, secret = range config.ShelterConfig.RESTServer.Secrets {

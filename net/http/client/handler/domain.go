@@ -27,7 +27,7 @@ func HandleDomains(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := signAndSend(request)
+	response, err := signAndSend(request, nil)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Println("Error signing and sending a /domain request in web client. Details:", err)
