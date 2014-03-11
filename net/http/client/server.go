@@ -3,6 +3,7 @@ package client
 import (
 	"crypto/tls"
 	"github.com/rafaeljusto/shelter/config"
+	"github.com/rafaeljusto/shelter/net/http/client/handler"
 	"net"
 	"net/http"
 	"path/filepath"
@@ -56,15 +57,14 @@ func Listen() ([]net.Listener, error) {
 }
 
 func Start(listeners []net.Listener) error {
-	staticPath := filepath.Join(
-		config.ShelterConfig.BasePath,
-		config.ShelterConfig.ClientServer.StaticPath,
-	)
+	// Static handler must be called directly because it uses configuration file values to
+	// configure the root path. For that reason we can't build it in the init function
+	handler.StartStaticHandler()
 
-	// We use prefix to set a different path from the defined in the handler
-	http.Handle("/", http.StripPrefix("/", http.FileServer(http.Dir(staticPath))))
+	server := http.Server{
+		Handler: mux,
+	}
 
-	var server http.Server
 	for _, v := range listeners {
 		// We are not checking the error returned by Serve, because if we check for some
 		// reason the HTTP server stop answering the requests

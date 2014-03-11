@@ -56,12 +56,12 @@ angular.module("shelter", [])
     $scope.retrieveDomains = function() {
       domainService.retrieveDomains().then(
         function(response) {
-          // TODO
-          $timeout($scope.retrieveDomains, 1000);
+          $scope.pagination = response;
+          $timeout($scope.retrieveDomains, 5000);
         },
         function(error) {
           // TODO
-          $timeout($scope.retrieveDomains, 1000);
+          $timeout($scope.retrieveDomains, 5000);
         });
     };
 
@@ -113,11 +113,11 @@ angular.module("shelter", [])
       scanService.retrieveScans().then(
         function(data) {
           // TODO
-          $timeout($scope.retrieveScans, 1000);
+          $timeout($scope.retrieveScans, 5000);
         },
         function(error) {
           // TODO
-          $timeout($scope.retrieveScans, 1000);
+          $timeout($scope.retrieveScans, 5000);
         });
     };
 

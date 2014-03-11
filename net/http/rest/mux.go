@@ -92,7 +92,7 @@ func (mux Mux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	mux.writeResponse(w, r, context)
 }
 
-// Find the best handler for the given URI. The best handler is the most specific one
+// Find the best handler for the given URI. The first match is always returned
 func (mux Mux) findRoute(uri string) handler.Handler {
 	for route, handler := range handler.Routes {
 		if route.MatchString(uri) {

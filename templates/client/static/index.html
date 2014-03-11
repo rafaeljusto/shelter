@@ -14,20 +14,27 @@
   <body data-ng-app="shelter">
     <h1>Shelter</h1>
 
-    <section data-ng-controller="domainCtrl">
+    <section data-ng-cloak data-ng-controller="domainCtrl">
       <header>
         <h2>Domains</h2>
       </header>
 
-      <domain data-ng-cloak data-ng-repeat="domain in domains" domain="domain"></domain>
+      <domain data-ng-repeat="domain in pagination.domains" domain="domain"></domain>
+
+      <div>
+        <label>Page:</label> <span>{{pagination.page}}</span><br>
+        <label>PageSize:</label> <span>{{pagination.pageSize}}</span><br>
+        <label>Number of pages:</label> <span>{{pagination.numberOfPages}}</span><br>
+        <label>Number of items:</label> <span>{{pagination.numberOfItems}}</span><br>
+      </div>
     </section>
 
-    <section data-ng-controller="scanCtrl">
+    <section data-ng-cloak data-ng-controller="scanCtrl">
       <header>
         <h2>Scans</h2>
       </header>
 
-      <scan data-ng-cloak data-ng-repeat="scan in scans" scan="scan"></scan>
+      <scan data-ng-repeat="scan in scans" scan="scan"></scan>
     </section>
 
     <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.14/angular.min.js"></script>
