@@ -16,6 +16,70 @@
 
     <section data-ng-cloak data-ng-controller="domainCtrl">
       <header>
+        <h2>New Domain</h2>
+      </header>
+
+      <form data-ng-submit="saveDomain()">
+        <fieldset>
+          <legend>Basic information</legend>
+          <label for="fqdn">FQDN</label>
+          <input type="text" data-ng-model="domain.fqdn" required>
+        </fieldset>
+
+        <fieldset data-ng-repeat="nameserver in domain.nameservers">
+          <legend>Nameserver {{$index+1}}</legend>
+
+          <label for="host{{$index+1}}">Host</label>
+          <input type="text" id="host{{$index+1}}" data-ng-model="domain.nameservers[$index].host"
+            required>
+
+          <label for="ipv4{{$index+1}}">IPv4</label>
+          <input type="text" id="ipv4{{$index+1}}" data-ng-model="domain.nameservers[$index].ipv4">
+
+          <label for="ipv6{{$index+1}}">IPv6</label>
+          <input type="text" id="ipv6{{$index+1}}" data-ng-model="domain.nameservers[$index].ipv6">
+        </fieldset>
+
+        <fieldset data-ng-repeat="ds in domain.dsset">
+          <legend>DS {{$index+1}}</legend>
+
+          <label for="keytag{{$index+1}}">Keytag</label>
+          <input type="number" id="keytag{{$index+1}}" data-ng-model="domain.dsset[$index].keytag"
+            min="1" max="65536" required>
+
+          <label for="algorithm{{$index+1}}">Algorithm</label>
+          <select id="algorithm{{$index+1}}" data-ng-model="domain.dsset[$index].algorithm"
+            data-ng-options="algorithm.id as algorithm.name for algorithm in dsAlgorithms"
+            required>
+          </select>
+
+          <label for="digestType{{$index+1}}">Digest Type</label>
+          <select id="digestType{{$index+1}}" data-ng-model="domain.dsset[$index].digestType"
+            data-ng-options="digestType.id as digestType.name for digestType in dsDigestTypes"
+            required>
+          </select>
+
+          <label for="digest{{$index+1}}">Digest</label>
+          <input type="text" id="digest{{$index+1}}" data-ng-model="domain.dsset[$index].digest"
+            required>
+        </fieldset>
+
+        <fieldset data-ng-repeat="owner in domain.owners">
+          <legend>Owner {{$index+1}}</legend>
+
+          <label for="email{{$index+1}}">E-mail</label>
+          <input type="email" id="email{{$index+1}}" data-ng-model="domain.owners[$index].email" required>
+
+          <label for="language{{$index+1}}">Language</label>
+          <select id="language{{$index+1}}" data-ng-model="domain.owners[$index].language"
+            data-ng-options="language for language in ownerLanguages" required>
+          </select>
+        </fieldset>
+
+        <button type="submit">Save</button>
+      </form>
+
+      <header>
         <h2>Domains</h2>
       </header>
 
@@ -34,7 +98,14 @@
         <h2>Scans</h2>
       </header>
 
-      <scan data-ng-repeat="scan in scans" scan="scan"></scan>
+      <scan data-ng-repeat="scan in pagination.scans" scan="scan"></scan>
+
+      <div>
+        <label>Page:</label> <span>{{pagination.page}}</span><br>
+        <label>PageSize:</label> <span>{{pagination.pageSize}}</span><br>
+        <label>Number of pages:</label> <span>{{pagination.numberOfPages}}</span><br>
+        <label>Number of items:</label> <span>{{pagination.numberOfItems}}</span><br>
+      </div>
     </section>
 
     <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.14/angular.min.js"></script>

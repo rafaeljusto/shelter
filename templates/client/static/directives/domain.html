@@ -1,0 +1,32 @@
+<article>
+  <header>
+    <h3>{{domain.fqdn}}</h3>
+  </header>
+
+  <h4>Nameservers</h4>
+  <div data-ng-repeat="nameserver in domain.nameservers">
+    <label>Host</label> <span>{{nameserver.host}}</span><br>
+    <label>IPv4</label> <span>{{nameserver.ipv4}}</span><br>
+    <label>IPv6</label> <span>{{nameserver.ipv6}}</span><br>
+    <label>Status</label> <span>{{nameserver.lastStatus}}</span><br>
+    <label>Checked</label> <span>{{nameserver.lastCheckAt}}</span><br>
+    <label>Last OK</label> <span>{{nameserver.lastOKAt}}</span>
+  </div>
+
+  <h4>DS set</h4>
+  <div data-ng-repeat="ds in domain.dsset">
+    <label>Keytag</label> <span>{{ds.keytag}}</span><br>
+    <label>Algorithm</label> <span>{{ds.algorithm}}</span><br>
+    <label>DigestType</label> <span>{{ds.digestType}}</span><br>
+    <label>Digest</label> <span>{{ds.digest}}</span><br>
+    <label>Status</label> <span>{{ds.lastStatus}}</span><br>
+    <label>Checked</label> <span>{{ds.lastCheckAt}}</span><br>
+    <label>Last OK</label> <span>{{ds.lastOKAt}}</span>
+  </div>
+
+  <h4>Owners</h4>
+  <div data-ng-repeat="owner in domain.owners">
+    <label>E-mail</label> <span>{{owner.email}}</span><br>
+    <label>Language</label> <span>{{owner.language}}</span>
+  </div>
+</article>

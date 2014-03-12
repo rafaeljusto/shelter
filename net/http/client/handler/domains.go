@@ -3,17 +3,16 @@ package handler
 import (
 	"fmt"
 	"github.com/rafaeljusto/shelter/log"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"regexp"
-	"strings"
 )
 
 func init() {
-	HandleFunc(regexp.MustCompile(`^/domain/([[:alnum:]]|\-|\.)+$`), HandleDomain)
+	HandleFunc(regexp.MustCompile(`^/domains$`), HandleDomains)
 }
 
-func HandleDomain(w http.ResponseWriter, r *http.Request) {
+func HandleDomains(w http.ResponseWriter, r *http.Request) {
 	restAddress, err := retrieveRESTAddress()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -21,17 +20,10 @@ func HandleDomain(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	content, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Println("Error while reading request body in web client. Details:", err)
-		return
-	}
-
 	request, err := http.NewRequest(
-		"PUT",
+		"GET",
 		fmt.Sprintf("%s%s", restAddress, r.RequestURI),
-		strings.NewReader(string(content)),
+		nil,
 	)
 
 	if err != nil {
@@ -40,24 +32,29 @@ func HandleDomain(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := signAndSend(request, content)
+	response, err := signAndSend(request, nil)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Println("Error signing and sending a request in web client. Details:", err)
 		return
 	}
 
-	if response.StatusCode != http.StatusCreated &&
-		response.StatusCode != http.StatusNoContent {
-
+	if response.StatusCode != http.StatusOK {
 		// TODO: Create a function to detect errors. Will be necessary when we receive a bad
 		// request while creating a domain for example
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Println(fmt.Sprintf("Exepected status code %d or %d but received %d from "+
-			"/domain result in web client", http.StatusCreated, http.StatusNoContent,
-			response.StatusCode))
+		log.Println(fmt.Sprintf("Exepected status code %d but received %d from "+
+			"/domains result in web client", http.StatusOK, response.StatusCode))
 		return
 	}
 
+	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(response.StatusCode)
+
+	if _, err := io.Copy(w, response.Body); err != nil {
+		// Here we already set the response code, so the client will receive a OK result
+		// without body
+		log.Println("Error copying REST response to web client response. Details:", err)
+		return
+	}
 }
