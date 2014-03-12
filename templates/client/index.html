@@ -19,7 +19,15 @@
       <button data-ng-click="changeLanguage('pt_BR')">pt-BR</button>
     </section>
 
-    <section data-ng-cloak data-ng-controller="domainCtrl">
+    <nav data-ng-cloak data-ng-init="menu = 'domains'">
+      <a data-ng-click="menu = 'new_domain'">{{ "New Domain" | translate }}</a>
+      <a data-ng-click="menu = 'domains'">{{ "Domains" | translate }}</a>
+      <a data-ng-click="menu = 'scans'">{{ "Scans" | translate }}</a>
+    </nav>
+
+    <section data-ng-cloak data-ng-controller="domainCtrl"
+      data-ng-show="menu == 'new_domain'">
+
       <header>
         <h2>{{ "New Domain" | translate }}</h2>
       </header>
@@ -85,7 +93,9 @@
       </form>
     </section>
 
-    <section data-ng-cloak data-ng-controller="domainsCtrl">
+    <section data-ng-cloak data-ng-controller="domainsCtrl"
+      data-ng-show="menu == 'domains'">
+
       <header>
         <h2>{{ "Domains" | translate }}</h2>
       </header>
@@ -100,7 +110,9 @@
       </div>
     </section>
 
-    <section data-ng-cloak data-ng-controller="scanCtrl">
+    <section data-ng-cloak data-ng-controller="scanCtrl"
+      data-ng-show="menu == 'scans'">
+
       <header>
         <h2>{{ "Scans" | translate }}</h2>
       </header>
