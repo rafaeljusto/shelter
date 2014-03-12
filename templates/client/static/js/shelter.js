@@ -1,7 +1,27 @@
 // References:
 // http://stackoverflow.com/questions/17646034/what-is-the-best-practice-for-making-an-ajax-call-in-angular-js
 
-angular.module("shelter", [])
+angular.module("shelter", ["ngCookies", "pascalprecht.translate"])
+
+  .config(function($translateProvider) {
+    $translateProvider.useStaticFilesLoader({
+      prefix: "/languages/",
+      suffix: ".json"
+    });
+    $translateProvider.fallbackLanguage("en_US");
+    $translateProvider.determinePreferredLanguage();
+    $translateProvider.useLocalStorage();
+  })
+
+  ///////////////////////////////////////////////////////
+  //                     Languages                     //
+  ///////////////////////////////////////////////////////
+
+  .controller("languagesCtrl", function($scope, $translate) {
+    $scope.changeLanguage = function(language) {
+      $translate.use(language);
+    };
+  })
 
   ///////////////////////////////////////////////////////
   //                     Domain                        //
@@ -109,7 +129,9 @@ angular.module("shelter", [])
           // TODO
         });
     }
+  })
 
+  .controller("domainsCtrl", function($scope, $timeout, domainService) {
     $scope.retrieveDomains = function() {
       domainService.retrieveDomains().then(
         function(response) {

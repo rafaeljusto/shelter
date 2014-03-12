@@ -1,6 +1,6 @@
 <!doctype html>
 
-<html lang="en">
+<html>
   <header>
     <title>Shelter</title>
 
@@ -12,75 +12,82 @@
   </header>
 
   <body data-ng-app="shelter">
-    <h1>Shelter</h1>
+    <h1 data-ng-cloak>{{ "Shelter" | translate }}</h1>
+
+    <section data-ng-cloak data-ng-controller="languagesCtrl">
+      <button data-ng-click="changeLanguage('en_US')">en-US</button>
+      <button data-ng-click="changeLanguage('pt_BR')">pt-BR</button>
+    </section>
 
     <section data-ng-cloak data-ng-controller="domainCtrl">
       <header>
-        <h2>New Domain</h2>
+        <h2>{{ "New Domain" | translate }}</h2>
       </header>
 
       <form data-ng-submit="saveDomain()">
         <fieldset>
-          <legend>Basic information</legend>
-          <label for="fqdn">FQDN</label>
+          <legend>{{ "Basic information" | translate }}</legend>
+          <label for="fqdn">{{ "FQDN" | translate }}</label>
           <input type="text" data-ng-model="domain.fqdn" required>
         </fieldset>
 
         <fieldset data-ng-repeat="nameserver in domain.nameservers">
-          <legend>Nameserver {{$index+1}}</legend>
+          <legend>{{ "Nameserver" | translate }} {{$index+1}}</legend>
 
-          <label for="host{{$index+1}}">Host</label>
+          <label for="host{{$index+1}}">{{ "Host" | translate }}</label>
           <input type="text" id="host{{$index+1}}" data-ng-model="domain.nameservers[$index].host"
             required>
 
-          <label for="ipv4{{$index+1}}">IPv4</label>
+          <label for="ipv4{{$index+1}}">{{ "IPv4" | translate }}</label>
           <input type="text" id="ipv4{{$index+1}}" data-ng-model="domain.nameservers[$index].ipv4">
 
-          <label for="ipv6{{$index+1}}">IPv6</label>
+          <label for="ipv6{{$index+1}}">{{ "IPv6" | translate }}</label>
           <input type="text" id="ipv6{{$index+1}}" data-ng-model="domain.nameservers[$index].ipv6">
         </fieldset>
 
         <fieldset data-ng-repeat="ds in domain.dsset">
-          <legend>DS {{$index+1}}</legend>
+          <legend>{{ "DS" | translate }} {{$index+1}}</legend>
 
-          <label for="keytag{{$index+1}}">Keytag</label>
+          <label for="keytag{{$index+1}}">{{ "Keytag" | translate }}</label>
           <input type="number" id="keytag{{$index+1}}" data-ng-model="domain.dsset[$index].keytag"
             min="1" max="65536" required>
 
-          <label for="algorithm{{$index+1}}">Algorithm</label>
+          <label for="algorithm{{$index+1}}">{{ "Algorithm" | translate }}</label>
           <select id="algorithm{{$index+1}}" data-ng-model="domain.dsset[$index].algorithm"
             data-ng-options="algorithm.id as algorithm.name for algorithm in dsAlgorithms"
             required>
           </select>
 
-          <label for="digestType{{$index+1}}">Digest Type</label>
+          <label for="digestType{{$index+1}}">{{ "Digest Type" | translate }}</label>
           <select id="digestType{{$index+1}}" data-ng-model="domain.dsset[$index].digestType"
             data-ng-options="digestType.id as digestType.name for digestType in dsDigestTypes"
             required>
           </select>
 
-          <label for="digest{{$index+1}}">Digest</label>
+          <label for="digest{{$index+1}}">{{ "Digest" | translate }}</label>
           <input type="text" id="digest{{$index+1}}" data-ng-model="domain.dsset[$index].digest"
             required>
         </fieldset>
 
         <fieldset data-ng-repeat="owner in domain.owners">
-          <legend>Owner {{$index+1}}</legend>
+          <legend>{{ "Owner" | translate }} {{$index+1}}</legend>
 
-          <label for="email{{$index+1}}">E-mail</label>
+          <label for="email{{$index+1}}">{{ "E-mail" | translate }}</label>
           <input type="email" id="email{{$index+1}}" data-ng-model="domain.owners[$index].email" required>
 
-          <label for="language{{$index+1}}">Language</label>
+          <label for="language{{$index+1}}">{{ "Language" | translate }}</label>
           <select id="language{{$index+1}}" data-ng-model="domain.owners[$index].language"
             data-ng-options="language for language in ownerLanguages" required>
           </select>
         </fieldset>
 
-        <button type="submit">Save</button>
+        <button type="submit">{{ "Save" | translate }}</button>
       </form>
+    </section>
 
+    <section data-ng-cloak data-ng-controller="domainsCtrl">
       <header>
-        <h2>Domains</h2>
+        <h2>{{ "Domains" | translate }}</h2>
       </header>
 
       <domain data-ng-repeat="domain in pagination.domains" domain="domain"></domain>
@@ -95,7 +102,7 @@
 
     <section data-ng-cloak data-ng-controller="scanCtrl">
       <header>
-        <h2>Scans</h2>
+        <h2>{{ "Scans" | translate }}</h2>
       </header>
 
       <scan data-ng-repeat="scan in pagination.scans" scan="scan"></scan>
@@ -108,7 +115,12 @@
       </div>
     </section>
 
-    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.14/angular.min.js"></script>
+    <script src="/js/angular.min.js"></script>
+    <script src="/js/angular-cookies.min.js"></script>
+    <script src="/js/angular-translate.min.js"></script>
+    <script src="/js/angular-translate-loader-static-files.min.js"></script>
+    <script src="/js/angular-translate-storage-cookie.min.js"></script>
+    <script src="/js/angular-translate-storage-local.min.js"></script>
     <script src="/js/shelter.js"></script>
   </body>
 </html>
