@@ -24,5 +24,12 @@
   "DS set": "Registros DS",
   "Scans": "Scans",
   "Started": "Início",
-  "Finished": "Fim"
+  "Finished": "Fim",
+  "FQDN help": "Preencha este campo seguindo o formato definido na RFC 1034 e na RFC 1123",
+  "Host help": "Preencha este campo com o seu servidor DNS seguindo o formato definido na RFC 1034 e na RFC 1123",
+  "IPv4 help": "Preencha este campo com um IP versão 4 válido seguindo o formato '#.#.#.#'. Onde # deve ser substituído por um número entre 1 e 255",
+  "IPv6 help": "Preencha este campo com um IP versão 6 válido seguindo o formato definido na RFC 5952",
+  "Keytag help": "Preencha este campo com o identificador da DNSKEY. Deve ser um número que caiba em 16 bits",
+  "item": "item",
+  "items": "itens"
 }

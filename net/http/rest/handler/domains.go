@@ -12,7 +12,7 @@ import (
 )
 
 func init() {
-	HandleFunc(regexp.MustCompile("^/domains(/)?.*$"), HandleDomains)
+	HandleFunc(regexp.MustCompile("^/domains(/.*)?$"), HandleDomains)
 }
 
 func HandleDomains(r *http.Request, context *context.Context) {

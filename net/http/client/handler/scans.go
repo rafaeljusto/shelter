@@ -9,7 +9,7 @@ import (
 )
 
 func init() {
-	HandleFunc(regexp.MustCompile(`^/scans$`), HandleScans)
+	HandleFunc(regexp.MustCompile(`^/scans(/.*)?$`), HandleScans)
 }
 
 func HandleScans(w http.ResponseWriter, r *http.Request) {
@@ -31,6 +31,8 @@ func HandleScans(w http.ResponseWriter, r *http.Request) {
 		log.Println("Error creating a request in web client. Details:", err)
 		return
 	}
+
+	request.Header.Set("Accept-Language", r.Header.Get("Accept-Language"))
 
 	response, err := signAndSend(request, nil)
 	if err != nil {

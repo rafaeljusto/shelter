@@ -24,5 +24,12 @@
   "DS set": "DS set",
   "Scans": "Scans",
   "Started": "Started",
-  "Finished": "Finished"
+  "Finished": "Finished",
+  "FQDN help": "Fill this field with your domain following the RFC 1034 and RFC 1123 formats",
+  "Host help": "Fill this field with your host following the RFC 1034 and RFC 1123 formats",
+  "IPv4 help": "Fill this field with a valid IP version 4 following '#.#.#.#' format. Where # should be replaced by a number between 1 and 255",
+  "IPv6 help": "Fill this field with a valid IP version 6 following RFC 5952 format",
+  "Keytag help": "Fill this field with the DNSKEY identifier. Should be a number that fits in a 16 bits range",
+  "item": "item",
+  "items": "items"
 }

@@ -3,7 +3,7 @@
 
 angular.module("shelter", ["ngCookies", "pascalprecht.translate"])
 
-  .config(function($translateProvider) {
+  .config(function($translateProvider, $httpProvider) {
     $translateProvider.useStaticFilesLoader({
       prefix: "/languages/",
       suffix: ".json"
@@ -11,6 +11,26 @@ angular.module("shelter", ["ngCookies", "pascalprecht.translate"])
     $translateProvider.fallbackLanguage("en_US");
     $translateProvider.determinePreferredLanguage();
     $translateProvider.useLocalStorage();
+
+    $httpProvider.defaults.headers.common = {
+      "Accept-Language": function() {
+        if ($translateProvider.use() == undefined) {
+          return $translateProvider.use();
+        } else {
+          return $translateProvider.use().replace("_", "-");
+        }
+      }
+    }
+  })
+
+  .filter("range", function() {
+    return function(input, total) {
+      total = parseInt(total);
+      for (var i = 0; i < total; i++) {
+        input.push(i);
+      }
+      return input;
+    };
   })
 
   ///////////////////////////////////////////////////////
@@ -29,8 +49,32 @@ angular.module("shelter", ["ngCookies", "pascalprecht.translate"])
 
   .factory("domainService", function($http) {
     return {
-      retrieveDomains: function() {
-        return $http.get("/domains")
+      retrieveDomains: function(page, pageSize) {
+        var uri = "";
+
+        if (page != undefined) {
+          if (uri.length == 0) {
+            uri += "?";
+          } else {
+            uri += "&";
+          }
+
+          uri += "page=" + page;
+        }
+
+        if (pageSize != undefined) {
+          if (uri.length == 0) {
+            uri += "?";
+          } else {
+            uri += "&";
+          }
+
+          uri += "pagesize=" + pageSize;
+        }
+
+        uri = "/domains/" + uri;
+
+        return $http.get(uri)
           .then(
             function(response) {
               return response.data;
@@ -132,15 +176,15 @@ angular.module("shelter", ["ngCookies", "pascalprecht.translate"])
   })
 
   .controller("domainsCtrl", function($scope, $timeout, domainService) {
-    $scope.retrieveDomains = function() {
-      domainService.retrieveDomains().then(
+    $scope.pageSizes = [ 20, 40, 60, 80, 100 ];
+
+    $scope.retrieveDomains = function(page, pageSize) {
+      domainService.retrieveDomains(page, pageSize).then(
         function(response) {
           $scope.pagination = response;
-          $timeout($scope.retrieveDomains, 5000);
         },
         function(error) {
           // TODO
-          $timeout($scope.retrieveDomains, 5000);
         });
     };
 
@@ -155,8 +199,32 @@ angular.module("shelter", ["ngCookies", "pascalprecht.translate"])
 
   .factory("scanService", function($http) {
     return {
-      retrieveScans: function() {
-        return $http.get("/scans")
+      retrieveScans: function(page, pageSize) {
+        var uri = "";
+
+        if (page != undefined) {
+          if (uri.length == 0) {
+            uri += "?";
+          } else {
+            uri += "&";
+          }
+
+          uri += "page=" + page;
+        }
+
+        if (pageSize != undefined) {
+          if (uri.length == 0) {
+            uri += "?";
+          } else {
+            uri += "&";
+          }
+
+          uri += "pagesize=" + pageSize;
+        }
+
+        uri = "/scans/" + uri;
+
+        return $http.get(uri)
           .then(
             function(response) {
               return response.data;
@@ -189,15 +257,15 @@ angular.module("shelter", ["ngCookies", "pascalprecht.translate"])
   })
 
   .controller("scanCtrl", function($scope, $timeout, scanService) {
-    $scope.retrieveScans = function() {
-      scanService.retrieveScans().then(
+    $scope.pageSizes = [ 20, 40, 60, 80, 100 ];
+
+    $scope.retrieveScans = function(page, pageSize) {
+      scanService.retrieveScans(page, pageSize).then(
         function(response) {
           $scope.pagination = response;
-          $timeout($scope.retrieveScans, 5000);
         },
         function(error) {
           // TODO
-          $timeout($scope.retrieveScans, 5000);
         });
     };
 

@@ -40,6 +40,8 @@ func HandleDomain(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	request.Header.Set("Accept-Language", r.Header.Get("Accept-Language"))
+
 	response, err := signAndSend(request, content)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

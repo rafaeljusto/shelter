@@ -12,7 +12,7 @@
   </header>
 
   <body data-ng-app="shelter">
-    <h1 data-ng-cloak>{{ "Shelter" | translate }}</h1>
+    <h1 data-ng-cloak translate>Shelter</h1>
 
     <section data-ng-cloak data-ng-controller="languagesCtrl">
       <button data-ng-click="changeLanguage('en_US')">en-US</button>
@@ -29,50 +29,66 @@
       data-ng-show="menu == 'new_domain'">
 
       <header>
-        <h2>{{ "New Domain" | translate }}</h2>
+        <h2 translate>New Domain</h2>
       </header>
 
       <form data-ng-submit="saveDomain()">
         <fieldset>
-          <legend>{{ "Basic information" | translate }}</legend>
-          <label for="fqdn">{{ "FQDN" | translate }}</label>
-          <input type="text" data-ng-model="domain.fqdn" required>
+          <legend translate>Basic information</legend>
+          <label for="fqdn" translate>FQDN</label>
+          <input type="text" data-ng-model="domain.fqdn"
+            title="{{ 'FQDN help' | translate }}"
+            pattern="^((\w((\w|\-){0,61}\w)?\.)*\w((\w|\-){0,61}\w)?)?(\.)?$"
+            required>
         </fieldset>
 
         <fieldset data-ng-repeat="nameserver in domain.nameservers">
           <legend>{{ "Nameserver" | translate }} {{$index+1}}</legend>
 
-          <label for="host{{$index+1}}">{{ "Host" | translate }}</label>
-          <input type="text" id="host{{$index+1}}" data-ng-model="domain.nameservers[$index].host"
+          <label for="host{{$index+1}}" translate>Host</label>
+          <input type="text" id="host{{$index+1}}"
+            data-ng-model="domain.nameservers[$index].host"
+            title="{{ 'Host help' | translate }}"
+            pattern="^((\w((\w|\-){0,61}\w)?\.)*\w((\w|\-){0,61}\w)?)?(\.)?$"
             required>
 
-          <label for="ipv4{{$index+1}}">{{ "IPv4" | translate }}</label>
-          <input type="text" id="ipv4{{$index+1}}" data-ng-model="domain.nameservers[$index].ipv4">
+          <label for="ipv4{{$index+1}}" translate>IPv4</label>
+          <input type="text" id="ipv4{{$index+1}}"
+            data-ng-model="domain.nameservers[$index].ipv4"
+            title="{{ 'IPv4 help' | translate }}"
+            pattern="^[0-9]{1,4}\.[0-9]{1,4}\.[0-9]{1,4}\.[0-9]{1,4}$">
 
-          <label for="ipv6{{$index+1}}">{{ "IPv6" | translate }}</label>
-          <input type="text" id="ipv6{{$index+1}}" data-ng-model="domain.nameservers[$index].ipv6">
+          <label for="ipv6{{$index+1}}" translate>IPv6</label>
+          <input type="text" id="ipv6{{$index+1}}"
+            data-ng-model="domain.nameservers[$index].ipv6"
+            title="{{ 'IPv6 help' | translate }}"
+            pattern="^((?=.*::)(?!.*::.+::)(::)?([\dA-F]{1,4}:(:|\b)|){5}|([\dA-F]{1,4}:){6})((([\dA-F]{1,4}((?!\3)::|:\b|$))|(?!\2\3)){2}|(((2[0-4]|1\d|[1-9])?\d|25[0-5])\.?\b){4})$">
         </fieldset>
 
         <fieldset data-ng-repeat="ds in domain.dsset">
           <legend>{{ "DS" | translate }} {{$index+1}}</legend>
 
-          <label for="keytag{{$index+1}}">{{ "Keytag" | translate }}</label>
-          <input type="number" id="keytag{{$index+1}}" data-ng-model="domain.dsset[$index].keytag"
-            min="1" max="65536" required>
+          <label for="keytag{{$index+1}}" translate>Keytag</label>
+          <input type="number" id="keytag{{$index+1}}"
+            data-ng-model="domain.dsset[$index].keytag"
+            min="1" max="65536"
+            title="{{ 'Keytag help' | translate }}"
+            pattern="[0-9]+"
+            required>
 
-          <label for="algorithm{{$index+1}}">{{ "Algorithm" | translate }}</label>
+          <label for="algorithm{{$index+1}}" translate>Algorithm</label>
           <select id="algorithm{{$index+1}}" data-ng-model="domain.dsset[$index].algorithm"
             data-ng-options="algorithm.id as algorithm.name for algorithm in dsAlgorithms"
             required>
           </select>
 
-          <label for="digestType{{$index+1}}">{{ "Digest Type" | translate }}</label>
+          <label for="digestType{{$index+1}}" translate>Digest Type</label>
           <select id="digestType{{$index+1}}" data-ng-model="domain.dsset[$index].digestType"
             data-ng-options="digestType.id as digestType.name for digestType in dsDigestTypes"
             required>
           </select>
 
-          <label for="digest{{$index+1}}">{{ "Digest" | translate }}</label>
+          <label for="digest{{$index+1}}" translate>Digest</label>
           <input type="text" id="digest{{$index+1}}" data-ng-model="domain.dsset[$index].digest"
             required>
         </fieldset>
@@ -80,16 +96,18 @@
         <fieldset data-ng-repeat="owner in domain.owners">
           <legend>{{ "Owner" | translate }} {{$index+1}}</legend>
 
-          <label for="email{{$index+1}}">{{ "E-mail" | translate }}</label>
-          <input type="email" id="email{{$index+1}}" data-ng-model="domain.owners[$index].email" required>
+          <label for="email{{$index+1}}" translate>E-mail</label>
+          <input type="email" id="email{{$index+1}}"
+            data-ng-model="domain.owners[$index].email"
+            required>
 
-          <label for="language{{$index+1}}">{{ "Language" | translate }}</label>
+          <label for="language{{$index+1}}" translate>Language</label>
           <select id="language{{$index+1}}" data-ng-model="domain.owners[$index].language"
             data-ng-options="language for language in ownerLanguages" required>
           </select>
         </fieldset>
 
-        <button type="submit">{{ "Save" | translate }}</button>
+        <button type="submit" translate>Save</button>
       </form>
     </section>
 
@@ -97,16 +115,33 @@
       data-ng-show="menu == 'domains'">
 
       <header>
-        <h2>{{ "Domains" | translate }}</h2>
+        <h2 translate>Domains</h2>
+        <span data-ng-if="pagination.numberOfItems == 1">
+          ({{pagination.numberOfItems}} {{ "item" | translate }})
+        </span>
+        <span data-ng-if="pagination.numberOfItems > 1">
+          ({{pagination.numberOfItems}} {{ "items" | translate }})
+        </span>
       </header>
 
       <domain data-ng-repeat="domain in pagination.domains" domain="domain"></domain>
 
-      <div>
-        <label>Page:</label> <span>{{pagination.page}}</span><br>
-        <label>PageSize:</label> <span>{{pagination.pageSize}}</span><br>
-        <label>Number of pages:</label> <span>{{pagination.numberOfPages}}</span><br>
-        <label>Number of items:</label> <span>{{pagination.numberOfItems}}</span><br>
+      <div data-ng-repeat="n in [] | range:pagination.numberOfPages">
+        <span data-ng-if="n+1 == pagination.page">{{n+1}}</span>
+        <button data-ng-if="n+1 != pagination.page"
+          data-ng-click="retrieveDomains(n+1, pagination.pageSize)">
+
+          {{n+1}}
+        </button>
+      </div>
+
+      <div data-ng-repeat="pageSize in pageSizes">
+        <span data-ng-if="pageSize == pagination.pageSize">{{pageSize}}</span>
+        <button data-ng-if="pageSize != pagination.pageSize"
+          data-ng-click="retrieveDomains(pagination.page, pageSize)">
+
+          {{pageSize}}
+        </button>
       </div>
     </section>
 
@@ -114,16 +149,33 @@
       data-ng-show="menu == 'scans'">
 
       <header>
-        <h2>{{ "Scans" | translate }}</h2>
+        <h2 translate>Scans</h2>
+        <span data-ng-if="pagination.numberOfItems == 1">
+          ({{pagination.numberOfItems}} {{ "item" | translate }})
+        </span>
+        <span data-ng-if="pagination.numberOfItems > 1">
+          ({{pagination.numberOfItems}} {{ "items" | translate }})
+        </span>
       </header>
 
       <scan data-ng-repeat="scan in pagination.scans" scan="scan"></scan>
 
-      <div>
-        <label>Page:</label> <span>{{pagination.page}}</span><br>
-        <label>PageSize:</label> <span>{{pagination.pageSize}}</span><br>
-        <label>Number of pages:</label> <span>{{pagination.numberOfPages}}</span><br>
-        <label>Number of items:</label> <span>{{pagination.numberOfItems}}</span><br>
+      <div data-ng-repeat="n in [] | range:pagination.numberOfPages">
+        <span data-ng-if="n+1 == pagination.page">{{n+1}}</span>
+        <button data-ng-if="n+1 != pagination.page"
+          data-ng-click="retrieveScans(n+1, pagination.pageSize)">
+
+          {{n+1}}
+        </button>
+      </div>
+
+      <div data-ng-repeat="pageSize in pageSizes">
+        <span data-ng-if="pageSize == pagination.pageSize">{{pageSize}}</span>
+        <button data-ng-if="pageSize != pagination.pageSize"
+          data-ng-click="retrieveScans(pagination.page, pageSize)">
+
+          {{pageSize}}
+        </button>
       </div>
     </section>
 

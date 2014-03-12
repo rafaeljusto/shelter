@@ -3,30 +3,30 @@
     <h3>{{domain.fqdn}}</h3>
   </header>
 
-  <h4>{{ "Nameservers" | translate }}</h4>
+  <h4 translate>Nameservers</h4>
   <div data-ng-repeat="nameserver in domain.nameservers">
-    <label>{{ "Host" | translate }}</label> <span>{{nameserver.host}}</span><br>
-    <label>{{ "IPv4" | translate }}</label> <span>{{nameserver.ipv4}}</span><br>
-    <label>{{ "IPv6" | translate }}</label> <span>{{nameserver.ipv6}}</span><br>
-    <label>{{ "Status" | translate }}</label> <span>{{nameserver.lastStatus}}</span><br>
-    <label>{{ "Checked" | translate }}</label> <span>{{nameserver.lastCheckAt}}</span><br>
-    <label>{{ "Last OK" | translate }}</label> <span>{{nameserver.lastOKAt}}</span>
+    <label translate>Host</label> <span>{{nameserver.host}}</span><br>
+    <label translate>IPv4</label> <span>{{nameserver.ipv4}}</span><br>
+    <label translate>IPv6</label> <span>{{nameserver.ipv6}}</span><br>
+    <label translate>Status</label> <span>{{nameserver.lastStatus}}</span><br>
+    <label translate>Checked</label> <span>{{nameserver.lastCheckAt}}</span><br>
+    <label translate>Last OK</label> <span>{{nameserver.lastOKAt}}</span>
   </div>
 
-  <h4>{{ "DS set" | translate }}</h4>
+  <h4 translate>DS set</h4>
   <div data-ng-repeat="ds in domain.dsset">
-    <label>{{ "Keytag" | translate }}</label> <span>{{ds.keytag}}</span><br>
-    <label>{{ "Algorithm" | translate }}</label> <span>{{ds.algorithm}}</span><br>
-    <label>{{ "DigestType" | translate }}</label> <span>{{ds.digestType}}</span><br>
-    <label>{{ "Digest" | translate }}</label> <span>{{ds.digest}}</span><br>
-    <label>{{ "Status" | translate }}</label> <span>{{ds.lastStatus}}</span><br>
-    <label>{{ "Checked" | translate }}</label> <span>{{ds.lastCheckAt}}</span><br>
-    <label>{{ "Last OK" | translate }}</label> <span>{{ds.lastOKAt}}</span>
+    <label translate>Keytag</label> <span>{{ds.keytag}}</span><br>
+    <label translate>Algorithm</label> <span>{{ds.algorithm}}</span><br>
+    <label translate>DigestType</label> <span>{{ds.digestType}}</span><br>
+    <label translate>Digest</label> <span>{{ds.digest}}</span><br>
+    <label translate>Status</label> <span>{{ds.lastStatus}}</span><br>
+    <label translate>Checked</label> <span>{{ds.lastCheckAt}}</span><br>
+    <label translate>Last OK</label> <span>{{ds.lastOKAt}}</span>
   </div>
 
-  <h4>{{ "Owners" | translate }}</h4>
+  <h4 translate>Owners</h4>
   <div data-ng-repeat="owner in domain.owners">
-    <label>{{ "E-mail" | translate }}</label> <span>{{owner.email}}</span><br>
-    <label>{{ "Language" | translate }}</label> <span>{{owner.language}}</span>
+    <label translate>E-mail</label> <span>{{owner.email}}</span><br>
+    <label translate>Language</label> <span>{{owner.language}}</span>
   </div>
 </article>
