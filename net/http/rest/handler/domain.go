@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/rafaeljusto/shelter/dao"
 	"github.com/rafaeljusto/shelter/log"
+	"github.com/rafaeljusto/shelter/model"
 	"github.com/rafaeljusto/shelter/net/http/rest/context"
 	"github.com/rafaeljusto/shelter/net/http/rest/protocol"
 	"net/http"
@@ -106,6 +107,8 @@ func createUpdateDomain(r *http.Request, context *context.Context, fqdn string) 
 		messageId := ""
 
 		switch err {
+		case model.ErrInvalidFQDN:
+			messageId = "invalid-fqdn"
 		case protocol.ErrInvalidDNSKEY:
 			messageId = "invalid-dnskey"
 		case protocol.ErrInvalidDSAlgorithm:
