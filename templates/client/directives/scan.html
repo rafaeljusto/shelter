@@ -4,6 +4,6 @@
   </header>
 
   <label translate>Status</label> <span>{{scan.status}}</span><br>
-  <label translate>Started</label> <span>{{scan.startedAt}}</span><br>
-  <label translate>Finished</label> <span>{{scan.finishedAt}}</span><br>
+  <label translate>Started</label> <span>{{scan.startedAt | datetime:getLanguage()}}</span><br>
+  <label translate>Finished</label> <span>{{scan.finishedAt | datetime:getLanguage()}}</span><br>
 </article>

@@ -36,5 +36,6 @@
   "items": "items",
   "DNSKEY": "DNSKEY",
   "Flags": "Flags",
-  "Public Key": "Public Key"
+  "Public Key": "Public Key",
+  "Server error": "Problem while connecting to the server. Retry again in a few minutes or contact the system administrator"
 }

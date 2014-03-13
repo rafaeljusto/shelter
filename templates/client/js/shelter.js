@@ -34,6 +34,19 @@ angular.module("shelter", ["ngCookies", "pascalprecht.translate"])
     };
   })
 
+  .filter("datetime", function() {
+    return function(input, language) {
+      var datetime = moment("YYYY-MM-DDTHH:mm:ssZ", input)
+      if (datetime.isValid()) {
+        language = language.replace("_", "-");
+        moment.lang(language);
+        return datetime.format("MMMM Do YYYY, h:mm:ss a");
+      }
+
+      return "";
+    };
+  })
+
   ///////////////////////////////////////////////////////
   //                     Languages                     //
   ///////////////////////////////////////////////////////
@@ -78,10 +91,10 @@ angular.module("shelter", ["ngCookies", "pascalprecht.translate"])
         return $http.get(uri)
           .then(
             function(response) {
-              return response.data;
+              return response;
             },
-            function(error) {
-              return error.data;
+            function(response) {
+              return response;
             });
       },
       saveDomain: function(domain) {
@@ -92,10 +105,10 @@ angular.module("shelter", ["ngCookies", "pascalprecht.translate"])
         })
           .then(
             function(response) {
-              return response.data;
+              return response;
             },
-            function(error) {
-              return error.data;
+            function(response) {
+              return response;
             });
       }
     };
@@ -108,13 +121,14 @@ angular.module("shelter", ["ngCookies", "pascalprecht.translate"])
         domain: '='
       },
       templateUrl: "/directives/domain.html",
-      controller: function($scope, domainService) {
+      controller: function($scope, $translate, domainService) {
+        $scope.getLanguage = function() {
+          return $translate.use();
+        };
+
         $scope.saveDomain = function(domain) {
           domainService.saveDomain(domain).then(
             function(response) {
-              // TODO
-            },
-            function(error) {
               // TODO
             });
         };
@@ -122,7 +136,7 @@ angular.module("shelter", ["ngCookies", "pascalprecht.translate"])
     };
   })
 
-  .controller("domainCtrl", function($scope, $timeout, domainService) {
+  .controller("domainCtrl", function($scope, $timeout, $translate, domainService) {
     $scope.dnskeyFlags = [
       {id: 256, name:"ZSK"},
       {id: 257, name:"KSK"},
@@ -182,14 +196,21 @@ angular.module("shelter", ["ngCookies", "pascalprecht.translate"])
 
     $scope.domain = {
       fqdn: "",
-      nameservers: [ $scope.emptyNameserver, $scope.emptyNameserver ],
+      nameservers: [
+        angular.copy($scope.emptyNameserver),
+        angular.copy($scope.emptyNameserver)
+      ],
       dnskeys: [],
-      dsset: [ $scope.emptyDS ],
-      owners: [ $scope.emptyOwner ]
+      dsset: [
+        angular.copy($scope.emptyDS)
+      ],
+      owners: [
+        angular.copy($scope.emptyOwner)
+      ]
     };
 
     $scope.addToList = function(object, list) {
-      list.push(object);
+      list.push(angular.copy(object));
     };
 
     $scope.removeFromList = function(index, list) {
@@ -199,12 +220,23 @@ angular.module("shelter", ["ngCookies", "pascalprecht.translate"])
     };
 
     $scope.saveDomain = function() {
+      // Convert keytag to number. For now I don't want to use valueAsNumber function
+      // because the code will remain the same size and older browsers will break
+      for (var i = 0; i < $scope.domain.dsset.length; i += 1) {
+        var keytag = parseInt($scope.domain.dsset[i].keytag, 10);
+        if (keytag == NaN) {
+          keytag = 0;
+        }
+        $scope.domain.dsset[i].keytag = keytag;
+      }
+
       domainService.saveDomain($scope.domain).then(
         function(response) {
-          // TODO
-        },
-        function(error) {
-          // TODO
+          if (response.status == 400) {
+            $scope.error = response.data.message;
+          } else if (response.status != 201 && response.status != 204) {
+            $scope.error = $translate("Server error");
+          }
         });
     };
   })
@@ -215,10 +247,11 @@ angular.module("shelter", ["ngCookies", "pascalprecht.translate"])
     $scope.retrieveDomains = function(page, pageSize) {
       domainService.retrieveDomains(page, pageSize).then(
         function(response) {
-          $scope.pagination = response;
-        },
-        function(error) {
-          // TODO
+          if (response.status == 400) {
+            $scope.error = response.data.message;
+          } else {
+           $scope.pagination = response.data;
+          }
         });
     };
 
@@ -261,20 +294,20 @@ angular.module("shelter", ["ngCookies", "pascalprecht.translate"])
         return $http.get(uri)
           .then(
             function(response) {
-              return response.data;
+              return response;
             },
-            function(error) {
-              return error.data;
+            function(response) {
+              return response;
             });
       },
       retrieveCurrentScan: function() {
         return $http.get("/currentscan")
           .then(
             function(response) {
-              return response.data;
+              return response;
             },
-            function(error) {
-              return error.data;
+            function(response) {
+              return response;
             });
       }
     };
@@ -287,6 +320,11 @@ angular.module("shelter", ["ngCookies", "pascalprecht.translate"])
         scan: '='
       },
       templateUrl: "/directives/scan.html",
+      controller: function($scope, $translate) {
+        $scope.getLanguage = function() {
+          return $translate.use();
+        };
+      }
     };
   })
 
@@ -296,19 +334,17 @@ angular.module("shelter", ["ngCookies", "pascalprecht.translate"])
     $scope.retrieveScans = function(page, pageSize) {
       scanService.retrieveScans(page, pageSize).then(
         function(response) {
-          $scope.pagination = response;
-        },
-        function(error) {
-          // TODO
+          if (response.status == 200) {
+            $scope.pagination = response.data;
+          } else {
+            // TODO
+          }
         });
     };
 
     $scope.retrieveCurrentScan = function() {
       scanService.retrieveCurrentScan().then(
         function(response) {
-          // TODO
-        },
-        function(error) {
           // TODO
         });
     };

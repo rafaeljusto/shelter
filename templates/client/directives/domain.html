@@ -9,8 +9,8 @@
     <label translate>IPv4</label> <span>{{nameserver.ipv4}}</span><br>
     <label translate>IPv6</label> <span>{{nameserver.ipv6}}</span><br>
     <label translate>Status</label> <span>{{nameserver.lastStatus}}</span><br>
-    <label translate>Checked</label> <span>{{nameserver.lastCheckAt}}</span><br>
-    <label translate>Last OK</label> <span>{{nameserver.lastOKAt}}</span>
+    <label translate>Checked</label> <span>{{nameserver.lastCheckAt | datetime:getLanguage()}}</span><br>
+    <label translate>Last OK</label> <span>{{nameserver.lastOKAt | datetime:getLanguage()}}</span>
   </div>
 
   <h4 translate>DS set</h4>
@@ -20,8 +20,8 @@
     <label translate>DigestType</label> <span>{{ds.digestType}}</span><br>
     <label translate>Digest</label> <span>{{ds.digest}}</span><br>
     <label translate>Status</label> <span>{{ds.lastStatus}}</span><br>
-    <label translate>Checked</label> <span>{{ds.lastCheckAt}}</span><br>
-    <label translate>Last OK</label> <span>{{ds.lastOKAt}}</span>
+    <label translate>Checked</label> <span>{{ds.lastCheckAt | datetime:getLanguage()}}</span><br>
+    <label translate>Last OK</label> <span>{{ds.lastOKAt | datetime:getLanguage()}}</span>
   </div>
 
   <h4 translate>Owners</h4>

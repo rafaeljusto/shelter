@@ -36,8 +36,9 @@
       <form data-ng-submit="saveDomain()">
         <fieldset>
           <legend translate>Basic information</legend>
-          <label for="fqdn" translate>FQDN</label>
+          <label for="fqdn" autofocus translate>FQDN</label>
           <input type="text" data-ng-model="domain.fqdn"
+            placeholder="example.com."
             title="{{ 'FQDN help' | translate }}"
             pattern="^((\w((\w|\-){0,61}\w)?\.)*\w((\w|\-){0,61}\w)?)?(\.)?$"
             required>
@@ -49,6 +50,7 @@
           <label for="host{{$index+1}}" translate>Host</label>
           <input type="text" id="host{{$index+1}}"
             data-ng-model="domain.nameservers[$index].host"
+            placeholder="ns1.example.com."
             title="{{ 'Host help' | translate }}"
             pattern="^((\w((\w|\-){0,61}\w)?\.)*\w((\w|\-){0,61}\w)?)?(\.)?$"
             required>
@@ -56,12 +58,14 @@
           <label for="ipv4{{$index+1}}" translate>IPv4</label>
           <input type="text" id="ipv4{{$index+1}}"
             data-ng-model="domain.nameservers[$index].ipv4"
+            placeholder="203.0.113.1"
             title="{{ 'IPv4 help' | translate }}"
             pattern="^[0-9]{1,4}\.[0-9]{1,4}\.[0-9]{1,4}\.[0-9]{1,4}$">
 
           <label for="ipv6{{$index+1}}" translate>IPv6</label>
           <input type="text" id="ipv6{{$index+1}}"
             data-ng-model="domain.nameservers[$index].ipv6"
+            placeholder="fe80::0202:b3ff:fe1e:8329"
             title="{{ 'IPv6 help' | translate }}"
             pattern="^((?=.*::)(?!.*::.+::)(::)?([\dA-F]{1,4}:(:|\b)|){5}|([\dA-F]{1,4}:){6})((([\dA-F]{1,4}((?!\3)::|:\b|$))|(?!\2\3)){2}|(((2[0-4]|1\d|[1-9])?\d|25[0-5])\.?\b){4})$">
 
@@ -112,7 +116,8 @@
           <label for="keytag{{$index+1}}" translate>Keytag</label>
           <input type="number" id="keytag{{$index+1}}"
             data-ng-model="domain.dsset[$index].keytag"
-            min="1" max="65536"
+            placeholder="1234"
+            min="1" max="65536" step="1"
             title="{{ 'Keytag help' | translate }}"
             pattern="[0-9]+"
             required>
@@ -150,6 +155,7 @@
           <label for="email{{$index+1}}" translate>E-mail</label>
           <input type="email" id="email{{$index+1}}"
             data-ng-model="domain.owners[$index].email"
+            placeholder="me@example.com."
             required>
 
           <label for="language{{$index+1}}" translate>Language</label>
@@ -172,6 +178,8 @@
           <i class="fa fa-floppy-o"></i>
           {{ "Save" | translate }}
         </button>
+
+        <div data-ng-if="error">{{error}}</div>
       </form>
     </section>
 
@@ -249,6 +257,7 @@
     <script src="/js/angular-translate-loader-static-files.min.js"></script>
     <script src="/js/angular-translate-storage-cookie.min.js"></script>
     <script src="/js/angular-translate-storage-local.min.js"></script>
+    <script src="/js/moment-with-langs.min.js"></script>
     <script src="/js/shelter.js"></script>
   </body>
 </html>
