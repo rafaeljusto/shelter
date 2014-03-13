@@ -9,6 +9,7 @@
     <meta name="author" content="Rafael Dantas Justo">
 
     <link rel="stylesheet" type="text/css" href="/css/shelter.css">
+    <link rel="stylesheet" type="text/css" href="/css/font-awesome.min.css">
   </header>
 
   <body data-ng-app="shelter">
@@ -42,7 +43,7 @@
             required>
         </fieldset>
 
-        <fieldset data-ng-repeat="nameserver in domain.nameservers">
+        <fieldset data-ng-repeat="nameserver in domain.nameservers track by $index">
           <legend>{{ "Nameserver" | translate }} {{$index+1}}</legend>
 
           <label for="host{{$index+1}}" translate>Host</label>
@@ -63,9 +64,49 @@
             data-ng-model="domain.nameservers[$index].ipv6"
             title="{{ 'IPv6 help' | translate }}"
             pattern="^((?=.*::)(?!.*::.+::)(::)?([\dA-F]{1,4}:(:|\b)|){5}|([\dA-F]{1,4}:){6})((([\dA-F]{1,4}((?!\3)::|:\b|$))|(?!\2\3)){2}|(((2[0-4]|1\d|[1-9])?\d|25[0-5])\.?\b){4})$">
+
+          <button type="button" data-ng-click="removeFromList($index, domain.nameservers)">
+            <i class="fa fa-times-circle"></i>
+            {{ "Remove" | translate }}
+          </button>
         </fieldset>
 
-        <fieldset data-ng-repeat="ds in domain.dsset">
+        <button type="button" data-ng-click="addToList(emptyNameserver, domain.nameservers)">
+          <i class="fa fa-plus-circle"></i>
+          {{ "Add" | translate }} {{ "Nameserver" | translate }}
+        </button>
+
+        <fieldset data-ng-repeat="dnskey in domain.dnskeys track by $index">
+          <legend>{{ "DNSKEY" | translate }} {{$index+1}}</legend>
+
+          <label for="flags{{$index+1}}" translate>Flags</label>
+          <select id="flags{{$index+1}}" data-ng-model="domain.dnskeys[$index].flags"
+            data-ng-options="flags.id as flags.name for flags in dnskeyFlags"
+            required>
+          </select>
+
+          <label for="dnskeyAlgorithm{{$index+1}}" translate>Algorithm</label>
+          <select id="dnskeyAlgorithm{{$index+1}}" data-ng-model="domain.dnskeys[$index].algorithm"
+            data-ng-options="algorithm.id as algorithm.name for algorithm in algorithms"
+            required>
+          </select>
+
+          <label for="publickKey{{$index+1}}" translate>Public Key</label>
+          <input type="text" id="publicKey{{$index+1}}" data-ng-model="domain.dnskeys[$index].publicKey"
+            required>
+
+          <button type="button" data-ng-click="removeFromList($index, domain.dnskeys)">
+            <i class="fa fa-times-circle"></i>
+            {{ "Remove" | translate }}
+          </button>
+        </fieldset>
+
+        <button type="button" data-ng-click="addToList(emptyDNSKEY, domain.dnskeys)">
+          <i class="fa fa-plus-circle"></i>
+          {{ "Add" | translate }} {{ "DNSKEY" | translate }}
+        </button>
+
+        <fieldset data-ng-repeat="ds in domain.dsset track by $index">
           <legend>{{ "DS" | translate }} {{$index+1}}</legend>
 
           <label for="keytag{{$index+1}}" translate>Keytag</label>
@@ -76,9 +117,9 @@
             pattern="[0-9]+"
             required>
 
-          <label for="algorithm{{$index+1}}" translate>Algorithm</label>
-          <select id="algorithm{{$index+1}}" data-ng-model="domain.dsset[$index].algorithm"
-            data-ng-options="algorithm.id as algorithm.name for algorithm in dsAlgorithms"
+          <label for="dsAlgorithm{{$index+1}}" translate>Algorithm</label>
+          <select id="dsAlgorithm{{$index+1}}" data-ng-model="domain.dsset[$index].algorithm"
+            data-ng-options="algorithm.id as algorithm.name for algorithm in algorithms"
             required>
           </select>
 
@@ -91,9 +132,19 @@
           <label for="digest{{$index+1}}" translate>Digest</label>
           <input type="text" id="digest{{$index+1}}" data-ng-model="domain.dsset[$index].digest"
             required>
+
+          <button type="button" data-ng-click="removeFromList($index, domain.dsset)">
+            <i class="fa fa-times-circle"></i>
+            {{ "Remove" | translate }}
+          </button>
         </fieldset>
 
-        <fieldset data-ng-repeat="owner in domain.owners">
+        <button type="button" data-ng-click="addToList(emptyDS, domain.dsset)">
+          <i class="fa fa-plus-circle"></i>
+          {{ "Add" | translate }} {{ "DS" | translate }}
+        </button>
+
+        <fieldset data-ng-repeat="owner in domain.owners track by $index">
           <legend>{{ "Owner" | translate }} {{$index+1}}</legend>
 
           <label for="email{{$index+1}}" translate>E-mail</label>
@@ -105,9 +156,22 @@
           <select id="language{{$index+1}}" data-ng-model="domain.owners[$index].language"
             data-ng-options="language for language in ownerLanguages" required>
           </select>
+
+          <button type="button" data-ng-click="removeFromList($index, domain.owners)">
+            <i class="fa fa-times-circle"></i>
+            {{ "Remove" | translate }}
+          </button>
         </fieldset>
 
-        <button type="submit" translate>Save</button>
+        <button type="button" data-ng-click="addToList(emptyOwner, domain.owners)">
+          <i class="fa fa-plus-circle"></i>
+          {{ "Add" | translate }} {{ "Owner" | translate }}
+        </button>
+
+        <button type="submit">
+          <i class="fa fa-floppy-o"></i>
+          {{ "Save" | translate }}
+        </button>
       </form>
     </section>
 

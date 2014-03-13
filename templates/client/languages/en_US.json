@@ -16,6 +16,8 @@
   "E-mail": "E-mail",
   "Language": "Language",
   "Save": "Save",
+  "Add": "Add",
+  "Remove": "Remove",
   "Domains": "Domains",
   "Nameservers": "Nameservers",
   "Status": "Status",
@@ -31,5 +33,8 @@
   "IPv6 help": "Fill this field with a valid IP version 6 following RFC 5952 format",
   "Keytag help": "Fill this field with the DNSKEY identifier. Should be a number that fits in a 16 bits range",
   "item": "item",
-  "items": "items"
+  "items": "items",
+  "DNSKEY": "DNSKEY",
+  "Flags": "Flags",
+  "Public Key": "Public Key"
 }

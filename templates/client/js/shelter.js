@@ -8,6 +8,7 @@ angular.module("shelter", ["ngCookies", "pascalprecht.translate"])
       prefix: "/languages/",
       suffix: ".json"
     });
+
     $translateProvider.fallbackLanguage("en_US");
     $translateProvider.determinePreferredLanguage();
     $translateProvider.useLocalStorage();
@@ -20,7 +21,7 @@ angular.module("shelter", ["ngCookies", "pascalprecht.translate"])
           return $translateProvider.use().replace("_", "-");
         }
       }
-    }
+    };
   })
 
   .filter("range", function() {
@@ -122,7 +123,12 @@ angular.module("shelter", ["ngCookies", "pascalprecht.translate"])
   })
 
   .controller("domainCtrl", function($scope, $timeout, domainService) {
-    $scope.dsAlgorithms = [
+    $scope.dnskeyFlags = [
+      {id: 256, name:"ZSK"},
+      {id: 257, name:"KSK"},
+    ];
+
+    $scope.algorithms = [
       {id: 1, name:"RSA/MD5"},
       {id: 2, name:"DH"},
       {id: 3, name:"DSA/SHA1"},
@@ -150,18 +156,46 @@ angular.module("shelter", ["ngCookies", "pascalprecht.translate"])
       "pt-BR"
     ];
 
+    $scope.emptyNameserver = {
+      host: "",
+      ipv4: "",
+      ipv6: ""
+    };
+
+    $scope.emptyDNSKEY = {
+      flags: 257,
+      algorithm: 8,
+      publickKey: ""
+    };
+
+    $scope.emptyDS = {
+      keytag: "",
+      algorithm: 8,
+      digestType: 2,
+      digest: ""
+    };
+
+    $scope.emptyOwner = {
+      email: "",
+      language: "en-US"
+    };
+
     $scope.domain = {
       fqdn: "",
-      nameservers: [
-        {host: "", ipv4: "", ipv6: ""},
-        {host: "", ipv4: "", ipv6: ""}
-      ],
-      dsset: [
-        {keytag: "", algorithm: 8, digestType: 2, digest: ""}
-      ],
-      owners: [
-        {email: "", language: "en-US"}
-      ]
+      nameservers: [ $scope.emptyNameserver, $scope.emptyNameserver ],
+      dnskeys: [],
+      dsset: [ $scope.emptyDS ],
+      owners: [ $scope.emptyOwner ]
+    };
+
+    $scope.addToList = function(object, list) {
+      list.push(object);
+    };
+
+    $scope.removeFromList = function(index, list) {
+      if (index >= 0 && index < list.length) {
+        list.splice(index, 1);
+      }
     };
 
     $scope.saveDomain = function() {
@@ -172,7 +206,7 @@ angular.module("shelter", ["ngCookies", "pascalprecht.translate"])
         function(error) {
           // TODO
         });
-    }
+    };
   })
 
   .controller("domainsCtrl", function($scope, $timeout, domainService) {
