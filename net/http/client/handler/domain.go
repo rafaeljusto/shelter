@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"github.com/rafaeljusto/shelter/log"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"regexp"
@@ -50,16 +51,27 @@ func HandleDomain(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if response.StatusCode != http.StatusCreated &&
-		response.StatusCode != http.StatusNoContent {
+		response.StatusCode != http.StatusNoContent &&
+		response.StatusCode != http.StatusBadRequest {
 
-		// TODO: Create a function to detect errors. Will be necessary when we receive a bad
-		// request while creating a domain for example
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Println(fmt.Sprintf("Exepected status code %d or %d but received %d from "+
-			"/domain result in web client", http.StatusCreated, http.StatusNoContent,
-			response.StatusCode))
+		log.Println(fmt.Sprintf("Unexepected status code %d from /domain result "+
+			"in web client", response.StatusCode))
 		return
 	}
 
-	w.WriteHeader(response.StatusCode)
+	if response.StatusCode != http.StatusBadRequest {
+		w.WriteHeader(response.StatusCode)
+
+	} else {
+		w.Header().Add("Content-Type", "application/json")
+		w.WriteHeader(response.StatusCode)
+
+		if _, err := io.Copy(w, response.Body); err != nil {
+			// Here we already set the response code, so the client will receive a OK result
+			// without body
+			log.Println("Error copying REST response to web client response. Details:", err)
+			return
+		}
+	}
 }

@@ -41,12 +41,12 @@ func HandleScans(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if response.StatusCode != http.StatusOK {
-		// TODO: Create a function to detect errors. Will be necessary when we receive a bad
-		// request while creating a domain for example
+	if response.StatusCode != http.StatusOK &&
+		response.StatusCode != http.StatusBadRequest {
+
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Println(fmt.Sprintf("Exepected status code %d but received %d from "+
-			"/scans result in web client", http.StatusOK, response.StatusCode))
+		log.Println(fmt.Sprintf("Unexepected status code %d from /scans "+
+			"result in web client", response.StatusCode))
 		return
 	}
 

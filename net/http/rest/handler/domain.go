@@ -103,9 +103,34 @@ func createUpdateDomain(r *http.Request, context *context.Context, fqdn string) 
 
 	var err error
 	if domain, err = protocol.Merge(domain, domainRequest); err != nil {
-		log.Println("Error while merging domain objects for create or "+
-			"update operation. Details:", err)
-		context.Response(http.StatusInternalServerError)
+		messageId := ""
+
+		switch err {
+		case protocol.ErrInvalidDNSKEY:
+			messageId = "invalid-dnskey"
+		case protocol.ErrInvalidDSAlgorithm:
+			messageId = "invalid-ds-algorithm"
+		case protocol.ErrInvalidDSDigestType:
+			messageId = "invalid-ds-digest-type"
+		case protocol.ErrInvalidIP:
+			messageId = "invalid-ip"
+		case protocol.ErrInvalidLanguage:
+			messageId = "invalid-language"
+		}
+
+		if len(messageId) == 0 {
+			log.Println("Error while merging domain objects for create or "+
+				"update operation. Details:", err)
+			context.Response(http.StatusInternalServerError)
+
+		} else {
+			if err := context.MessageResponse(http.StatusBadRequest,
+				messageId, r.URL.RequestURI()); err != nil {
+
+				log.Println("Error while writing response. Details:", err)
+				context.Response(http.StatusInternalServerError)
+			}
+		}
 		return
 	}
 
