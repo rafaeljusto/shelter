@@ -23,3 +23,43 @@ label {
 input {
   font-size: 1rem;
 }
+
+nav ul {
+  list-style-type: none;
+  padding: 0rem;
+  margin: 0%;
+}
+
+nav ul li {
+  cursor: pointer;
+  padding: 1.2rem 0rem 1.2rem 0.4rem;
+  transition: background-color 0.2s;
+}
+
+nav ul li:hover {
+  background-color: #1b5169;
+  color: #fff;
+  transition: background-color 0.4s;
+}
+
+.languages {
+  text-align: right
+}
+
+.selected-language {
+  border-color: #1b5169;
+}
+
+.field label, .field span {
+  padding: 0.4rem 0.4rem 0.4rem 0.4rem;
+}
+
+.field label {
+  background-color: #1b5169;
+  color: #fff;
+}
+
+.field span {
+  background-color: #eee;
+  display: block;
+}

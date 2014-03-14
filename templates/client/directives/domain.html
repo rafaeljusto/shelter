@@ -5,28 +5,60 @@
 
   <h4 translate>Nameservers</h4>
   <div data-ng-repeat="nameserver in domain.nameservers">
-    <label translate>Host</label> <span>{{nameserver.host}}</span><br>
-    <label translate>IPv4</label> <span>{{nameserver.ipv4}}</span><br>
-    <label translate>IPv6</label> <span>{{nameserver.ipv6}}</span><br>
-    <label translate>Status</label> <span>{{nameserver.lastStatus}}</span><br>
-    <label translate>Checked</label> <span>{{nameserver.lastCheckAt | datetime:getLanguage()}}</span><br>
-    <label translate>Last OK</label> <span>{{nameserver.lastOKAt | datetime:getLanguage()}}</span>
+    <div class="field">
+      <label translate>Host</label><span>{{nameserver.host}}</span>
+    </div>
+    <div class="field">
+      <label translate>IPv4</label><span>{{nameserver.ipv4}}</span>
+    </div>
+    <div class="field">
+      <label translate>IPv6</label><span>{{nameserver.ipv6}}</span>
+    </div>
+    <div class="field">
+      <label translate>Status</label><span>{{nameserver.lastStatus}}</span>
+    </div>
+    <div class="field">
+      <label translate>Checked</label><span>{{nameserver.lastCheckAt | datetime:getLanguage()}}</span>
+    </div>
+    <div class="field">
+      <label translate>Last OK</label><span>{{nameserver.lastOKAt | datetime:getLanguage()}}</span>
+    </div>
   </div>
 
   <h4 translate>DS set</h4>
   <div data-ng-repeat="ds in domain.dsset">
-    <label translate>Keytag</label> <span>{{ds.keytag}}</span><br>
-    <label translate>Algorithm</label> <span>{{ds.algorithm}}</span><br>
-    <label translate>DigestType</label> <span>{{ds.digestType}}</span><br>
-    <label translate>Digest</label> <span>{{ds.digest}}</span><br>
-    <label translate>Status</label> <span>{{ds.lastStatus}}</span><br>
-    <label translate>Checked</label> <span>{{ds.lastCheckAt | datetime:getLanguage()}}</span><br>
-    <label translate>Last OK</label> <span>{{ds.lastOKAt | datetime:getLanguage()}}</span>
+    <div class="field">
+      <label translate>Keytag</label><span>{{ds.keytag}}</span>
+    </div>
+    <div class="field">
+      <label translate>Algorithm</label><span>{{ds.algorithm}}</span>
+    </div>
+    <div class="field">
+      <label translate>DigestType</label><span>{{ds.digestType}}</span>
+    </div>
+    <div class="field">
+      <label translate>Digest</label><span>{{ds.digest}}</span>
+    </div>
+    <div class="field">
+      <label translate>Status</label><span>{{ds.lastStatus}}</span>
+    </div>
+    <div class="field">
+      <label translate>Checked</label><span>{{ds.lastCheckAt | datetime:getLanguage()}}</span>
+    </div>
+    <div class="field">
+      <label translate>Last OK</label><span>{{ds.lastOKAt | datetime:getLanguage()}}</span>
+    </div>
   </div>
 
   <h4 translate>Owners</h4>
   <div data-ng-repeat="owner in domain.owners">
-    <label translate>E-mail</label> <span>{{owner.email}}</span><br>
-    <label translate>Language</label> <span>{{owner.language}}</span>
+    <div class="field">
+      <label translate>E-mail</label><span>{{owner.email}}</span>
+    </div>
+    <div class="field">
+      <label translate>Language</label><span>{{owner.language}}</span>
+    </div>
   </div>
+
+  <domainform domain="domain"></domainform>
 </article>

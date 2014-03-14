@@ -3,7 +3,13 @@
     <h3>{{scan.startedAt}}</h3>
   </header>
 
-  <label translate>Status</label> <span>{{scan.status}}</span><br>
-  <label translate>Started</label> <span>{{scan.startedAt | datetime:getLanguage()}}</span><br>
-  <label translate>Finished</label> <span>{{scan.finishedAt | datetime:getLanguage()}}</span><br>
+  <div class="field">
+    <label translate>Status</label><span>{{scan.status}}</span>
+  </div>
+  <div class="field">
+    <label translate>Started</label><span>{{scan.startedAt | datetime:getLanguage()}}</span>
+  </div>
+  <div class="field">
+    <label translate>Finished</label><span>{{scan.finishedAt | datetime:getLanguage()}}</span>
+  </div>
 </article>

@@ -1,5 +1,4 @@
 {
-  "Shelter": "Shelter",
   "New Domain": "New Domain",
   "Basic information": "Basic information",
   "FQDN": "FQDN",
@@ -38,5 +37,5 @@
   "Flags": "Flags",
   "Public Key": "Public Key",
   "Server error": "Problem while connecting to the server. Retry again in a few minutes or contact the system administrator",
-  "Domain created": "Domain created successfully"
+  "Domain created": "Domain saved successfully"
 }

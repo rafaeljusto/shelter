@@ -132,6 +132,10 @@ angular.module("shelter", ["ngCookies", "pascalprecht.translate"])
     $scope.changeLanguage = function(language) {
       $translate.use(language);
     };
+
+    $scope.getLanguage = function() {
+      return $translate.use();
+    };
   })
 
   ///////////////////////////////////////////////////////
@@ -252,7 +256,7 @@ angular.module("shelter", ["ngCookies", "pascalprecht.translate"])
 
           domainService.saveDomain($scope.domain).then(
             function(response) {
-              if (response.status == 201 && response.status == 204) {
+              if (response.status == 201 || response.status == 204) {
                 $translate("Domain created").then(function(translation) {
                   $scope.success = translation;
                 });

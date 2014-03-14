@@ -13,18 +13,26 @@
   </header>
 
   <body data-ng-app="shelter">
-    <h1 data-ng-cloak translate>Shelter</h1>
+    <h1>Shelter</h1>
 
-    <section data-ng-cloak data-ng-controller="languagesCtrl">
-      <button data-ng-click="changeLanguage('en_US')">en-US</button>
-      <button data-ng-click="changeLanguage('pt_BR')">pt-BR</button>
+    <section data-ng-cloak data-ng-controller="languagesCtrl" class="languages">
+      <button data-ng-click="changeLanguage('en_US')"
+        data-ng-class="{'selected-language': getLanguage() == 'en_US'}">en-US</button>
+      <button data-ng-click="changeLanguage('pt_BR')"
+        data-ng-class="{'selected-language': getLanguage() == 'pt_BR'}">pt-BR</button>
     </section>
 
+    <hr/>
+
     <nav data-ng-cloak data-ng-init="menu = 'domains'">
-      <a data-ng-click="menu = 'new_domain'">{{ "New Domain" | translate }}</a>
-      <a data-ng-click="menu = 'domains'">{{ "Domains" | translate }}</a>
-      <a data-ng-click="menu = 'scans'">{{ "Scans" | translate }}</a>
+      <ul>
+        <li data-ng-click="menu = 'new_domain'">{{ "New Domain" | translate }}</li>
+        <li data-ng-click="menu = 'domains'">{{ "Domains" | translate }}</li>
+        <li data-ng-click="menu = 'scans'">{{ "Scans" | translate }}</li>
+      </ul>
     </nav>
+
+    <hr/>
 
     <section data-ng-cloak data-ng-controller="domainCtrl"
       data-ng-show="menu == 'new_domain'">
