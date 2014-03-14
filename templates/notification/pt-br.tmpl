@@ -1,14 +1,16 @@
+{{$domain := .}}
+
 From: {{.From}}
 To: {{.To}}
-Subject: Problema de configuracao com o dominio {{.FQDN}}
+Subject: Problema de configuracao com o dominio {{$domain.FQDN}}
 
 
 Prezado Sr./Sra.,
 
 Durante a validação periódica de domínio, um problema de configuração foi detectado com o
-domínio {{.FQDN}}.
+domínio {{$domain.FQDN}}.
 
-{{range $nameserver := .Nameservers}}
+{{range $nameserver := $domain.Nameservers}}
   {{if nsStatusEq $nameserver.LastStatus "TIMEOUT"}}
   * Servidor DNS {{$nameserver.Host}} não esta respondendo as consultas DNS.
     Por favor verifique os seus firewalls e servidor DNS para garantir que o serviço esta
@@ -16,11 +18,11 @@ domínio {{.FQDN}}.
 
   {{else if nsStatusEq $nameserver.LastStatus "NOAA"}}
   * Servidor DNS {{$nameserver.Host}} não possui autoridade para o domínio
-    {{.FQDN}}. Por favor verifica as configurações do seu servidor.
+    {{$domain.FQDN}}. Por favor verifica as configurações do seu servidor.
 
   {{else if nsStatusEq $nameserver.LastStatus "UDN"}}
   * Servidor DNS {{$nameserver.Host}} não possui informações sobre o dominio
-    {{.FQDN}}.
+    {{$domain.FQDN}}.
 
   {{else if nsStatusEq $nameserver.LastStatus "UH"}}
   * Servidor DNS {{$nameserver.Host}} não foi encontrado.
@@ -48,7 +50,7 @@ domínio {{.FQDN}}.
 
   {{else if nsStatusEq $nameserver.LastStatus "NOTSYNCH"}}
   * Servidor DNS {{$nameserver.Host}} não esta sincronizado com os outros servidores DNS
-    do domínio {{.FQDN}}. Verifique o serial do registro SOA de cada zona dos servidores
+    do domínio {{$domain.FQDN}}. Verifique o serial do registro SOA de cada zona dos servidores
     DNS.
 
   {{else if nsStatusEq $nameserver.LastStatus "ERROR"}}
@@ -57,7 +59,7 @@ domínio {{.FQDN}}.
   {{end}}
 {{end}}
 
-{{range $ds := .DSSet}}
+{{range $ds := $domain.DSSet}}
   {{if dsStatusEq $ds.LastStatus "TIMEOUT"}}
   * DS com keytag {{$ds.Keytag}} não esta respondendo as consultas DNS.
     Por favor verifique os seus firewalls e servidor DNS para garantir que o serviço esta

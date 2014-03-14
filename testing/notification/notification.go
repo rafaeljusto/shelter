@@ -79,17 +79,19 @@ func createTemplateFile() string {
 	}
 	defer f.Close()
 
-	_, err = f.WriteString(`From: {{.From}}
+	_, err = f.WriteString(`{{$domain := .}}
+
+From: {{.From}}
 To: {{.To}}
-Subject: Misconfiguration on domain {{.FQDN}}
+Subject: Misconfiguration on domain {{$domain.FQDN}}
 
 
 Dear Sir/Madam,
 
 During our periodically domain verification, a configuration problem was detected with the
-domain {{.FQDN}}.
+domain {{$domain.FQDN}}.
 
-{{range $nameserver := .Nameservers}}
+{{range $nameserver := $domain.Nameservers}}
   {{if nsStatusEq $nameserver.LastStatus "TIMEOUT"}}
   * Nameserver {{$nameserver.Host}} isn't answering the DNS requests.
     Please check your firewalls and DNS server and make sure that the service is up and
@@ -97,10 +99,10 @@ domain {{.FQDN}}.
 
   {{else if nsStatusEq $nameserver.LastStatus "NOAA"}}
   * Nameserver {{$nameserver.Host}} don't have authority over the domain
-    {{.FQDN}}. Please check your nameserver configuration.
+    {{$domain.FQDN}}. Please check your nameserver configuration.
 
   {{else if nsStatusEq $nameserver.LastStatus "UDN"}}
-  * Nameserver {{$nameserver.Host}} don't have data about the domain {{.FQDN}}.
+  * Nameserver {{$nameserver.Host}} don't have data about the domain {{$domain.FQDN}}.
 
   {{else if nsStatusEq $nameserver.LastStatus "UH"}}
   * Nameserver {{$nameserver.Host}} couldn't be resolved. The authoritative DNS server
@@ -128,7 +130,7 @@ domain {{.FQDN}}.
 
   {{else if nsStatusEq $nameserver.LastStatus "NOTSYNCH"}}
   * Nameserver {{$nameserver.Host}} is not synchronized with other nameservers of the
-    domain {{.FQDN}}. Check out the serial of the SOA records on each nameserver's zone.
+    domain {{$domain.FQDN}}. Check out the serial of the SOA records on each nameserver's zone.
 
   {{else if nsStatusEq $nameserver.LastStatus "ERROR"}}
   * Nameserver {{$nameserver.Host}} got an unexpected error.
@@ -136,7 +138,7 @@ domain {{.FQDN}}.
   {{end}}
 {{end}}
 
-{{range $ds := .DSSet}}
+{{range $ds := $domain.DSSet}}
   {{if dsStatusEq $ds.LastStatus "TIMEOUT"}}
   * DS with keytag {{$ds.Keytag}} isn't answering the DNS requests.
     Please check your firewalls and DNS server and make sure that the service is up and

@@ -131,7 +131,8 @@ func notifyDomain(domain *model.Domain) error {
 		// Remove extra new lines that can appear because of the template execution. Special
 		// lines used for controlling the templates are removed but the new lines are left
 		// behind
-		msgBytes := extraSpaces.ReplaceAll(msg.Bytes(), []byte("\n\n"))
+		msgBytes := bytes.TrimSpace(msg.Bytes())
+		msgBytes = extraSpaces.ReplaceAll(msgBytes, []byte("\n\n"))
 
 		switch config.ShelterConfig.Notification.SMTPServer.Auth.Type {
 		case config.AuthenticationTypePlain:
