@@ -15,3 +15,11 @@ body {
 [ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
   display: none !important;
 }
+
+label {
+  display: block;
+}
+
+input {
+  font-size: 1rem;
+}

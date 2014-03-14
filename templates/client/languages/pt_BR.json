@@ -37,5 +37,6 @@
   "DNSKEY": "DNSKEY",
   "Flags": "Flags",
   "Public Key": "Chave Pública",
-  "Server error": "Problema para se conectar no servidor. Tente novamente após alguns minutos ou contate o administrador do sistema"
+  "Server error": "Problema para se conectar no servidor. Tente novamente após alguns minutos ou contate o administrador do sistema",
+  "Domain created": "Domínio criado com sucesso"
 }
