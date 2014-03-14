@@ -206,6 +206,34 @@ angular.module("shelter", ["ngCookies", "pascalprecht.translate"])
         $scope.getLanguage = function() {
           return $translate.use();
         };
+
+        $scope.getAlgorithm = function(id) {
+          for (var i = 0; i < algorithms.length; i++) {
+            if (algorithms[i].id == id) {
+              return algorithms[i].name;
+            }
+          }
+
+          return id;
+        }
+
+        $scope.getDSDigestType = function(id) {
+          for (var i = 0; i < dsDigestTypes.length; i++) {
+            if (dsDigestTypes[i].id == id) {
+              return dsDigestTypes[i].name;
+            }
+          }
+
+          return id;
+        }
+
+        $scope.showDSDigest = function(digest) {
+          if (digest.length >= 24) {
+            return digest.substr(0, 12) + "..." + digest.substr(digest.length - 12, 12);
+          }
+
+          return digest;
+        };
       }
     };
   })

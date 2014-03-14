@@ -1,15 +1,17 @@
-<article>
-  <header>
-    <h3>{{scan.startedAt}}</h3>
+<article data-ng-init="details = false">
+  <header data-ng-click="details = !details">
+    <h3>{{scan.startedAt | datetime:getLanguage()}}</h3>
   </header>
 
-  <div class="field">
-    <label translate>Status</label><span>{{scan.status}}</span>
-  </div>
-  <div class="field">
-    <label translate>Started</label><span>{{scan.startedAt | datetime:getLanguage()}}</span>
-  </div>
-  <div class="field">
-    <label translate>Finished</label><span>{{scan.finishedAt | datetime:getLanguage()}}</span>
+  <div data-ng-show="details">
+    <div class="field">
+      <label translate>Status</label><span>{{scan.status}}</span>
+    </div>
+    <div class="field">
+      <label translate>Started</label><span>{{scan.startedAt | datetime:getLanguage()}}</span>
+    </div>
+    <div class="field">
+      <label translate>Finished</label><span>{{scan.finishedAt | datetime:getLanguage()}}</span>
+    </div>
   </div>
 </article>

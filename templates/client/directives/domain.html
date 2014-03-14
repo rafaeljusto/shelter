@@ -1,64 +1,66 @@
-<article>
-  <header>
+<article data-ng-init="details = false">
+  <header data-ng-click="details = !details">
     <h3>{{domain.fqdn}}</h3>
   </header>
 
-  <h4 translate>Nameservers</h4>
-  <div data-ng-repeat="nameserver in domain.nameservers">
-    <div class="field">
-      <label translate>Host</label><span>{{nameserver.host}}</span>
+  <div data-ng-show="details">
+    <h4 translate>Nameservers</h4>
+    <div data-ng-repeat="nameserver in domain.nameservers">
+      <div class="field">
+        <label translate>Host</label><span>{{nameserver.host}}</span>
+      </div>
+      <div class="field">
+        <label translate>IPv4</label><span>{{nameserver.ipv4}}</span>
+      </div>
+      <div class="field">
+        <label translate>IPv6</label><span>{{nameserver.ipv6}}</span>
+      </div>
+      <div class="field">
+        <label translate>Status</label><span>{{nameserver.lastStatus}}</span>
+      </div>
+      <div class="field">
+        <label translate>Checked</label><span>{{nameserver.lastCheckAt | datetime:getLanguage()}}</span>
+      </div>
+      <div class="field">
+        <label translate>Last OK</label><span>{{nameserver.lastOKAt | datetime:getLanguage()}}</span>
+      </div>
     </div>
-    <div class="field">
-      <label translate>IPv4</label><span>{{nameserver.ipv4}}</span>
-    </div>
-    <div class="field">
-      <label translate>IPv6</label><span>{{nameserver.ipv6}}</span>
-    </div>
-    <div class="field">
-      <label translate>Status</label><span>{{nameserver.lastStatus}}</span>
-    </div>
-    <div class="field">
-      <label translate>Checked</label><span>{{nameserver.lastCheckAt | datetime:getLanguage()}}</span>
-    </div>
-    <div class="field">
-      <label translate>Last OK</label><span>{{nameserver.lastOKAt | datetime:getLanguage()}}</span>
-    </div>
-  </div>
 
-  <h4 translate>DS set</h4>
-  <div data-ng-repeat="ds in domain.dsset">
-    <div class="field">
-      <label translate>Keytag</label><span>{{ds.keytag}}</span>
+    <h4 translate>DS set</h4>
+    <div data-ng-repeat="ds in domain.dsset">
+      <div class="field">
+        <label translate>Keytag</label><span>{{ds.keytag}}</span>
+      </div>
+      <div class="field">
+        <label translate>Algorithm</label><span>{{getAlgorithm(ds.algorithm)}}</span>
+      </div>
+      <div class="field">
+        <label translate>DigestType</label><span>{{getDSDigestType(ds.digestType)}}</span>
+      </div>
+      <div class="field">
+        <label translate>Digest</label><span>{{showDSDigest(ds.digest)}}</span>
+      </div>
+      <div class="field">
+        <label translate>Status</label><span>{{ds.lastStatus}}</span>
+      </div>
+      <div class="field">
+        <label translate>Checked</label><span>{{ds.lastCheckAt | datetime:getLanguage()}}</span>
+      </div>
+      <div class="field">
+        <label translate>Last OK</label><span>{{ds.lastOKAt | datetime:getLanguage()}}</span>
+      </div>
     </div>
-    <div class="field">
-      <label translate>Algorithm</label><span>{{ds.algorithm}}</span>
-    </div>
-    <div class="field">
-      <label translate>DigestType</label><span>{{ds.digestType}}</span>
-    </div>
-    <div class="field">
-      <label translate>Digest</label><span>{{ds.digest}}</span>
-    </div>
-    <div class="field">
-      <label translate>Status</label><span>{{ds.lastStatus}}</span>
-    </div>
-    <div class="field">
-      <label translate>Checked</label><span>{{ds.lastCheckAt | datetime:getLanguage()}}</span>
-    </div>
-    <div class="field">
-      <label translate>Last OK</label><span>{{ds.lastOKAt | datetime:getLanguage()}}</span>
-    </div>
-  </div>
 
-  <h4 translate>Owners</h4>
-  <div data-ng-repeat="owner in domain.owners">
-    <div class="field">
-      <label translate>E-mail</label><span>{{owner.email}}</span>
+    <h4 translate>Owners</h4>
+    <div data-ng-repeat="owner in domain.owners">
+      <div class="field">
+        <label translate>E-mail</label><span>{{owner.email}}</span>
+      </div>
+      <div class="field">
+        <label translate>Language</label><span>{{owner.language}}</span>
+      </div>
     </div>
-    <div class="field">
-      <label translate>Language</label><span>{{owner.language}}</span>
-    </div>
-  </div>
 
-  <domainform domain="domain"></domainform>
+    <domainform domain="domain"></domainform>
+  </div>
 </article>
