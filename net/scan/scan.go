@@ -1,6 +1,8 @@
 package scan
 
 import (
+	"fmt"
+	"github.com/miekg/dns"
 	"github.com/rafaeljusto/shelter/config"
 	"github.com/rafaeljusto/shelter/dao"
 	"github.com/rafaeljusto/shelter/database/mongodb"
@@ -8,6 +10,13 @@ import (
 	"github.com/rafaeljusto/shelter/model"
 	"sync"
 	"time"
+)
+
+// When converting a DNSKEY into a DS we need to choose wich digest type are we going to
+// use, as we don't want to bother the user asking this information we assume a default
+// digest type
+const (
+	DefaultDigestType = model.DSDigestTypeSHA256
 )
 
 // Function responsible for running the domain scan system, checking the configuration of each
@@ -126,4 +135,107 @@ func ScanDomain(domain *model.Domain) {
 
 	// Wait for all parts of the scan to finish their job
 	scanGroup.Wait()
+}
+
+// Send DNS requests to fill a domain object from the information found on the DNS authoritative
+// nameservers. This is very usefull to make it easier for the user to fill forms with the domain
+// information. The domain must be already delegated by a registry to this function works, because
+// it uses a recursive DNS
+func QueryDomain(fqdn string) (model.Domain, error) {
+	domain := model.Domain{
+		FQDN: fqdn,
+	}
+
+	querier := newQuerier(
+		config.ShelterConfig.Scan.UDPMaxSize,
+		time.Duration(config.ShelterConfig.Scan.Timeouts.DialSeconds)*time.Second,
+		time.Duration(config.ShelterConfig.Scan.Timeouts.ReadSeconds)*time.Second,
+		time.Duration(config.ShelterConfig.Scan.Timeouts.WriteSeconds)*time.Second,
+		config.ShelterConfig.Scan.ConnectionRetries,
+	)
+
+	resolver := fmt.Sprintf("%s:%d",
+		config.ShelterConfig.Scan.Resolver.Address,
+		config.ShelterConfig.Scan.Resolver.Port,
+	)
+
+	var dnsRequestMessage dns.Msg
+	dnsRequestMessage.SetQuestion(fqdn, dns.TypeNS)
+	dnsRequestMessage.RecursionDesired = true
+
+	dnsResponseMsg, err := querier.sendDNSRequest(resolver, &dnsRequestMessage)
+	if err != nil {
+		return domain, err
+	}
+
+	for _, answer := range dnsResponseMsg.Answer {
+		nsRecord, ok := answer.(*dns.NS)
+		if !ok {
+			continue
+		}
+
+		domain.Nameservers = append(domain.Nameservers, model.Nameserver{
+			Host: nsRecord.Ns,
+		})
+	}
+
+	for index, nameserver := range domain.Nameservers {
+		dnsRequestMessage.SetQuestion(nameserver.Host, dns.TypeA)
+		dnsResponseMsg, err = querier.sendDNSRequest(resolver, &dnsRequestMessage)
+		if err != nil {
+			return domain, err
+		}
+
+		for _, answer := range dnsResponseMsg.Answer {
+			ipv4Record, ok := answer.(*dns.A)
+			if !ok {
+				continue
+			}
+
+			domain.Nameservers[index].IPv4 = ipv4Record.A
+		}
+
+		dnsRequestMessage.SetQuestion(nameserver.Host, dns.TypeAAAA)
+		dnsResponseMsg, err = querier.sendDNSRequest(resolver, &dnsRequestMessage)
+		if err != nil {
+			return domain, err
+		}
+
+		for _, answer := range dnsResponseMsg.Answer {
+			ipv6Record, ok := answer.(*dns.AAAA)
+			if !ok {
+				continue
+			}
+
+			domain.Nameservers[index].IPv6 = ipv6Record.AAAA
+		}
+	}
+
+	// We are going to retrieve the DNSKEYs from the user zone, and generate the DS records from it.
+	// This is good if the user wants to use the Shelter project as a easy-to-fill domain registration
+	// form
+	dnsRequestMessage.SetQuestion(fqdn, dns.TypeDNSKEY)
+
+	dnsResponseMsg, err = querier.sendDNSRequest(resolver, &dnsRequestMessage)
+	if err != nil {
+		return domain, err
+	}
+
+	for _, answer := range dnsResponseMsg.Answer {
+		dnskeyRecord, ok := answer.(*dns.DNSKEY)
+		if !ok {
+			continue
+		}
+
+		dsRecord := dnskeyRecord.ToDS(int(DefaultDigestType))
+
+		domain.DSSet = append(domain.DSSet, model.DS{
+			Keytag:     dsRecord.KeyTag,
+			Algorithm:  model.DSAlgorithm(dsRecord.Algorithm),
+			DigestType: model.DSDigestType(dsRecord.DigestType),
+			Digest:     dsRecord.Digest,
+		})
+	}
+
+	return domain, nil
 }

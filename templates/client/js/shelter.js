@@ -144,6 +144,16 @@ angular.module("shelter", ["ngCookies", "pascalprecht.translate"])
 
   .factory("domainService", function($http) {
     return {
+      queryDomain: function(fqdn) {
+        return $http.get("/domain/" + fqdn + "/verification")
+          .then(
+            function(response) {
+              return response;
+            },
+            function(response) {
+              return response;
+            });
+      },
       retrieveDomains: function(page, pageSize) {
         var uri = "";
 
@@ -271,7 +281,28 @@ angular.module("shelter", ["ngCookies", "pascalprecht.translate"])
           }
         };
 
+        $scope.queryDomain = function(fqdn) {
+          $scope.error = "";
+          $scope.success = "";
+          
+          domainService.queryDomain(fqdn).then(
+            function(response) {
+              if (response.status == 200) {
+                $scope.domain = response.data;
+              } else if (response.status == 400) {
+                $scope.error = response.data.message;
+              } else {
+                $translate("Server error").then(function(translation) {
+                  $scope.error = translation;
+                });
+              }
+            });
+        };
+
         $scope.saveDomain = function(domain) {
+          $scope.error = "";
+          $scope.success = "";
+
           // Convert keytag to number. For now I don't want to use valueAsNumber function
           // because the code will remain the same size and older browsers will break
           for (var i = 0; i < $scope.domain.dsset.length; i += 1) {

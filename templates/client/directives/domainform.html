@@ -7,6 +7,9 @@
       title="{{ 'FQDN help' | translate }}"
       pattern="^((\w((\w|\-){0,61}\w)?\.)*\w((\w|\-){0,61}\w)?)?(\.)?$"
       required>
+    <button type="button" data-ng-click="queryDomain(domain.fqdn)">
+      {{ "Import" | translate }}
+    </button>
   </fieldset>
 
   <fieldset data-ng-repeat="nameserver in domain.nameservers track by $index">

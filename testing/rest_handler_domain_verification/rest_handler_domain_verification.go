@@ -54,6 +54,7 @@ func main() {
 	startDNSServer(restConfig.DNSServerPort, restConfig.Scan.UDPMaxSize)
 
 	scanDomain()
+	queryDomain()
 
 	utils.Println("SUCCESS!")
 }
@@ -131,6 +132,69 @@ func scanDomain() {
 
 	if domainResponse.Nameservers[1].LastStatus != model.NameserverStatusToString(model.NameserverStatusOK) {
 		utils.Fatalln("Scan did not work for ns2", nil)
+	}
+}
+
+func queryDomain() {
+	dns.HandleFunc("example.com.br.", func(w dns.ResponseWriter, dnsRequestMessage *dns.Msg) {
+		defer w.Close()
+
+		dnsResponseMessage := new(dns.Msg)
+		defer w.WriteMsg(dnsResponseMessage)
+
+		dnsResponseMessage = &dns.Msg{
+			MsgHdr:   dns.MsgHdr{},
+			Question: dnsRequestMessage.Question,
+			Answer: []dns.RR{
+				&dns.NS{
+					Hdr: dns.RR_Header{
+						Name:   "example.com.br.",
+						Rrtype: dns.TypeNS,
+						Class:  dns.ClassINET,
+						Ttl:    86400,
+					},
+					Ns: "a.dns.br.",
+				},
+				&dns.NS{
+					Hdr: dns.RR_Header{
+						Name:   "example.com.br.",
+						Rrtype: dns.TypeNS,
+						Class:  dns.ClassINET,
+						Ttl:    86400,
+					},
+					Ns: "b.dns.br.",
+				},
+			},
+		}
+		dnsResponseMessage.SetReply(dnsRequestMessage)
+
+		w.WriteMsg(dnsResponseMessage)
+	})
+
+	r, err := http.NewRequest("GET", "/domain/example.com.br./verification", nil)
+	if err != nil {
+		utils.Fatalln("Error creating the HTTP request", err)
+	}
+
+	context, err := context.NewContext(r, nil)
+	if err != nil {
+		utils.Fatalln("Error creating context", err)
+	}
+
+	handler.HandleDomainVerification(r, &context)
+
+	if context.ResponseHTTPStatus != http.StatusOK {
+		utils.Fatalln("Error scanning domain",
+			errors.New(string(context.ResponseContent)))
+	}
+
+	var domainResponse protocol.DomainResponse
+	if err := json.Unmarshal(context.ResponseContent, &domainResponse); err != nil {
+		utils.Fatalln("Error decoding domain response", err)
+	}
+
+	if len(domainResponse.Nameservers) != 2 {
+		utils.Fatalln("Wrong number of nameservers", nil)
 	}
 }
 

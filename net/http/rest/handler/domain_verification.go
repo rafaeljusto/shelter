@@ -26,8 +26,46 @@ func HandleDomainVerification(r *http.Request, context *context.Context) {
 		return
 	}
 
-	if r.Method == "PUT" {
+	var err error
+	fqdn, err = model.NormalizeDomainName(fqdn)
+
+	if err != nil {
+		if err := context.MessageResponse(http.StatusBadRequest,
+			"invalid-uri", r.URL.RequestURI()); err != nil {
+
+			log.Println("Error while writing response. Details:", err)
+			context.Response(http.StatusInternalServerError)
+		}
+
+		return
+	}
+
+	if r.Method == "GET" || r.Method == "HEAD" {
+		queryDomain(r, context, fqdn)
+
+	} else if r.Method == "PUT" {
 		scanDomain(r, context, fqdn)
+
+	} else {
+		context.Response(http.StatusMethodNotAllowed)
+	}
+}
+
+// Build the domain object doing a DNS query. To this function works the domain must be registered
+// correctly and delegated in the DNS tree
+func queryDomain(r *http.Request, context *context.Context, fqdn string) {
+	domain, err := scan.QueryDomain(fqdn)
+	if err != nil {
+		log.Println("Error while resolving FQDN. Details:", err)
+		context.Response(http.StatusInternalServerError)
+		return
+	}
+
+	if err := context.JSONResponse(http.StatusOK,
+		protocol.ToDomainResponse(domain)); err != nil {
+
+		log.Println("Error while writing response. Details:", err)
+		context.Response(http.StatusInternalServerError)
 	}
 }
 

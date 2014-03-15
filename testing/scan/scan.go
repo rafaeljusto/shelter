@@ -107,6 +107,7 @@ func main() {
 
 	domainWithNoErrors(domainDAO)
 	domainWithNoErrorsOnTheFly()
+	domainQuery()
 
 	// Scan performance report is optional and only generated when the report file
 	// path parameter is given
@@ -326,6 +327,143 @@ func domainWithNoErrorsOnTheFly() {
 			utils.Fatalln(fmt.Sprintf("Last OK date was not updated in DS %d",
 				ds.Keytag), nil)
 		}
+	}
+}
+
+func domainQuery() {
+	_, dnskey, rrsig, _, _ := generateAndSignDomain("example.com.br.")
+
+	dns.HandleFunc("example.com.br.", func(w dns.ResponseWriter, dnsRequestMessage *dns.Msg) {
+		defer w.Close()
+
+		dnsResponseMessage := new(dns.Msg)
+		defer w.WriteMsg(dnsResponseMessage)
+
+		if dnsRequestMessage.Question[0].Qtype == dns.TypeNS {
+			dnsResponseMessage = &dns.Msg{
+				MsgHdr:   dns.MsgHdr{},
+				Question: dnsRequestMessage.Question,
+				Answer: []dns.RR{
+					&dns.NS{
+						Hdr: dns.RR_Header{
+							Name:   "example.com.br.",
+							Rrtype: dns.TypeNS,
+							Class:  dns.ClassINET,
+							Ttl:    86400,
+						},
+						Ns: "ns1.example.com.br.",
+					},
+				},
+			}
+			dnsResponseMessage.SetReply(dnsRequestMessage)
+
+			w.WriteMsg(dnsResponseMessage)
+
+		} else if dnsRequestMessage.Question[0].Qtype == dns.TypeDNSKEY {
+			dnsResponseMessage = &dns.Msg{
+				MsgHdr: dns.MsgHdr{
+					Authoritative: true,
+				},
+				Question: dnsRequestMessage.Question,
+				Answer: []dns.RR{
+					dnskey,
+					rrsig,
+				},
+			}
+			dnsResponseMessage.SetReply(dnsRequestMessage)
+
+			w.WriteMsg(dnsResponseMessage)
+
+		}
+	})
+
+	dns.HandleFunc("ns1.example.com.br.", func(w dns.ResponseWriter, dnsRequestMessage *dns.Msg) {
+		defer w.Close()
+
+		dnsResponseMessage := new(dns.Msg)
+		defer w.WriteMsg(dnsResponseMessage)
+
+		if dnsRequestMessage.Question[0].Qtype == dns.TypeA {
+			dnsResponseMessage = &dns.Msg{
+				MsgHdr: dns.MsgHdr{
+					Authoritative: true,
+				},
+				Question: dnsRequestMessage.Question,
+				Answer: []dns.RR{
+					&dns.A{
+						Hdr: dns.RR_Header{
+							Name:   "ns1.example.com.br.",
+							Rrtype: dns.TypeA,
+							Class:  dns.ClassINET,
+							Ttl:    86400,
+						},
+						A: net.ParseIP("127.0.0.1"),
+					},
+				},
+			}
+			dnsResponseMessage.SetReply(dnsRequestMessage)
+
+			w.WriteMsg(dnsResponseMessage)
+
+		} else if dnsRequestMessage.Question[0].Qtype == dns.TypeAAAA {
+			dnsResponseMessage = &dns.Msg{
+				MsgHdr: dns.MsgHdr{
+					Authoritative: true,
+				},
+				Question: dnsRequestMessage.Question,
+				Answer: []dns.RR{
+					&dns.AAAA{
+						Hdr: dns.RR_Header{
+							Name:   "ns1.example.com.br.",
+							Rrtype: dns.TypeAAAA,
+							Class:  dns.ClassINET,
+							Ttl:    86400,
+						},
+						AAAA: net.ParseIP("::1"),
+					},
+				},
+			}
+			dnsResponseMessage.SetReply(dnsRequestMessage)
+
+			w.WriteMsg(dnsResponseMessage)
+		}
+	})
+
+	domain, err := scan.QueryDomain("example.com.br.")
+	if err != nil {
+		utils.Fatalln("Error resolving a domain", err)
+	}
+
+	if domain.FQDN != "example.com.br." {
+		utils.Fatalln("Did not set FQDN properly in domain query", nil)
+	}
+
+	if len(domain.Nameservers) != 1 {
+		utils.Fatalln("Did not return the desired nameservers in domain query", nil)
+	}
+
+	if domain.Nameservers[0].Host != "ns1.example.com.br." {
+		utils.Fatalln("Did not set a valid host in domain query", nil)
+	}
+
+	if domain.Nameservers[0].IPv4.String() != "127.0.0.1" {
+		utils.Fatalln("Did not set a valid IPv4 in domain query", nil)
+	}
+
+	if domain.Nameservers[0].IPv6.String() != "::1" {
+		utils.Fatalln("Did not set a valid IPv6 in domain query", nil)
+	}
+
+	if len(domain.DSSet) != 1 {
+		utils.Fatalln("Did not return the desired DS set in domain query", nil)
+	}
+
+	if domain.DSSet[0].Keytag != dnskey.KeyTag() {
+		utils.Fatalln("Did not set a valid keytag in domain query", nil)
+	}
+
+	if domain.DSSet[0].Algorithm != model.DSAlgorithm(dnskey.Algorithm) {
+		utils.Fatalln("Did not set a valid algorithm in domain query", nil)
 	}
 }
 

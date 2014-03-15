@@ -38,6 +38,11 @@ type Config struct {
 		SaveAtOnce        int
 		ConnectionRetries int
 
+		Resolver struct {
+			Address string
+			Port    int
+		}
+
 		Timeouts struct {
 			DialSeconds  int
 			ReadSeconds  int

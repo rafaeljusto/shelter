@@ -22,8 +22,6 @@
         data-ng-class="{'selected-language': getLanguage() == 'pt_BR'}">pt-BR</button>
     </section>
 
-    <hr/>
-
     <nav data-ng-cloak data-ng-init="menu = 'domains'">
       <ul>
         <li data-ng-click="menu = 'new_domain'">{{ "New Domain" | translate }}</li>
@@ -31,8 +29,6 @@
         <li data-ng-click="menu = 'scans'">{{ "Scans" | translate }}</li>
       </ul>
     </nav>
-
-    <hr/>
 
     <section data-ng-cloak data-ng-controller="domainCtrl"
       data-ng-show="menu == 'new_domain'">
