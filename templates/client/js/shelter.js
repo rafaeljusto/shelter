@@ -303,14 +303,17 @@ angular.module("shelter", ["ngCookies", "pascalprecht.translate"])
           $scope.error = "";
           $scope.success = "";
 
-          // Convert keytag to number. For now I don't want to use valueAsNumber function
-          // because the code will remain the same size and older browsers will break
-          for (var i = 0; i < $scope.domain.dsset.length; i += 1) {
-            var keytag = parseInt($scope.domain.dsset[i].keytag, 10);
-            if (keytag == NaN) {
-              keytag = 0;
+          // If the domain is imported without DS records, the DS set attribute will be undefined
+          if ($scope.domain.dsset) {
+            // Convert keytag to number. For now I don't want to use valueAsNumber function
+            // because the code will remain the same size and older browsers will break
+            for (var i = 0; i < $scope.domain.dsset.length; i += 1) {
+              var keytag = parseInt($scope.domain.dsset[i].keytag, 10);
+              if (keytag == NaN) {
+                keytag = 0;
+              }
+              $scope.domain.dsset[i].keytag = keytag;
             }
-            $scope.domain.dsset[i].keytag = keytag;
           }
 
           domainService.saveDomain($scope.domain).then(
