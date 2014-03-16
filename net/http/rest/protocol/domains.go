@@ -20,7 +20,7 @@ type DomainsResponse struct {
 func ToDomainsResponse(domains []model.Domain, pagination dao.DomainDAOPagination) DomainsResponse {
 	var domainsResponses []DomainResponse
 	for _, domain := range domains {
-		domainsResponses = append(domainsResponses, ToDomainResponse(domain))
+		domainsResponses = append(domainsResponses, ToDomainResponse(domain, true))
 	}
 
 	var orderBy string

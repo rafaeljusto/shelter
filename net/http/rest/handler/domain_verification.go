@@ -62,7 +62,7 @@ func queryDomain(r *http.Request, context *context.Context, fqdn string) {
 	}
 
 	if err := context.JSONResponse(http.StatusOK,
-		protocol.ToDomainResponse(domain)); err != nil {
+		protocol.ToDomainResponse(domain, false)); err != nil {
 
 		log.Println("Error while writing response. Details:", err)
 		context.Response(http.StatusInternalServerError)
@@ -127,7 +127,7 @@ func scanDomain(r *http.Request, context *context.Context, fqdn string) {
 	scan.ScanDomain(&domain)
 
 	if err := context.JSONResponse(http.StatusOK,
-		protocol.ToDomainResponse(domain)); err != nil {
+		protocol.ToDomainResponse(domain, false)); err != nil {
 
 		log.Println("Error while writing response. Details:", err)
 		context.Response(http.StatusInternalServerError)

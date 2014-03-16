@@ -108,18 +108,23 @@ type DomainResponse struct {
 	Links       []Link               `json:"links,omitempty"`       // Links to manipulate object
 }
 
-// Convert the domain system object to a limited information user format
-func ToDomainResponse(domain model.Domain) DomainResponse {
-	// We should add more links here for system navigation. For example, we could add links
-	// for object update, delete, list, etc. But I did not found yet in IANA list the
-	// correct link type to be used. Also, the URI is hard coded, I didn't have any idea on
-	// how can we do this dynamically yet. We cannot get the URI from the handler because we
-	// are going to have a cross-reference problem
-	links := []Link{
-		{
+// Convert the domain system object to a limited information user format. We have a persisted flag
+// to known when the object exists in our database or not to choose when we need to add the object
+// links or not
+func ToDomainResponse(domain model.Domain, persisted bool) DomainResponse {
+	var links []Link
+
+	// We don't add links when the object doesn't exist in the system yet
+	if persisted {
+		// We should add more links here for system navigation. For example, we could add links
+		// for object update, delete, list, etc. But I did not found yet in IANA list the
+		// correct link type to be used. Also, the URI is hard coded, I didn't have any idea on
+		// how can we do this dynamically yet. We cannot get the URI from the handler because we
+		// are going to have a cross-reference problem
+		links = append(links, Link{
 			Types: []LinkType{LinkTypeSelf},
 			HRef:  fmt.Sprintf("/domain/%s", domain.FQDN),
-		},
+		})
 	}
 
 	return DomainResponse{

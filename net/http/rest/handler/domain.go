@@ -65,7 +65,7 @@ func retrieveDomain(r *http.Request, context *context.Context, fqdn string) {
 	context.AddHeader("Last-Modified", domain.LastModifiedAt.Format(time.RFC1123))
 
 	if err := context.JSONResponse(http.StatusOK,
-		protocol.ToDomainResponse(domain)); err != nil {
+		protocol.ToDomainResponse(domain, true)); err != nil {
 
 		log.Println("Error while writing response. Details:", err)
 		context.Response(http.StatusInternalServerError)

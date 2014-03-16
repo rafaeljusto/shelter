@@ -251,7 +251,7 @@ func TestToDomainResponse(t *testing.T) {
 		},
 	}
 
-	domainResponse := ToDomainResponse(domain)
+	domainResponse := ToDomainResponse(domain, true)
 
 	if domainResponse.FQDN != "example.com.br." {
 		t.Error("Fail to convert FQDN")
@@ -270,5 +270,15 @@ func TestToDomainResponse(t *testing.T) {
 		domainResponse.Owners[0].Language != "pt-BR" {
 
 		t.Error("Fail to convert owners")
+	}
+
+	if len(domainResponse.Links) != 1 {
+		t.Error("Wrong number of links")
+	}
+
+	domainResponse = ToDomainResponse(domain, false)
+
+	if len(domainResponse.Links) != 0 {
+		t.Error("Shouldn't return links when the object doesn't exist in the system")
 	}
 }
