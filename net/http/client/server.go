@@ -57,6 +57,11 @@ func Listen() ([]net.Listener, error) {
 }
 
 func Start(listeners []net.Listener) error {
+	// Initialize CIDR whitelist
+	if err := loadACL(); err != nil {
+		return err
+	}
+
 	// Static handler must be called directly because it uses configuration file values to
 	// configure the root path. For that reason we can't build it in the init function
 	handler.StartStaticHandler()
@@ -69,6 +74,18 @@ func Start(listeners []net.Listener) error {
 		// We are not checking the error returned by Serve, because if we check for some
 		// reason the HTTP server stop answering the requests
 		go server.Serve(v)
+	}
+
+	return nil
+}
+
+func loadACL() error {
+	for _, cidrStr := range config.ShelterConfig.RESTServer.ACL {
+		if _, cidr, err := net.ParseCIDR(cidrStr); err == nil {
+			mux.ACL = append(mux.ACL, cidr)
+		} else {
+			return err
+		}
 	}
 
 	return nil
