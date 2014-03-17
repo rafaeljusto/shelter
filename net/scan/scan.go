@@ -8,6 +8,7 @@ import (
 	"github.com/rafaeljusto/shelter/database/mongodb"
 	"github.com/rafaeljusto/shelter/log"
 	"github.com/rafaeljusto/shelter/model"
+	"strings"
 	"sync"
 	"time"
 )
@@ -180,6 +181,11 @@ func QueryDomain(fqdn string) (model.Domain, error) {
 	}
 
 	for index, nameserver := range domain.Nameservers {
+		// Don't need to retrieve glue records if not necessary
+		if !strings.HasSuffix(nameserver.Host, domain.FQDN) {
+			continue
+		}
+
 		dnsRequestMessage.SetQuestion(nameserver.Host, dns.TypeA)
 		dnsResponseMsg, err = querier.sendDNSRequest(resolver, &dnsRequestMessage)
 		if err != nil {
