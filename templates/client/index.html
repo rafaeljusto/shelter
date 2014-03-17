@@ -16,10 +16,10 @@
     <h1>Shelter</h1>
 
     <section data-ng-cloak data-ng-controller="languagesCtrl" class="languages">
-      <button data-ng-click="changeLanguage('en_US')"
-        data-ng-class="{'selected-language': getLanguage() == 'en_US'}">en-US</button>
-      <button data-ng-click="changeLanguage('pt_BR')"
-        data-ng-class="{'selected-language': getLanguage() == 'pt_BR'}">pt-BR</button>
+      <a data-ng-show="getLanguage() != 'en_US'"
+        data-ng-click="changeLanguage('en_US')">English</a>
+      <a data-ng-show="getLanguage() != 'pt_BR'"
+        data-ng-click="changeLanguage('pt_BR')">Portugu&ecirc;s</a>
     </section>
 
     <nav data-ng-cloak data-ng-init="menu = 'domains'">

@@ -8,6 +8,7 @@
       pattern="^((\w((\w|\-){0,61}\w)?\.)*\w((\w|\-){0,61}\w)?)?(\.)?$"
       required>
     <button type="button" data-ng-click="queryDomain(domain.fqdn)">
+      <i class="fa fa-sign-in"></i>
       {{ "Import" | translate }}
     </button>
   </fieldset>
@@ -23,21 +24,26 @@
       pattern="^((\w((\w|\-){0,61}\w)?\.)*\w((\w|\-){0,61}\w)?)?(\.)?$"
       required>
 
-    <label for="ipv4{{$index+1}}" translate>IPv4</label>
+    <label for="ipv4{{$index+1}}" translate
+      data-ng-show="needsGlue(domain.fqdn, nameserver.host)">IPv4</label>
     <input type="text" id="ipv4{{$index+1}}"
+      data-ng-show="needsGlue(domain.fqdn, nameserver.host)"
       data-ng-model="domain.nameservers[$index].ipv4"
       placeholder="203.0.113.1"
       title="{{ 'IPv4 help' | translate }}"
       pattern="^[0-9]{1,4}\.[0-9]{1,4}\.[0-9]{1,4}\.[0-9]{1,4}$">
 
-    <label for="ipv6{{$index+1}}" translate>IPv6</label>
+    <label for="ipv6{{$index+1}}" translate
+      data-ng-show="needsGlue(domain.fqdn, nameserver.host)">IPv6</label>
     <input type="text" id="ipv6{{$index+1}}"
+      data-ng-show="needsGlue(domain.fqdn, nameserver.host)"
       data-ng-model="domain.nameservers[$index].ipv6"
       placeholder="fe80::0202:b3ff:fe1e:8329"
       title="{{ 'IPv6 help' | translate }}"
       pattern="^((?=.*::)(?!.*::.+::)(::)?([\dA-F]{1,4}:(:|\b)|){5}|([\dA-F]{1,4}:){6})((([\dA-F]{1,4}((?!\3)::|:\b|$))|(?!\2\3)){2}|(((2[0-4]|1\d|[1-9])?\d|25[0-5])\.?\b){4})$">
 
-    <button type="button" data-ng-click="removeFromList($index, domain.nameservers)">
+    <button type="button" data-ng-click="removeFromList($index, domain.nameservers)"
+      class="remove">
       <i class="fa fa-times-circle"></i>
       {{ "Remove" | translate }}
     </button>
@@ -67,7 +73,8 @@
     <input type="text" id="publicKey{{$index+1}}" data-ng-model="domain.dnskeys[$index].publicKey"
       required>
 
-    <button type="button" data-ng-click="removeFromList($index, domain.dnskeys)">
+    <button type="button" data-ng-click="removeFromList($index, domain.dnskeys)"
+      class="remove">
       <i class="fa fa-times-circle"></i>
       {{ "Remove" | translate }}
     </button>
@@ -106,7 +113,8 @@
     <input type="text" id="digest{{$index+1}}" data-ng-model="domain.dsset[$index].digest"
       required>
 
-    <button type="button" data-ng-click="removeFromList($index, domain.dsset)">
+    <button type="button" data-ng-click="removeFromList($index, domain.dsset)"
+      class="remove">
       <i class="fa fa-times-circle"></i>
       {{ "Remove" | translate }}
     </button>
@@ -131,7 +139,8 @@
       data-ng-options="language for language in ownerLanguages" required>
     </select>
 
-    <button type="button" data-ng-click="removeFromList($index, domain.owners)">
+    <button type="button" data-ng-click="removeFromList($index, domain.owners)"
+      class="remove">
       <i class="fa fa-times-circle"></i>
       {{ "Remove" | translate }}
     </button>

@@ -9,10 +9,10 @@
       <div class="field">
         <label translate>Host</label><span>{{nameserver.host}}</span>
       </div>
-      <div class="field">
+      <div class="field" data-ng-show="nameserver.ipv4.length > 0">
         <label translate>IPv4</label><span>{{nameserver.ipv4}}</span>
       </div>
-      <div class="field">
+      <div class="field" data-ng-show="nameserver.ipv6.length > 0">
         <label translate>IPv6</label><span>{{nameserver.ipv6}}</span>
       </div>
       <div class="field">

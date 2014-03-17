@@ -271,6 +271,14 @@ angular.module("shelter", ["ngCookies", "pascalprecht.translate"])
         $scope.dsDigestTypes = dsDigestTypes;
         $scope.ownerLanguages = ownerLanguages;
 
+        $scope.needsGlue = function(fqdn, host) {
+          if (fqdn.length == 0 || host.length < fqdn.length) {
+            return false;
+          }
+
+          return host.indexOf(fqdn, host.length - fqdn.length) !== -1;
+        };
+
         $scope.addToList = function(object, list) {
           list.push(angular.copy(object));
         };
@@ -284,7 +292,7 @@ angular.module("shelter", ["ngCookies", "pascalprecht.translate"])
         $scope.queryDomain = function(fqdn) {
           $scope.error = "";
           $scope.success = "";
-          
+
           domainService.queryDomain(fqdn).then(
             function(response) {
               if (response.status == 200) {
