@@ -41,5 +41,9 @@
   "Import": "Import",
   "Edit": "Edit",
   "Page": "Page",
-  "Page size": "Page size"
+  "Page size": "Page size",
+  "Nameservers statistics": "Nameservers statistics",
+  "DS statistics": "DS statistics",
+  "Domains scanned": "Domains scanned",
+  "Domains scanned with DNSSEC": "Domains scanned with DNSSEC"
 }

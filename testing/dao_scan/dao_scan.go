@@ -67,6 +67,7 @@ func main() {
 	scanLifeCycle(scanDAO)
 	scanConcurrency(scanDAO)
 	scansPagination(scanDAO)
+	scanStatistics(scanDAO)
 
 	utils.Println("SUCCESS!")
 }
@@ -206,6 +207,45 @@ func scansPagination(scanDAO dao.ScanDAO) {
 
 	if pagination.NumberOfPages != 1 {
 		utils.Fatalln("Calculating wrong number of pages when there's only one page", nil)
+	}
+
+	if err := scanDAO.RemoveAll(); err != nil {
+		utils.Fatalln("Error removing scans from database", err)
+	}
+}
+
+func scanStatistics(scanDAO dao.ScanDAO) {
+	scan := newScan()
+	scan.NameserverStatistics = map[string]uint64{
+		"OK":      40,
+		"TIMEOUT": 10,
+	}
+	scan.DSStatistics = map[string]uint64{
+		"OK":     8,
+		"DNSERR": 2,
+	}
+
+	// Create scan
+	if err := scanDAO.Save(&scan); err != nil {
+		utils.Fatalln("Couldn't save scan in database", err)
+	}
+
+	var err error
+	scan, err = scanDAO.FindByStartedAt(scan.StartedAt)
+	if err != nil {
+		utils.Fatalln("Couldn't find created scan in database", err)
+	}
+
+	if len(scan.NameserverStatistics) != 2 ||
+		scan.NameserverStatistics["OK"] != 40 ||
+		scan.NameserverStatistics["TIMEOUT"] != 10 {
+		utils.Fatalln("Not retrieving nameserver statistics correctly", nil)
+	}
+
+	if len(scan.DSStatistics) != 2 ||
+		scan.DSStatistics["OK"] != 8 ||
+		scan.DSStatistics["DNSERR"] != 2 {
+		utils.Fatalln("Not retrieving DS statistics correctly", nil)
 	}
 
 	if err := scanDAO.RemoveAll(); err != nil {

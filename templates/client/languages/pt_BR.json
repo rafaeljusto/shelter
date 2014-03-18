@@ -41,5 +41,9 @@
   "Import": "Importar",
   "Edit": "Editar",
   "Page": "Página",
-  "Page size": "Tamanho da página"
+  "Page size": "Tamanho da página",
+  "Nameservers statistics": "Estatísticas DNS",
+  "DS statistics": "Estatísticas DS",
+  "Domains scanned": "Domínios verificados",
+  "Domains scanned with DNSSEC": "Domínios com DNSSEC verificados"
 }

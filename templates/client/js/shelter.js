@@ -483,6 +483,14 @@ angular.module("shelter", ["ngCookies", "pascalprecht.translate"])
       },
       templateUrl: "/directives/scan.html",
       controller: function($scope, $translate) {
+        $scope.countStatistics = function(statistics) {
+          var counter = 0;
+          for (var status in statistics) {
+            counter += statistics[status];
+          }
+          return counter;
+        };
+
         $scope.getLanguage = function() {
           return $translate.use();
         };

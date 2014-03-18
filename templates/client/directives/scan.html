@@ -13,5 +13,37 @@
     <div class="field">
       <label translate>Finished</label><span>{{scan.finishedAt | datetime:getLanguage()}}</span>
     </div>
+    <div class="field">
+      <label translate>Domains scanned</label><span>{{scan.domainsScanned}}</span>
+    </div>
+    <div class="field">
+      <label translate>Domains scanned with DNSSEC</label><span>{{scan.domainsWithDNSSECScanned}}</span>
+    </div>
+
+    <div class="field" data-ng-show="scan.nameserverStatistics"
+      data-ng-init="nsCounter = countStatistics(scan.nameserverStatistics)">
+      <table>
+        <caption translate>Nameservers statistics</caption>
+        <tbody>
+          <tr data-ng-repeat="(status, quantity) in scan.nameserverStatistics">
+            <th>{{status}}</th>
+            <td>{{quantity*100/nsCounter}}%</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="field" data-ng-show="scan.dsStatistics"
+      data-ng-init="dsCounter = countStatistics(scan.dsStatistics)">
+      <table>
+        <caption translate>DS statistics</caption>
+        <tbody>
+          <tr data-ng-repeat="(status, quantity) in scan.dsStatistics">
+            <th>{{status}}</th>
+            <td>{{quantity*100/dsCounter}}%</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </article>

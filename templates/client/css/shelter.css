@@ -29,7 +29,7 @@ body {
 h1 {
   color: #fff;
   font-family: "Londrina Shadow", cursive;
-  margin: 0.2rem 0.4rem 0.2rem 0.4rem;
+  margin: 20px auto 20px auto;
   padding: 0.2rem 0.4rem 0.2rem 0.4rem;
   text-align: center;
 }
@@ -40,12 +40,13 @@ h2 {
 }
 
 h3 {
-  margin: 0% 2% 0% 2%;
+  margin: 0px 20px 0px 20px;
 }
 
 section {
-  margin: 0.2rem 0.4rem 0.2rem 0.4rem;
+  margin: auto;
   padding: 0.2rem 0.4rem 0.2rem 0.4rem;
+  width: 98%;
 }
 
 /**********************************/
@@ -55,19 +56,25 @@ section {
 nav {
   background-color: #fff;
   border-radius: 10px;
-  margin: 0.8% 0.8% 0.8% 0.8%;
+  margin: auto;
+  width: 98%;
 }
 
 nav ul {
   list-style-type: none;
   padding: 0rem;
-  margin: 0%;
+  margin: 0px;
 }
 
 nav ul li {
+  border-bottom: 1px solid #eee;
   cursor: pointer;
   padding: 1.2rem 0.4rem 1.2rem 0.4rem;
   transition: background-color 0.2s;
+}
+
+nav ul li:last-child {
+  border-bottom: none;
 }
 
 nav ul li:hover {
@@ -97,7 +104,7 @@ fieldset {
   background-color: #fff;
   border-radius: 10px;
   border-style: none;
-  margin: 4% 0% 4% 0%;
+  margin: 40px 0px 40px 0px;
 }
 
 fieldset legend {
@@ -128,7 +135,7 @@ button[type=submit] {
   font-weight: bold;
   height: 65px;
   line-height: 65px;
-  margin: 6% auto 6% auto;
+  margin: 20px auto 0px auto;
   text-shadow: 1px 1px 0px #689324;
 }
 
@@ -144,7 +151,7 @@ button[type=button] {
   font-weight: bold;
   height: 40px;
   line-height: 40px;
-  margin: 4% 0% 4% 0%;
+  margin: 10px 0px 0px 0px;
   text-shadow: 1px 1px 0px #1570cd;
 }
 
@@ -160,7 +167,7 @@ button[type=button].remove {
   font-weight: bold;
   height: 40px;
   line-height: 40px;
-  margin: 6% 0% 0% auto;
+  margin: 20px 0px 0px auto;
   text-shadow: 1px 1px 0px #810e05;
 }
 
@@ -209,29 +216,48 @@ article header {
 }
 
 article h4 {
-  margin: 4% 2% 4% 2%;
+  margin: 20px 10px 20px 10px;
   padding: 0.2rem 0.4rem 0.2rem 0.4rem;
+}
+
+.details {
+  padding: 0rem 0rem 1rem 0rem;
 }
 
 .fieldgroup {
   border-bottom: 1px solid #888;
+  padding: 0rem 0rem 1rem 0rem;
 }
 
-.field {
-  margin: 2% 2% 2% 2%;
+.field, .content-edit {
+  margin: 20px 10px 0px 10px;
   padding: 0.2rem 0.4rem 0.2rem 0.4rem;
 }
 
-.field label {
+.field label, .field caption {
   color: #888;
+  text-align: left;
 }
 
 .field span {
   display: block;
 }
 
-.content-edit {
-  text-align: center;
+.field table {
+  width: 100%;
+}
+
+.field th, .field td {
+  text-align: left;
+}
+
+.content-edit fieldset {
+  border: 1px solid #000;
+}
+
+button[type=button].content-edit-button {
+  display: block;
+  margin: 20px auto 0px auto;
 }
 
 /**********************************/
@@ -239,7 +265,7 @@ article h4 {
 /**********************************/
 
 .pagination {
-  margin: 6% 0% 2% 0%;
+  margin: 20px 0px 0px 0px;
 }
 
 .pagination > label {
@@ -248,7 +274,7 @@ article h4 {
 
 .pagination > div {
   display: inline-block;
-  margin: 4% 2% 4% 2%;
+  margin: 20px 10px 20px 10px;
 }
 
 .pagination > div > span {
@@ -262,7 +288,9 @@ article h4 {
   font-weight: bold;
   height: 40px;
   line-height: 40px;
+  min-width: 41px;
   padding: 1px 6px;
+  text-align: center;
   text-shadow: 1px 1px 0px #1570cd;
 }
 
@@ -277,5 +305,7 @@ article h4 {
   font-weight: bold;
   height: 40px;
   line-height: 40px;
+  min-width: 41px;
+  text-align: center;
   text-shadow: 1px 1px 0px #1570cd;
 }
