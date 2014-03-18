@@ -1,11 +1,13 @@
 <article data-ng-init="details = false">
-  <header data-ng-click="details = !details">
+  <header data-ng-click="details = !details"
+    data-ng-class="{'error': hasProblems(domain),
+      'ok': !hasProblems(domain) && wasChecked(domain)}">
     <h3>{{domain.fqdn}}</h3>
   </header>
 
-  <div data-ng-show="details">
-    <h4 translate>Nameservers</h4>
-    <div data-ng-repeat="nameserver in domain.nameservers">
+  <div data-ng-show="details && !edit">
+    <h4 data-ng-show="domain.nameservers.length > 0" translate>Nameservers</h4>
+    <div data-ng-repeat="nameserver in domain.nameservers" class="fieldgroup">
       <div class="field">
         <label translate>Host</label><span>{{nameserver.host}}</span>
       </div>
@@ -18,16 +20,16 @@
       <div class="field">
         <label translate>Status</label><span>{{nameserver.lastStatus}}</span>
       </div>
-      <div class="field">
+      <div class="field" data-ng-show="dateDefined(nameserver.lastCheckAt)">
         <label translate>Checked</label><span>{{nameserver.lastCheckAt | datetime:getLanguage()}}</span>
       </div>
-      <div class="field">
+      <div class="field" data-ng-show="dateDefined(nameserver.lastOKAt)">
         <label translate>Last OK</label><span>{{nameserver.lastOKAt | datetime:getLanguage()}}</span>
       </div>
     </div>
 
-    <h4 translate>DS set</h4>
-    <div data-ng-repeat="ds in domain.dsset">
+    <h4 data-ng-show="domain.dsset.length > 0" translate>DS set</h4>
+    <div data-ng-repeat="ds in domain.dsset" class="fieldgroup">
       <div class="field">
         <label translate>Keytag</label><span>{{ds.keytag}}</span>
       </div>
@@ -43,16 +45,16 @@
       <div class="field">
         <label translate>Status</label><span>{{ds.lastStatus}}</span>
       </div>
-      <div class="field">
+      <div class="field" data-ng-show="dateDefined(ds.lastCheckAt)">
         <label translate>Checked</label><span>{{ds.lastCheckAt | datetime:getLanguage()}}</span>
       </div>
-      <div class="field">
+      <div class="field" data-ng-show="dateDefined(ds.lastOKAt)">
         <label translate>Last OK</label><span>{{ds.lastOKAt | datetime:getLanguage()}}</span>
       </div>
     </div>
 
-    <h4 translate>Owners</h4>
-    <div data-ng-repeat="owner in domain.owners">
+    <h4 data-ng-show="domain.owners.length > 0" translate>Owners</h4>
+    <div data-ng-repeat="owner in domain.owners" class="fieldgroup">
       <div class="field">
         <label translate>E-mail</label><span>{{owner.email}}</span>
       </div>
@@ -60,7 +62,17 @@
         <label translate>Language</label><span>{{owner.language}}</span>
       </div>
     </div>
+  </div>
 
+  <button type="button" style="display:block; margin: 4% auto 4% auto"
+    data-ng-init="edit = false" data-ng-click="edit = true"
+    data-ng-show="details && !edit">
+
+    <i class="fa fa-edit"></i>
+    {{ "Edit" | translate }}
+  </button>
+
+  <div data-ng-show="details && edit">
     <domainform domain="domain"></domainform>
   </div>
 </article>

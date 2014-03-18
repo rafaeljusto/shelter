@@ -213,6 +213,58 @@ angular.module("shelter", ["ngCookies", "pascalprecht.translate"])
       },
       templateUrl: "/directives/domain.html",
       controller: function($scope, $translate, domainService) {
+        $scope.hasErrors = function(domain) {
+          errors = false;
+
+          if (domain.nameservers) {
+            domain.nameservers.forEach(function(nameserver) {
+              if (nameserver.status != "NOTCHECKED" && nameserver.status != "OK") {
+                errors = true;
+              }
+            });
+          }
+
+          if (domain.dsset) {
+            domain.dsset.forEach(function(ds) {
+              if (ds.status != "NOTCHECKED" && ds.status != "OK") {
+                errors = true;
+              }
+            });
+          }
+
+          return errors;
+        };
+
+        $scope.wasChecked = function(domain) {
+          checked = false;
+
+          if (domain.nameservers) {
+            domain.nameservers.forEach(function(nameserver) {
+              if (nameserver.lastStatus != "NOTCHECKED") {
+                checked = true;
+              }
+            });
+          }
+
+          if (domain.dsset) {
+            domain.dsset.forEach(function(ds) {
+              if (ds.lastStatus != "NOTCHECKED") {
+                checked = true;
+              }
+            });
+          }
+
+          return checked;
+        };
+
+        $scope.dateDefined = function(input) {
+          var datetime = moment(input, ["YYYY-MM-DDTHH:mm:ss.SSSZ", "YYYY-MM-DDTHH:mm:ssZ"])
+          if (datetime.isValid()) {
+            return (datetime.unix() > 0);
+          }
+          return false;
+        };
+
         $scope.getLanguage = function() {
           return $translate.use();
         };

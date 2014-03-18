@@ -38,5 +38,8 @@
   "Public Key": "Public Key",
   "Server error": "Problem while connecting to the server. Retry again in a few minutes or contact the system administrator",
   "Domain created": "Domain saved successfully",
-  "Import": "Import"
+  "Import": "Import",
+  "Edit": "Edit",
+  "Page": "Page",
+  "Page size": "Page size"
 }

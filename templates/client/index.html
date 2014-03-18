@@ -44,33 +44,41 @@
       data-ng-show="menu == 'domains'">
 
       <header>
-        <h2 translate>Domains</h2>
-        <span data-ng-if="pagination.numberOfItems == 1">
-          ({{pagination.numberOfItems}} {{ "item" | translate }})
-        </span>
-        <span data-ng-if="pagination.numberOfItems > 1">
-          ({{pagination.numberOfItems}} {{ "items" | translate }})
-        </span>
+        <h2>
+          {{ "Domains" | translate }}
+          <span data-ng-if="pagination.numberOfItems == 1">
+            ({{pagination.numberOfItems}} {{ "item" | translate }})
+          </span>
+          <span data-ng-if="pagination.numberOfItems > 1">
+            ({{pagination.numberOfItems}} {{ "items" | translate }})
+          </span>
+        </h2>
       </header>
 
       <domain data-ng-repeat="domain in pagination.domains" domain="domain"></domain>
 
-      <div data-ng-repeat="n in [] | range:pagination.numberOfPages">
-        <span data-ng-if="n+1 == pagination.page">{{n+1}}</span>
-        <button data-ng-if="n+1 != pagination.page"
-          data-ng-click="retrieveDomains(n+1, pagination.pageSize)">
+      <div class="pagination">
+        <label translate>Page</label>
+        <div data-ng-repeat="n in [] | range:pagination.numberOfPages">
+          <span data-ng-if="n+1 == pagination.page">{{n+1}}</span>
+          <button data-ng-if="n+1 != pagination.page"
+            data-ng-click="retrieveDomains(n+1, pagination.pageSize)">
 
-          {{n+1}}
-        </button>
+            {{n+1}}
+          </button>
+        </div>
       </div>
 
-      <div data-ng-repeat="pageSize in pageSizes">
-        <span data-ng-if="pageSize == pagination.pageSize">{{pageSize}}</span>
-        <button data-ng-if="pageSize != pagination.pageSize"
-          data-ng-click="retrieveDomains(pagination.page, pageSize)">
+      <div class="pagination">
+        <label translate>Page size</label>
+        <div data-ng-repeat="pageSize in pageSizes" class="pagination">
+          <span data-ng-if="pageSize == pagination.pageSize">{{pageSize}}</span>
+          <button data-ng-if="pageSize != pagination.pageSize"
+            data-ng-click="retrieveDomains(pagination.page, pageSize)">
 
-          {{pageSize}}
-        </button>
+            {{pageSize}}
+          </button>
+        </div>
       </div>
     </section>
 
@@ -78,33 +86,41 @@
       data-ng-show="menu == 'scans'">
 
       <header>
-        <h2 translate>Scans</h2>
-        <span data-ng-if="pagination.numberOfItems == 1">
-          ({{pagination.numberOfItems}} {{ "item" | translate }})
-        </span>
-        <span data-ng-if="pagination.numberOfItems > 1">
-          ({{pagination.numberOfItems}} {{ "items" | translate }})
-        </span>
+        <h2>
+          {{ "Scans" | translate }}
+          <span data-ng-if="pagination.numberOfItems == 1">
+            ({{pagination.numberOfItems}} {{ "item" | translate }})
+          </span>
+          <span data-ng-if="pagination.numberOfItems > 1">
+            ({{pagination.numberOfItems}} {{ "items" | translate }})
+          </span>
+        </h2>
       </header>
 
       <scan data-ng-repeat="scan in pagination.scans" scan="scan"></scan>
 
-      <div data-ng-repeat="n in [] | range:pagination.numberOfPages">
-        <span data-ng-if="n+1 == pagination.page">{{n+1}}</span>
-        <button data-ng-if="n+1 != pagination.page"
-          data-ng-click="retrieveScans(n+1, pagination.pageSize)">
+      <div class="pagination">
+        <label translate>Page</label>
+        <div data-ng-repeat="n in [] | range:pagination.numberOfPages">
+          <span data-ng-if="n+1 == pagination.page">{{n+1}}</span>
+          <button data-ng-if="n+1 != pagination.page"
+            data-ng-click="retrieveScans(n+1, pagination.pageSize)">
 
-          {{n+1}}
-        </button>
+            {{n+1}}
+          </button>
+        </div>
       </div>
 
-      <div data-ng-repeat="pageSize in pageSizes">
-        <span data-ng-if="pageSize == pagination.pageSize">{{pageSize}}</span>
-        <button data-ng-if="pageSize != pagination.pageSize"
-          data-ng-click="retrieveScans(pagination.page, pageSize)">
+      <div class="pagination">
+        <label translate>Page size</label>
+        <div data-ng-repeat="pageSize in pageSizes">
+          <span data-ng-if="pageSize == pagination.pageSize">{{pageSize}}</span>
+          <button data-ng-if="pageSize != pagination.pageSize"
+            data-ng-click="retrieveScans(pagination.page, pageSize)">
 
-          {{pageSize}}
-        </button>
+            {{pageSize}}
+          </button>
+        </div>
       </div>
     </section>
 
