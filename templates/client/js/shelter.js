@@ -73,6 +73,48 @@ var emptyDomain = {
   ]
 };
 
+// Apply source list to destination list, adding new elements, removing old ones and
+// keeping the ones that are equal
+function mergeList(source, destination, areEqual, mergeObject) {
+  if (!source || !destination) {
+    return;
+  }
+
+  // Check new items
+  for (var i = 0; i < source.length; i++) {
+    var found = false;
+    for (var j = 0; j < destination.length; j++) {
+      if (areEqual(source[i], destination[j])) {
+        if (mergeObject) {
+          mergeObject(source[i], destination[j]);
+        }
+
+        found = true;
+        break;
+      }
+    }
+
+    if (!found) {
+      destination.push(source);
+    }
+  }
+
+  // Check removed items
+  for (var j = 0; j < destination.length; j++) {
+    var found = false;
+    for (var i = 0; i < source.length; i++) {
+      if (areEqual(source[i], destination[j])) {
+        found = true;
+        break;
+      }
+    }
+
+    if (!found) {
+      destination.splice(j, 1);
+    }
+  }
+}
+
 angular.module("shelter", ["ngCookies", "pascalprecht.translate"])
 
   .config(function($translateProvider, $httpProvider) {
@@ -414,7 +456,26 @@ angular.module("shelter", ["ngCookies", "pascalprecht.translate"])
         function(response) {
           if (response.status == 200) {
             $scope.error = null;
-            $scope.pagination = response.data;
+
+            if (!$scope.pagination) {
+              $scope.pagination = response.data;
+
+            } else {
+              $scope.numberOfItems = response.data.numberOfItems;
+              $scope.numberOfPages = response.data.numberOfPages;
+              $scope.pageSizes = response.data.pageSizes;
+
+              mergeList(response.data.domains,
+                $scope.pagination.domains,
+                function(networkDomain, domain) {
+                  return networkDomain.fqdn == domain.fqdn;
+                },
+                function(networkDomain, domain) {
+                  domain.nameservers = networkDomain.nameservers;
+                  domain.dsset = networkDomain.dsset;
+                  domain.owners = networkDomain.owners;
+                });
+            }
 
           } else if (response.status == 400) {
             $scope.error = null;
@@ -524,7 +585,29 @@ angular.module("shelter", ["ngCookies", "pascalprecht.translate"])
         function(response) {
           if (response.status == 200) {
             $scope.error = null;
-            $scope.pagination = response.data;
+
+            if (!$scope.pagination) {
+              $scope.pagination = response.data;
+
+            } else {
+              $scope.numberOfItems = response.data.numberOfItems;
+              $scope.numberOfPages = response.data.numberOfPages;
+              $scope.pageSizes = response.data.pageSizes;
+
+              mergeList(response.data.scans,
+                $scope.pagination.scans,
+                function(networkScan, scan) {
+                  return networkScan.startedAt == scan.startedAt;
+                },
+                function(networkScan, scan) {
+                  scan.status = networkScan.status;
+                  scan.finishedAt = networkScan.finishedAt;
+                  scan.domainsScanned = networkScan.domainsScanned;
+                  scan.domainsWithDNSSECScanned = networkScan.domainsWithDNSSECScanned;
+                  scan.nameserverStatistics = networkScan.nameserverStatistics;
+                  scan.dsStatistics = networkScan.dsStatistics;
+                });
+            }
 
           } else if (response.status == 400) {
             $scope.error = null;
