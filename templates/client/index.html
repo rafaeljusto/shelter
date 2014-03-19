@@ -55,6 +55,9 @@
         </h2>
       </header>
 
+      <div class="message error" data-ng-if="error">{{error}}</div>
+      <div class="message success" data-ng-if="success">{{success}}</div>
+
       <domain data-ng-repeat="domain in pagination.domains" domain="domain"></domain>
 
       <div class="pagination">
@@ -80,6 +83,9 @@
           </button>
         </div>
       </div>
+
+      <div class="message error" data-ng-if="error">{{error}}</div>
+      <div class="message success" data-ng-if="success">{{success}}</div>
     </section>
 
     <section data-ng-cloak data-ng-controller="scanCtrl"
@@ -96,6 +102,27 @@
           </span>
         </h2>
       </header>
+
+      <div class="message error" data-ng-if="error">{{error}}</div>
+      <div class="message success" data-ng-if="success">{{success}}</div>
+
+      <article class="current-scan">
+        <header>
+          <h3 translate>Next Scan</h3>
+        </header>
+
+        <div class="content">
+          <div class="field">
+            <label translate>Status</label><span>{{currentScan.status}}</span>
+          </div>
+          <div class="field">
+            <label translate>Scheduled</label><span>{{currentScan.scheduledAt | datetime:getLanguage()}}</span>
+          </div>
+
+          <progress value="{{currentScan.domainsScanned}}"
+            max="{{currentScan.domainsToBeScanned}}"></progress>
+        </div>
+      </article>
 
       <scan data-ng-repeat="scan in pagination.scans" scan="scan"></scan>
 
@@ -122,6 +149,9 @@
           </button>
         </div>
       </div>
+
+      <div class="message error" data-ng-if="error">{{error}}</div>
+      <div class="message success" data-ng-if="success">{{success}}</div>
     </section>
 
     <script src="/js/angular.min.js"></script>

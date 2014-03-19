@@ -3,7 +3,7 @@
     <h3>{{scan.startedAt | datetime:getLanguage()}}</h3>
   </header>
 
-  <div data-ng-show="details">
+  <div data-ng-show="details" class="content">
     <div class="field">
       <label translate>Status</label><span>{{scan.status}}</span>
     </div>
@@ -13,10 +13,10 @@
     <div class="field">
       <label translate>Finished</label><span>{{scan.finishedAt | datetime:getLanguage()}}</span>
     </div>
-    <div class="field">
+    <div class="field" data-ng-show="scan.domainsScanned">
       <label translate>Domains scanned</label><span>{{scan.domainsScanned}}</span>
     </div>
-    <div class="field">
+    <div class="field" data-ng-show="scan.domainsWithDNSSECScanned">
       <label translate>Domains scanned with DNSSEC</label><span>{{scan.domainsWithDNSSECScanned}}</span>
     </div>
 

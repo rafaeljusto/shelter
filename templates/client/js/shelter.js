@@ -348,10 +348,15 @@ angular.module("shelter", ["ngCookies", "pascalprecht.translate"])
           domainService.queryDomain(fqdn).then(
             function(response) {
               if (response.status == 200) {
+                $scope.error = null;
                 $scope.domain = response.data;
+
               } else if (response.status == 400) {
+                $scope.error = null;
                 $scope.error = response.data.message;
+
               } else {
+                $scope.success = null;
                 $translate("Server error").then(function(translation) {
                   $scope.error = translation;
                 });
@@ -360,9 +365,6 @@ angular.module("shelter", ["ngCookies", "pascalprecht.translate"])
         };
 
         $scope.saveDomain = function(domain) {
-          $scope.error = "";
-          $scope.success = "";
-
           // If the domain is imported without DS records, the DS set attribute will be undefined
           if ($scope.domain.dsset) {
             // Convert keytag to number. For now I don't want to use valueAsNumber function
@@ -380,11 +382,16 @@ angular.module("shelter", ["ngCookies", "pascalprecht.translate"])
             function(response) {
               if (response.status == 201 || response.status == 204) {
                 $translate("Domain created").then(function(translation) {
+                  $scope.error = null;
                   $scope.success = translation;
                 });
+
               } else if (response.status == 400) {
+                $scope.error = null;
                 $scope.error = response.data.message;
+
               } else {
+                $scope.success = null;
                 $translate("Server error").then(function(translation) {
                   $scope.error = translation;
                 });
@@ -399,21 +406,28 @@ angular.module("shelter", ["ngCookies", "pascalprecht.translate"])
     $scope.emptyDomain =  angular.copy(emptyDomain);
   })
 
-  .controller("domainsCtrl", function($scope, $translate, domainService) {
+  .controller("domainsCtrl", function($scope, $translate, $timeout, domainService) {
     $scope.pageSizes = [ 20, 40, 60, 80, 100 ];
 
     $scope.retrieveDomains = function(page, pageSize) {
       domainService.retrieveDomains(page, pageSize).then(
         function(response) {
           if (response.status == 200) {
-           $scope.pagination = response.data;
+            $scope.error = null;
+            $scope.pagination = response.data;
+
           } else if (response.status == 400) {
+            $scope.error = null;
             $scope.error = response.data.message;
+
           } else {
+            $scope.success = null;
             $translate("Server error").then(function(translation) {
               $scope.error = translation;
             });
           }
+
+          $timeout($scope.retrieveDomains, 5000);
         });
     };
 
@@ -463,7 +477,7 @@ angular.module("shelter", ["ngCookies", "pascalprecht.translate"])
             });
       },
       retrieveCurrentScan: function() {
-        return $http.get("/currentscan")
+        return $http.get("/scan/current")
           .then(
             function(response) {
               return response;
@@ -498,30 +512,57 @@ angular.module("shelter", ["ngCookies", "pascalprecht.translate"])
     };
   })
 
-  .controller("scanCtrl", function($scope, $translate, scanService) {
+  .controller("scanCtrl", function($scope, $translate, $timeout, scanService) {
     $scope.pageSizes = [ 20, 40, 60, 80, 100 ];
+
+    $scope.getLanguage = function() {
+      return $translate.use();
+    };
 
     $scope.retrieveScans = function(page, pageSize) {
       scanService.retrieveScans(page, pageSize).then(
         function(response) {
           if (response.status == 200) {
+            $scope.error = null;
             $scope.pagination = response.data;
+
           } else if (response.status == 400) {
+            $scope.error = null;
             $scope.error = response.data.message;
+
           } else {
+            $scope.success = null;
             $translate("Server error").then(function(translation) {
               $scope.error = translation;
             });
           }
+
+          $timeout($scope.retrieveScans, 5000);
         });
     };
 
     $scope.retrieveCurrentScan = function() {
       scanService.retrieveCurrentScan().then(
         function(response) {
-          // TODO
+          if (response.status == 200) {
+            $scope.error = null;
+            $scope.currentScan = response.data;
+
+          } else if (response.status == 400) {
+            $scope.error = null;
+            $scope.error = response.data.message;
+
+          } else {
+            $scope.success = null;
+            $translate("Server error").then(function(translation) {
+              $scope.error = translation;
+            });
+          }
+
+          $timeout($scope.retrieveCurrentScan, 1000);
         });
     };
 
+    $scope.retrieveCurrentScan();
     $scope.retrieveScans();
   });

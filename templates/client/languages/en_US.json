@@ -45,5 +45,7 @@
   "Nameservers statistics": "Nameservers statistics",
   "DS statistics": "DS statistics",
   "Domains scanned": "Domains scanned",
-  "Domains scanned with DNSSEC": "Domains scanned with DNSSEC"
+  "Domains scanned with DNSSEC": "Domains scanned with DNSSEC",
+  "Scheduled": "Scheduled",
+  "Next Scan": "Next Scan"
 }

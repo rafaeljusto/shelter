@@ -5,7 +5,7 @@
     <h3>{{domain.fqdn}}</h3>
   </header>
 
-  <div data-ng-show="details && !edit">
+  <div class="content" data-ng-show="details && !edit">
     <h4 data-ng-show="domain.nameservers.length > 0" translate>Nameservers</h4>
     <div data-ng-repeat="nameserver in domain.nameservers" class="fieldgroup">
       <div class="field">

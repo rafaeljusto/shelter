@@ -45,5 +45,7 @@
   "Nameservers statistics": "Estatísticas DNS",
   "DS statistics": "Estatísticas DS",
   "Domains scanned": "Domínios verificados",
-  "Domains scanned with DNSSEC": "Domínios com DNSSEC verificados"
+  "Domains scanned with DNSSEC": "Domínios com DNSSEC verificados",
+  "Scheduled": "Agendado",
+  "Next Scan": "Próxima Verificação"
 }
