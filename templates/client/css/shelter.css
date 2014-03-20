@@ -271,21 +271,6 @@ article h4 {
   padding: 0.2rem 0.4rem 0.2rem 0.4rem;
 }
 
-.content {
-  padding: 0px 0px 20px 0px;
-}
-
-.content.ng-hide-add,
-.content.ng-hide-remove {
-  display: block !important;
-  opacity: 1;
-  transition: all linear 0.5s;
-}
-
-.content.ng-hide {
-  opacity: 0;
-}
-
 .fieldgroup {
   border-bottom: 1px solid #888;
   padding: 0rem 0rem 1rem 0rem;
@@ -544,4 +529,15 @@ progress {
   100% {
     -webkit-transform:scale(.3)
   }
+}
+
+.ng-hide-add,
+.ng-hide-remove {
+  display: block !important;
+  opacity: 1;
+  transition: all linear 0.5s;
+}
+
+.ng-hide {
+  opacity: 0;
 }
