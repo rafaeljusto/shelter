@@ -34,8 +34,21 @@ go get -u <package_name>
 The objects are persisted using a MongoDB database.
 To install it check the webpage http://www.mongodb.org/
 
+Also, to easy run the project tests you will need the following:
+* Python3 - http://www.python.org/
+* Karma - http://karma-runner.github.io
+  * npm install -g karma
+  * npm install -g karma-jasmine
+  * npm install -g karma-firefox-launcher
+
 And finally, to build the project, just run the following command on the project root:
 
 ```
 go build shelter.go
+```
+
+Optionally you can run the tests executing the following command on the project root:
+
+```
+python3 test-all.py
 ```

@@ -95,7 +95,7 @@ function mergeList(source, destination, areEqual, mergeObject) {
     }
 
     if (!found) {
-      destination.push(source);
+      destination.push(source[i]);
     }
   }
 
