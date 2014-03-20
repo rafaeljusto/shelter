@@ -58,7 +58,8 @@
       <div class="message error" data-ng-if="error">{{error}}</div>
       <div class="message success" data-ng-if="success">{{success}}</div>
 
-      <domain data-ng-repeat="domain in pagination.domains" domain="domain"></domain>
+      <domain class="animate"
+        data-ng-repeat="domain in pagination.domains" domain="domain"></domain>
 
       <div class="pagination">
         <label translate>Page</label>
@@ -124,7 +125,7 @@
         </div>
       </article>
 
-      <scan data-ng-repeat="scan in pagination.scans" scan="scan"></scan>
+      <scan class="animate" data-ng-repeat="scan in pagination.scans" scan="scan"></scan>
 
       <div class="pagination">
         <label translate>Page</label>
@@ -155,6 +156,7 @@
     </section>
 
     <script src="/js/angular.min.js"></script>
+    <script src="/js/angular-animate.min.js"></script>
     <script src="/js/angular-cookies.min.js"></script>
     <script src="/js/angular-translate.min.js"></script>
     <script src="/js/angular-translate-loader-static-files.min.js"></script>

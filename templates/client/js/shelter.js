@@ -115,7 +115,7 @@ function mergeList(source, destination, areEqual, mergeObject) {
   }
 }
 
-angular.module("shelter", ["ngCookies", "pascalprecht.translate"])
+angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
 
   .config(function($translateProvider, $httpProvider) {
     $translateProvider.useStaticFilesLoader({
@@ -151,7 +151,7 @@ angular.module("shelter", ["ngCookies", "pascalprecht.translate"])
   .filter("datetime", function() {
     return function(input, language) {
       var datetime = moment(input, ["YYYY-MM-DDTHH:mm:ss.SSSZ", "YYYY-MM-DDTHH:mm:ssZ"])
-      if (datetime.isValid()) {
+      if (datetime.isValid() && language) {
         // Detect empty datetime
         if (datetime.unix() <= 0) {
           return ""
@@ -384,8 +384,7 @@ angular.module("shelter", ["ngCookies", "pascalprecht.translate"])
         };
 
         $scope.queryDomain = function(fqdn) {
-          $scope.error = "";
-          $scope.success = "";
+          $scope.importWorking = true;
 
           domainService.queryDomain(fqdn).then(
             function(response) {
@@ -403,10 +402,14 @@ angular.module("shelter", ["ngCookies", "pascalprecht.translate"])
                   $scope.error = translation;
                 });
               }
+
+              $scope.importWorking = false;
             });
         };
 
         $scope.saveDomain = function(domain) {
+          $scope.saveWorking = true;
+
           // If the domain is imported without DS records, the DS set attribute will be undefined
           if ($scope.domain.dsset) {
             // Convert keytag to number. For now I don't want to use valueAsNumber function
@@ -438,6 +441,8 @@ angular.module("shelter", ["ngCookies", "pascalprecht.translate"])
                   $scope.error = translation;
                 });
               }
+
+              $scope.saveWorking = false;
             });
         };
       }
@@ -463,7 +468,7 @@ angular.module("shelter", ["ngCookies", "pascalprecht.translate"])
             } else {
               $scope.numberOfItems = response.data.numberOfItems;
               $scope.numberOfPages = response.data.numberOfPages;
-              $scope.pageSizes = response.data.pageSizes;
+              $scope.pageSize = response.data.pageSize;
 
               mergeList(response.data.domains,
                 $scope.pagination.domains,
@@ -592,7 +597,7 @@ angular.module("shelter", ["ngCookies", "pascalprecht.translate"])
             } else {
               $scope.numberOfItems = response.data.numberOfItems;
               $scope.numberOfPages = response.data.numberOfPages;
-              $scope.pageSizes = response.data.pageSizes;
+              $scope.pageSize = response.data.pageSize;
 
               mergeList(response.data.scans,
                 $scope.pagination.scans,
@@ -648,4 +653,20 @@ angular.module("shelter", ["ngCookies", "pascalprecht.translate"])
 
     $scope.retrieveCurrentScan();
     $scope.retrieveScans();
+  })
+
+
+
+  ///////////////////////////////////////////////////////
+  //                     Loading                       //
+  ///////////////////////////////////////////////////////
+
+  .directive("loading", function() {
+    return {
+      restrict: 'E',
+      scope: {
+        show: '='
+      },
+      templateUrl: "/directives/loading.html"
+    };
   });

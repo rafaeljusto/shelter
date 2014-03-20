@@ -10,13 +10,20 @@
       title="{{ 'FQDN help' | translate }}"
       pattern="^((\w((\w|\-){0,61}\w)?\.)*\w((\w|\-){0,61}\w)?)?(\.)?$"
       required>
-    <button type="button" data-ng-click="queryDomain(domain.fqdn)">
-      <i class="fa fa-sign-in"></i>
-      {{ "Import" | translate }}
+    <button type="button" data-ng-init="importWorking = false"
+      data-ng-click="queryDomain(domain.fqdn)"
+      data-ng-disabled="domain.fqdn.length == 0 || importWorking">
+      <loading data-show="importWorking"></loading>
+      <div data-ng-hide="importWorking">
+        <i class="fa fa-sign-in"></i>
+        {{ "Import" | translate }}
+      </div>
     </button>
   </fieldset>
 
-  <fieldset data-ng-repeat="nameserver in domain.nameservers track by $index">
+  <fieldset class="animate"
+    data-ng-repeat="nameserver in domain.nameservers track by $index">
+
     <legend>{{ "Nameserver" | translate }} {{$index+1}}</legend>
 
     <label for="host{{$index+1}}" translate>Host</label>
@@ -57,7 +64,9 @@
     {{ "Add" | translate }} {{ "Nameserver" | translate }}
   </button>
 
-  <fieldset data-ng-repeat="dnskey in domain.dnskeys track by $index">
+  <fieldset class="animate"
+    data-ng-repeat="dnskey in domain.dnskeys track by $index">
+
     <legend>{{ "DNSKEY" | translate }} {{$index+1}}</legend>
 
     <label for="flags{{$index+1}}" translate>Flags</label>
@@ -88,7 +97,9 @@
     {{ "Add" | translate }} {{ "DNSKEY" | translate }}
   </button>
 
-  <fieldset data-ng-repeat="ds in domain.dsset track by $index">
+  <fieldset class="animate"
+    data-ng-repeat="ds in domain.dsset track by $index">
+
     <legend>{{ "DS" | translate }} {{$index+1}}</legend>
 
     <label for="keytag{{$index+1}}" translate>Keytag</label>
@@ -128,7 +139,9 @@
     {{ "Add" | translate }} {{ "DS" | translate }}
   </button>
 
-  <fieldset data-ng-repeat="owner in domain.owners track by $index">
+  <fieldset class="animate"
+    data-ng-repeat="owner in domain.owners track by $index">
+
     <legend>{{ "Owner" | translate }} {{$index+1}}</legend>
 
     <label for="email{{$index+1}}" translate>E-mail</label>
@@ -154,9 +167,13 @@
     {{ "Add" | translate }} {{ "Owner" | translate }}
   </button>
 
-  <button type="submit">
-    <i class="fa fa-floppy-o"></i>
-    {{ "Save" | translate }}
+  <button data-ng-init="saveWorking = false" type="submit"
+    data-ng-disabled="saveWorking">
+    <loading data-show="saveWorking"></loading>
+    <div data-ng-hide="saveWorking">
+      <i class="fa fa-floppy-o"></i>
+      {{ "Save" | translate }}
+    </div>
   </button>
 </form>
 

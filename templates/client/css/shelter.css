@@ -40,7 +40,12 @@ body {
   width: 100%;
 }
 
-[ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
+[ng\:cloak],
+[ng-cloak],
+[data-ng-cloak],
+[x-ng-cloak],
+.ng-cloak,
+.x-ng-cloak {
   display: none !important;
 }
 
@@ -158,6 +163,7 @@ button[type=submit] {
   height: 65px;
   line-height: 65px;
   margin: 20px auto 0px auto;
+  min-width: 102px;
   text-shadow: 1px 1px 0px #689324;
 }
 
@@ -174,6 +180,7 @@ button[type=button] {
   height: 40px;
   line-height: 40px;
   margin: 10px 0px 0px 0px;
+  min-width: 81px;
   text-shadow: 1px 1px 0px #1570cd;
 }
 
@@ -193,10 +200,29 @@ button[type=button].remove {
   text-shadow: 1px 1px 0px #810e05;
 }
 
-button[type=submit]:active, button[type=button]:active {
+button[type=submit]:active,
+button[type=button]:active {
   /* http://www.cssbuttongenerator.com/ */
   position: relative;
   top: 1%;
+}
+
+.animate.ng-move,
+.animate.ng-enter,
+.animate.ng-leave {
+  transition: all linear 0.5s;
+}
+
+.animate.ng-move,
+.animate.ng-enter,
+.animate.ng-leave.ng-leave-active {
+  opacity: 0;
+}
+
+.animate.ng-move.ng-move-active,
+.animate.ng-enter.ng-enter-active,
+.animate.ng-leave {
+  opacity: 1;
 }
 
 /**********************************/
@@ -217,6 +243,7 @@ article header {
   font-weight: bold;
   padding: 0.2rem 0.4rem 0.2rem 0.4rem;
   text-shadow: 1px 1px 0px #1570cd;
+  transition: all linear 1.5s;
 }
 
 .error {
@@ -226,6 +253,7 @@ article header {
   font-style: normal;
   font-weight: bold;
   text-shadow: 1px 1px 0px #810e05;
+  transition: all linear 1.5s;
 }
 
 .ok {
@@ -235,6 +263,7 @@ article header {
   font-style: normal;
   font-weight: bold;
   text-shadow: 1px 1px 0px #689324;
+  transition: all linear 1.5s;
 }
 
 article h4 {
@@ -246,17 +275,30 @@ article h4 {
   padding: 0px 0px 20px 0px;
 }
 
+.content.ng-hide-add,
+.content.ng-hide-remove {
+  display: block !important;
+  opacity: 1;
+  transition: all linear 0.5s;
+}
+
+.content.ng-hide {
+  opacity: 0;
+}
+
 .fieldgroup {
   border-bottom: 1px solid #888;
   padding: 0rem 0rem 1rem 0rem;
 }
 
-.field, .content-edit {
+.field,
+.content-edit {
   margin: 20px 10px 0px 10px;
   padding: 0.2rem 0.4rem 0.2rem 0.4rem;
 }
 
-.field label, .field caption {
+.field label,
+.field caption {
   color: #888;
   text-align: left;
 }
@@ -269,7 +311,8 @@ article h4 {
   width: 100%;
 }
 
-.field th, .field td {
+.field th,
+.field td {
   text-align: left;
 }
 
@@ -354,7 +397,7 @@ progress {
 /* Messages related styles        */
 /**********************************/
 
-.message{
+.message {
   background-image: linear-gradient(135deg, rgba(255, 255, 255, .05) 25%, transparent 25%,
     transparent 50%, rgba(255, 255, 255, .05) 50%, rgba(255, 255, 255, .05) 75%,
     transparent 75%, transparent);
@@ -367,22 +410,138 @@ progress {
   text-shadow: 0 1px 0 rgba(0,0,0,.5);
 }
 
-.info{
+.info {
   background-color: #4ea5cd;
   border-color: #3b8eb5;
 }
 
-.error{
+.error {
   background-color: #de4343;
   border-color: #c43d3d;
 }
 
-.warning{
+.warning {
   background-color: #eaaf51;
   border-color: #d99a36;
 }
 
-.success{
+.success {
   background-color: #61b832;
   border-color: #55a12c;
+}
+
+/**********************************/
+/* Loading related styles         */
+/**********************************/
+
+/* http://cssload.net/ */
+
+.container-circularG {
+  display: inline-block;
+  height: 20px;
+  position: relative;
+  margin: auto;
+  width: 20px;
+}
+
+.circularG {
+  position: absolute;
+  background-color: #fff;
+  width: 5px;
+  height: 5px;
+  border-radius: 3px;
+  animation-name: bounce_circularG;
+  animation-duration: 1.04s;
+  animation-iteration-count: infinite;
+  animation-direction: linear;
+  -webkit-border-radius: 3px;
+  -webkit-animation-name: bounce_circularG;
+  -webkit-animation-duration: 1.04s;
+  -webkit-animation-iteration-count: infinite;
+  -webkit-animation-direction: linear;
+}
+
+.circularG_1 {
+  left: 0px;
+  top: 8px;
+  animation-delay: 0.39s;
+  -webkit-animation-delay: 0.39s;
+}
+
+.circularG_2 {
+  left: 2px;
+  top: 2px;
+  animation-delay: 0.52s;
+  -webkit-animation-delay: 0.52s;
+}
+
+.circularG_3 {
+  top: 0px;
+  left: 8px;
+  animation-delay:0.65s;
+  -webkit-animation-delay: 0.65s;
+}
+
+.circularG_4 {
+  right: 2px;
+  top: 2px;
+  animation-delay:0.78s;
+  -webkit-animation-delay: 0.78s;
+}
+
+.circularG_5 {
+  right: 0px;
+  top: 8px;
+  animation-delay:0.91s;
+  -webkit-animation-delay: 0.91s;
+}
+
+.circularG_6 {
+  right: 2px;
+  bottom: 2px;
+  animation-delay:1.04s;
+  -webkit-animation-delay: 1.04s;
+}
+
+.circularG_7 {
+  left: 8px;
+  bottom: 0px;
+  animation-delay:1.17s;
+  -webkit-animation-delay: 1.17s;
+}
+
+.circularG_8 {
+  left: 2px;
+  bottom: 2px;
+  animation-delay:1.3s;
+  -webkit-animation-delay: 1.3s;
+}
+
+@keyframes bounce_circularG {
+  0% {
+    transform:scale(1)
+  }
+  100% {
+    transform:scale(.3)
+  }
+}
+
+@-moz-keyframes bounce_circularG {
+  0% {
+    -moz-transform:scale(1)
+  }
+
+  100% {
+    -moz-transform:scale(.3)
+  }
+}
+
+@-webkit-keyframes bounce_circularG {
+  0% {
+    -webkit-transform:scale(1)
+  }
+
+  100% {
+    -webkit-transform:scale(.3)
+  }
 }
