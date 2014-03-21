@@ -1,7 +1,7 @@
 <article data-ng-init="details = false">
   <header data-ng-click="details = !details"
-    data-ng-class="{'error': hasProblems(domain),
-      'ok': !hasProblems(domain) && wasChecked(domain)}">
+    data-ng-class="{'domain-error': hasProblems(domain),
+      'domain-ok': !hasProblems(domain) && wasChecked(domain)}">
     <h3>{{domain.fqdn}}</h3>
   </header>
 
@@ -64,13 +64,46 @@
     </div>
   </div>
 
-  <button type="button" class="content-edit-button"
-    data-ng-init="edit = false" data-ng-click="edit = true"
-    data-ng-show="details && !edit">
+  <div class="buttons" data-ng-show="details && !edit">
+    <button type="button" class="big-button"
+      data-ng-init="edit = false" data-ng-click="edit = true">
+      <i class="fa fa-edit"></i>
+      {{ "Edit" | translate }}
+    </button>
+    <button type="button" class="big-button" data-ng-init="verifyWorking = false"
+      data-ng-click="verifyDomain(domain)" data-ng-disabled="verifyWorking">
+      <i class="fa fa-spinner fa-2x fa-spin" data-ng-if="verifyWorking"></i>
+      <div data-ng-if="!verifyWorking">
+        <i class="fa fa-search"></i>
+        {{ "Verify" | translate }}
+      </div>
+    </button>
+  </div>
 
-    <i class="fa fa-edit"></i>
-    {{ "Edit" | translate }}
-  </button>
+  <div class="message error" data-ng-if="error">{{error}}</div>
+  <div class="message success" data-ng-if="success">
+    {{success}}
+
+    <h4 data-ng-show="verifyResult.nameservers.length > 0" translate>Nameservers</h4>
+    <div data-ng-repeat="nameserver in verifyResult.nameservers" class="fieldgroup">
+      <div class="field">
+        <label translate>Host</label><span>{{nameserver.host}}</span>
+      </div>
+      <div class="field">
+        <label translate>Status</label><span>{{nameserver.lastStatus}}</span>
+      </div>
+    </div>
+
+    <h4 data-ng-show="verifyResult.dsset.length > 0" translate>DS set</h4>
+    <div data-ng-repeat="ds in verifyResult.dsset" class="fieldgroup">
+      <div class="field">
+        <label translate>Keytag</label><span>{{ds.keytag}}</span>
+      </div>
+      <div class="field">
+        <label translate>Status</label><span>{{ds.lastStatus}}</span>
+      </div>
+    </div>
+  </div>
 
   <div class="content-edit" data-ng-show="details && edit">
     <domainform domain="domain"></domainform>

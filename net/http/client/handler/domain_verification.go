@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"github.com/rafaeljusto/shelter/log"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"regexp"
+	"strings"
 )
 
 func init() {
@@ -20,11 +22,31 @@ func HandleDomainVerification(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	request, err := http.NewRequest(
-		"GET",
-		fmt.Sprintf("%s%s", restAddress, r.RequestURI),
-		nil,
-	)
+	var content []byte
+	if r.ContentLength > 0 {
+		content, err = ioutil.ReadAll(r.Body)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			log.Println("Error while reading request body in web client. Details:", err)
+			return
+		}
+	}
+
+	var request *http.Request
+	if content == nil {
+		request, err = http.NewRequest(
+			r.Method,
+			fmt.Sprintf("%s%s", restAddress, r.RequestURI),
+			nil,
+		)
+
+	} else {
+		request, err = http.NewRequest(
+			r.Method,
+			fmt.Sprintf("%s%s", restAddress, r.RequestURI),
+			strings.NewReader(string(content)),
+		)
+	}
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -34,7 +56,7 @@ func HandleDomainVerification(w http.ResponseWriter, r *http.Request) {
 
 	request.Header.Set("Accept-Language", r.Header.Get("Accept-Language"))
 
-	response, err := signAndSend(request, nil)
+	response, err := signAndSend(request, content)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Println("Error signing and sending a request in web client. Details:", err)

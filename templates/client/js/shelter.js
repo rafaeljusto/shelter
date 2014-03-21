@@ -230,6 +230,20 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
               return response;
             });
       },
+      verifyDomain: function(domain) {
+        return $http.put("/domain/" + domain.fqdn + "/verification", domain, {
+          headers: {
+            "Content-Type": "application/json"
+          }
+        })
+          .then(
+            function(response) {
+              return response;
+            },
+            function(response) {
+              return response;
+            });
+      },
       saveDomain: function(domain) {
         return $http.put("/domain/" + domain.fqdn, domain, {
           headers: {
@@ -338,6 +352,46 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
 
           return digest;
         };
+
+        $scope.verifyDomain = function(domain) {
+          $scope.verifyWorking = true;
+
+          // If the domain is imported without DS records, the DS set attribute will be undefined
+          if ($scope.domain.dsset) {
+            // Convert keytag to number. For now I don't want to use valueAsNumber function
+            // because the code will remain the same size and older browsers will break
+            for (var i = 0; i < $scope.domain.dsset.length; i += 1) {
+              var keytag = parseInt($scope.domain.dsset[i].keytag, 10);
+              if (keytag == NaN) {
+                keytag = 0;
+              }
+              $scope.domain.dsset[i].keytag = keytag;
+            }
+          }
+
+          domainService.verifyDomain($scope.domain).then(
+            function(response) {
+              if (response.status == 200) {
+                $scope.error = null;
+                $translate("Verify result").then(function(translation) {
+                  $scope.success = translation;
+                  $scope.verifyResult = response.data;
+                });
+
+              } else if (response.status == 400) {
+                $scope.error = null;
+                $scope.error = response.data.message;
+
+              } else {
+                $scope.success = null;
+                $translate("Server error").then(function(translation) {
+                  $scope.error = translation;
+                });
+              }
+
+              $scope.verifyWorking = false;
+            });
+        };
       }
     };
   })
@@ -407,6 +461,46 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
             });
         };
 
+        $scope.verifyDomain = function(domain) {
+          $scope.verifyWorking = true;
+
+          // If the domain is imported without DS records, the DS set attribute will be undefined
+          if ($scope.domain.dsset) {
+            // Convert keytag to number. For now I don't want to use valueAsNumber function
+            // because the code will remain the same size and older browsers will break
+            for (var i = 0; i < $scope.domain.dsset.length; i += 1) {
+              var keytag = parseInt($scope.domain.dsset[i].keytag, 10);
+              if (keytag == NaN) {
+                keytag = 0;
+              }
+              $scope.domain.dsset[i].keytag = keytag;
+            }
+          }
+
+          domainService.verifyDomain($scope.domain).then(
+            function(response) {
+              if (response.status == 200) {
+                $scope.error = null;
+                $translate("Verify result").then(function(translation) {
+                  $scope.success = translation;
+                  $scope.verifyResult = response.data;
+                });
+
+              } else if (response.status == 400) {
+                $scope.error = null;
+                $scope.error = response.data.message;
+
+              } else {
+                $scope.success = null;
+                $translate("Server error").then(function(translation) {
+                  $scope.error = translation;
+                });
+              }
+
+              $scope.verifyWorking = false;
+            });
+        };
+
         $scope.saveDomain = function(domain) {
           $scope.saveWorking = true;
 
@@ -450,7 +544,7 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
   })
 
   .controller("domainCtrl", function($scope) {
-    $scope.emptyDomain =  angular.copy(emptyDomain);
+    $scope.emptyDomain = angular.copy(emptyDomain);
   })
 
   .controller("domainsCtrl", function($scope, $translate, $timeout, domainService) {
@@ -466,9 +560,9 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
               $scope.pagination = response.data;
 
             } else {
-              $scope.numberOfItems = response.data.numberOfItems;
-              $scope.numberOfPages = response.data.numberOfPages;
-              $scope.pageSize = response.data.pageSize;
+              $scope.pagination.numberOfItems = response.data.numberOfItems;
+              $scope.pagination.numberOfPages = response.data.numberOfPages;
+              $scope.pagination.pageSize = response.data.pageSize;
 
               mergeList(response.data.domains,
                 $scope.pagination.domains,
@@ -493,7 +587,13 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
             });
           }
 
-          $timeout($scope.retrieveDomains, 5000);
+          $timeout(function() {
+            if ($scope.pagination) {
+              $scope.retrieveDomains($scope.pagination.page, $scope.pagination.pageSize);
+            } else {
+              $scope.retrieveDomains();
+            }
+          }, 5000);
         });
     };
 
@@ -595,9 +695,9 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
               $scope.pagination = response.data;
 
             } else {
-              $scope.numberOfItems = response.data.numberOfItems;
-              $scope.numberOfPages = response.data.numberOfPages;
-              $scope.pageSize = response.data.pageSize;
+              $scope.pagination.numberOfItems = response.data.numberOfItems;
+              $scope.pagination.numberOfPages = response.data.numberOfPages;
+              $scope.pagination.pageSize = response.data.pageSize;
 
               mergeList(response.data.scans,
                 $scope.pagination.scans,
@@ -625,7 +725,13 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
             });
           }
 
-          $timeout($scope.retrieveScans, 5000);
+          $timeout(function() {
+            if ($scope.pagination) {
+              $scope.retrieveScans($scope.pagination.page, $scope.pagination.pageSize);
+            } else {
+              $scope.retrieveScans();
+            }
+          }, 5000);
         });
     };
 
@@ -653,20 +759,4 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
 
     $scope.retrieveCurrentScan();
     $scope.retrieveScans();
-  })
-
-
-
-  ///////////////////////////////////////////////////////
-  //                     Loading                       //
-  ///////////////////////////////////////////////////////
-
-  .directive("loading", function() {
-    return {
-      restrict: 'E',
-      scope: {
-        show: '='
-      },
-      templateUrl: "/directives/loading.html"
-    };
   });

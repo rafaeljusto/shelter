@@ -1,5 +1,27 @@
 <div class="message error" data-ng-if="error">{{error}}</div>
-<div class="message success" data-ng-if="success">{{success}}</div>
+<div class="message success" data-ng-if="success">
+  {{success}}
+
+  <h4 data-ng-show="verifyResult.nameservers.length > 0" translate>Nameservers</h4>
+  <div data-ng-repeat="nameserver in verifyResult.nameservers" class="fieldgroup">
+    <div class="field">
+      <label translate>Host</label><span>{{nameserver.host}}</span>
+    </div>
+    <div class="field">
+      <label translate>Status</label><span>{{nameserver.lastStatus}}</span>
+    </div>
+  </div>
+
+  <h4 data-ng-show="verifyResult.dsset.length > 0" translate>DS set</h4>
+  <div data-ng-repeat="ds in verifyResult.dsset" class="fieldgroup">
+    <div class="field">
+      <label translate>Keytag</label><span>{{ds.keytag}}</span>
+    </div>
+    <div class="field">
+      <label translate>Status</label><span>{{ds.lastStatus}}</span>
+    </div>
+  </div>
+</div>
 
 <form data-ng-submit="saveDomain()">
   <fieldset>
@@ -10,11 +32,11 @@
       title="{{ 'FQDN help' | translate }}"
       pattern="^((\w((\w|\-){0,61}\w)?\.)*\w((\w|\-){0,61}\w)?)?(\.)?$"
       required>
-    <button type="button" data-ng-init="importWorking = false"
+    <button type="button" class="normal-button" data-ng-init="importWorking = false"
       data-ng-click="queryDomain(domain.fqdn)"
       data-ng-disabled="domain.fqdn.length == 0 || importWorking">
-      <loading data-show="importWorking"></loading>
-      <div data-ng-hide="importWorking">
+      <i class="fa fa-spinner fa-2x fa-spin" data-ng-if="importWorking"></i>
+      <div data-ng-if="!importWorking">
         <i class="fa fa-sign-in"></i>
         {{ "Import" | translate }}
       </div>
@@ -52,14 +74,15 @@
       title="{{ 'IPv6 help' | translate }}"
       pattern="^((?=.*::)(?!.*::.+::)(::)?([\dA-F]{1,4}:(:|\b)|){5}|([\dA-F]{1,4}:){6})((([\dA-F]{1,4}((?!\3)::|:\b|$))|(?!\2\3)){2}|(((2[0-4]|1\d|[1-9])?\d|25[0-5])\.?\b){4})$">
 
-    <button type="button" data-ng-click="removeFromList($index, domain.nameservers)"
-      class="remove">
+    <button type="button" class="normal-button remove-button"
+      data-ng-click="removeFromList($index, domain.nameservers)">
       <i class="fa fa-times-circle"></i>
       {{ "Remove" | translate }}
     </button>
   </fieldset>
 
-  <button type="button" data-ng-click="addToList(emptyNameserver, domain.nameservers)">
+  <button type="button" class="normal-button"
+    data-ng-click="addToList(emptyNameserver, domain.nameservers)">
     <i class="fa fa-plus-circle"></i>
     {{ "Add" | translate }} {{ "Nameserver" | translate }}
   </button>
@@ -85,14 +108,15 @@
     <input type="text" id="publicKey{{$index+1}}" data-ng-model="domain.dnskeys[$index].publicKey"
       required>
 
-    <button type="button" data-ng-click="removeFromList($index, domain.dnskeys)"
-      class="remove">
+    <button type="button" class="normal-button remove-button"
+      data-ng-click="removeFromList($index, domain.dnskeys)">
       <i class="fa fa-times-circle"></i>
       {{ "Remove" | translate }}
     </button>
   </fieldset>
 
-  <button type="button" data-ng-click="addToList(emptyDNSKEY, domain.dnskeys)">
+  <button type="button" class="normal-button"
+    data-ng-click="addToList(emptyDNSKEY, domain.dnskeys)">
     <i class="fa fa-plus-circle"></i>
     {{ "Add" | translate }} {{ "DNSKEY" | translate }}
   </button>
@@ -127,14 +151,15 @@
     <input type="text" id="digest{{$index+1}}" data-ng-model="domain.dsset[$index].digest"
       required>
 
-    <button type="button" data-ng-click="removeFromList($index, domain.dsset)"
-      class="remove">
+    <button type="button" class="normal-button remove-button"
+      data-ng-click="removeFromList($index, domain.dsset)">
       <i class="fa fa-times-circle"></i>
       {{ "Remove" | translate }}
     </button>
   </fieldset>
 
-  <button type="button" data-ng-click="addToList(emptyDS, domain.dsset)">
+  <button type="button" class="normal-button"
+    data-ng-click="addToList(emptyDS, domain.dsset)">
     <i class="fa fa-plus-circle"></i>
     {{ "Add" | translate }} {{ "DS" | translate }}
   </button>
@@ -155,27 +180,60 @@
       data-ng-options="language for language in ownerLanguages" required>
     </select>
 
-    <button type="button" data-ng-click="removeFromList($index, domain.owners)"
-      class="remove">
+    <button type="button" class="normal-button remove-button"
+      data-ng-click="removeFromList($index, domain.owners)">
       <i class="fa fa-times-circle"></i>
       {{ "Remove" | translate }}
     </button>
   </fieldset>
 
-  <button type="button" data-ng-click="addToList(emptyOwner, domain.owners)">
+  <button type="button" class="normal-button"
+    data-ng-click="addToList(emptyOwner, domain.owners)">
     <i class="fa fa-plus-circle"></i>
     {{ "Add" | translate }} {{ "Owner" | translate }}
   </button>
 
-  <button data-ng-init="saveWorking = false" type="submit"
-    data-ng-disabled="saveWorking">
-    <loading data-show="saveWorking"></loading>
-    <div data-ng-hide="saveWorking">
-      <i class="fa fa-floppy-o"></i>
-      {{ "Save" | translate }}
-    </div>
-  </button>
+  <div class="buttons">
+    <button type="submit" class="big-button" data-ng-init="saveWorking = false"
+      data-ng-disabled="saveWorking">
+      <i class="fa fa-spinner fa-2x fa-spin" data-ng-if="saveWorking"></i>
+      <div data-ng-if="!saveWorking">
+        <i class="fa fa-floppy-o"></i>
+        {{ "Save" | translate }}
+      </div>
+    </button>
+    <button type="button" class="big-button" data-ng-init="verifyWorking = false"
+      data-ng-click="verifyDomain(domain)" data-ng-disabled="verifyWorking">
+      <i class="fa fa-spinner fa-2x fa-spin" data-ng-if="verifyWorking"></i>
+      <div data-ng-if="!verifyWorking">
+        <i class="fa fa-search"></i>
+        {{ "Verify" | translate }}
+      </div>
+    </button>
+  </div>
 </form>
 
 <div class="message error" data-ng-if="error">{{error}}</div>
-<div class="message success" data-ng-if="success">{{success}}</div>
+<div class="message success" data-ng-if="success">
+  {{success}}
+
+  <h4 data-ng-show="verifyResult.nameservers.length > 0" translate>Nameservers</h4>
+  <div data-ng-repeat="nameserver in verifyResult.nameservers" class="fieldgroup">
+    <div class="field">
+      <label translate>Host</label><span>{{nameserver.host}}</span>
+    </div>
+    <div class="field">
+      <label translate>Status</label><span>{{nameserver.lastStatus}}</span>
+    </div>
+  </div>
+
+  <h4 data-ng-show="verifyResult.dsset.length > 0" translate>DS set</h4>
+  <div data-ng-repeat="ds in verifyResult.dsset" class="fieldgroup">
+    <div class="field">
+      <label translate>Keytag</label><span>{{ds.keytag}}</span>
+    </div>
+    <div class="field">
+      <label translate>Status</label><span>{{ds.lastStatus}}</span>
+    </div>
+  </div>
+</div>

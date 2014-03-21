@@ -16,9 +16,9 @@
     <h1>Shelter</h1>
 
     <section data-ng-cloak data-ng-controller="languagesCtrl" class="languages">
-      <a data-ng-show="getLanguage() != 'en_US'"
+      <a data-ng-if="getLanguage() != 'en_US'"
         data-ng-click="changeLanguage('en_US')">English</a>
-      <a data-ng-show="getLanguage() != 'pt_BR'"
+      <a data-ng-if="getLanguage() != 'pt_BR'"
         data-ng-click="changeLanguage('pt_BR')">Portugu&ecirc;s</a>
     </section>
 

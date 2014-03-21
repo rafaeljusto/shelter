@@ -76,6 +76,20 @@ section {
   width: 98%;
 }
 
+@media (min-width: 400px) {
+  h1 {
+    font-size: 3em;
+  }
+
+  h2 {
+    font-size: 2em;
+  }
+
+  h3 {
+    font-size: 1.5em;
+  }
+}
+
 /**********************************/
 /* Navigation menu related styles */
 /**********************************/
@@ -110,6 +124,23 @@ nav ul li:hover {
   transition: background-color 0.4s;
 }
 
+@media (min-width: 400px) {
+  nav ul {
+    text-align: center;
+  }
+
+  nav ul li {
+    border-bottom: none;
+    border-right: 1px solid #eee;
+    display: inline-block;
+    width: 30%;
+  }
+
+  nav ul li:last-child {
+    border-right: none;
+  }
+}
+
 /**********************************/
 /* Language related styles        */
 /**********************************/
@@ -131,7 +162,7 @@ fieldset {
   background-color: #fff;
   border-radius: 10px;
   border-style: none;
-  margin: 40px 0px 40px 0px;
+  margin: 20px 0px 0px 0px;
 }
 
 fieldset legend {
@@ -150,29 +181,41 @@ input {
   font-size: 1rem;
 }
 
+/* http://www.cssbuttongenerator.com/ */
+
 button[type=submit] {
-  /* http://www.cssbuttongenerator.com/ */
   background-color: #9dce2c;
   border: 1px solid #83c41a;
   box-shadow: inset 0px 1px 0px 0px #c1ed9c;
-  color: #ffffff;
-  display: block;
-  font-size: 1.6rem;
-  font-style: normal;
-  font-weight: bold;
-  height: 65px;
-  line-height: 65px;
-  margin: 20px auto 0px auto;
-  min-width: 102px;
+  color: #fff;
   text-shadow: 1px 1px 0px #689324;
 }
 
 button[type=button] {
-  /* http://www.cssbuttongenerator.com/ */
   background-color: #3d94f6;
   border: 1px solid #337fed;
   box-shadow: inset 0px 1px 0px 0px #97c4fe;
-  color: #ffffff;
+  color: #fff;
+  text-shadow: 1px 1px 0px #1570cd;
+}
+
+button[type=submit]:active,
+button[type=button]:active {
+  position: relative;
+  top: 1%;
+}
+
+.remove-button {
+  background-color: #f24537 !important;
+  border: 1px solid #d02718 !important;
+  box-shadow: inset 0px 1px 0px 0px #f5978e !important;
+  color: #fff !important;
+  display: block !important;
+  margin: 20px 0px 0px auto !important;
+  text-shadow: 1px 1px 0px #810e05 !important;
+}
+
+.normal-button {
   display: inline-block;
   font-size: 1rem;
   font-style: normal;
@@ -181,48 +224,23 @@ button[type=button] {
   line-height: 40px;
   margin: 10px 0px 0px 0px;
   min-width: 81px;
-  text-shadow: 1px 1px 0px #1570cd;
 }
 
-button[type=button].remove {
-  /* http://www.cssbuttongenerator.com/ */
-  background-color: #f24537;
-  border: 1px solid #d02718;
-  box-shadow: inset 0px 1px 0px 0px #f5978e;
-  color: #ffffff;
-  display: block;
-  font-size: 1rem;
+.big-button {
+  display: inline-block;
+  font-size: 1.6rem;
   font-style: normal;
   font-weight: bold;
-  height: 40px;
-  line-height: 40px;
-  margin: 20px 0px 0px auto;
-  text-shadow: 1px 1px 0px #810e05;
+  height: 65px;
+  line-height: 65px;
+  min-width: 102px;
 }
 
-button[type=submit]:active,
-button[type=button]:active {
-  /* http://www.cssbuttongenerator.com/ */
-  position: relative;
-  top: 1%;
-}
-
-.animate.ng-move,
-.animate.ng-enter,
-.animate.ng-leave {
-  transition: all linear 0.5s;
-}
-
-.animate.ng-move,
-.animate.ng-enter,
-.animate.ng-leave.ng-leave-active {
-  opacity: 0;
-}
-
-.animate.ng-move.ng-move-active,
-.animate.ng-enter.ng-enter-active,
-.animate.ng-leave {
-  opacity: 1;
+.buttons {
+  margin: 20px auto 0px auto;
+  padding: 0px 0px 20px 0px;
+  width: 100%;
+  text-align: center;
 }
 
 /**********************************/
@@ -234,9 +252,10 @@ article {
 }
 
 article header {
+  background: linear-gradient(to right, #3d94f6 0%,#0c7ff2 56%,#002d99 100%);
   background-color: #3d94f6;
   border-bottom: 1px solid #000;
-  color: #ffffff;
+  color: #fff;
   cursor: pointer;
   font-size: 1rem !important;
   font-style: normal;
@@ -246,29 +265,44 @@ article header {
   transition: all linear 1.5s;
 }
 
-.error {
-  background-color: #f24537;
-  color: #ffffff;
-  font-size: 1rem;
-  font-style: normal;
-  font-weight: bold;
-  text-shadow: 1px 1px 0px #810e05;
-  transition: all linear 1.5s;
-}
-
-.ok {
-  background-color: #9dce2c;
-  color: #ffffff;
-  font-size: 1.6rem;
-  font-style: normal;
-  font-weight: bold;
-  text-shadow: 1px 1px 0px #689324;
-  transition: all linear 1.5s;
+article header:hover {
+  color: #000;
 }
 
 article h4 {
   margin: 20px 10px 20px 10px;
   padding: 0.2rem 0.4rem 0.2rem 0.4rem;
+}
+
+progress {
+  border-radius: 5px;
+  box-shadow: 0 1px 5px #000 inset, 0 1px 0 #444;
+  display: block;
+  height: 25px;
+  margin: 20px auto 0px auto;
+  padding: 5px;
+  width: 80%;
+}
+
+.domain-ok,
+.domain-error {
+  color: #fff;
+  font-size: 1.6rem;
+  font-style: normal;
+  font-weight: bold;
+  transition: all linear 1.5s;
+}
+
+.domain-error {
+  background: linear-gradient(to right, #f24537 0%,#8f0222 70%,#6d0019 100%);
+  background-color: #f24537;
+  text-shadow: 1px 1px 0px #810e05;
+}
+
+.domain-ok {
+  background: linear-gradient(to right, #9dce2c 0%,#8ab66b 83%,#8ab66b 100%);
+  background-color: #9dce2c;
+  text-shadow: 1px 1px 0px #689324;
 }
 
 .fieldgroup {
@@ -305,27 +339,13 @@ article h4 {
   border: 1px solid #000;
 }
 
-button[type=button].content-edit-button {
-  display: block;
-  margin: 0px auto 0px auto;
-}
-
 .current-scan {
   margin: 0px 0px 20px 0px;
+  padding: 0px 0px 20px 0px;
 }
 
 .current-scan > header {
   cursor: default;
-}
-
-progress {
-  border-radius: 5px;
-  box-shadow: 0 1px 5px #000 inset, 0 1px 0 #444;
-  display: block;
-  height: 25px;
-  margin: 20px auto 0px auto;
-  padding: 5px;
-  width: 80%;
 }
 
 /**********************************/
@@ -345,9 +365,8 @@ progress {
   margin: 20px 10px 20px 10px;
 }
 
-.pagination > div > span {
-  background-color: #f24537;
-  border: 1px solid #d02718;
+.pagination > div > span,
+.pagination > div > button {
   box-shadow: inset 0px 1px 0px 0px #97c4fe;
   color: #ffffff;
   display: inline-block;
@@ -362,20 +381,14 @@ progress {
   text-shadow: 1px 1px 0px #1570cd;
 }
 
+.pagination > div > span {
+  background-color: #f24537;
+  border: 1px solid #d02718;
+}
+
 .pagination > div > button {
   background-color: #3d94f6;
   border: 1px solid #337fed;
-  box-shadow: inset 0px 1px 0px 0px #97c4fe;
-  color: #ffffff;
-  display: inline-block;
-  font-size: 1rem;
-  font-style: normal;
-  font-weight: bold;
-  height: 40px;
-  line-height: 40px;
-  min-width: 41px;
-  text-align: center;
-  text-shadow: 1px 1px 0px #1570cd;
 }
 
 /**********************************/
@@ -415,120 +428,30 @@ progress {
   border-color: #55a12c;
 }
 
+.success .field label {
+  color: #ddd;
+}
+
 /**********************************/
-/* Loading related styles         */
+/* Animation related styles       */
 /**********************************/
 
-/* http://cssload.net/ */
-
-.container-circularG {
-  display: inline-block;
-  height: 20px;
-  position: relative;
-  margin: auto;
-  width: 20px;
+.animate.ng-move,
+.animate.ng-enter,
+.animate.ng-leave {
+  transition: all linear 0.5s;
 }
 
-.circularG {
-  position: absolute;
-  background-color: #fff;
-  width: 5px;
-  height: 5px;
-  border-radius: 3px;
-  animation-name: bounce_circularG;
-  animation-duration: 1.04s;
-  animation-iteration-count: infinite;
-  animation-direction: linear;
-  -webkit-border-radius: 3px;
-  -webkit-animation-name: bounce_circularG;
-  -webkit-animation-duration: 1.04s;
-  -webkit-animation-iteration-count: infinite;
-  -webkit-animation-direction: linear;
+.animate.ng-move,
+.animate.ng-enter,
+.animate.ng-leave.ng-leave-active {
+  opacity: 0;
 }
 
-.circularG_1 {
-  left: 0px;
-  top: 8px;
-  animation-delay: 0.39s;
-  -webkit-animation-delay: 0.39s;
-}
-
-.circularG_2 {
-  left: 2px;
-  top: 2px;
-  animation-delay: 0.52s;
-  -webkit-animation-delay: 0.52s;
-}
-
-.circularG_3 {
-  top: 0px;
-  left: 8px;
-  animation-delay:0.65s;
-  -webkit-animation-delay: 0.65s;
-}
-
-.circularG_4 {
-  right: 2px;
-  top: 2px;
-  animation-delay:0.78s;
-  -webkit-animation-delay: 0.78s;
-}
-
-.circularG_5 {
-  right: 0px;
-  top: 8px;
-  animation-delay:0.91s;
-  -webkit-animation-delay: 0.91s;
-}
-
-.circularG_6 {
-  right: 2px;
-  bottom: 2px;
-  animation-delay:1.04s;
-  -webkit-animation-delay: 1.04s;
-}
-
-.circularG_7 {
-  left: 8px;
-  bottom: 0px;
-  animation-delay:1.17s;
-  -webkit-animation-delay: 1.17s;
-}
-
-.circularG_8 {
-  left: 2px;
-  bottom: 2px;
-  animation-delay:1.3s;
-  -webkit-animation-delay: 1.3s;
-}
-
-@keyframes bounce_circularG {
-  0% {
-    transform:scale(1)
-  }
-  100% {
-    transform:scale(.3)
-  }
-}
-
-@-moz-keyframes bounce_circularG {
-  0% {
-    -moz-transform:scale(1)
-  }
-
-  100% {
-    -moz-transform:scale(.3)
-  }
-}
-
-@-webkit-keyframes bounce_circularG {
-  0% {
-    -webkit-transform:scale(1)
-  }
-
-  100% {
-    -webkit-transform:scale(.3)
-  }
+.animate.ng-move.ng-move-active,
+.animate.ng-enter.ng-enter-active,
+.animate.ng-leave {
+  opacity: 1;
 }
 
 .ng-hide-add,
