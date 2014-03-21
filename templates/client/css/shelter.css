@@ -76,7 +76,7 @@ section {
   width: 98%;
 }
 
-@media (min-width: 400px) {
+@media (min-width: 461px) {
   h1 {
     font-size: 3em;
   }
@@ -124,7 +124,7 @@ nav ul li:hover {
   transition: background-color 0.4s;
 }
 
-@media (min-width: 400px) {
+@media (min-width: 461px) {
   nav ul {
     text-align: center;
   }
