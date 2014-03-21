@@ -72,7 +72,7 @@
       data-ng-model="domain.nameservers[$index].ipv6"
       placeholder="fe80::0202:b3ff:fe1e:8329"
       title="{{ 'IPv6 help' | translate }}"
-      pattern="^((?=.*::)(?!.*::.+::)(::)?([\dA-F]{1,4}:(:|\b)|){5}|([\dA-F]{1,4}:){6})((([\dA-F]{1,4}((?!\3)::|:\b|$))|(?!\2\3)){2}|(((2[0-4]|1\d|[1-9])?\d|25[0-5])\.?\b){4})$">
+      pattern="^((?=.*::)(?!.*::.+::)(::)?([\da-fA-F]{1,4}:(:|\b)|){5}|([\da-fA-F]{1,4}:){6})((([\da-fA-F]{1,4}((?!\3)::|:\b|$))|(?!\2\3)){2}|(((2[0-4]|1\d|[1-9])?\d|25[0-5])\.?\b){4})$">
 
     <button type="button" class="normal-button remove-button right-button"
       data-ng-click="removeFromList($index, domain.nameservers)">
