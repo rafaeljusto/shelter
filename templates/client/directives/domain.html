@@ -78,6 +78,15 @@
         {{ "Verify" | translate }}
       </div>
     </button>
+    <button type="button" class="big-button remove-button"
+      data-ng-init="removeWorking = false"
+      data-ng-click="removeDomain(domain.fqdn)" data-ng-disabled="removeWorking">
+      <i class="fa fa-spinner fa-2x fa-spin" data-ng-if="removeWorking"></i>
+      <div data-ng-if="!removeWorking">
+        <i class="fa fa-trash-o"></i>
+        {{ "Remove" | translate }}
+      </div>
+    </button>
   </div>
 
   <div class="message error" data-ng-if="error">{{error}}</div>

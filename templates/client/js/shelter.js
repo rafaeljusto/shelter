@@ -244,6 +244,16 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
               return response;
             });
       },
+      removeDomain: function(fqdn) {
+        return $http.delete("/domain/" + fqdn)
+          .then(
+            function(response) {
+              return response;
+            },
+            function(response) {
+              return response;
+            });
+      },
       saveDomain: function(domain) {
         return $http.put("/domain/" + domain.fqdn, domain, {
           headers: {
@@ -392,6 +402,33 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
               $scope.verifyWorking = false;
             });
         };
+
+        $scope.removeDomain = function(fqdn) {
+          $scope.removeWorking = true;
+
+          domainService.removeDomain(fqdn).then(
+            function(response) {
+              if (response.status == 204) {
+                $scope.error = null;
+                $translate("Domain removed").then(function(translation) {
+                  $scope.success = translation;
+                  $scope.verifyResult = response.data;
+                });
+
+              } else if (response.status == 400) {
+                $scope.error = null;
+                $scope.error = response.data.message;
+
+              } else {
+                $scope.success = null;
+                $translate("Server error").then(function(translation) {
+                  $scope.error = translation;
+                });
+              }
+
+              $scope.removeWorking = false;
+            });
+        }
       }
     };
   })

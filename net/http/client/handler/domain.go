@@ -22,18 +22,31 @@ func HandleDomain(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	content, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Println("Error while reading request body in web client. Details:", err)
-		return
+	var content []byte
+	if r.ContentLength > 0 {
+		content, err = ioutil.ReadAll(r.Body)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			log.Println("Error while reading request body in web client. Details:", err)
+			return
+		}
 	}
 
-	request, err := http.NewRequest(
-		"PUT",
-		fmt.Sprintf("%s%s", restAddress, r.RequestURI),
-		strings.NewReader(string(content)),
-	)
+	var request *http.Request
+	if content == nil {
+		request, err = http.NewRequest(
+			r.Method,
+			fmt.Sprintf("%s%s", restAddress, r.RequestURI),
+			nil,
+		)
+
+	} else {
+		request, err = http.NewRequest(
+			r.Method,
+			fmt.Sprintf("%s%s", restAddress, r.RequestURI),
+			strings.NewReader(string(content)),
+		)
+	}
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

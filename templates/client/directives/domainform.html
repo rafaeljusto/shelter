@@ -74,7 +74,7 @@
       title="{{ 'IPv6 help' | translate }}"
       pattern="^((?=.*::)(?!.*::.+::)(::)?([\dA-F]{1,4}:(:|\b)|){5}|([\dA-F]{1,4}:){6})((([\dA-F]{1,4}((?!\3)::|:\b|$))|(?!\2\3)){2}|(((2[0-4]|1\d|[1-9])?\d|25[0-5])\.?\b){4})$">
 
-    <button type="button" class="normal-button remove-button"
+    <button type="button" class="normal-button remove-button right-button"
       data-ng-click="removeFromList($index, domain.nameservers)">
       <i class="fa fa-times-circle"></i>
       {{ "Remove" | translate }}
@@ -108,7 +108,7 @@
     <input type="text" id="publicKey{{$index+1}}" data-ng-model="domain.dnskeys[$index].publicKey"
       required>
 
-    <button type="button" class="normal-button remove-button"
+    <button type="button" class="normal-button remove-button right-button"
       data-ng-click="removeFromList($index, domain.dnskeys)">
       <i class="fa fa-times-circle"></i>
       {{ "Remove" | translate }}
@@ -151,7 +151,7 @@
     <input type="text" id="digest{{$index+1}}" data-ng-model="domain.dsset[$index].digest"
       required>
 
-    <button type="button" class="normal-button remove-button"
+    <button type="button" class="normal-button remove-button right-button"
       data-ng-click="removeFromList($index, domain.dsset)">
       <i class="fa fa-times-circle"></i>
       {{ "Remove" | translate }}
@@ -180,7 +180,7 @@
       data-ng-options="language for language in ownerLanguages" required>
     </select>
 
-    <button type="button" class="normal-button remove-button"
+    <button type="button" class="normal-button remove-button right-button"
       data-ng-click="removeFromList($index, domain.owners)">
       <i class="fa fa-times-circle"></i>
       {{ "Remove" | translate }}

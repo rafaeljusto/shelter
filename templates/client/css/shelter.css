@@ -210,8 +210,6 @@ button[type=button]:active {
   border: 1px solid #d02718 !important;
   box-shadow: inset 0px 1px 0px 0px #f5978e !important;
   color: #fff !important;
-  display: block !important;
-  margin: 20px 0px 0px auto !important;
   text-shadow: 1px 1px 0px #810e05 !important;
 }
 
@@ -224,6 +222,11 @@ button[type=button]:active {
   line-height: 40px;
   margin: 10px 0px 0px 0px;
   min-width: 81px;
+}
+
+.right-button {
+  display: block !important;
+  margin: 20px 0px 0px auto !important;
 }
 
 .big-button {

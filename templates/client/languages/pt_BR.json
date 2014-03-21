@@ -7,6 +7,7 @@
   "Digest": "Digest",
   "DNSKEY": "DNSKEY",
   "Domain created": "Domínio salvo com sucesso",
+  "Domain removed": "Domínio removido com sucesso",
   "Domains scanned with DNSSEC": "Domínios com DNSSEC verificados",
   "Domains scanned": "Domínios verificados",
   "Domains": "Domínios",
