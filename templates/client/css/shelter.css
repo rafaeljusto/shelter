@@ -238,6 +238,7 @@ button[type=button]:active {
   font-weight: bold;
   height: 65px;
   line-height: 65px;
+  margin: 10px 0px 0px 0px;
   min-width: 102px;
 }
 
