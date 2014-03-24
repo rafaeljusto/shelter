@@ -356,6 +356,10 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
         }
 
         $scope.showDSDigest = function(digest) {
+          if (digest == undefined) {
+            return "";
+          }
+
           if (digest.length >= 24) {
             return digest.substr(0, 12) + "..." + digest.substr(digest.length - 12, 12);
           }
@@ -457,7 +461,7 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
         $scope.ownerLanguages = ownerLanguages;
 
         $scope.needsGlue = function(fqdn, host) {
-          if (fqdn.length == 0 || host.length < fqdn.length) {
+          if (fqdn == undefined || fqdn.length == 0 || host.length < fqdn.length) {
             return false;
           }
 

@@ -17,6 +17,7 @@ module.exports = function(config) {
     files: [
       '../js/angular.min.js',
       '../tests/angular-mocks.js',
+      '../js/angular-animate.min.js',
       '../js/angular-cookies.min.js',
       '../js/angular-translate.min.js',
       '../js/angular-translate-loader-static-files.min.js',
@@ -24,20 +25,27 @@ module.exports = function(config) {
       '../js/angular-translate-storage-local.min.js',
       '../js/moment-with-langs.min.js',
       '../js/shelter.js',
-      '../tests/statics.js'
+      '../tests/statics.js',
+      '../tests/domain.js',
+      '../directives/*.html'
     ],
 
 
     // list of files to exclude
     exclude: [
-      
+
     ],
 
 
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
-    
+      '../directives/*.html': ['ng-html2js']
+    },
+
+    ngHtml2JsPreprocessor: {
+      stripPrefix: '.*/shelter/templates/client',
+      moduleName: 'directives'
     },
 
 

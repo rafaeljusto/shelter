@@ -36,10 +36,11 @@ To install it check the webpage http://www.mongodb.org/
 
 Also, to easy run the project tests you will need the following:
 * Python3 - http://www.python.org/
-* Karma - http://karma-runner.github.io
+* Karma and dependencies - http://karma-runner.github.io
   * npm install -g karma
   * npm install -g karma-jasmine
   * npm install -g karma-firefox-launcher
+  * npm install -g karma-ng-html2js-preprocessor
 
 And finally, to build the project, just run the following command on the project root:
 
