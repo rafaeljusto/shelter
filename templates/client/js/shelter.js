@@ -284,7 +284,7 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
 
           if (domain.nameservers) {
             domain.nameservers.forEach(function(nameserver) {
-              if (nameserver.status != "NOTCHECKED" && nameserver.status != "OK") {
+              if (nameserver.lastStatus != "NOTCHECKED" && nameserver.lastStatus != "OK") {
                 errors = true;
               }
             });
@@ -292,7 +292,7 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
 
           if (domain.dsset) {
             domain.dsset.forEach(function(ds) {
-              if (ds.status != "NOTCHECKED" && ds.status != "OK") {
+              if (ds.lastStatus != "NOTCHECKED" && ds.lastStatus != "OK") {
                 errors = true;
               }
             });

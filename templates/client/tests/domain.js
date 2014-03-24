@@ -17,15 +17,15 @@ describe("Domain directive", function() {
     scope.$digest();
   }));
 
-  it("verify if a domain has errors", inject(function($compile, $rootScope) {
+  it("verify if a domain has errors", function() {
     expect(elm.scope().$$childTail.hasErrors).not.toBeUndefined();
 
     scope.domain = {
       nameservers: [
-        { status: "OK" }
+        { lastStatus: "OK" }
       ],
       dsset: [
-        { status: "OK" }
+        { lastStatus: "OK" }
       ]
     };
 
@@ -34,11 +34,11 @@ describe("Domain directive", function() {
 
     scope.domain = {
       nameservers: [
-        { status: "OK" }
+        { lastStatus: "OK" }
       ],
       dsset: [
-        { status: "OK" },
-        { status: "TIMEOUT" }
+        { lastStatus: "OK" },
+        { lastStatus: "TIMEOUT" }
       ]
     };
 
@@ -47,11 +47,11 @@ describe("Domain directive", function() {
 
     scope.domain = {
       nameservers: [
-        { status: "OK" },
-        { status: "TIMEOUT" }
+        { lastStatus: "OK" },
+        { lastStatus: "TIMEOUT" }
       ],
       dsset: [
-        { status: "OK" }
+        { lastStatus: "OK" }
       ]
     };
 
@@ -60,14 +60,62 @@ describe("Domain directive", function() {
 
     scope.domain = {
       nameservers: [
-        { status: "NOTCHECKED" }
+        { lastStatus: "NOTCHECKED" }
       ],
       dsset: [
-        { status: "NOTCHECKED" }
+        { lastStatus: "NOTCHECKED" }
       ]
     };
 
     scope.$digest();
     expect(elm.scope().$$childTail.hasErrors(scope.domain)).toBe(false);
-  }));
+  });
+
+  it("verify if a domain was checked", function() {
+    expect(elm.scope().$$childTail.wasChecked).not.toBeUndefined();
+
+    scope.domain = {
+      nameservers: [
+        { lastStatus: "NOTCHECKED" }
+      ],
+      dsset: [
+        { lastStatus: "NOTCHECKED" }
+      ]
+    };
+
+    scope.$digest();
+    expect(elm.scope().$$childTail.wasChecked(scope.domain)).toBe(false);
+
+    scope.domain = {
+      nameservers: [
+        { lastStatus: "NOTCHECKED" }
+      ],
+      dsset: [
+        { lastStatus: "OK" }
+      ]
+    };
+
+    scope.$digest();
+    expect(elm.scope().$$childTail.wasChecked(scope.domain)).toBe(true);
+
+    scope.domain = {
+      nameservers: [
+        { lastStatus: "OK" }
+      ],
+      dsset: [
+        { lastStatus: "NOTCHECKED" }
+      ]
+    };
+
+    scope.$digest();
+    expect(elm.scope().$$childTail.wasChecked(scope.domain)).toBe(true);
+  });
+
+  it("verify if the date is defined", function() {
+    expect(elm.scope().$$childTail.dateDefined).not.toBeUndefined();
+    expect(elm.scope().$$childTail.dateDefined("2014-03-24T14:13:15-03:00")).toBe(true);
+    expect(elm.scope().$$childTail.dateDefined("2014-03-24T14:13:15Z")).toBe(true);
+    expect(elm.scope().$$childTail.dateDefined("1969-01-01T00:00:00Z")).toBe(false);
+    expect(elm.scope().$$childTail.dateDefined("This is not a date")).toBe(false);
+  });
 });
