@@ -23,19 +23,16 @@ describe("Domain directive", function() {
   it("verify if a domain has errors", function() {
     expect(ctrl.hasErrors).not.toBeUndefined();
 
-    scope.domain = {
+    expect(ctrl.hasErrors({
       nameservers: [
         { lastStatus: "OK" }
       ],
       dsset: [
         { lastStatus: "OK" }
       ]
-    };
+    })).toBe(false);
 
-    scope.$digest();
-    expect(ctrl.hasErrors(scope.domain)).toBe(false);
-
-    scope.domain = {
+    expect(ctrl.hasErrors({
       nameservers: [
         { lastStatus: "OK" }
       ],
@@ -43,12 +40,9 @@ describe("Domain directive", function() {
         { lastStatus: "OK" },
         { lastStatus: "TIMEOUT" }
       ]
-    };
+    })).toBe(true);
 
-    scope.$digest();
-    expect(ctrl.hasErrors(scope.domain)).toBe(true);
-
-    scope.domain = {
+    expect(ctrl.hasErrors({
       nameservers: [
         { lastStatus: "OK" },
         { lastStatus: "TIMEOUT" }
@@ -56,62 +50,47 @@ describe("Domain directive", function() {
       dsset: [
         { lastStatus: "OK" }
       ]
-    };
+    })).toBe(true);
 
-    scope.$digest();
-    expect(ctrl.hasErrors(scope.domain)).toBe(true);
-
-    scope.domain = {
+    expect(ctrl.hasErrors({
       nameservers: [
         { lastStatus: "NOTCHECKED" }
       ],
       dsset: [
         { lastStatus: "NOTCHECKED" }
       ]
-    };
-
-    scope.$digest();
-    expect(ctrl.hasErrors(scope.domain)).toBe(false);
+    })).toBe(false);
   });
 
   it("verify if a domain was checked", function() {
     expect(ctrl.wasChecked).not.toBeUndefined();
 
-    scope.domain = {
+    expect(ctrl.wasChecked({
       nameservers: [
         { lastStatus: "NOTCHECKED" }
       ],
       dsset: [
         { lastStatus: "NOTCHECKED" }
       ]
-    };
+    })).toBe(false);
 
-    scope.$digest();
-    expect(ctrl.wasChecked(scope.domain)).toBe(false);
-
-    scope.domain = {
+    expect(ctrl.wasChecked({
       nameservers: [
         { lastStatus: "NOTCHECKED" }
       ],
       dsset: [
         { lastStatus: "OK" }
       ]
-    };
+    })).toBe(true);
 
-    scope.$digest();
-    expect(ctrl.wasChecked(scope.domain)).toBe(true);
-
-    scope.domain = {
+    expect(ctrl.wasChecked({
       nameservers: [
         { lastStatus: "OK" }
       ],
       dsset: [
         { lastStatus: "NOTCHECKED" }
       ]
-    };
-
-    scope.$digest();
-    expect(ctrl.wasChecked(scope.domain)).toBe(true);
+    })).toBe(true);
   });
 
   it("verify if the date is defined", function() {
@@ -156,6 +135,8 @@ describe("Domain directive", function() {
 
   it("should show only a part of the DS digest", function() {
     expect(ctrl.showDSDigest).not.toBeUndefined();
-
+    expect(ctrl.showDSDigest(undefined)).toBe("");
+    expect(ctrl.showDSDigest("EAA0978F38879DB70A53F9FF1ACF21D046A98B5C")).toBe("EAA0978F3887...21D046A98B5C");
+    expect(ctrl.showDSDigest("EAA0978F38879DB70A53F9F")).toBe("EAA0978F38879DB70A53F9F");
   });
 });
