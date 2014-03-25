@@ -44,8 +44,7 @@ fi
 
 # Interface tests
 echo "\n[[ INTERFACE TESTS ]]\n"
-cd templates/client/tests
-karma start karma.conf.js --single-run
+./node_modules/.bin/karma start templates/client/tests/karma.conf.js --single-run
 return_code=$?
 
 exit $return_code

@@ -153,4 +153,9 @@ describe("Domain directive", function() {
     expect(ctrl.getDSDigestType(5)).toBe("SHA512");
     expect(ctrl.getDSDigestType(99)).toBe(99);
   });
+
+  it("should show only a part of the DS digest", function() {
+    expect(ctrl.showDSDigest).not.toBeUndefined();
+
+  });
 });

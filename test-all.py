@@ -122,10 +122,10 @@ def runInterfaceTests():
   print("\n[[ INTERFACE TESTS ]]\n")
 
   success = True
-  testScript = os.path.join("templates", "client", "tests", "test-js.py")
+  karmaConf = os.path.join("templates", "client", "tests", "karma.conf.js")
 
   try:
-    subprocess.check_call([testScript])
+    subprocess.check_call(["karma", "start", karmaConf, "--single-run"])
 
   except:
     success = False
@@ -138,14 +138,15 @@ def runInterfaceTests():
 
 def usage():
   print("")
-  print("Usage: " + sys.argv[0] + " [-h|--help] [-u|--unit] [-b|--bench]")
+  print("Usage: " + sys.argv[0] + " [-h|--help] [-u|--unit] [-b|--bench] [-i|--interface]")
   print("  Where -h or --help is for showing this usage")
   print("        -u or --unit is to run only the unit tests")
   print("        -b or --bench is to run unit tests with benchmark")
+  print("        -i or --interface is to run only the interface tests")
 
 def main(argv):
   try:
-    opts, args = getopt.getopt(argv, "ub", ["unit", "bench"])
+    opts, args = getopt.getopt(argv, "ubi", ["unit", "bench", "interface"])
 
   except getopt.GetoptError as err:
     print(str(err))
@@ -153,6 +154,7 @@ def main(argv):
     sys.exit(1)
 
   unitTestOnly = False
+  interfaceTestOnly = False
   benchmark = False
 
   for key, value in opts:
@@ -162,6 +164,9 @@ def main(argv):
     elif key in ("-b", "--bench"):
       benchmark = True
 
+    elif key in ("-i", "--interface"):
+      interfaceTestOnly = True
+
     elif key in ("-h", "--help"):
       usage()
       sys.exit(0)
@@ -170,10 +175,14 @@ def main(argv):
     initialChecks()
     changePath()
     buildMainBinary()
-    runUnitTests(benchmark)
 
-    if not unitTestOnly:
+    if unitTestOnly or not interfaceTestOnly:
+      runUnitTests(benchmark)
+
+    if not unitTestOnly and not interfaceTestOnly:
       runIntegrationTests()
+
+    if interfaceTestOnly or not unitTestOnly:
       runInterfaceTests()
 
   except KeyboardInterrupt:
