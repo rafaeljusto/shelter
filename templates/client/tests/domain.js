@@ -20,7 +20,7 @@ describe("Domain directive", function() {
     ctrl = elm.scope().$$childTail;
   }));
 
-  it("verify if a domain has errors", function() {
+  it("should verify if a domain has errors", function() {
     expect(ctrl.hasErrors).not.toBeUndefined();
 
     expect(ctrl.hasErrors({
@@ -62,7 +62,7 @@ describe("Domain directive", function() {
     })).toBe(false);
   });
 
-  it("verify if a domain was checked", function() {
+  it("should verify if a domain was checked", function() {
     expect(ctrl.wasChecked).not.toBeUndefined();
 
     expect(ctrl.wasChecked({
@@ -93,7 +93,7 @@ describe("Domain directive", function() {
     })).toBe(true);
   });
 
-  it("verify if the date is defined", function() {
+  it("should verify if the date is defined", function() {
     expect(ctrl.dateDefined).not.toBeUndefined();
     expect(ctrl.dateDefined("2014-03-24T14:13:15-03:00")).toBe(true);
     expect(ctrl.dateDefined("2014-03-24T14:13:15Z")).toBe(true);
@@ -101,7 +101,7 @@ describe("Domain directive", function() {
     expect(ctrl.dateDefined("This is not a date")).toBe(false);
   });
 
-  it("verify if the get language function returns the default language", function() {
+  it("should verify if the get language function returns the default language", function() {
     expect(ctrl.getLanguage).not.toBeUndefined();
     expect(ctrl.getLanguage()).toBe("en_US");
   });
@@ -193,6 +193,10 @@ describe("Domain directive", function() {
     expect(ctrl.verifyResult.nameservers[0].lastStatus).toBe("OK");
     expect(ctrl.verifyResult.nameservers[0].lastOKAt).toBe("2014-03-25T11:00:00-03:00");
     expect(ctrl.verifyResult.nameservers[0].lastCheckAt).toBe("2014-03-25T11:00:00-03:00");
+    expect(ctrl.verifyResult.dsset.length).toBe(1);
+    expect(ctrl.verifyResult.dsset[0].lastStatus).toBe("OK");
+    expect(ctrl.verifyResult.dsset[0].lastOKAt).toBe("2014-03-25T11:00:00-03:00");
+    expect(ctrl.verifyResult.dsset[0].lastCheckAt).toBe("2014-03-25T11:00:00-03:00");
   }));
 
   it("should remove a domain", inject(function($injector) {

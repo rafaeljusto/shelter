@@ -16,6 +16,7 @@ module.exports = function(config) {
       'js/shelter.js',
       'tests/statics.js',
       'tests/domain.js',
+      'tests/domainform.js',
       'directives/*.html'
     ],
 

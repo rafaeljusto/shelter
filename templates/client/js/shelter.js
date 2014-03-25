@@ -465,7 +465,9 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
         $scope.ownerLanguages = ownerLanguages;
 
         $scope.needsGlue = function(fqdn, host) {
-          if (fqdn == undefined || fqdn.length == 0 || host.length < fqdn.length) {
+          if (fqdn == undefined || host == undefined ||
+            fqdn.length == 0 || host.length < fqdn.length) {
+
             return false;
           }
 
@@ -473,6 +475,10 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
         };
 
         $scope.addToList = function(object, list) {
+          if (object == undefined) {
+            return;
+          }
+
           list.push(angular.copy(object));
         };
 
@@ -510,19 +516,19 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
           $scope.verifyWorking = true;
 
           // If the domain is imported without DS records, the DS set attribute will be undefined
-          if ($scope.domain.dsset) {
+          if (domain.dsset) {
             // Convert keytag to number. For now I don't want to use valueAsNumber function
             // because the code will remain the same size and older browsers will break
-            for (var i = 0; i < $scope.domain.dsset.length; i += 1) {
-              var keytag = parseInt($scope.domain.dsset[i].keytag, 10);
+            for (var i = 0; i < domain.dsset.length; i += 1) {
+              var keytag = parseInt(domain.dsset[i].keytag, 10);
               if (keytag == NaN) {
                 keytag = 0;
               }
-              $scope.domain.dsset[i].keytag = keytag;
+              domain.dsset[i].keytag = keytag;
             }
           }
 
-          domainService.verifyDomain($scope.domain).then(
+          domainService.verifyDomain(domain).then(
             function(response) {
               if (response.status == 200) {
                 $scope.error = null;
@@ -550,19 +556,19 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
           $scope.saveWorking = true;
 
           // If the domain is imported without DS records, the DS set attribute will be undefined
-          if ($scope.domain.dsset) {
+          if (domain.dsset) {
             // Convert keytag to number. For now I don't want to use valueAsNumber function
             // because the code will remain the same size and older browsers will break
-            for (var i = 0; i < $scope.domain.dsset.length; i += 1) {
-              var keytag = parseInt($scope.domain.dsset[i].keytag, 10);
+            for (var i = 0; i < domain.dsset.length; i += 1) {
+              var keytag = parseInt(domain.dsset[i].keytag, 10);
               if (keytag == NaN) {
                 keytag = 0;
               }
-              $scope.domain.dsset[i].keytag = keytag;
+              domain.dsset[i].keytag = keytag;
             }
           }
 
-          domainService.saveDomain($scope.domain).then(
+          domainService.saveDomain(domain).then(
             function(response) {
               if (response.status == 201 || response.status == 204) {
                 $translate("Domain created").then(function(translation) {
