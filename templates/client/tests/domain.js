@@ -141,5 +141,16 @@ describe("Domain directive", function() {
     expect(ctrl.getAlgorithm(12)).toBe("GOST R");
     expect(ctrl.getAlgorithm(13)).toBe("ECDSA/SHA256");
     expect(ctrl.getAlgorithm(14)).toBe("ECDSA/SHA384");
+    expect(ctrl.getAlgorithm(99)).toBe(99);
+  });
+
+  it("should return the correct DS digest type name", function() {
+    expect(ctrl.getDSDigestType).not.toBeUndefined();
+    expect(ctrl.getDSDigestType(1)).toBe("SHA1");
+    expect(ctrl.getDSDigestType(2)).toBe("SHA256");
+    expect(ctrl.getDSDigestType(3)).toBe("GOST94");
+    expect(ctrl.getDSDigestType(4)).toBe("SHA384");
+    expect(ctrl.getDSDigestType(5)).toBe("SHA512");
+    expect(ctrl.getDSDigestType(99)).toBe(99);
   });
 });
