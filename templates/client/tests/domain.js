@@ -139,4 +139,72 @@ describe("Domain directive", function() {
     expect(ctrl.showDSDigest("EAA0978F38879DB70A53F9FF1ACF21D046A98B5C")).toBe("EAA0978F3887...21D046A98B5C");
     expect(ctrl.showDSDigest("EAA0978F38879DB70A53F9F")).toBe("EAA0978F38879DB70A53F9F");
   });
+
+  it("should verify a domain", inject(function($injector) {
+    expect(ctrl.verifyDomain).not.toBeUndefined();
+
+    $httpBackend = $injector.get("$httpBackend");
+    $httpBackend.whenPUT("/domain/br./verification").respond(200, "{ \
+      \"fqdn\": \"br.\", \
+      \"nameservers\": [ \
+        { \
+          \"host\": \"a.dns.br\", \
+          \"ipv4\": \"200.160.0.10\", \
+          \"lastStatus\": \"OK\", \
+          \"lastOKAt\": \"2014-03-25T11:00:00-03:00\", \
+          \"lastCheckAt\": \"2014-03-25T11:00:00-03:00\" \
+        } \
+      ], \
+      \"dsset\": [ \
+        { \
+          \"keytag\": 41674, \
+          \"algorithm\": 5, \
+          \"digestType\": 1, \
+          \"digest\": \"EAA0978F38879DB70A53F9FF1ACF21D046A98B5C\", \
+          \"lastStatus\": \"OK\", \
+          \"lastOKAt\": \"2014-03-25T11:00:00-03:00\", \
+          \"lastCheckAt\": \"2014-03-25T11:00:00-03:00\" \
+        } \
+      ] \
+    }");
+
+    ctrl.verifyDomain({
+      fqdn: "br.",
+      nameservers: [
+        {
+          host: "a.dns.br.",
+          ipv4: "200.160.0.10"
+        }
+      ],
+      dsset: [
+        {
+          keytag: "41674",
+          algorithm: 5,
+          digestType: 1,
+          digest: "EAA0978F38879DB70A53F9FF1ACF21D046A98B5C"
+        }
+      ],
+    });
+
+    $httpBackend.flush()
+
+    expect(ctrl.verifyResult).not.toBeUndefined();
+    expect(ctrl.verifyResult.nameservers.length).toBe(1);
+    expect(ctrl.verifyResult.nameservers[0].lastStatus).toBe("OK");
+    expect(ctrl.verifyResult.nameservers[0].lastOKAt).toBe("2014-03-25T11:00:00-03:00");
+    expect(ctrl.verifyResult.nameservers[0].lastCheckAt).toBe("2014-03-25T11:00:00-03:00");
+  }));
+
+  it("should remove a domain", inject(function($injector) {
+    expect(ctrl.removeDomain).not.toBeUndefined();
+
+    $httpBackend = $injector.get("$httpBackend");
+    $httpBackend.whenDELETE("/domain/br.").respond(204, "");
+
+    ctrl.removeDomain("br.");
+    $httpBackend.flush()
+
+    expect(ctrl.success).not.toBeUndefined();
+    expect(ctrl.success).toBe("Domain removed");
+  }));
 });

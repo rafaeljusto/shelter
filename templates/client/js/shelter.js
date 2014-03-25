@@ -371,19 +371,19 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
           $scope.verifyWorking = true;
 
           // If the domain is imported without DS records, the DS set attribute will be undefined
-          if ($scope.domain.dsset) {
+          if (domain.dsset) {
             // Convert keytag to number. For now I don't want to use valueAsNumber function
             // because the code will remain the same size and older browsers will break
-            for (var i = 0; i < $scope.domain.dsset.length; i += 1) {
-              var keytag = parseInt($scope.domain.dsset[i].keytag, 10);
+            for (var i = 0; i < domain.dsset.length; i += 1) {
+              var keytag = parseInt(domain.dsset[i].keytag, 10);
               if (keytag == NaN) {
                 keytag = 0;
               }
-              $scope.domain.dsset[i].keytag = keytag;
+              domain.dsset[i].keytag = keytag;
             }
           }
 
-          domainService.verifyDomain($scope.domain).then(
+          domainService.verifyDomain(domain).then(
             function(response) {
               if (response.status == 200) {
                 $scope.error = null;
@@ -393,11 +393,13 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
                 });
 
               } else if (response.status == 400) {
-                $scope.error = null;
+                $scope.success = null;
+                $scope.verifyResult = null;
                 $scope.error = response.data.message;
 
               } else {
                 $scope.success = null;
+                $scope.verifyResult = null;
                 $translate("Server error").then(function(translation) {
                   $scope.error = translation;
                 });
@@ -416,15 +418,17 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
                 $scope.error = null;
                 $translate("Domain removed").then(function(translation) {
                   $scope.success = translation;
-                  $scope.verifyResult = response.data;
+                  $scope.verifyResult = null;
                 });
 
               } else if (response.status == 400) {
-                $scope.error = null;
+                $scope.success = null;
+                $scope.verifyResult = null;
                 $scope.error = response.data.message;
 
               } else {
                 $scope.success = null;
+                $scope.verifyResult = null;
                 $translate("Server error").then(function(translation) {
                   $scope.error = translation;
                 });
