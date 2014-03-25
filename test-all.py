@@ -15,7 +15,7 @@ def findPath():
   goPath = os.environ["GOPATH"]
   goPathParts = goPath.split(";")
   for goPathPart in goPathParts:
-    projectPath = os.path.join(goPathPart, "src", "github.com", 
+    projectPath = os.path.join(goPathPart, "src", "github.com",
       "rafaeljusto", "shelter")
     if os.path.exists(projectPath):
       return projectPath
@@ -44,7 +44,7 @@ def buildMainBinary():
   except OSError:
     pass
 
-  # TODO: In windows the main binary is probably 
+  # TODO: In windows the main binary is probably
   #       generated as shelter.exe, we should also
   #        remove it
 
@@ -101,12 +101,12 @@ def runIntegrationTests():
   for testFile in testFiles:
     config = "-config=" + testFile[:len(testFile)-3] + ".conf"
     try:
-      subprocess.check_call(["go", "run", "-race", testFile, config]) 
+      subprocess.check_call(["go", "run", "-race", testFile, config])
 
     except:
       success = False
 
-  # One of the integration tests creates a temporary 
+  # One of the integration tests creates a temporary
   # log file, we just need to remove it
   try:
     os.remove("scan.log")
@@ -116,6 +116,22 @@ def runIntegrationTests():
 
   if not success:
     print("Errors during the integration test execution")
+    sys.exit(1)
+
+def runInterfaceTests():
+  print("\n[[ INTERFACE TESTS ]]\n")
+
+  success = True
+  testScript = os.path.join("templates", "client", "tests", "test-js.py")
+
+  try:
+    subprocess.check_call([testScript])
+
+  except:
+    success = False
+
+  if not success:
+    print("Errors during the interface test execution")
     sys.exit(1)
 
 ###################################################################
@@ -158,6 +174,7 @@ def main(argv):
 
     if not unitTestOnly:
       runIntegrationTests()
+      runInterfaceTests()
 
   except KeyboardInterrupt:
     sys.exit(1)

@@ -36,4 +36,16 @@ find . -type f -wholename './testing/*.go' | grep -v 'utils' | sort -u | awk -F 
 return_code=$?
 rm -f scan.log
 
+# If there was any error in the integration tests, we shouldn't
+# run the interface tests!
+if [ $return_code -ne 0 ]; then
+  exit $return_code
+fi
+
+# Interface tests
+echo "\n[[ INTERFACE TESTS ]]\n"
+cd templates/client/tests
+karma start karma.conf.js --single-run
+return_code=$?
+
 exit $return_code
