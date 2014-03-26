@@ -150,7 +150,9 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
 
   .filter("datetime", function() {
     return function(input, language) {
-      var datetime = moment(input, ["YYYY-MM-DDTHH:mm:ss.SSSZ", "YYYY-MM-DDTHH:mm:ssZ"])
+      // We will keep the timezone from what we received, but we aren't showing the
+      // timezone in the result string. This could be a problem!
+      var datetime = moment(input, ["YYYY-MM-DDTHH:mm:ss.SSSZ", "YYYY-MM-DDTHH:mm:ssZ"]).parseZone();
       if (datetime.isValid() && language) {
         // Detect empty datetime
         if (datetime.unix() <= 0) {
@@ -159,7 +161,7 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
 
         language = language.replace("_", "-");
         moment.lang(language);
-        return datetime.format("MMMM Do YYYY, h:mm:ss a");
+        return datetime.format("LLLL");
       }
 
       return "";
