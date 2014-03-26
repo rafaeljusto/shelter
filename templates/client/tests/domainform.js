@@ -1,5 +1,5 @@
 describe("Domain form directive", function() {
-  var elm, scope, ctrl;
+  var scope, ctrl;
 
   beforeEach(module('shelter'));
   beforeEach(module('directives'));
@@ -9,7 +9,7 @@ describe("Domain form directive", function() {
     $httpBackend.whenGET("/languages/en_US.json").respond(200, "{}");
     $httpBackend.flush()
 
-    elm = angular.element("<domainform domain='domain'></domain>");
+    var elm = angular.element("<domainform domain='domain'></domain>");
 
     scope = $rootScope;
     scope.domain = {};
@@ -57,23 +57,23 @@ describe("Domain form directive", function() {
     expect(ctrl.queryDomain).not.toBeUndefined();
 
     $httpBackend = $injector.get("$httpBackend");
-    $httpBackend.whenGET("/domain/br./verification").respond(200, "{ \
-      \"fqdn\": \"br.\", \
-      \"nameservers\": [ \
-        { \
-          \"host\": \"a.dns.br\", \
-          \"ipv4\": \"200.160.0.10\" \
-        } \
-      ], \
-      \"dsset\": [ \
-        { \
-          \"keytag\": 41674, \
-          \"algorithm\": 5, \
-          \"digestType\": 1, \
-          \"digest\": \"EAA0978F38879DB70A53F9FF1ACF21D046A98B5C\" \
-        } \
-      ] \
-    }");
+    $httpBackend.whenGET("/domain/br./verification").respond(200, {
+      fqdn: "br.",
+      nameservers: [
+        {
+          host: "a.dns.br",
+          ipv4: "200.160.0.10"
+        }
+      ],
+      "dsset": [
+        {
+          keytag: 41674,
+          algorithm: 5,
+          digestType: 1,
+          digest: "EAA0978F38879DB70A53F9FF1ACF21D046A98B5C"
+        }
+      ]
+    });
 
     ctrl.queryDomain("br.");
     $httpBackend.flush()
@@ -89,29 +89,29 @@ describe("Domain form directive", function() {
     expect(ctrl.verifyDomain).not.toBeUndefined();
 
     $httpBackend = $injector.get("$httpBackend");
-    $httpBackend.whenPUT("/domain/br./verification").respond(200, "{ \
-      \"fqdn\": \"br.\", \
-      \"nameservers\": [ \
-        { \
-          \"host\": \"a.dns.br\", \
-          \"ipv4\": \"200.160.0.10\", \
-          \"lastStatus\": \"OK\", \
-          \"lastOKAt\": \"2014-03-25T11:00:00-03:00\", \
-          \"lastCheckAt\": \"2014-03-25T11:00:00-03:00\" \
-        } \
-      ], \
-      \"dsset\": [ \
-        { \
-          \"keytag\": 41674, \
-          \"algorithm\": 5, \
-          \"digestType\": 1, \
-          \"digest\": \"EAA0978F38879DB70A53F9FF1ACF21D046A98B5C\", \
-          \"lastStatus\": \"OK\", \
-          \"lastOKAt\": \"2014-03-25T11:00:00-03:00\", \
-          \"lastCheckAt\": \"2014-03-25T11:00:00-03:00\" \
-        } \
-      ] \
-    }");
+    $httpBackend.whenPUT("/domain/br./verification").respond(200, {
+      fqdn: "br.",
+      nameservers: [
+        {
+          host: "a.dns.br",
+          ipv4: "200.160.0.10",
+          lastStatus: "OK",
+          lastOKAt: "2014-03-25T11:00:00-03:00",
+          lastCheckAt: "2014-03-25T11:00:00-03:00"
+        }
+      ],
+      "dsset": [
+        {
+          keytag: 41674,
+          algorithm: 5,
+          digestType: 1,
+          digest: "EAA0978F38879DB70A53F9FF1ACF21D046A98B5C",
+          lastStatus: "OK",
+          lastOKAt: "2014-03-25T11:00:00-03:00",
+          lastCheckAt: "2014-03-25T11:00:00-03:00"
+        }
+      ]
+    });
 
     ctrl.verifyDomain({
       fqdn: "br.",

@@ -17,6 +17,12 @@ module.exports = function(config) {
       'tests/statics.js',
       'tests/domain.js',
       'tests/domainform.js',
+      'tests/domain-controller.js',
+      'tests/domains-controller.js',
+      'tests/scan.js',
+      'tests/scan-controller.js',
+      'tests/languages-controller.js',
+      'tests/filters.js',
       'directives/*.html'
     ],
 
