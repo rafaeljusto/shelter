@@ -13,20 +13,20 @@ import (
 // Function created to run the listeners before dropping privileges in the main binary, so
 // that we can listen in low ports without keeping the program as a super user
 func Listen() ([]net.Listener, error) {
-	listeners := make([]net.Listener, 0, len(config.ShelterConfig.ClientServer.Listeners))
+	listeners := make([]net.Listener, 0, len(config.ShelterConfig.WebClient.Listeners))
 
-	for _, v := range config.ShelterConfig.ClientServer.Listeners {
+	for _, v := range config.ShelterConfig.WebClient.Listeners {
 		ipAndPort := net.JoinHostPort(v.IP, strconv.Itoa(v.Port))
 
 		if v.TLS {
 			certificatePath := filepath.Join(
 				config.ShelterConfig.BasePath,
-				config.ShelterConfig.ClientServer.TLS.CertificatePath,
+				config.ShelterConfig.WebClient.TLS.CertificatePath,
 			)
 
 			privateKeyPath := filepath.Join(
 				config.ShelterConfig.BasePath,
-				config.ShelterConfig.ClientServer.TLS.PrivateKeyPath,
+				config.ShelterConfig.WebClient.TLS.PrivateKeyPath,
 			)
 
 			cert, err := tls.LoadX509KeyPair(certificatePath, privateKeyPath)

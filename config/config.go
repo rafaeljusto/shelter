@@ -80,7 +80,7 @@ type Config struct {
 		Secrets map[string]string
 	}
 
-	ClientServer struct {
+	WebClient struct {
 		Enabled    bool
 		StaticPath string
 

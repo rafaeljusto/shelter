@@ -13,7 +13,7 @@ var (
 func StartStaticHandler() {
 	staticPath := filepath.Join(
 		config.ShelterConfig.BasePath,
-		config.ShelterConfig.ClientServer.StaticPath,
+		config.ShelterConfig.WebClient.StaticPath,
 	)
 
 	StaticHandler = http.FileServer(http.Dir(staticPath)).ServeHTTP
