@@ -97,7 +97,7 @@ func main() {
 		utils.Fatalln("Error reading configuration file", err)
 	}
 
-	startDNSServer(config.Server.Port, config.Scan.UDPMaxSize)
+	utils.StartDNSServer(config.Server.Port, config.Scan.UDPMaxSize)
 
 	domainWithNoDNSErrors(config)
 	domainWithNoDNSSECErrors(config)
@@ -565,26 +565,6 @@ func runScan(config ScanQuerierTestConfigFile,
 	}
 
 	return domains
-}
-
-func startDNSServer(port int, udpMaxSize uint16) {
-	// Change the querier DNS port for the scan
-	scan.DNSPort = port
-
-	server := dns.Server{
-		Net:     "udp",
-		Addr:    fmt.Sprintf("localhost:%d", port),
-		UDPSize: int(udpMaxSize),
-	}
-
-	go func() {
-		if err := server.ListenAndServe(); err != nil {
-			utils.Fatalln("Error starting DNS test server", err)
-		}
-	}()
-
-	// Wait the DNS server to start before testing
-	time.Sleep(1 * time.Second)
 }
 
 // Function to read input data file for performance tests. The file must use the following

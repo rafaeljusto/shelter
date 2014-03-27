@@ -18,12 +18,12 @@ import (
 )
 
 var (
-	configFilePath string     // Path for the configuration file with all the query parameters
-	report         bool       // Flag to generate the scan performance report file
-	cpuProfile     bool       // Write profile about the CPU when executing the report
-	goProfile      bool       // Write profile about the Go routines when executing the report
-	memoryProfile  bool       // Write profile about the memory usage when executing the report
-	server         dns.Server // DNS server used to simulate DNS requests
+	configFilePath string      // Path for the configuration file with all the query parameters
+	report         bool        // Flag to generate the scan performance report file
+	cpuProfile     bool        // Write profile about the CPU when executing the report
+	goProfile      bool        // Write profile about the Go routines when executing the report
+	memoryProfile  bool        // Write profile about the memory usage when executing the report
+	server         *dns.Server // DNS server used to simulate DNS requests
 )
 
 const (
@@ -92,7 +92,7 @@ func main() {
 	// test there was an error and the data wasn't removed from the database
 	utils.ClearDatabase(database)
 
-	startDNSServer(scanConfig.DNSServerPort, scanConfig.Scan.UDPMaxSize)
+	server = utils.StartDNSServer(scanConfig.DNSServerPort, scanConfig.Scan.UDPMaxSize)
 
 	domainDAO := dao.DomainDAO{
 		Database: database,
@@ -731,24 +731,4 @@ func generateAndSaveDomain(fqdn string, domainDAO dao.DomainDAO, dnskey *dns.DNS
 	if err := domainDAO.Save(&domain); err != nil {
 		utils.Fatalln(fmt.Sprintf("Fail to save domain %s", domain.FQDN), err)
 	}
-}
-
-func startDNSServer(port int, udpMaxSize uint16) {
-	// Change the querier DNS port for the scan
-	scan.DNSPort = port
-
-	server = dns.Server{
-		Net:     "udp",
-		Addr:    fmt.Sprintf("localhost:%d", port),
-		UDPSize: int(udpMaxSize),
-	}
-
-	go func() {
-		if err := server.ListenAndServe(); err != nil {
-			utils.Fatalln("Error starting DNS test server", err)
-		}
-	}()
-
-	// Wait the DNS server to start before testing
-	time.Sleep(1 * time.Second)
 }

@@ -2,8 +2,6 @@ package main
 
 import (
 	"bytes"
-	"crypto/md5"
-	"encoding/base64"
 	"flag"
 	"fmt"
 	"github.com/rafaeljusto/shelter/config"
@@ -15,7 +13,6 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
-	"time"
 )
 
 var (
@@ -166,7 +163,7 @@ func checkHeaders(mux *rest.Mux) {
 			utils.Fatalln("Error creating the HTTP request", err)
 		}
 
-		buildHTTPHeader(r, content)
+		utils.BuildHTTPHeader(r, content)
 		r.Header.Set(item.Header, item.HeaderValue)
 
 		w = httptest.NewRecorder()
@@ -197,7 +194,7 @@ func createDomain(mux *rest.Mux) {
 		utils.Fatalln("Error creating the HTTP request", err)
 	}
 
-	buildHTTPHeader(r, content)
+	utils.BuildHTTPHeader(r, content)
 
 	messages.ShelterRESTLanguagePacks = messages.LanguagePacks{
 		Default: "en-us",
@@ -245,7 +242,7 @@ func checkWrongACL(mux rest.Mux) {
 	}
 	r.RemoteAddr = "127.0.0.1:1234"
 
-	buildHTTPHeader(r, nil)
+	utils.BuildHTTPHeader(r, nil)
 
 	_, cidr, err := net.ParseCIDR("10.0.0.0/8")
 	if err != nil {
@@ -281,7 +278,7 @@ func retrieveDomainMetadata(mux rest.Mux) {
 	}
 	r.RemoteAddr = "127.0.0.1:1234"
 
-	buildHTTPHeader(r, nil)
+	utils.BuildHTTPHeader(r, nil)
 
 	_, cidr, err := net.ParseCIDR("127.0.0.0/8")
 	if err != nil {
@@ -308,7 +305,7 @@ func retrieveDomainsMetadata(mux rest.Mux) {
 	}
 	r.RemoteAddr = "127.0.0.1:1234"
 
-	buildHTTPHeader(r, nil)
+	utils.BuildHTTPHeader(r, nil)
 
 	_, cidr, err := net.ParseCIDR("127.0.0.0/8")
 	if err != nil {
@@ -334,7 +331,7 @@ func deleteDomain(mux *rest.Mux) {
 		utils.Fatalln("Error creating the HTTP request", err)
 	}
 
-	buildHTTPHeader(r, nil)
+	utils.BuildHTTPHeader(r, nil)
 
 	w := httptest.NewRecorder()
 	mux.ServeHTTP(w, r)
@@ -342,27 +339,4 @@ func deleteDomain(mux *rest.Mux) {
 	if w.Code != http.StatusNoContent {
 		utils.Fatalln("Error removing a domain object", nil)
 	}
-}
-
-func buildHTTPHeader(r *http.Request, content []byte) {
-	if r.ContentLength > 0 {
-		r.Header.Set("Content-Type", check.SupportedContentType)
-
-		hash := md5.New()
-		hash.Write(content)
-		hashBytes := hash.Sum(nil)
-		hashBase64 := base64.StdEncoding.EncodeToString(hashBytes)
-
-		r.Header.Set("Content-MD5", hashBase64)
-	}
-
-	r.Header.Set("Date", time.Now().Format(time.RFC1123))
-
-	stringToSign, err := check.BuildStringToSign(r, "1")
-	if err != nil {
-		utils.Fatalln("Error creating authorization", err)
-	}
-
-	signature := check.GenerateSignature(stringToSign, config.ShelterConfig.RESTServer.Secrets["1"])
-	r.Header.Set("Authorization", fmt.Sprintf("%s %d:%s", check.SupportedNamespace, 1, signature))
 }

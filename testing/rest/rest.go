@@ -2,22 +2,14 @@ package main
 
 import (
 	"bytes"
-	"crypto/md5"
-	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
 	"github.com/rafaeljusto/shelter/config"
 	"github.com/rafaeljusto/shelter/database/mongodb"
-	"github.com/rafaeljusto/shelter/net/http/rest"
-	"github.com/rafaeljusto/shelter/net/http/rest/check"
-	"github.com/rafaeljusto/shelter/net/http/rest/messages"
 	"github.com/rafaeljusto/shelter/testing/utils"
 	"io/ioutil"
 	"net/http"
-	"os"
-	"path/filepath"
 	"runtime"
 	"time"
 )
@@ -99,9 +91,8 @@ func main() {
 	// the collection does not exist yet, it will be created in the first insert
 	utils.ClearDatabase(database)
 
-	createMessagesFile()
-	defer removeMessagesFile()
-	startRESTServer()
+	finishRESTServer := utils.StartRESTServer()
+	defer finishRESTServer()
 
 	domainLifeCycle()
 
@@ -205,7 +196,7 @@ func domainLifeCycle() {
 			utils.Fatalln("Error creating the HTTP request", err)
 		}
 
-		buildHTTPHeader(r, []byte(item.content))
+		utils.BuildHTTPHeader(r, []byte(item.content))
 
 		response, err := client.Do(r)
 		if err != nil {
@@ -294,7 +285,7 @@ func restActionReport(numberOfItems int,
 				utils.Fatalln("Error creating the HTTP request", err)
 			}
 
-			buildHTTPHeader(r, content)
+			utils.BuildHTTPHeader(r, content)
 
 			response, err := client.Do(r)
 			if err != nil {
@@ -343,83 +334,4 @@ func calculateRESTDurations(action func(), numberOfDomains int) (totalDuration t
 	}
 
 	return
-}
-
-func buildHTTPHeader(r *http.Request, content []byte) {
-	if r.ContentLength > 0 {
-		r.Header.Set("Content-Type", check.SupportedContentType)
-
-		hash := md5.New()
-		hash.Write(content)
-		hashBytes := hash.Sum(nil)
-		hashBase64 := base64.StdEncoding.EncodeToString(hashBytes)
-
-		r.Header.Set("Content-MD5", hashBase64)
-	}
-
-	r.Header.Set("Date", time.Now().Format(time.RFC1123))
-
-	stringToSign, err := check.BuildStringToSign(r, "1")
-	if err != nil {
-		utils.Fatalln("Error creating authorization", err)
-	}
-
-	signature := check.GenerateSignature(stringToSign, config.ShelterConfig.RESTServer.Secrets["1"])
-	r.Header.Set("Authorization", fmt.Sprintf("%s %d:%s", check.SupportedNamespace, 1, signature))
-}
-
-func createMessagesFile() {
-	languagePacks := messages.LanguagePacks{
-		Default: "en-us",
-		Packs: []messages.LanguagePack{
-			{
-				GenericName:  "en",
-				SpecificName: "en-us",
-			},
-			{
-				GenericName:  "pt",
-				SpecificName: "pt-br",
-			},
-		},
-	}
-
-	messagePath := filepath.Join(
-		config.ShelterConfig.BasePath,
-		config.ShelterConfig.RESTServer.LanguageConfigPath,
-	)
-
-	file, err := os.Create(messagePath)
-	if err != nil {
-		utils.Fatalln("Error creating messages file", err)
-	}
-	defer file.Close()
-
-	encoder := json.NewEncoder(file)
-	if err := encoder.Encode(languagePacks); err != nil {
-		utils.Fatalln("Error encoding messages structure", err)
-	}
-}
-
-func removeMessagesFile() {
-	messagePath := filepath.Join(
-		config.ShelterConfig.BasePath,
-		config.ShelterConfig.RESTServer.LanguageConfigPath,
-	)
-
-	// We don't care if the file doesn't exists anymore, so we ignore the returned error
-	os.Remove(messagePath)
-}
-
-func startRESTServer() {
-	listeners, err := rest.Listen()
-	if err != nil {
-		utils.Fatalln("Error listening to interfaces", err)
-	}
-
-	if err := rest.Start(listeners); err != nil {
-		utils.Fatalln("Error starting the REST server", err)
-	}
-
-	// Wait the REST server to start before testing
-	time.Sleep(1 * time.Second)
 }

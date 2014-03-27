@@ -64,6 +64,7 @@ func HandleDomain(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if response.StatusCode != http.StatusCreated &&
+		response.StatusCode != http.StatusOK &&
 		response.StatusCode != http.StatusNoContent &&
 		response.StatusCode != http.StatusBadRequest {
 

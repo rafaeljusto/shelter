@@ -11,16 +11,13 @@ import (
 	"github.com/rafaeljusto/shelter/net/http/rest/context"
 	"github.com/rafaeljusto/shelter/net/http/rest/handler"
 	"github.com/rafaeljusto/shelter/net/http/rest/protocol"
-	"github.com/rafaeljusto/shelter/net/scan"
 	"github.com/rafaeljusto/shelter/testing/utils"
 	"net/http"
 	"strings"
-	"time"
 )
 
 var (
-	configFilePath string     // Path for the config file with the connection information
-	server         dns.Server // DNS server used to simulate DNS requests
+	configFilePath string // Path for the config file with the connection information
 )
 
 // RESTHandlerDomainTestConfigFile is a structure to store the test configuration file data
@@ -51,7 +48,7 @@ func main() {
 		utils.Fatalln("Error reading configuration file", err)
 	}
 
-	startDNSServer(restConfig.DNSServerPort, restConfig.Scan.UDPMaxSize)
+	utils.StartDNSServer(restConfig.DNSServerPort, restConfig.Scan.UDPMaxSize)
 
 	scanDomain()
 	queryDomain()
@@ -196,24 +193,4 @@ func queryDomain() {
 	if len(domainResponse.Nameservers) != 2 {
 		utils.Fatalln("Wrong number of nameservers", nil)
 	}
-}
-
-func startDNSServer(port int, udpMaxSize uint16) {
-	// Change the querier DNS port for the scan
-	scan.DNSPort = port
-
-	server = dns.Server{
-		Net:     "udp",
-		Addr:    fmt.Sprintf("localhost:%d", port),
-		UDPSize: int(udpMaxSize),
-	}
-
-	go func() {
-		if err := server.ListenAndServe(); err != nil {
-			utils.Fatalln("Error starting DNS test server", err)
-		}
-	}()
-
-	// Wait the DNS server to start before testing
-	time.Sleep(1 * time.Second)
 }

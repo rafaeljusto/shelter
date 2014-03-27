@@ -3,7 +3,6 @@ package dspolicy
 import (
 	"github.com/miekg/dns"
 	"github.com/rafaeljusto/shelter/model"
-	"github.com/rafaeljusto/shelter/testing/utils"
 	"testing"
 	"time"
 )
@@ -67,7 +66,7 @@ func TestDSNetworkError(t *testing.T) {
 }
 
 func TestRunPolicies(t *testing.T) {
-	dnskey, rrsig, err := utils.GenerateKeyAndSignZone("test.br.")
+	dnskey, rrsig, err := generateKeyAndSignZone("test.br.")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -77,7 +76,7 @@ func TestRunPolicies(t *testing.T) {
 		DSSet: []model.DS{
 			{
 				Keytag:     dnskey.KeyTag(),
-				Algorithm:  utils.ConvertKeyAlgorithm(dnskey.Algorithm),
+				Algorithm:  convertKeyAlgorithm(dnskey.Algorithm),
 				DigestType: model.DSDigestTypeSHA1,
 				Digest:     ds.Digest,
 			},
@@ -182,7 +181,7 @@ func TestDNSHeaderPolicy(t *testing.T) {
 }
 
 func TestDNSSECPolicy(t *testing.T) {
-	dnskey, rrsig, err := utils.GenerateKeyAndSignZone("test.br.")
+	dnskey, rrsig, err := generateKeyAndSignZone("test.br.")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -192,7 +191,7 @@ func TestDNSSECPolicy(t *testing.T) {
 		DSSet: []model.DS{
 			{
 				Keytag:     dnskey.KeyTag(),
-				Algorithm:  utils.ConvertKeyAlgorithm(dnskey.Algorithm),
+				Algorithm:  convertKeyAlgorithm(dnskey.Algorithm),
 				DigestType: model.DSDigestTypeSHA1,
 				Digest:     ds.Digest,
 			},
@@ -215,13 +214,13 @@ func TestDNSSECPolicy(t *testing.T) {
 }
 
 func TestDNSSECPolicyMissingKey(t *testing.T) {
-	dnskey, _, err := utils.GenerateKeyAndSignZone("test.br.")
+	dnskey, _, err := generateKeyAndSignZone("test.br.")
 	if err != nil {
 		t.Fatal(err)
 	}
 	ds := dnskey.ToDS(int(model.DSDigestTypeSHA1))
 
-	otherDNSKEY, otherRRSIG, err := utils.GenerateKeyAndSignZone("test.br.")
+	otherDNSKEY, otherRRSIG, err := generateKeyAndSignZone("test.br.")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -230,7 +229,7 @@ func TestDNSSECPolicyMissingKey(t *testing.T) {
 		DSSet: []model.DS{
 			{
 				Keytag:     dnskey.KeyTag(),
-				Algorithm:  utils.ConvertKeyAlgorithm(dnskey.Algorithm),
+				Algorithm:  convertKeyAlgorithm(dnskey.Algorithm),
 				DigestType: model.DSDigestTypeSHA1,
 				Digest:     ds.Digest,
 			},
@@ -254,7 +253,7 @@ func TestDNSSECPolicyMissingKey(t *testing.T) {
 
 func TestDNSSECPolicyNoSEPKey(t *testing.T) {
 	dnskey, rrsig, err :=
-		utils.GenerateKeyAndSignZoneWithNoSEPKey("test.br.")
+		generateKeyAndSignZoneWithNoSEPKey("test.br.")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -264,7 +263,7 @@ func TestDNSSECPolicyNoSEPKey(t *testing.T) {
 		DSSet: []model.DS{
 			{
 				Keytag:     dnskey.KeyTag(),
-				Algorithm:  utils.ConvertKeyAlgorithm(dnskey.Algorithm),
+				Algorithm:  convertKeyAlgorithm(dnskey.Algorithm),
 				DigestType: model.DSDigestTypeSHA1,
 				Digest:     ds.Digest,
 			},
@@ -287,13 +286,13 @@ func TestDNSSECPolicyNoSEPKey(t *testing.T) {
 }
 
 func TestDNSSECPolicyMissingSignature(t *testing.T) {
-	dnskey, _, err := utils.GenerateKeyAndSignZone("test.br.")
+	dnskey, _, err := generateKeyAndSignZone("test.br.")
 	if err != nil {
 		t.Fatal(err)
 	}
 	ds := dnskey.ToDS(int(model.DSDigestTypeSHA1))
 
-	otherDNSKEY, otherRRSIG, err := utils.GenerateKeyAndSignZone("test.br.")
+	otherDNSKEY, otherRRSIG, err := generateKeyAndSignZone("test.br.")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -302,7 +301,7 @@ func TestDNSSECPolicyMissingSignature(t *testing.T) {
 		DSSet: []model.DS{
 			{
 				Keytag:     dnskey.KeyTag(),
-				Algorithm:  utils.ConvertKeyAlgorithm(dnskey.Algorithm),
+				Algorithm:  convertKeyAlgorithm(dnskey.Algorithm),
 				DigestType: model.DSDigestTypeSHA1,
 				Digest:     ds.Digest,
 			},
@@ -326,7 +325,7 @@ func TestDNSSECPolicyMissingSignature(t *testing.T) {
 }
 
 func TestDNSSECPolicyExpiredSignature(t *testing.T) {
-	dnskey, rrsig, err := utils.GenerateKeyAndSignZoneWithExpiredSignature("test.br.")
+	dnskey, rrsig, err := generateKeyAndSignZoneWithExpiredSignature("test.br.")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -336,7 +335,7 @@ func TestDNSSECPolicyExpiredSignature(t *testing.T) {
 		DSSet: []model.DS{
 			{
 				Keytag:     dnskey.KeyTag(),
-				Algorithm:  utils.ConvertKeyAlgorithm(dnskey.Algorithm),
+				Algorithm:  convertKeyAlgorithm(dnskey.Algorithm),
 				DigestType: model.DSDigestTypeSHA1,
 				Digest:     ds.Digest,
 			},
@@ -359,7 +358,7 @@ func TestDNSSECPolicyExpiredSignature(t *testing.T) {
 }
 
 func TestDNSSECPolicySignatureError(t *testing.T) {
-	dnskey, rrsig, err := utils.GenerateKeyAndSignZone("test.br.")
+	dnskey, rrsig, err := generateKeyAndSignZone("test.br.")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -372,7 +371,7 @@ func TestDNSSECPolicySignatureError(t *testing.T) {
 		DSSet: []model.DS{
 			{
 				Keytag:     dnskey.KeyTag(),
-				Algorithm:  utils.ConvertKeyAlgorithm(dnskey.Algorithm),
+				Algorithm:  convertKeyAlgorithm(dnskey.Algorithm),
 				DigestType: model.DSDigestTypeSHA1,
 				Digest:     ds.Digest,
 			},
@@ -395,7 +394,7 @@ func TestDNSSECPolicySignatureError(t *testing.T) {
 }
 
 func TestDNSSECPolicyWrongDSDigest(t *testing.T) {
-	dnskey, rrsig, err := utils.GenerateKeyAndSignZone("test.br.")
+	dnskey, rrsig, err := generateKeyAndSignZone("test.br.")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -405,7 +404,7 @@ func TestDNSSECPolicyWrongDSDigest(t *testing.T) {
 		DSSet: []model.DS{
 			{
 				Keytag:     dnskey.KeyTag(),
-				Algorithm:  utils.ConvertKeyAlgorithm(dnskey.Algorithm),
+				Algorithm:  convertKeyAlgorithm(dnskey.Algorithm),
 				DigestType: model.DSDigestTypeSHA1,
 				Digest:     "A" + ds.Digest,
 			},
@@ -428,12 +427,12 @@ func TestDNSSECPolicyWrongDSDigest(t *testing.T) {
 }
 
 func TestSelectDNSKEY(t *testing.T) {
-	dnskey, rrsig, err := utils.GenerateKeyAndSignZone("test.br.")
+	dnskey, rrsig, err := generateKeyAndSignZone("test.br.")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	otherDNSKEY, otherRRSIG, err := utils.GenerateKeyAndSignZone("test.br.")
+	otherDNSKEY, otherRRSIG, err := generateKeyAndSignZone("test.br.")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -462,12 +461,12 @@ func TestSelectDNSKEY(t *testing.T) {
 }
 
 func TestSelectRRSIG(t *testing.T) {
-	dnskey, rrsig, err := utils.GenerateKeyAndSignZone("test.br.")
+	dnskey, rrsig, err := generateKeyAndSignZone("test.br.")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	otherDNSKEY, otherRRSIG, err := utils.GenerateKeyAndSignZone("test.br.")
+	otherDNSKEY, otherRRSIG, err := generateKeyAndSignZone("test.br.")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -493,4 +492,161 @@ func TestSelectRRSIG(t *testing.T) {
 	if domainDSPolicy.selectRRSIG(rrsigs, dnskey.KeyTag()) != nil {
 		t.Error("Selecting a RRSIG that don't exists")
 	}
+}
+
+func generateKeyAndSignZone(zone string) (*dns.DNSKEY, *dns.RRSIG, error) {
+	var globalErr error
+
+	// When creating a lot of keys in a small amount of time, sometimes the systems fails to
+	// generate or sign the key. For that reason we try at least 3 times of failure before
+	// returning the error. Only this method has this feature because the other ones are not
+	// used in performance reports
+	for i := 0; i < 3; i++ {
+		dnskey := &dns.DNSKEY{
+			Hdr: dns.RR_Header{
+				Name:   zone,
+				Rrtype: dns.TypeDNSKEY,
+			},
+			Flags:     257,
+			Protocol:  3,
+			Algorithm: dns.RSASHA1NSEC3SHA1,
+		}
+
+		privateKey, err := dnskey.Generate(1024)
+		if err != nil {
+			globalErr = err
+			continue
+		}
+
+		rrsig := &dns.RRSIG{
+			Hdr: dns.RR_Header{
+				Name:   zone,
+				Rrtype: dns.TypeRRSIG,
+			},
+			TypeCovered: dns.TypeDNSKEY,
+			Algorithm:   dnskey.Algorithm,
+			Expiration:  uint32(time.Now().Add(10 * time.Second).Unix()),
+			Inception:   uint32(time.Now().Unix()),
+			KeyTag:      dnskey.KeyTag(),
+			SignerName:  zone,
+		}
+
+		if err := rrsig.Sign(privateKey, []dns.RR{dnskey}); err != nil {
+			globalErr = err
+			continue
+		}
+
+		return dnskey, rrsig, nil
+	}
+
+	return nil, nil, globalErr
+}
+
+func generateKeyAndSignZoneWithNoSEPKey(zone string) (*dns.DNSKEY, *dns.RRSIG, error) {
+	dnskey := &dns.DNSKEY{
+		Hdr: dns.RR_Header{
+			Name:   zone,
+			Rrtype: dns.TypeDNSKEY,
+		},
+		Flags:     256,
+		Protocol:  3,
+		Algorithm: dns.RSASHA1NSEC3SHA1,
+	}
+
+	privateKey, err := dnskey.Generate(1024)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	rrsig := &dns.RRSIG{
+		Hdr: dns.RR_Header{
+			Name:   zone,
+			Rrtype: dns.TypeRRSIG,
+		},
+		TypeCovered: dns.TypeDNSKEY,
+		Algorithm:   dnskey.Algorithm,
+		Expiration:  uint32(time.Now().Add(10 * time.Second).Unix()),
+		Inception:   uint32(time.Now().Unix()),
+		KeyTag:      dnskey.KeyTag(),
+		SignerName:  zone,
+	}
+
+	if err := rrsig.Sign(privateKey, []dns.RR{dnskey}); err != nil {
+		return nil, nil, err
+	}
+
+	return dnskey, rrsig, nil
+}
+
+func generateKeyAndSignZoneWithExpiredSignature(zone string) (*dns.DNSKEY, *dns.RRSIG, error) {
+	dnskey := &dns.DNSKEY{
+		Hdr: dns.RR_Header{
+			Name:   zone,
+			Rrtype: dns.TypeDNSKEY,
+		},
+		Flags:     257,
+		Protocol:  3,
+		Algorithm: dns.RSASHA1NSEC3SHA1,
+	}
+
+	privateKey, err := dnskey.Generate(1024)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	rrsig := &dns.RRSIG{
+		Hdr: dns.RR_Header{
+			Name:   zone,
+			Rrtype: dns.TypeRRSIG,
+		},
+		TypeCovered: dns.TypeDNSKEY,
+		Algorithm:   dnskey.Algorithm,
+		Expiration:  uint32(time.Now().Add(-2 * time.Second).Unix()),
+		Inception:   uint32(time.Now().Add(-5 * time.Second).Unix()),
+		KeyTag:      dnskey.KeyTag(),
+		SignerName:  zone,
+	}
+
+	if err := rrsig.Sign(privateKey, []dns.RR{dnskey}); err != nil {
+		return nil, nil, err
+	}
+
+	return dnskey, rrsig, nil
+}
+
+func convertKeyAlgorithm(algorithm uint8) model.DSAlgorithm {
+	switch algorithm {
+	case dns.RSAMD5:
+		return model.DSAlgorithmRSAMD5
+	case dns.DH:
+		return model.DSAlgorithmDH
+	case dns.DSA:
+		return model.DSAlgorithmDSASHA1
+	case dns.ECC:
+		return model.DSAlgorithmECC
+	case dns.RSASHA1:
+		return model.DSAlgorithmRSASHA1
+	case dns.DSANSEC3SHA1:
+		return model.DSAlgorithmDSASHA1NSEC3
+	case dns.RSASHA1NSEC3SHA1:
+		return model.DSAlgorithmRSASHA1NSEC3
+	case dns.RSASHA256:
+		return model.DSAlgorithmRSASHA256
+	case dns.RSASHA512:
+		return model.DSAlgorithmRSASHA512
+	case dns.ECCGOST:
+		return model.DSAlgorithmECCGOST
+	case dns.ECDSAP256SHA256:
+		return model.DSAlgorithmECDSASHA256
+	case dns.ECDSAP384SHA384:
+		return model.DSAlgorithmECDSASHA384
+	case dns.INDIRECT:
+		return model.DSAlgorithmIndirect
+	case dns.PRIVATEDNS:
+		return model.DSAlgorithmPrivateDNS
+	case dns.PRIVATEOID:
+		return model.DSAlgorithmPrivateOID
+	}
+
+	return model.DSAlgorithmRSASHA1
 }
