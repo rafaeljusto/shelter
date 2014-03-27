@@ -35,7 +35,7 @@ const (
 	ErrListeningRESTInterfaces
 	ErrStartingRESTServer
 	ErrListeningClientInterfaces
-	ErrStartingClientServer
+	ErrStartingWebClient
 	ErrScanTimeFormat
 	ErrCurrentScanInitialize
 	ErrNotificationTemplates
@@ -89,7 +89,7 @@ func main() {
 		}
 	}
 
-	if config.ShelterConfig.ClientServer.Enabled {
+	if config.ShelterConfig.WebClient.Enabled {
 		var err error
 		clientListeners, err = client.Listen()
 		if err != nil {
@@ -99,7 +99,7 @@ func main() {
 
 		if err := client.Start(clientListeners); err != nil {
 			log.Println("Error starting the Client server. Details:", err)
-			os.Exit(ErrStartingClientServer)
+			os.Exit(ErrStartingWebClient)
 		}
 	}
 
