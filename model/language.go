@@ -1,3 +1,7 @@
+// Copyright 2014 Rafael Dantas Justo. All rights reserved.
+// Use of this source code is governed by a GPL
+// license that can be found in the LICENSE file.
+
 package model
 
 // File generated using the language.py script, that is responsable for parsing the IANA

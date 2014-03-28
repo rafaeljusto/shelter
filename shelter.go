@@ -1,3 +1,21 @@
+// shelter - DNS/DNSSEC misconfiguration checker
+//
+// Copyright (C) 2014 Rafael Dantas Justo <adm@rafael.net.br>
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
 package main
 
 import (
@@ -18,6 +36,20 @@ import (
 	"runtime"
 	"syscall"
 	"time"
+)
+
+const (
+	copyright string = `Shelter version 0.1, Copyright (C) 2014 Rafael Dantas Justo
+Shelter comes with ABSOLUTELY NO WARRANTY.
+This is free software, and you are welcome
+to redistribute it under certain conditions.
+`
+)
+
+// List of arguments that can be filled in the program command line
+var (
+	configFilePath string // General configuration path
+	showVersion    *bool  // Show system version
 )
 
 // We store all listeners to make it easier later to stop all in a system SIGTERM event
@@ -44,10 +76,23 @@ const (
 // We are going to use the initialization function to read command line arguments, load
 // the configuration file and register system signals
 func init() {
+	flag.StringVar(&configFilePath, "config", "", "Configuration file")
+	showVersion = flag.Bool("version", false, "System version")
+
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "%s\nUsage of %s:\n", copyright, os.Args[0])
+		flag.PrintDefaults()
+	}
+
 	flag.Parse()
 
-	if flag.NArg() < 1 {
-		fmt.Printf("Usage: %s <configuration file>\n", os.Args[0])
+	if *showVersion {
+		fmt.Println(copyright)
+		os.Exit(0)
+	}
+
+	if len(configFilePath) == 0 {
+		fmt.Println("The configuration file was not informed")
 		os.Exit(ErrInputParameters)
 	}
 
@@ -235,5 +280,5 @@ func loadSettings() error {
 	// TODO: Possible concurrent access problem while reloading the configuration file. And
 	// we also should reload many structures that could change with the new configuration
 	// files, like the network interfaces
-	return config.LoadConfig(flag.Arg(0))
+	return config.LoadConfig(configFilePath)
 }
