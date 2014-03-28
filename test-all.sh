@@ -7,6 +7,9 @@
 
 : ${GOPATH:?"Need to set GOPATH"}
 
+workspace=`echo $GOPATH | cut -d: -f1`
+cd $workspace/src/github.com/rafaeljusto/shelter
+
 # Main binary must build
 go build shelter.go
 return_code=$?

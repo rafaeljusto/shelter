@@ -1,0 +1,10 @@
+# Upstart job configuration file
+
+description "Shelter initialisation"
+
+start on filesystem and (started networking)
+
+respawn
+respawn limit 5 10
+
+exec /usr/local/shelter/bin/shelter /usr/local/shelter/etc/shelter.conf

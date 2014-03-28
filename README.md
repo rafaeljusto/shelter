@@ -1,7 +1,7 @@
 shelter
 =======
 
-[![Build Status](https://travis-ci.org/rafaeljusto/shelter.png?branch=master)](https://travis-ci.org/rafaeljusto/shelter)
+[![Build Status](https://travis-ci.org/rafaeljusto/shelter.png?branch=deploy)](https://travis-ci.org/rafaeljusto/shelter)
 [![GoDoc](https://godoc.org/github.com/rafaeljusto/shelter?status.png)](https://godoc.org/github.com/rafaeljusto/shelter)
 
 System created for registries to periodically validate and alert domains about DNS or
@@ -53,3 +53,14 @@ Optionally you can run the tests executing the following command on the project 
 ```
 python3 test-all.py
 ```
+
+deploying
+=========
+
+To deploy the project you will need one of the programs bellow, depending on the
+operational system that you choose.
+
+* FPM - https://github.com/jordansissel/fpm (Debian packages)
+
+All necessary scripts to generate the packages are under the deploy folder in the project
+root.
