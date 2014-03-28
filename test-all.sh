@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# Copyright 2014 Rafael Dantas Justo. All rights reserved.
+# Use of this source code is governed by a GPL
+# license that can be found in the LICENSE file.
+
 # Travis CI tool doesn't support python scripts in a Go project,
 # so this script was created thinking on the limited enviroment
 # of the CI tool, if you're testing the project, please use the

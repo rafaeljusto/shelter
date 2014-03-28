@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+# Copyright 2014 Rafael Dantas Justo. All rights reserved.
+# Use of this source code is governed by a GPL
+# license that can be found in the LICENSE file.
+
 import fnmatch
 import os
 import subprocess
@@ -53,7 +57,7 @@ def runCoverReport():
     except subprocess.CalledProcessError:
       success = False
 
-  # Remove the temporary file created for the 
+  # Remove the temporary file created for the
   # covering reports
   try:
     os.remove("cover-profile.out")

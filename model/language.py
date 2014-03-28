@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+# Copyright 2014 Rafael Dantas Justo. All rights reserved.
+# Use of this source code is governed by a GPL
+# license that can be found in the LICENSE file.
+
 # Script responsable for building the language.go file from the IANA Language Subtag Registry file
 # format. We should run this only when we found a new language that should be used in the system and
 # is not yet listed in our Go file
@@ -80,6 +84,11 @@ def buildLanguages(data):
 def writeLanguages(languages, regions, outputPath):
   output = open(outputPath, "w")
 
+  print("""// model - Description of the objects
+//
+// Copyright 2014 Rafael Dantas Justo. All rights reserved.
+// Use of this source code is governed by a GPL
+// license that can be found in the LICENSE file.""", file=output)
   print("package model", file=output)
   print("""
 // File generated using the language.py script, that is responsable for parsing the IANA

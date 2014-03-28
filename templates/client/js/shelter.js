@@ -1,5 +1,8 @@
-// References:
-// http://stackoverflow.com/questions/17646034/what-is-the-best-practice-for-making-an-ajax-call-in-angular-js
+/*
+ * Copyright 2014 Rafael Dantas Justo. All rights reserved.
+ * Use of this source code is governed by a GPL
+ * license that can be found in the LICENSE file.
+ */
 
 var dnskeyFlags = [
   {id: 256, name:"ZSK"},
