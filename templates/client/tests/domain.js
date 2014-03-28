@@ -17,7 +17,7 @@ describe("Domain directive", function() {
     $compile(elm)(scope);
     scope.$digest();
 
-    ctrl = elm.scope().$$childTail;
+    ctrl = elm.isolateScope();
   }));
 
   it("should verify if a domain has errors", function() {

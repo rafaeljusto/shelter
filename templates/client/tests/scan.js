@@ -17,7 +17,7 @@ describe("Scan directive", function() {
     $compile(elm)(scope);
     scope.$digest();
 
-    ctrl = elm.scope().$$childTail;
+    ctrl = elm.isolateScope();
   }));
 
   it("should count number of statistics", function() {

@@ -17,7 +17,7 @@ describe("Domain form directive", function() {
     $compile(elm)(scope);
     scope.$digest();
 
-    ctrl = elm.scope().$$childTail;
+    ctrl = elm.isolateScope();
   }));
 
   it("should detect when a nameserver needs glue records", function() {
