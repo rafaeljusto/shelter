@@ -12,7 +12,6 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-	"reflect"
 	"strings"
 	"syscall"
 	"testing"
@@ -170,13 +169,11 @@ func TestSignAndSend(t *testing.T) {
 			}
 
 		case *url.Error:
-			if specificErr.Op != "read" {
-				t.Log(specificErr.Op)
+			if specificErr.Op != "Get" {
 				t.Error(err)
 			}
 
 		default:
-			t.Log("Type: ", reflect.ValueOf(err).String())
 			t.Error(err)
 		}
 	}
@@ -207,13 +204,11 @@ func TestSignAndSend(t *testing.T) {
 			}
 
 		case *url.Error:
-			if specificErr.Op != "read" {
-				t.Log(specificErr.Op)
+			if specificErr.Op != "Get" {
 				t.Error(err)
 			}
 
 		default:
-			t.Log("Type: ", reflect.ValueOf(err).String())
 			t.Error(err)
 		}
 	}
