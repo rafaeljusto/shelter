@@ -12,6 +12,7 @@ import (
 	"net"
 	"net/http"
 	"strings"
+	"syscall"
 	"testing"
 )
 
@@ -155,11 +156,18 @@ func TestSignAndSend(t *testing.T) {
 
 	if _, err := signAndSend(r, nil); err != nil {
 		// Avoid connection error
-		if opError, ok := err.(*net.OpError); ok {
-			if opError.Op != "read" {
+		switch specificErr := err.(type) {
+		case *net.OpError:
+			if specificErr.Op != "read" {
 				t.Error(err)
 			}
-		} else {
+
+		case syscall.Errno:
+			if specificErr != syscall.ECONNREFUSED {
+				t.Error(err)
+			}
+
+		default:
 			t.Error(err)
 		}
 	}
@@ -178,11 +186,18 @@ func TestSignAndSend(t *testing.T) {
 
 	if _, err := signAndSend(r, content); err != nil {
 		// Avoid connection error
-		if opError, ok := err.(*net.OpError); ok {
-			if opError.Op != "read" {
+		switch specificErr := err.(type) {
+		case *net.OpError:
+			if specificErr.Op != "read" {
 				t.Error(err)
 			}
-		} else {
+
+		case syscall.Errno:
+			if specificErr != syscall.ECONNREFUSED {
+				t.Error(err)
+			}
+
+		default:
 			t.Error(err)
 		}
 	}
