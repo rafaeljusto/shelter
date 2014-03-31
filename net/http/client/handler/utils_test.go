@@ -11,6 +11,7 @@ import (
 	"github.com/rafaeljusto/shelter/net/http/rest/check"
 	"net"
 	"net/http"
+	"net/url"
 	"reflect"
 	"strings"
 	"syscall"
@@ -168,6 +169,12 @@ func TestSignAndSend(t *testing.T) {
 				t.Error(err)
 			}
 
+		case url.Error:
+			if specificErr.Op != "read" {
+				t.Log(specificErr.Op)
+				t.Error(err)
+			}
+
 		default:
 			t.Log("Type: ", reflect.ValueOf(err).String())
 			t.Error(err)
@@ -196,6 +203,12 @@ func TestSignAndSend(t *testing.T) {
 
 		case syscall.Errno:
 			if specificErr != syscall.ECONNREFUSED {
+				t.Error(err)
+			}
+
+		case url.Error:
+			if specificErr.Op != "read" {
+				t.Log(specificErr.Op)
 				t.Error(err)
 			}
 
