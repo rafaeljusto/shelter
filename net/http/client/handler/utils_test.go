@@ -9,6 +9,7 @@ package handler
 import (
 	"github.com/rafaeljusto/shelter/config"
 	"github.com/rafaeljusto/shelter/net/http/rest/check"
+	"net"
 	"net/http"
 	"strings"
 	"testing"
@@ -154,7 +155,11 @@ func TestSignAndSend(t *testing.T) {
 
 	if _, err := signAndSend(r, nil); err != nil {
 		// Avoid connection error
-		if !strings.Contains(err.Error(), "connection refused") {
+		if opError, ok := err.(*net.OpError); ok {
+			if opError.Op != "read" {
+				t.Error(err)
+			}
+		} else {
 			t.Error(err)
 		}
 	}
@@ -173,7 +178,11 @@ func TestSignAndSend(t *testing.T) {
 
 	if _, err := signAndSend(r, content); err != nil {
 		// Avoid connection error
-		if !strings.Contains(err.Error(), "connection refused") {
+		if opError, ok := err.(*net.OpError); ok {
+			if opError.Op != "read" {
+				t.Error(err)
+			}
+		} else {
 			t.Error(err)
 		}
 	}

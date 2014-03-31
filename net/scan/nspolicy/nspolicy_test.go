@@ -9,6 +9,7 @@ package nspolicy
 import (
 	"github.com/miekg/dns"
 	"github.com/rafaeljusto/shelter/model"
+	"net"
 	"testing"
 )
 
@@ -42,21 +43,19 @@ func TestNSNetworkError(t *testing.T) {
 		t.Error("Not detecting network timeout")
 	}
 
-	err = myErr{
-		err:     "lookup",
-		timeout: false,
+	opErr := &net.OpError{
+		Op: "dial",
 	}
 
-	if domainNSPolicy.CheckNetworkError(err) != model.NameserverStatusUnknownHost {
+	if domainNSPolicy.CheckNetworkError(opErr) != model.NameserverStatusUnknownHost {
 		t.Error("Not detecting when it couldn't resolve the nameserver")
 	}
 
-	err = myErr{
-		err:     "connection refused",
-		timeout: false,
+	opErr = &net.OpError{
+		Op: "read",
 	}
 
-	if domainNSPolicy.CheckNetworkError(err) != model.NameserverStatusConnectionRefused {
+	if domainNSPolicy.CheckNetworkError(opErr) != model.NameserverStatusConnectionRefused {
 		t.Error("Not detecting when the connection was refused")
 	}
 
