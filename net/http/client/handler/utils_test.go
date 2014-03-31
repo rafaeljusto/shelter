@@ -11,6 +11,7 @@ import (
 	"github.com/rafaeljusto/shelter/net/http/rest/check"
 	"net"
 	"net/http"
+	"reflect"
 	"strings"
 	"syscall"
 	"testing"
@@ -168,6 +169,7 @@ func TestSignAndSend(t *testing.T) {
 			}
 
 		default:
+			t.Log("Type: ", reflect.ValueOf(err).String())
 			t.Error(err)
 		}
 	}
@@ -198,6 +200,7 @@ func TestSignAndSend(t *testing.T) {
 			}
 
 		default:
+			t.Log("Type: ", reflect.ValueOf(err).String())
 			t.Error(err)
 		}
 	}
