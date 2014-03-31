@@ -59,6 +59,10 @@ func TestNameserverChangeStatus(t *testing.T) {
 		LastCheckAt: timeMark,
 	}
 
+	// Wait for a while to make a difference between the first and the second
+	// LastCheck fields
+	time.Sleep(1 * time.Millisecond)
+
 	nameserver.ChangeStatus(NameserverStatusOK)
 
 	if nameserver.LastStatus != NameserverStatusOK {
