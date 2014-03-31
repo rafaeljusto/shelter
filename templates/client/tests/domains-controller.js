@@ -11,7 +11,7 @@ describe("Domains controller", function() {
 
   beforeEach(inject(function($rootScope, $controller, $injector) {
     $httpBackend = $injector.get("$httpBackend");
-    $httpBackend.whenGET("/languages/en_US.json").respond(200, "{}");
+    $httpBackend.whenGET(/languages\/.+\.json/).respond(200, "{}");
     $httpBackend.flush()
 
     scope = $rootScope.$new();

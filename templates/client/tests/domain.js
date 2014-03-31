@@ -12,7 +12,7 @@ describe("Domain directive", function() {
 
   beforeEach(inject(function($rootScope, $compile, $injector) {
     $httpBackend = $injector.get("$httpBackend");
-    $httpBackend.whenGET("/languages/en_US.json").respond(200, "{}");
+    $httpBackend.whenGET(/languages\/.+\.json/).respond(200, "{}");
     $httpBackend.flush()
 
     var elm = angular.element("<domain domain='domain'></domain>");
@@ -107,10 +107,12 @@ describe("Domain directive", function() {
     expect(ctrl.dateDefined("This is not a date")).toBe(false);
   });
 
-  it("should verify if the get language function returns the default language", function() {
+  it("should verify if the get language function returns the default language", inject(function($translate) {
     expect(ctrl.getLanguage).not.toBeUndefined();
-    expect(ctrl.getLanguage()).toBe("en_US");
-  });
+    expect(ctrl.getLanguage()).toBe($translate.preferredLanguage());
+    expect(ctrl.getLanguage()).not.toBe("");
+    expect(ctrl.getLanguage()).not.toBe(undefined);
+  }));
 
   it("should return the correct algorithm name", function() {
     expect(ctrl.getAlgorithm).not.toBeUndefined();

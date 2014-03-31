@@ -12,7 +12,7 @@ describe("Domain form directive", function() {
 
   beforeEach(inject(function($rootScope, $compile, $injector) {
     $httpBackend = $injector.get("$httpBackend");
-    $httpBackend.whenGET("/languages/en_US.json").respond(200, "{}");
+    $httpBackend.whenGET(/languages\/.+\.json/).respond(200, "{}");
     $httpBackend.flush()
 
     var elm = angular.element("<domainform domain='domain'></domain>");

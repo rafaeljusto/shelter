@@ -11,8 +11,7 @@ describe("Languages controller", function() {
 
   beforeEach(inject(function($rootScope, $controller, $injector) {
     $httpBackend = $injector.get("$httpBackend");
-    $httpBackend.whenGET("/languages/en_US.json").respond(200, "{}");
-    $httpBackend.whenGET("/languages/pt_BR.json").respond(200, "{}");
+    $httpBackend.whenGET(/languages\/.+\.json/).respond(200, "{}");
     $httpBackend.flush()
 
     scope = $rootScope.$new();
@@ -21,15 +20,19 @@ describe("Languages controller", function() {
     });
   }));
 
-  it("should verify if the get language function returns the default language", function() {
-    expect(scope.getLanguage()).toBe("en_US");
-  });
+  it("should verify if the get language function returns the default language", inject(function($translate) {
+    expect(scope.getLanguage()).toBe($translate.preferredLanguage());
+    expect(scope.getLanguage()).not.toBe("");
+    expect(scope.getLanguage()).not.toBe(undefined);
+  }));
 
   it("should change language correctly", inject(function($injector) {
     $httpBackend = $injector.get("$httpBackend");
-    scope.changeLanguage("pt_BR");
+
+    // Must be an unknown language, because we don't known the default system language
+    scope.changeLanguage("xx_ZZ");
     $httpBackend.flush()
 
-    expect(scope.getLanguage()).toBe("pt_BR");
+    expect(scope.getLanguage()).toBe("xx_ZZ");
   }));
 });
