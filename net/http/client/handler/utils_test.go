@@ -169,7 +169,7 @@ func TestSignAndSend(t *testing.T) {
 				t.Error(err)
 			}
 
-		case url.Error:
+		case *url.Error:
 			if specificErr.Op != "read" {
 				t.Log(specificErr.Op)
 				t.Error(err)
@@ -206,7 +206,7 @@ func TestSignAndSend(t *testing.T) {
 				t.Error(err)
 			}
 
-		case url.Error:
+		case *url.Error:
 			if specificErr.Op != "read" {
 				t.Log(specificErr.Op)
 				t.Error(err)
