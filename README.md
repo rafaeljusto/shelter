@@ -42,6 +42,20 @@ Also, to easy run the project tests you will need the following:
   * npm install -g karma-firefox-launcher
   * npm install -g karma-ng-html2js-preprocessor
 
+Remember that the project directory should respect the path bellow, because the source
+code dependencies can make references to this structure.
+
+```
+<GOPATH>/src/github.com/rafaeljusto/shelter
+```
+
+You can automatically retrieve the project with the desired structure using the following
+command:
+
+```
+go get -u github.com/rafaeljusto/shelter
+```
+
 And finally, to build the project, just run the following command on the project root:
 
 ```
@@ -61,6 +75,7 @@ To deploy the project you will need one of the programs bellow, depending on the
 operational system that you choose.
 
 * FPM - https://github.com/jordansissel/fpm (Debian packages)
+* Termbox - https://github.com/nsf/termbox-go (Debian packages)
 
 All necessary scripts to generate the packages are under the deploy folder in the project
 root.

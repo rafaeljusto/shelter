@@ -12,7 +12,18 @@ url="http://github.com/rafaeljusto/shelter"
 license="GPL"
 description="System that checks periodically DNS servers for DNS and DNSSEC misconfigurations"
 
-install_path=/usr/local/shelter
+# https://www.debian.org/doc/debian-policy/ch-opersys.html - section 9.1.2
+#
+# As mandated by the FHS, packages must not place any files in /usr/local, either by putting
+# them in the file system archive to be unpacked by dpkg or by manipulating them in their
+# maintainer scripts.
+#
+# However, the package may create empty directories below /usr/local so that the system
+# administrator knows where to place site-specific files. These are not directories in
+# /usr/local, but are children of directories in /usr/local. These directories
+# (/usr/local/*/dir/) should be removed on package removal if they are empty.
+
+install_path=/usr/shelter
 tmp_dir=/tmp/shelter
 project_root=$tmp_dir$install_path
 
@@ -23,6 +34,8 @@ workspace=$workspace/src/github.com/rafaeljusto/shelter
 current_dir=`pwd`
 cd $workspace
 go build shelter.go
+cd $workspace/deploy/debian
+go build config_init.go
 cd $current_dir
 
 if [ -f $pack_name*.deb ]; then
@@ -41,11 +54,14 @@ mkdir -p $tmp_dir$install_path/var/log
 cp -r $workspace/etc $project_root/
 cp -r $workspace/templates $project_root/
 mv $workspace/shelter $project_root/bin/
+mv $workspace/deploy/debian/config_init $project_root/bin/
+cp $workspace/deploy/debian/config_clear.sh $project_root/bin/config_clear
 
 fpm -s dir -t deb \
+  --after-install $project_root/bin/config_init \
+  --before-remove $project_root/bin/config_clear \
   --exclude=.git -n $pack_name -v $version --vendor "$vendor" \
   --maintainer "$maintainer" --url $url --license $license --description "$description" \
-  --config-files usr/local/shelter/etc/shelter.conf \
   --deb-upstart $workspace/deploy/debian/shelter.upstart \
   --deb-user root --deb-group root \
-  --prefix / -C $tmp_dir usr/local/shelter
+  --prefix / -C $tmp_dir usr/shelter
