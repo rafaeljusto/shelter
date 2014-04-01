@@ -56,17 +56,27 @@ func main() {
 	}
 }
 
-func readRESTListeners() {
-	readRESTInterfaces()
-	readRESTPort()
-	readRESTTLS()
+func readRESTListeners() bool {
+	if _, continueProcessing := readRESTInterfaces(); !continueProcessing {
+		return false
+	}
+
+	if _, continueProcessing := readRESTPort(); !continueProcessing {
+		return false
+	}
+
+	if _, _, continueProcessing := readRESTTLS(); !continueProcessing {
+		return false
+	}
+
+	return true
 }
 
-func readRESTInterfaces() []net.Interface {
+func readRESTInterfaces() ([]net.Interface, bool) {
 	interfaces, err := net.Interfaces()
 	if err != nil {
-		// TODO: Manual input?!
-		return nil
+		log.Println(err)
+		return nil, true
 	}
 
 	var options []string
@@ -75,8 +85,8 @@ func readRESTInterfaces() []net.Interface {
 
 		addrs, err := i.Addrs()
 		if err != nil {
-			// TODO: Manual input?!
-			return nil
+			log.Println(err)
+			return nil, true
 		}
 
 		for _, a := range addrs {
@@ -96,7 +106,7 @@ func readRESTInterfaces() []net.Interface {
 		_, windowsHeight := termbox.Size()
 		writeText("[TAB] Move over options", 2, windowsHeight-4)
 		writeText("[SPACE] Select an option", 2, windowsHeight-3)
-		writeText("[ENTER] Finish", 2, windowsHeight-2)
+		writeText("[ENTER] Continue", 2, windowsHeight-2)
 
 		for _, selectedOption := range selectedOptions {
 			termbox.SetCell(3, 9+selectedOption, 0x221a, termbox.ColorYellow, termbox.ColorBlue)
@@ -150,16 +160,18 @@ func readRESTInterfaces() []net.Interface {
 		return true
 	}
 
-	readInput(restInputsDraw, restInputsAction)
+	if !readInput(restInputsDraw, restInputsAction) {
+		return nil, false
+	}
 
 	var selectedInterfaces []net.Interface
 	for _, option := range selectedOptions {
 		selectedInterfaces = append(selectedInterfaces, interfaces[option])
 	}
-	return selectedInterfaces
+	return selectedInterfaces, true
 }
 
-func readRESTPort() int {
+func readRESTPort() (int, bool) {
 	port := "_____"
 	portPosition := 0
 
@@ -169,7 +181,7 @@ func readRESTPort() int {
 		writeText(port, 2, 9)
 
 		_, windowsHeight := termbox.Size()
-		writeText("[ENTER] Finish", 2, windowsHeight-2)
+		writeText("[ENTER] Continue", 2, windowsHeight-2)
 	}
 
 	restInputsAction := func(ev termbox.Event) bool {
@@ -201,14 +213,16 @@ func readRESTPort() int {
 		return true
 	}
 
-	readInput(restInputsDraw, restInputsAction)
+	if !readInput(restInputsDraw, restInputsAction) {
+		return 0, false
+	}
 
 	strings.Replace(port, "_", "", -1)
 	portNumber, _ := strconv.Atoi(port)
-	return portNumber
+	return portNumber, true
 }
 
-func readRESTTLS() (useTLS, generateCerts bool) {
+func readRESTTLS() (useTLS, generateCerts, continueProcessing bool) {
 	options := []string{
 		"Use TLS on interfaces (HTTPS)",
 		"Generate self-signed certificates automatically (valid for 1 year)",
@@ -225,7 +239,7 @@ func readRESTTLS() (useTLS, generateCerts bool) {
 		_, windowsHeight := termbox.Size()
 		writeText("[TAB] Move over options", 2, windowsHeight-4)
 		writeText("[SPACE] Select an option", 2, windowsHeight-3)
-		writeText("[ENTER] Finish", 2, windowsHeight-2)
+		writeText("[ENTER] Continue", 2, windowsHeight-2)
 
 		for _, selectedOption := range selectedOptions {
 			termbox.SetCell(3, 9+selectedOption, 0x221a, termbox.ColorYellow, termbox.ColorBlue)
@@ -279,8 +293,12 @@ func readRESTTLS() (useTLS, generateCerts bool) {
 		return true
 	}
 
-	readInput(restInputsDraw, restInputsAction)
+	if !readInput(restInputsDraw, restInputsAction) {
+		continueProcessing = false
+		return
+	}
 
+	continueProcessing = true
 	for _, option := range selectedOptions {
 		if option == 0 {
 			useTLS = true
@@ -288,10 +306,11 @@ func readRESTTLS() (useTLS, generateCerts bool) {
 			generateCerts = true
 		}
 	}
+
 	return
 }
 
-func readInput(inputsDraw func(), inputsAction func(termbox.Event) bool) {
+func readInput(inputsDraw func(), inputsAction func(termbox.Event) bool) bool {
 	err := termbox.Init()
 	if err != nil {
 		panic(err)
@@ -301,17 +320,15 @@ func readInput(inputsDraw func(), inputsAction func(termbox.Event) bool) {
 	termbox.SetInputMode(termbox.InputEsc)
 	draw(inputsDraw)
 
-loop:
 	for {
 		switch ev := termbox.PollEvent(); ev.Type {
 		case termbox.EventKey:
 			if ev.Key == termbox.KeyEsc {
-				break loop
-
+				return false
 			}
 
 			if !inputsAction(ev) {
-				break loop
+				return true
 			}
 
 		case termbox.EventResize:
