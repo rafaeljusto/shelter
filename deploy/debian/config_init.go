@@ -24,6 +24,13 @@ const (
 	sampleConfigFilePath = "/usr/shelter/etc/shelter.conf.sample"
 )
 
+var (
+	scanModule         = false
+	restModule         = false
+	webClientModule    = false
+	notificationModule = false
+)
+
 func main() {
 	defer func() {
 		if r := recover(); r != nil {
@@ -39,7 +46,12 @@ func main() {
 			return
 		}
 
-		readRESTListeners()
+		if !readEnabledModules() ||
+			!readDatabaseParameters() ||
+			!readRESTListeners() {
+
+			return
+		}
 
 		jsonConfig, err := json.MarshalIndent(config.ShelterConfig, " ", " ")
 		if err != nil {
@@ -57,44 +69,381 @@ func main() {
 	}
 }
 
+func readEnabledModules() bool {
+	options := []string{
+		"Scan",
+		"REST",
+		"Web Client",
+		"Notification",
+	}
+
+	overOption := -1
+	var selectedOptions []int
+
+	// By default all interfaces are going to be used
+	for index, _ := range options {
+		selectedOptions = append(selectedOptions, index)
+	}
+
+	restInputsDraw := func() {
+		writeTitle("Modules", 2, 4)
+		writeText("Please select the modules that are going to be enabled:", 2, 7)
+		writeOptions(options, 2, 9)
+
+		_, windowsHeight := termbox.Size()
+		writeText("[TAB] Move over options", 2, windowsHeight-4)
+		writeText("[SPACE] Select an option", 2, windowsHeight-3)
+		writeText("[ENTER] Continue", 2, windowsHeight-2)
+
+		for _, selectedOption := range selectedOptions {
+			termbox.SetCell(3, 9+selectedOption, 0x221a, termbox.ColorYellow, termbox.ColorBlue)
+		}
+
+		if overOption > -1 {
+			termbox.SetCell(2, 9+overOption, rune('['), termbox.ColorYellow, termbox.ColorBlue)
+			termbox.SetCell(4, 9+overOption, rune(']'), termbox.ColorYellow, termbox.ColorBlue)
+		}
+	}
+
+	restInputsAction := func(ev termbox.Event) bool {
+		switch ev.Key {
+		case termbox.KeyTab:
+			// Move to the next option
+
+			overOption += 1
+			if overOption >= len(options) {
+				overOption = 0
+			}
+
+		case termbox.KeySpace:
+			// Select the option
+
+			found := false
+			for index, selectedOption := range selectedOptions {
+				if selectedOption == overOption {
+					if len(selectedOptions) == 1 {
+						selectedOptions = []int{}
+					} else if index == 0 {
+						selectedOptions = selectedOptions[index+1:]
+					} else if index == len(selectedOptions)-1 {
+						selectedOptions = selectedOptions[:index]
+					} else {
+						selectedOptions = append(selectedOptions[:index], selectedOptions[index+1:]...)
+					}
+					found = true
+				}
+			}
+
+			if !found {
+				selectedOptions = append(selectedOptions, overOption)
+			}
+
+		case termbox.KeyEnter:
+			// Finish reading inputs
+			return false
+		}
+
+		draw(restInputsDraw)
+		return true
+	}
+
+	if !readInput(restInputsDraw, restInputsAction) {
+		return false
+	}
+
+	for _, option := range selectedOptions {
+		switch option {
+		case 0:
+			scanModule = true
+		case 1:
+			restModule = true
+		case 3:
+			webClientModule = true
+		case 4:
+			notificationModule = true
+		}
+	}
+
+	config.ShelterConfig.Scan.Enabled = scanModule
+	config.ShelterConfig.RESTServer.Enabled = restModule
+	config.ShelterConfig.WebClient.Enabled = webClientModule
+	config.ShelterConfig.Notification.Enabled = notificationModule
+
+	return true
+}
+
+func readDatabaseParameters() bool {
+	address, continueProcessing := readDatabaseHost()
+	if !continueProcessing {
+		return false
+	}
+
+	port, continueProcessing := readDatabasePort()
+	if !continueProcessing {
+		return false
+	}
+
+	name, continueProcessing := readDatabaseName()
+	if !continueProcessing {
+		return false
+	}
+
+	config.ShelterConfig.Database.URI = fmt.Sprintf("%s:%d", address, port)
+	config.ShelterConfig.Database.Name = name
+	return true
+}
+
+func readDatabaseHost() (string, bool) {
+	host := "localhost_________________________________________"
+	hostPosition := 0
+
+	restInputsDraw := func() {
+		writeTitle("Database Configurations", 2, 4)
+		writeText("Please inform the host (IP or domain) of MongoDB database:", 2, 7)
+		writeText(host, 2, 9)
+
+		if hostPosition < len(host) {
+			termbox.SetCell(2+hostPosition, 9, rune(host[hostPosition]), termbox.ColorWhite, termbox.ColorYellow)
+		}
+
+		_, windowsHeight := termbox.Size()
+		writeText("[ENTER] Continue", 2, windowsHeight-2)
+	}
+
+	restInputsAction := func(ev termbox.Event) bool {
+		switch ev.Key {
+		case termbox.KeyBackspace, termbox.KeyBackspace2:
+			hostPosition -= 1
+			if hostPosition < 0 {
+				hostPosition = 0
+			}
+
+			host = host[:hostPosition] + "_" + host[hostPosition+1:]
+
+		case termbox.KeyDelete:
+			if hostPosition < len(host) {
+				host = host[:hostPosition] + host[hostPosition+1:] + "_"
+			}
+
+		case termbox.KeyEnter:
+			if len(strings.Replace(host, "_", "", -1)) == 0 {
+				draw(func() {
+					restInputsDraw()
+					writeText("ERROR: Host cannot be empty!", 2, 11)
+				})
+
+				return true
+			}
+
+			// Finish reading inputs
+			return false
+
+		default:
+			if ((ev.Ch >= 48 && ev.Ch < 58) || // 0-9
+				(ev.Ch >= 65 && ev.Ch < 91) || // A-Z
+				(ev.Ch >= 97 && ev.Ch < 123) || // a-z
+				ev.Ch == 45 || ev.Ch == 46) && // - .
+				hostPosition < len(host) {
+
+				host = host[:hostPosition] + string(ev.Ch) + host[hostPosition+1:]
+
+				hostPosition += 1
+				if hostPosition > len(host) {
+					hostPosition = len(host)
+				}
+			}
+		}
+
+		draw(restInputsDraw)
+		return true
+	}
+
+	if !readInput(restInputsDraw, restInputsAction) {
+		return "", false
+	}
+
+	return strings.Replace(host, "_", "", -1), true
+}
+
+func readDatabasePort() (int, bool) {
+	port := "27017"
+	portPosition := 0
+
+	restInputsDraw := func() {
+		writeTitle("Database Configurations", 2, 4)
+		writeText("Please inform the port for the MongoDB database:", 2, 7)
+		writeText(port, 2, 9)
+
+		if portPosition < len(port) {
+			termbox.SetCell(2+portPosition, 9, rune(port[portPosition]), termbox.ColorWhite, termbox.ColorYellow)
+		}
+
+		_, windowsHeight := termbox.Size()
+		writeText("[ENTER] Continue", 2, windowsHeight-2)
+	}
+
+	restInputsAction := func(ev termbox.Event) bool {
+		switch ev.Key {
+		case termbox.KeyBackspace, termbox.KeyBackspace2:
+			portPosition -= 1
+			if portPosition < 0 {
+				portPosition = 0
+			}
+
+			port = port[:portPosition] + "_" + port[portPosition+1:]
+
+		case termbox.KeyDelete:
+			if portPosition < len(port) {
+				port = port[:portPosition] + port[portPosition+1:] + "_"
+			}
+
+		case termbox.KeyEnter:
+			// Finish reading inputs
+			return false
+
+		default:
+			if ev.Ch >= 48 && ev.Ch < 58 && portPosition < len(port) {
+				port = port[:portPosition] + string(ev.Ch) + port[portPosition+1:]
+
+				portPosition += 1
+				if portPosition > len(port) {
+					portPosition = len(port)
+				}
+			}
+		}
+
+		draw(restInputsDraw)
+		return true
+	}
+
+	if !readInput(restInputsDraw, restInputsAction) {
+		return 0, false
+	}
+
+	port = strings.Replace(port, "_", "", -1)
+	portNumber, _ := strconv.Atoi(port)
+	return portNumber, true
+}
+
+func readDatabaseName() (string, bool) {
+	name := "shelter___________________________________________"
+	namePosition := 0
+
+	restInputsDraw := func() {
+		writeTitle("Database Configurations", 2, 4)
+		writeText("Please inform the name of the MongoDB database:", 2, 7)
+		writeText(name, 2, 9)
+
+		if namePosition < len(name) {
+			termbox.SetCell(2+namePosition, 9, rune(name[namePosition]), termbox.ColorWhite, termbox.ColorYellow)
+		}
+
+		_, windowsHeight := termbox.Size()
+		writeText("[ENTER] Continue", 2, windowsHeight-2)
+	}
+
+	restInputsAction := func(ev termbox.Event) bool {
+		switch ev.Key {
+		case termbox.KeyBackspace, termbox.KeyBackspace2:
+			namePosition -= 1
+			if namePosition < 0 {
+				namePosition = 0
+			}
+
+			name = name[:namePosition] + "_" + name[namePosition+1:]
+
+		case termbox.KeyDelete:
+			if namePosition < len(name) {
+				name = name[:namePosition] + name[namePosition+1:] + "_"
+			}
+
+		case termbox.KeyEnter:
+			if len(strings.Replace(name, "_", "", -1)) == 0 {
+				draw(func() {
+					restInputsDraw()
+					writeText("ERROR: name cannot be empty!", 2, 11)
+				})
+
+				return true
+			}
+
+			// Finish reading inputs
+			return false
+
+		default:
+			if ((ev.Ch >= 48 && ev.Ch < 58) || // 0-9
+				(ev.Ch >= 65 && ev.Ch < 91) || // A-Z
+				(ev.Ch >= 97 && ev.Ch < 123) || // a-z
+				ev.Ch == 45 || ev.Ch == 46) && // - .
+				namePosition < len(name) {
+
+				name = name[:namePosition] + string(ev.Ch) + name[namePosition+1:]
+
+				namePosition += 1
+				if namePosition > len(name) {
+					namePosition = len(name)
+				}
+			}
+		}
+
+		draw(restInputsDraw)
+		return true
+	}
+
+	if !readInput(restInputsDraw, restInputsAction) {
+		return "", false
+	}
+
+	return strings.Replace(name, "_", "", -1), true
+}
+
 func readRESTListeners() bool {
-	addresses, continueProcessing := readRESTAddresses()
-	if !continueProcessing {
-		return false
-	}
+	var addresses []string
+	var port int
+	var useTLS, generateCerts bool
+	var continueProcessing bool
 
-	port, continueProcessing := readRESTPort()
-	if !continueProcessing {
-		return false
-	}
-
-	useTLS, generateCerts, continueProcessing := readRESTTLS()
-	if !continueProcessing {
-		return false
-	}
-
-	if generateCerts {
-		hostname, continueProcessing := readRESTCertsParams()
+	if restModule || webClientModule {
+		addresses, continueProcessing = readRESTAddresses()
 		if !continueProcessing {
 			return false
 		}
 
-		cmd := exec.Command("/usr/shelter/bin/generate_cert", "--host", hostname)
-		if err := cmd.Run(); err != nil {
-			log.Println("Error generating certificates. Details:", err)
+		port, continueProcessing = readRESTPort()
+		if !continueProcessing {
+			return false
+		}
+	}
 
-		} else {
-			err := os.MkdirAll("/usr/shelter/etc/keys", os.ModeDir|0600)
-			if err != nil {
-				log.Println("Error creating certificates directory. Details:", err)
+	if restModule {
+		useTLS, generateCerts, continueProcessing = readRESTTLS()
+		if !continueProcessing {
+			return false
+		}
+
+		if generateCerts {
+			hostname, continueProcessing := readRESTCertsParams()
+			if !continueProcessing {
+				return false
+			}
+
+			cmd := exec.Command("/usr/shelter/bin/generate_cert", "--host", hostname)
+			if err := cmd.Run(); err != nil {
+				log.Println("Error generating certificates. Details:", err)
 
 			} else {
-				if err := moveFile("/usr/shelter/etc/keys/cert.pem", "cert.pem"); err != nil {
-					log.Println("Error copying file cert.pem. Details:", err)
-				}
+				err := os.MkdirAll("/usr/shelter/etc/keys", os.ModeDir|0600)
+				if err != nil {
+					log.Println("Error creating certificates directory. Details:", err)
 
-				if err := moveFile("/usr/shelter/etc/keys/key.pem", "key.pem"); err != nil {
-					log.Println("Error copying file key.pem. Details:", err)
+				} else {
+					if err := moveFile("/usr/shelter/etc/keys/cert.pem", "cert.pem"); err != nil {
+						log.Println("Error copying file cert.pem. Details:", err)
+					}
+
+					if err := moveFile("/usr/shelter/etc/keys/key.pem", "key.pem"); err != nil {
+						log.Println("Error copying file key.pem. Details:", err)
+					}
 				}
 			}
 		}
