@@ -9,9 +9,12 @@ import (
 	"fmt"
 	"github.com/nsf/termbox-go"
 	"github.com/rafaeljusto/shelter/config"
+	"io"
+	"io/ioutil"
 	"log"
 	"net"
 	"os"
+	"os/exec"
 	"strconv"
 	"strings"
 )
@@ -38,15 +41,13 @@ func main() {
 
 		readRESTListeners()
 
-		configFileOutput, err := os.Create(configFilePath)
+		jsonConfig, err := json.MarshalIndent(config.ShelterConfig, " ", " ")
 		if err != nil {
 			log.Fatalln(err)
 			return
 		}
-		defer configFileOutput.Close()
 
-		configFileEncoder := json.NewEncoder(configFileOutput)
-		if err := configFileEncoder.Encode(config.ShelterConfig); err != nil {
+		if err := ioutil.WriteFile(configFilePath, jsonConfig, 0664); err != nil {
 			log.Fatalln(err)
 			return
 		}
@@ -57,22 +58,70 @@ func main() {
 }
 
 func readRESTListeners() bool {
-	if _, continueProcessing := readRESTInterfaces(); !continueProcessing {
+	addresses, continueProcessing := readRESTAddresses()
+	if !continueProcessing {
 		return false
 	}
 
-	if _, continueProcessing := readRESTPort(); !continueProcessing {
+	port, continueProcessing := readRESTPort()
+	if !continueProcessing {
 		return false
 	}
 
-	if _, _, continueProcessing := readRESTTLS(); !continueProcessing {
+	useTLS, generateCerts, continueProcessing := readRESTTLS()
+	if !continueProcessing {
 		return false
+	}
+
+	if generateCerts {
+		hostname, continueProcessing := readRESTCertsParams()
+		if !continueProcessing {
+			return false
+		}
+
+		cmd := exec.Command("/usr/shelter/bin/generate_cert", "--host", hostname)
+		if err := cmd.Run(); err != nil {
+			log.Println("Error generating certificates. Details:", err)
+
+		} else {
+			err := os.MkdirAll("/usr/shelter/etc/keys", os.ModeDir|0600)
+			if err != nil {
+				log.Println("Error creating certificates directory. Details:", err)
+
+			} else {
+				if err := moveFile("/usr/shelter/etc/keys/cert.pem", "cert.pem"); err != nil {
+					log.Println("Error copying file cert.pem. Details:", err)
+				}
+
+				if err := moveFile("/usr/shelter/etc/keys/key.pem", "key.pem"); err != nil {
+					log.Println("Error copying file key.pem. Details:", err)
+				}
+			}
+		}
+	}
+
+	config.ShelterConfig.RESTServer.Listeners = []struct {
+		IP   string
+		Port int
+		TLS  bool
+	}{}
+
+	for _, address := range addresses {
+		config.ShelterConfig.RESTServer.Listeners = append(config.ShelterConfig.RESTServer.Listeners, struct {
+			IP   string
+			Port int
+			TLS  bool
+		}{
+			IP:   address,
+			Port: port,
+			TLS:  useTLS,
+		})
 	}
 
 	return true
 }
 
-func readRESTInterfaces() ([]net.Interface, bool) {
+func readRESTAddresses() ([]string, bool) {
 	interfaces, err := net.Interfaces()
 	if err != nil {
 		log.Println(err)
@@ -81,8 +130,6 @@ func readRESTInterfaces() ([]net.Interface, bool) {
 
 	var options []string
 	for _, i := range interfaces {
-		var addresses []string
-
 		addrs, err := i.Addrs()
 		if err != nil {
 			log.Println(err)
@@ -90,17 +137,23 @@ func readRESTInterfaces() ([]net.Interface, bool) {
 		}
 
 		for _, a := range addrs {
-			addresses = append(addresses, a.String())
+			ip := a.String()
+			ip = ip[:strings.Index(ip, "/")]
+			options = append(options, fmt.Sprintf("%s", ip))
 		}
-		options = append(options, fmt.Sprintf("%s (%s)", i.Name, strings.Join(addresses, ", ")))
 	}
 
 	overOption := -1
 	var selectedOptions []int
 
+	// By default all interfaces are going to be used
+	for index, _ := range options {
+		selectedOptions = append(selectedOptions, index)
+	}
+
 	restInputsDraw := func() {
 		writeTitle("REST Configurations", 2, 4)
-		writeText("Please select the interfaces that you want to listen:", 2, 7)
+		writeText("Please select the IP addresses that you want to listen:", 2, 7)
 		writeOptions(options, 2, 9)
 
 		_, windowsHeight := termbox.Size()
@@ -164,21 +217,25 @@ func readRESTInterfaces() ([]net.Interface, bool) {
 		return nil, false
 	}
 
-	var selectedInterfaces []net.Interface
+	var selectedAddresses []string
 	for _, option := range selectedOptions {
-		selectedInterfaces = append(selectedInterfaces, interfaces[option])
+		selectedAddresses = append(selectedAddresses, options[option])
 	}
-	return selectedInterfaces, true
+	return selectedAddresses, true
 }
 
 func readRESTPort() (int, bool) {
-	port := "_____"
+	port := "4443_"
 	portPosition := 0
 
 	restInputsDraw := func() {
 		writeTitle("REST Configurations", 2, 4)
 		writeText("Please inform the port that you want to listen:", 2, 7)
 		writeText(port, 2, 9)
+
+		if portPosition < len(port) {
+			termbox.SetCell(2+portPosition, 9, rune(port[portPosition]), termbox.ColorWhite, termbox.ColorYellow)
+		}
 
 		_, windowsHeight := termbox.Size()
 		writeText("[ENTER] Continue", 2, windowsHeight-2)
@@ -193,6 +250,11 @@ func readRESTPort() (int, bool) {
 			}
 
 			port = port[:portPosition] + "_" + port[portPosition+1:]
+
+		case termbox.KeyDelete:
+			if portPosition < len(port) {
+				port = port[:portPosition] + port[portPosition+1:] + "_"
+			}
 
 		case termbox.KeyEnter:
 			// Finish reading inputs
@@ -217,7 +279,7 @@ func readRESTPort() (int, bool) {
 		return 0, false
 	}
 
-	strings.Replace(port, "_", "", -1)
+	port = strings.Replace(port, "_", "", -1)
 	portNumber, _ := strconv.Atoi(port)
 	return portNumber, true
 }
@@ -229,7 +291,7 @@ func readRESTTLS() (useTLS, generateCerts, continueProcessing bool) {
 	}
 
 	overOption := -1
-	var selectedOptions []int
+	selectedOptions := []int{0, 1}
 
 	restInputsDraw := func() {
 		writeTitle("REST Configurations", 2, 4)
@@ -282,6 +344,11 @@ func readRESTTLS() (useTLS, generateCerts, continueProcessing bool) {
 
 			if !found {
 				selectedOptions = append(selectedOptions, overOption)
+
+				// Automatically certificates generation cannot exist withou TLS
+				if overOption == 1 && len(selectedOptions) == 1 {
+					selectedOptions = append(selectedOptions, 0)
+				}
 			}
 
 		case termbox.KeyEnter:
@@ -308,6 +375,78 @@ func readRESTTLS() (useTLS, generateCerts, continueProcessing bool) {
 	}
 
 	return
+}
+
+func readRESTCertsParams() (string, bool) {
+	host := "localhost_________________________________________"
+	hostPosition := 0
+
+	restInputsDraw := func() {
+		writeTitle("REST Configurations", 2, 4)
+		writeText("Please inform the hostname of the certificate:", 2, 7)
+		writeText(host, 2, 9)
+
+		if hostPosition < len(host) {
+			termbox.SetCell(2+hostPosition, 9, rune(host[hostPosition]), termbox.ColorWhite, termbox.ColorYellow)
+		}
+
+		_, windowsHeight := termbox.Size()
+		writeText("[ENTER] Continue", 2, windowsHeight-2)
+	}
+
+	restInputsAction := func(ev termbox.Event) bool {
+		switch ev.Key {
+		case termbox.KeyBackspace, termbox.KeyBackspace2:
+			hostPosition -= 1
+			if hostPosition < 0 {
+				hostPosition = 0
+			}
+
+			host = host[:hostPosition] + "_" + host[hostPosition+1:]
+
+		case termbox.KeyDelete:
+			if hostPosition < len(host) {
+				host = host[:hostPosition] + host[hostPosition+1:] + "_"
+			}
+
+		case termbox.KeyEnter:
+			if len(strings.Replace(host, "_", "", -1)) == 0 {
+				draw(func() {
+					restInputsDraw()
+					writeText("ERROR: Hostname cannot be empty!", 2, 11)
+				})
+
+				return true
+			}
+
+			// Finish reading inputs
+			return false
+
+		default:
+			if ((ev.Ch >= 48 && ev.Ch < 58) || // 0-9
+				(ev.Ch >= 65 && ev.Ch < 91) || // A-Z
+				(ev.Ch >= 97 && ev.Ch < 123) || // a-z
+				ev.Ch == 45 || ev.Ch == 46) && // - .
+				hostPosition < len(host) {
+
+				host = host[:hostPosition] + string(ev.Ch) + host[hostPosition+1:]
+
+				hostPosition += 1
+				if hostPosition > len(host) {
+					hostPosition = len(host)
+				}
+			}
+		}
+
+		draw(restInputsDraw)
+		return true
+	}
+
+	if !readInput(restInputsDraw, restInputsAction) {
+		return "", false
+	}
+
+	return strings.Replace(host, "_", "", -1), true
 }
 
 func readInput(inputsDraw func(), inputsAction func(termbox.Event) bool) bool {
@@ -396,4 +535,26 @@ func writeOptions(options []string, x, y int) {
 	for index, option := range options {
 		writeText("[ ] "+option, x, y+index)
 	}
+}
+
+func moveFile(dst, orig string) error {
+	file, err := os.Open(orig)
+	if err != nil {
+		return err
+	}
+
+	dstFile, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+
+	if _, err := io.Copy(dstFile, file); err != nil {
+		return err
+	}
+
+	if err := os.Remove(orig); err != nil {
+		return err
+	}
+
+	return nil
 }
