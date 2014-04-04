@@ -15,6 +15,22 @@ contributed with ideas for the project.
 
 For more information check the [Wiki](https://github.com/rafaeljusto/shelter/wiki).
 
+features
+========
+* Automatically detect DNS/DNSSEC configuration problems of the registered domains
+* Automatically sends e-mails notifying domain's owners of the configuration problems
+* System can be deployed on registry or provider back-end infrastructure, not letting
+critical data to spread to other networks
+* Uses REST architecture to allow a distributted system and easy integration with other
+softwares
+* Multi-language support for notification's e-mails that can be distinct for each domain's
+owner
+* Built-in web client to manage domains easily without the necessity to develop a REST
+client
+* IDNA support for domains
+* Optimized scan strategy to verify all registered domains configurations
+* On-the-fly domain verification interface
+
 building
 ========
 
