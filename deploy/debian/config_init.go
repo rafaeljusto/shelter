@@ -23,8 +23,9 @@ import (
 )
 
 const (
-	configFilePath       = "/usr/shelter/etc/shelter.conf"
-	sampleConfigFilePath = "/usr/shelter/etc/shelter.conf.sample"
+	basePath             = "/usr/shelter"
+	configFilePath       = basePath + "/etc/shelter.conf"
+	sampleConfigFilePath = basePath + "/etc/shelter.conf.sample"
 )
 
 var (
@@ -42,6 +43,11 @@ var (
 	ipRangeInput      = regexp.MustCompile("[0-9a-fA-F\\:\\./]")
 	secretAlphabet    = []byte("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+,.?/:;{}[]`~")
 )
+
+type Option struct {
+	Value    string
+	Selected bool
+}
 
 func init() {
 	rand.Seed(time.Now().Unix())
@@ -64,7 +70,8 @@ func main() {
 
 		if !readEnabledModules() ||
 			!readDatabaseParameters() ||
-			!readRESTParameters() {
+			!readRESTParameters() ||
+			!readWebClientParameters() {
 
 			return
 		}
@@ -86,33 +93,44 @@ func main() {
 }
 
 func readEnabledModules() bool {
-	options := []string{
-		"Scan",
-		"REST",
-		"Web Client",
-		"Notification",
+	options := []Option{
+		{Value: "Scan", Selected: true},
+		{Value: "REST", Selected: true},
+		{Value: "Web Client", Selected: true},
+		{Value: "Notification", Selected: true},
 	}
 
 	title := "Modules"
 	description := "Please select the modules that are going to be enabled:"
 
-	selectedOptions, continueProcessing :=
+	options, continueProcessing :=
 		manageInputOptionsScreen(title, description, options, nil)
 
 	if !continueProcessing {
 		return false
 	}
 
-	for _, option := range selectedOptions {
-		switch option {
+	for index, option := range options {
+		switch index {
 		case 0:
-			scanModule = true
+			if option.Selected {
+				scanModule = true
+			}
+
 		case 1:
-			restModule = true
+			if option.Selected {
+				restModule = true
+			}
+
 		case 2:
-			webClientModule = true
+			if option.Selected {
+				webClientModule = true
+			}
+
 		case 3:
-			notificationModule = true
+			if option.Selected {
+				notificationModule = true
+			}
 		}
 	}
 
@@ -220,7 +238,9 @@ func readRESTListeners() bool {
 				return false
 			}
 
-			generateCertificates(hostname)
+			cert, key := generateCertificates("epp", hostname)
+			config.ShelterConfig.RESTServer.TLS.CertificatePath = "etc/keys/" + cert
+			config.ShelterConfig.RESTServer.TLS.PrivateKeyPath = "etc/keys/" + key
 		}
 	}
 
@@ -245,28 +265,6 @@ func readRESTListeners() bool {
 	return true
 }
 
-func generateCertificates(hostname string) {
-	cmd := exec.Command("/usr/shelter/bin/generate_cert", "--host", hostname)
-	if err := cmd.Run(); err != nil {
-		log.Println("Error generating certificates. Details:", err)
-		return
-	}
-
-	err := os.MkdirAll("/usr/shelter/etc/keys", os.ModeDir|0600)
-	if err != nil {
-		log.Println("Error creating certificates directory. Details:", err)
-		return
-	}
-
-	if err := moveFile("/usr/shelter/etc/keys/cert.pem", "cert.pem"); err != nil {
-		log.Println("Error copying file cert.pem. Details:", err)
-	}
-
-	if err := moveFile("/usr/shelter/etc/keys/key.pem", "key.pem"); err != nil {
-		log.Println("Error copying file key.pem. Details:", err)
-	}
-}
-
 func readRESTAddresses() ([]string, bool) {
 	interfaces, err := net.Interfaces()
 	if err != nil {
@@ -274,7 +272,7 @@ func readRESTAddresses() ([]string, bool) {
 		return nil, true
 	}
 
-	var options []string
+	var options []Option
 	for _, i := range interfaces {
 		addrs, err := i.Addrs()
 		if err != nil {
@@ -285,14 +283,17 @@ func readRESTAddresses() ([]string, bool) {
 		for _, a := range addrs {
 			ip := a.String()
 			ip = ip[:strings.Index(ip, "/")]
-			options = append(options, fmt.Sprintf("%s", ip))
+			options = append(options, Option{
+				Value:    fmt.Sprintf("%s", ip),
+				Selected: true,
+			})
 		}
 	}
 
 	title := "REST Configurations"
 	description := "Please select the IP addresses that you want to listen:"
 
-	selectedOptions, continueProcessing :=
+	options, continueProcessing :=
 		manageInputOptionsScreen(title, description, options, nil)
 
 	if !continueProcessing {
@@ -300,8 +301,10 @@ func readRESTAddresses() ([]string, bool) {
 	}
 
 	var selectedAddresses []string
-	for _, option := range selectedOptions {
-		selectedAddresses = append(selectedAddresses, options[option])
+	for _, option := range options {
+		if option.Selected {
+			selectedAddresses = append(selectedAddresses, option.Value)
+		}
 	}
 	return selectedAddresses, true
 }
@@ -314,37 +317,43 @@ func readRESTPort() (int, bool) {
 }
 
 func readRESTTLS() (useTLS, generateCerts, continueProcessing bool) {
-	options := []string{
-		"Use TLS on interfaces (HTTPS)",
-		"Generate self-signed certificates automatically (valid for 1 year)",
+	options := []Option{
+		{Value: "Use TLS on interfaces (HTTPS)", Selected: true},
+		{Value: "Generate self-signed certificates automatically (valid for 1 year)", Selected: true},
 	}
 
 	title := "REST Configurations"
 	description := "Please select the following TLS options:"
 
 	selectedOptions, continueProcessing :=
-		manageInputOptionsScreen(title, description, options, func(selectedOptions []int, isNew bool) []int {
-			// Automatically certificates generation cannot exist without TLS
-			if len(selectedOptions) == 1 && selectedOptions[0] == 1 {
-				if isNew {
-					selectedOptions = append(selectedOptions, 0)
-				} else {
-					selectedOptions = []int{}
-				}
-			}
+		manageInputOptionsScreen(title, description, options,
+			func(options []Option, optionIndex int) []Option {
+				// Automatically certificates generation cannot exist without TLS
+				if optionIndex == 0 && !options[0].Selected {
+					options[1].Selected = false
 
-			return selectedOptions
-		})
+				} else if optionIndex > 0 && options[optionIndex].Selected {
+					options[0].Selected = true
+				}
+
+				return options
+			})
 
 	if !continueProcessing {
 		return
 	}
 
-	for _, option := range selectedOptions {
-		if option == 0 {
-			useTLS = true
-		} else if option == 1 {
-			generateCerts = true
+	for index, option := range selectedOptions {
+		switch index {
+		case 0:
+			if option.Selected {
+				useTLS = true
+			}
+
+		case 1:
+			if option.Selected {
+				generateCerts = true
+			}
 		}
 	}
 
@@ -430,14 +439,14 @@ func readRESTSecret() bool {
 
 func readRESTSecretId() (keyId string, generateSecret bool, continueProcessing bool) {
 	keyId = "key01_______________"
-	options := []string{
-		"Generate shared secret automatically",
+	options := []Option{
+		{Value: "Generate shared secret automatically", Selected: true},
 	}
 
 	title := "REST Configurations"
 	description := "Please inform the shared secret identification:"
 
-	keyId, selectedOptions, continueProcessing :=
+	keyId, options, continueProcessing =
 		manageInputTextOptionsScreen(title, description, keyId, alphaNumericInput,
 			func(input string) (bool, string) {
 				if len(input) == 0 {
@@ -447,7 +456,7 @@ func readRESTSecretId() (keyId string, generateSecret bool, continueProcessing b
 				return true, ""
 			}, options, nil)
 
-	return keyId, len(selectedOptions) > 0, continueProcessing
+	return keyId, options[0].Selected, continueProcessing
 }
 
 func readRESTSecretContent(keyId string) (string, bool) {
@@ -463,6 +472,192 @@ func readRESTSecretContent(keyId string) (string, bool) {
 
 			return true, ""
 		})
+}
+
+func readWebClientParameters() bool {
+	var addresses []string
+	var port int
+	var useTLS, generateCerts, useEPPCerts bool
+	var continueProcessing bool
+
+	if webClientModule {
+		addresses, continueProcessing = readWebClientAddresses()
+		if !continueProcessing {
+			return false
+		}
+
+		port, continueProcessing = readWebClientPort()
+		if !continueProcessing {
+			return false
+		}
+
+		useTLS, generateCerts, useEPPCerts, continueProcessing = readWebClientTLS()
+		if !continueProcessing {
+			return false
+		}
+
+		if generateCerts && !useEPPCerts {
+			hostname, continueProcessing := readWebClientCertsParams()
+			if !continueProcessing {
+				return false
+			}
+
+			cert, key := generateCertificates("webclient", hostname)
+			config.ShelterConfig.WebClient.TLS.CertificatePath = "etc/keys/" + cert
+			config.ShelterConfig.WebClient.TLS.PrivateKeyPath = "etc/keys/" + key
+
+		} else if !generateCerts && useEPPCerts {
+			config.ShelterConfig.WebClient.TLS.CertificatePath =
+				config.ShelterConfig.RESTServer.TLS.CertificatePath
+			config.ShelterConfig.WebClient.TLS.PrivateKeyPath =
+				config.ShelterConfig.RESTServer.TLS.PrivateKeyPath
+		}
+	}
+
+	config.ShelterConfig.WebClient.Listeners = []struct {
+		IP   string
+		Port int
+		TLS  bool
+	}{}
+
+	for _, address := range addresses {
+		config.ShelterConfig.WebClient.Listeners = append(config.ShelterConfig.WebClient.Listeners, struct {
+			IP   string
+			Port int
+			TLS  bool
+		}{
+			IP:   address,
+			Port: port,
+			TLS:  useTLS,
+		})
+	}
+
+	return true
+}
+
+func readWebClientAddresses() ([]string, bool) {
+	interfaces, err := net.Interfaces()
+	if err != nil {
+		log.Println(err)
+		return nil, true
+	}
+
+	var options []Option
+	for _, i := range interfaces {
+		addrs, err := i.Addrs()
+		if err != nil {
+			log.Println(err)
+			return nil, true
+		}
+
+		for _, a := range addrs {
+			ip := a.String()
+			ip = ip[:strings.Index(ip, "/")]
+			options = append(options, Option{
+				Value:    fmt.Sprintf("%s", ip),
+				Selected: true,
+			})
+		}
+	}
+
+	title := "Web Client Configurations"
+	description := "Please select the IP addresses that you want to listen:"
+
+	options, continueProcessing :=
+		manageInputOptionsScreen(title, description, options, nil)
+
+	if !continueProcessing {
+		return nil, false
+	}
+
+	var selectedAddresses []string
+	for _, option := range options {
+		if option.Selected {
+			selectedAddresses = append(selectedAddresses, option.Value)
+		}
+	}
+	return selectedAddresses, true
+}
+
+func readWebClientPort() (int, bool) {
+	port := "4444_"
+	title := "Web Client Configurations"
+	description := "Please inform the port that you want to listen:"
+	return manageInputNumberScreen(title, description, port)
+}
+
+func readWebClientTLS() (useTLS, generateCerts, useEPPCerts, continueProcessing bool) {
+	options := []Option{
+		{Value: "Use TLS on interfaces (HTTPS)", Selected: true},
+		{Value: "Generate self-signed certificates automatically (valid for 1 year)", Selected: true},
+	}
+
+	if len(config.ShelterConfig.RESTServer.Listeners) > 0 &&
+		config.ShelterConfig.RESTServer.Listeners[0].TLS {
+		options = append(options, Option{
+			Value:    "Use same certificate from EPP server",
+			Selected: true,
+		})
+		options[1].Selected = false
+	}
+
+	title := "Web Client Configurations"
+	description := "Please select the following TLS options:"
+
+	options, continueProcessing =
+		manageInputOptionsScreen(title, description, options,
+			func(options []Option, optionIndex int) []Option {
+				// Automatically certificates generation and use EPP certificate cannot exist
+				// without TLS
+
+				if optionIndex == 0 && !options[0].Selected {
+					options[1].Selected = false
+
+					if len(options) == 3 {
+						options[2].Selected = false
+					}
+
+				} else if optionIndex > 0 && options[optionIndex].Selected {
+					options[0].Selected = true
+
+					if optionIndex == 1 && len(options) == 3 {
+						options[2].Selected = false
+					} else if optionIndex == 2 {
+						options[1].Selected = false
+					}
+				}
+
+				return options
+			})
+
+	if !continueProcessing {
+		return
+	}
+
+	for index, option := range options {
+		switch index {
+		case 0:
+			if option.Selected {
+				useTLS = true
+			}
+
+		case 1:
+			if option.Selected {
+				generateCerts = true
+			}
+
+		case 2:
+			if option.Selected {
+				useEPPCerts = true
+			}
+		}
+	}
+
+	return
+}
+
+func readWebClientCertsParams() (string, bool) {
+	return "", true
 }
 
 func readInput(inputsDraw func(), inputsAction func(termbox.Event) bool) bool {
@@ -547,25 +742,19 @@ func writeText(text string, x, y int) {
 	}
 }
 
-func writeOptions(options []string, x, y int) {
+func writeOptions(options []Option, x, y int) {
 	for index, option := range options {
-		writeText("[ ] "+option, x, y+index)
+		writeText("[ ] "+option.Value, x, y+index)
 	}
 }
 
 func manageInputOptionsScreen(
 	title, description string,
-	options []string,
-	checkConsistency func([]int, bool) []int,
-) ([]int, bool) {
+	options []Option,
+	checkConsistency func([]Option, int) []Option,
+) ([]Option, bool) {
 
 	overOption := -1
-	var selectedOptions []int
-
-	// By default all options are selected
-	for index, _ := range options {
-		selectedOptions = append(selectedOptions, index)
-	}
 
 	inputsDraw := func() {
 		writeTitle(title, 2, 4)
@@ -577,8 +766,10 @@ func manageInputOptionsScreen(
 		writeText("[SPACE] Select an option", 2, windowsHeight-3)
 		writeText("[ENTER] Continue", 2, windowsHeight-2)
 
-		for _, selectedOption := range selectedOptions {
-			termbox.SetCell(3, 9+selectedOption, 0x221a, termbox.ColorYellow, termbox.ColorBlue)
+		for index, option := range options {
+			if option.Selected {
+				termbox.SetCell(3, 9+index, 0x221a, termbox.ColorYellow, termbox.ColorBlue)
+			}
 		}
 
 		if overOption > -1 {
@@ -600,28 +791,17 @@ func manageInputOptionsScreen(
 		case termbox.KeySpace:
 			// Select the option
 
-			found := false
-			for index, selectedOption := range selectedOptions {
-				if selectedOption == overOption {
-					if len(selectedOptions) == 1 {
-						selectedOptions = []int{}
-					} else if index == 0 {
-						selectedOptions = selectedOptions[index+1:]
-					} else if index == len(selectedOptions)-1 {
-						selectedOptions = selectedOptions[:index]
-					} else {
-						selectedOptions = append(selectedOptions[:index], selectedOptions[index+1:]...)
-					}
-					found = true
+			var optionIndex int
+			for index, option := range options {
+				if index == overOption {
+					optionIndex = index
+					options[index].Selected = !option.Selected
+					break
 				}
 			}
 
-			if !found {
-				selectedOptions = append(selectedOptions, overOption)
-			}
-
 			if checkConsistency != nil {
-				selectedOptions = checkConsistency(selectedOptions, !found)
+				options = checkConsistency(options, optionIndex)
 			}
 
 		case termbox.KeyEnter:
@@ -637,7 +817,7 @@ func manageInputOptionsScreen(
 		return nil, false
 	}
 
-	return selectedOptions, true
+	return options, true
 }
 
 func manageInputTextScreen(
@@ -742,18 +922,12 @@ func manageInputTextOptionsScreen(
 	input string,
 	allowedInput *regexp.Regexp,
 	validate func(string) (bool, string),
-	options []string,
-	checkConsistency func([]int, bool) []int,
-) (string, []int, bool) {
+	options []Option,
+	checkConsistency func([]Option, int) []Option,
+) (string, []Option, bool) {
 
 	inputPosition := 0
 	overOption := 0
-	var selectedOptions []int
-
-	// By default all options are selected except for the first one (that is the input text)
-	for index, _ := range options {
-		selectedOptions = append(selectedOptions, index)
-	}
 
 	inputsDraw := func() {
 		writeTitle(title, 2, 4)
@@ -766,8 +940,10 @@ func manageInputTextOptionsScreen(
 		writeText("[SPACE] Select an option", 2, windowsHeight-3)
 		writeText("[ENTER] Continue", 2, windowsHeight-2)
 
-		for _, selectedOption := range selectedOptions {
-			termbox.SetCell(3, 11+selectedOption, 0x221a, termbox.ColorYellow, termbox.ColorBlue)
+		for index, option := range options {
+			if option.Selected {
+				termbox.SetCell(3, 11+index, 0x221a, termbox.ColorYellow, termbox.ColorBlue)
+			}
 		}
 
 		if inputPosition < len(input) && overOption == 0 {
@@ -818,28 +994,17 @@ func manageInputTextOptionsScreen(
 
 			// Select the option
 
-			found := false
-			for index, selectedOption := range selectedOptions {
-				if selectedOption == overOption-1 {
-					if len(selectedOptions) == 1 {
-						selectedOptions = []int{}
-					} else if index == 0 {
-						selectedOptions = selectedOptions[index+1:]
-					} else if index == len(selectedOptions)-1 {
-						selectedOptions = selectedOptions[:index]
-					} else {
-						selectedOptions = append(selectedOptions[:index], selectedOptions[index+1:]...)
-					}
-					found = true
+			var optionIndex int
+			for index, option := range options {
+				if index == overOption-1 {
+					optionIndex = index
+					options[index].Selected = !option.Selected
+					break
 				}
 			}
 
-			if !found {
-				selectedOptions = append(selectedOptions, overOption-1)
-			}
-
 			if checkConsistency != nil {
-				selectedOptions = checkConsistency(selectedOptions, !found)
+				options = checkConsistency(options, optionIndex)
 			}
 
 		case termbox.KeyEnter:
@@ -885,7 +1050,33 @@ func manageInputTextOptionsScreen(
 		return "", nil, false
 	}
 
-	return strings.Replace(input, "_", "", -1), selectedOptions, true
+	return strings.Replace(input, "_", "", -1), options, true
+}
+
+func generateCertificates(prefix, hostname string) (cert, key string) {
+	cmd := exec.Command(basePath+"/bin/generate_cert", "--host", hostname)
+	if err := cmd.Run(); err != nil {
+		log.Println("Error generating certificates. Details:", err)
+		return
+	}
+
+	err := os.MkdirAll(basePath+"/etc/keys", os.ModeDir|0600)
+	if err != nil {
+		log.Println("Error creating certificates directory. Details:", err)
+		return
+	}
+
+	cert = prefix + "-cert.pem"
+	if err := moveFile(basePath+"/etc/keys/cert.pem", cert); err != nil {
+		log.Println("Error copying file cert.pem. Details:", err)
+	}
+
+	key = prefix + "-key.pem"
+	if err := moveFile(basePath+"/etc/keys/key.pem", key); err != nil {
+		log.Println("Error copying file key.pem. Details:", err)
+	}
+
+	return
 }
 
 func moveFile(dst, orig string) error {
