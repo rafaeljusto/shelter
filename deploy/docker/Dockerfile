@@ -41,11 +41,13 @@ ADD shelter /usr/shelter/bin/shelter
 ADD templates /usr/shelter/templates
 ADD etc/shelter.conf.sample /usr/shelter/etc/shelter.conf
 ADD etc/messages.conf /usr/shelter/etc/messages.conf
+ADD key.pem /usr/shelter/etc/keys/key.pem
+ADD cert.pem /usr/shelter/etc/keys/cert.pem
+ADD deploy/docker/container-entrypoint.sh /usr/shelter/bin/container-entrypoint.sh
 
 # Expose REST port and web client port to the outside world
 EXPOSE 4443
 EXPOSE 4444
 
 # Run services when the container starts
-ENTRYPOINT ["usr/bin/mongodb"]
-ENTRYPOINT ["usr/shelter/bin/shelter", "--config", "usr/shelter/etc/shelter.conf"]
+ENTRYPOINT ["usr/shelter/bin/container-entrypoint.sh"]

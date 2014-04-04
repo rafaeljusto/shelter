@@ -22,8 +22,15 @@ cd $workspace/src/github.com/rafaeljusto/shelter
 # Build main binary
 go build shelter.go
 
+# Generate certificates for container
+go run deploy/debian/generate_cert.go --host=localhost
+
 # Create container
-docker build -t shelter deploy/docker/Dockerfile 
+sudo docker build -t shelter deploy/docker/Dockerfile 
+
+# Remove certificates
+rm -f key.pem
+rm -f cert.pem
 
 # Push the container to the index
 docker push $username/shelter

@@ -93,6 +93,7 @@ operational system that you choose.
 
 * FPM - https://github.com/jordansissel/fpm (Debian packages)
 * Termbox - https://github.com/nsf/termbox-go (Debian packages)
+* Docker - http://docker.io/
 
 All necessary scripts to generate the packages are under the deploy folder in the project
 root.
