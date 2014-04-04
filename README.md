@@ -17,6 +17,7 @@ For more information check the [Wiki](https://github.com/rafaeljusto/shelter/wik
 
 features
 ========
+
 * Automatically detect DNS/DNSSEC configuration problems of the registered domains
 * Automatically sends e-mails notifying domain's owners of the configuration problems
 * System can be deployed on registry or provider back-end infrastructure, not letting
@@ -27,7 +28,7 @@ softwares
 owner
 * Built-in web client to manage domains easily without the necessity to develop a REST
 client
-* IDNA support for domains
+* IDNA support for domains' names
 * Optimized scan strategy to verify all registered domains configurations
 * On-the-fly domain verification interface
 
