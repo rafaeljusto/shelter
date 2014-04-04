@@ -71,7 +71,8 @@ func main() {
 		if !readEnabledModules() ||
 			!readDatabaseParameters() ||
 			!readRESTParameters() ||
-			!readWebClientParameters() {
+			!readWebClientParameters() ||
+			!readNotificationParameters() {
 
 			return
 		}
@@ -89,6 +90,14 @@ func main() {
 
 	} else {
 		// Update current configuration file
+	}
+
+	cmd := exec.Command("initctl", "stop", "shelter")
+	cmd.Run() // We don't care about stop errors, because maybe the process wasn't there
+
+	cmd = exec.Command("initctl", "start", "shelter")
+	if err := cmd.Run(); err != nil {
+		log.Println("Error starting shelter. Details:", err)
 	}
 }
 
@@ -173,6 +182,7 @@ func readDatabaseHost() (string, bool) {
 	host := "localhost_________________________________________"
 	title := "Database Configurations"
 	description := "Please inform the host (IP or domain) of MongoDB database:"
+
 	return manageInputTextScreen(title, description, host, hostnameOrIPInput,
 		func(input string) (bool, string) {
 			if len(input) == 0 {
@@ -215,12 +225,7 @@ func readRESTListeners() bool {
 	var continueProcessing bool
 
 	if restModule || webClientModule {
-		addresses, continueProcessing = readRESTAddresses()
-		if !continueProcessing {
-			return false
-		}
-
-		port, continueProcessing = readRESTPort()
+		port, addresses, continueProcessing = readRESTPortAddresses()
 		if !continueProcessing {
 			return false
 		}
@@ -238,7 +243,7 @@ func readRESTListeners() bool {
 				return false
 			}
 
-			cert, key := generateCertificates("epp", hostname)
+			cert, key := generateCertificates("rest", hostname)
 			config.ShelterConfig.RESTServer.TLS.CertificatePath = "etc/keys/" + cert
 			config.ShelterConfig.RESTServer.TLS.PrivateKeyPath = "etc/keys/" + key
 		}
@@ -265,11 +270,13 @@ func readRESTListeners() bool {
 	return true
 }
 
-func readRESTAddresses() ([]string, bool) {
+func readRESTPortAddresses() (int, []string, bool) {
+	port := "4443_"
+
 	interfaces, err := net.Interfaces()
 	if err != nil {
 		log.Println(err)
-		return nil, true
+		return 0, nil, true
 	}
 
 	var options []Option
@@ -277,12 +284,18 @@ func readRESTAddresses() ([]string, bool) {
 		addrs, err := i.Addrs()
 		if err != nil {
 			log.Println(err)
-			return nil, true
+			return 0, nil, true
 		}
 
 		for _, a := range addrs {
 			ip := a.String()
 			ip = ip[:strings.Index(ip, "/")]
+
+			// Avoid fe80::/10 prefix because is used only for link local
+			if strings.HasPrefix(ip, "fe80") {
+				continue
+			}
+
 			options = append(options, Option{
 				Value:    fmt.Sprintf("%s", ip),
 				Selected: true,
@@ -291,14 +304,22 @@ func readRESTAddresses() ([]string, bool) {
 	}
 
 	title := "REST Configurations"
-	description := "Please select the IP addresses that you want to listen:"
+	description := "Please inform the port number and select the IP addresses that the REST server will listen:"
 
-	options, continueProcessing :=
-		manageInputOptionsScreen(title, description, options, nil)
+	port, options, continueProcessing :=
+		manageInputTextOptionsScreen(title, description, port, numericInput, func(input string) (bool, string) {
+			if len(input) == 0 {
+				return false, "You must inform a port number"
+			}
+
+			return true, ""
+		}, options, nil)
 
 	if !continueProcessing {
-		return nil, false
+		return 0, nil, false
 	}
+
+	portConverted, _ := strconv.Atoi(port)
 
 	var selectedAddresses []string
 	for _, option := range options {
@@ -306,14 +327,8 @@ func readRESTAddresses() ([]string, bool) {
 			selectedAddresses = append(selectedAddresses, option.Value)
 		}
 	}
-	return selectedAddresses, true
-}
 
-func readRESTPort() (int, bool) {
-	port := "4443_"
-	title := "REST Configurations"
-	description := "Please inform the port that you want to listen:"
-	return manageInputNumberScreen(title, description, port)
+	return portConverted, selectedAddresses, true
 }
 
 func readRESTTLS() (useTLS, generateCerts, continueProcessing bool) {
@@ -477,26 +492,21 @@ func readRESTSecretContent(keyId string) (string, bool) {
 func readWebClientParameters() bool {
 	var addresses []string
 	var port int
-	var useTLS, generateCerts, useEPPCerts bool
+	var useTLS, generateCerts, useRESTCerts bool
 	var continueProcessing bool
 
 	if webClientModule {
-		addresses, continueProcessing = readWebClientAddresses()
+		port, addresses, continueProcessing = readWebClientPortAddresses()
 		if !continueProcessing {
 			return false
 		}
 
-		port, continueProcessing = readWebClientPort()
+		useTLS, generateCerts, useRESTCerts, continueProcessing = readWebClientTLS()
 		if !continueProcessing {
 			return false
 		}
 
-		useTLS, generateCerts, useEPPCerts, continueProcessing = readWebClientTLS()
-		if !continueProcessing {
-			return false
-		}
-
-		if generateCerts && !useEPPCerts {
+		if generateCerts && !useRESTCerts {
 			hostname, continueProcessing := readWebClientCertsParams()
 			if !continueProcessing {
 				return false
@@ -506,7 +516,7 @@ func readWebClientParameters() bool {
 			config.ShelterConfig.WebClient.TLS.CertificatePath = "etc/keys/" + cert
 			config.ShelterConfig.WebClient.TLS.PrivateKeyPath = "etc/keys/" + key
 
-		} else if !generateCerts && useEPPCerts {
+		} else if !generateCerts && useRESTCerts {
 			config.ShelterConfig.WebClient.TLS.CertificatePath =
 				config.ShelterConfig.RESTServer.TLS.CertificatePath
 			config.ShelterConfig.WebClient.TLS.PrivateKeyPath =
@@ -521,25 +531,28 @@ func readWebClientParameters() bool {
 	}{}
 
 	for _, address := range addresses {
-		config.ShelterConfig.WebClient.Listeners = append(config.ShelterConfig.WebClient.Listeners, struct {
-			IP   string
-			Port int
-			TLS  bool
-		}{
-			IP:   address,
-			Port: port,
-			TLS:  useTLS,
-		})
+		config.ShelterConfig.WebClient.Listeners =
+			append(config.ShelterConfig.WebClient.Listeners, struct {
+				IP   string
+				Port int
+				TLS  bool
+			}{
+				IP:   address,
+				Port: port,
+				TLS:  useTLS,
+			})
 	}
 
 	return true
 }
 
-func readWebClientAddresses() ([]string, bool) {
+func readWebClientPortAddresses() (int, []string, bool) {
+	port := "4444_"
+
 	interfaces, err := net.Interfaces()
 	if err != nil {
 		log.Println(err)
-		return nil, true
+		return 0, nil, true
 	}
 
 	var options []Option
@@ -547,12 +560,18 @@ func readWebClientAddresses() ([]string, bool) {
 		addrs, err := i.Addrs()
 		if err != nil {
 			log.Println(err)
-			return nil, true
+			return 0, nil, true
 		}
 
 		for _, a := range addrs {
 			ip := a.String()
 			ip = ip[:strings.Index(ip, "/")]
+
+			// Avoid fe80::/10 prefix because is used only for link local
+			if strings.HasPrefix(ip, "fe80") {
+				continue
+			}
+
 			options = append(options, Option{
 				Value:    fmt.Sprintf("%s", ip),
 				Selected: true,
@@ -561,14 +580,24 @@ func readWebClientAddresses() ([]string, bool) {
 	}
 
 	title := "Web Client Configurations"
-	description := "Please select the IP addresses that you want to listen:"
+	description := "Please inform the port number and select the IP addresses " +
+		"that the Web Client will listen:"
 
-	options, continueProcessing :=
-		manageInputOptionsScreen(title, description, options, nil)
+	port, options, continueProcessing :=
+		manageInputTextOptionsScreen(title, description, port, numericInput,
+			func(input string) (bool, string) {
+				if len(input) == 0 {
+					return false, "You must inform a port number"
+				}
+
+				return true, ""
+			}, options, nil)
 
 	if !continueProcessing {
-		return nil, false
+		return 0, nil, false
 	}
+
+	portConverted, _ := strconv.Atoi(port)
 
 	var selectedAddresses []string
 	for _, option := range options {
@@ -576,17 +605,10 @@ func readWebClientAddresses() ([]string, bool) {
 			selectedAddresses = append(selectedAddresses, option.Value)
 		}
 	}
-	return selectedAddresses, true
+	return portConverted, selectedAddresses, true
 }
 
-func readWebClientPort() (int, bool) {
-	port := "4444_"
-	title := "Web Client Configurations"
-	description := "Please inform the port that you want to listen:"
-	return manageInputNumberScreen(title, description, port)
-}
-
-func readWebClientTLS() (useTLS, generateCerts, useEPPCerts, continueProcessing bool) {
+func readWebClientTLS() (useTLS, generateCerts, useRESTCerts, continueProcessing bool) {
 	options := []Option{
 		{Value: "Use TLS on interfaces (HTTPS)", Selected: true},
 		{Value: "Generate self-signed certificates automatically (valid for 1 year)", Selected: true},
@@ -595,7 +617,7 @@ func readWebClientTLS() (useTLS, generateCerts, useEPPCerts, continueProcessing 
 	if len(config.ShelterConfig.RESTServer.Listeners) > 0 &&
 		config.ShelterConfig.RESTServer.Listeners[0].TLS {
 		options = append(options, Option{
-			Value:    "Use same certificate from EPP server",
+			Value:    "Use same certificate from REST server",
 			Selected: true,
 		})
 		options[1].Selected = false
@@ -607,7 +629,7 @@ func readWebClientTLS() (useTLS, generateCerts, useEPPCerts, continueProcessing 
 	options, continueProcessing =
 		manageInputOptionsScreen(title, description, options,
 			func(options []Option, optionIndex int) []Option {
-				// Automatically certificates generation and use EPP certificate cannot exist
+				// Automatically certificates generation and use REST certificate cannot exist
 				// without TLS
 
 				if optionIndex == 0 && !options[0].Selected {
@@ -648,7 +670,7 @@ func readWebClientTLS() (useTLS, generateCerts, useEPPCerts, continueProcessing 
 
 		case 2:
 			if option.Selected {
-				useEPPCerts = true
+				useRESTCerts = true
 			}
 		}
 	}
@@ -657,7 +679,155 @@ func readWebClientTLS() (useTLS, generateCerts, useEPPCerts, continueProcessing 
 }
 
 func readWebClientCertsParams() (string, bool) {
-	return "", true
+	host := "localhost_________________________________________"
+	title := "Web Client Configurations"
+	description := "Please inform the hostname of the certificate:"
+	return manageInputTextScreen(title, description, host, hostnameInput,
+		func(input string) (bool, string) {
+			if len(input) == 0 {
+				return false, "Certificate hostname cannot be empty"
+			}
+
+			return true, ""
+		})
+}
+
+func readNotificationParameters() bool {
+	var smtpServer, authenticationType, username, password string
+	var port int
+	var continueProcessing bool
+
+	if notificationModule {
+		smtpServer, continueProcessing = readNotificationSMTPServer()
+		if !continueProcessing {
+			return false
+		}
+
+		port, continueProcessing = readNotificationPort()
+		if !continueProcessing {
+			return false
+		}
+
+		authenticationType, continueProcessing = readNotificationAuthType()
+		if !continueProcessing {
+			return false
+		}
+
+		if authenticationType != "None" {
+			username, continueProcessing = readNotificationUsername()
+			if !continueProcessing {
+				return false
+			}
+
+			password, continueProcessing = readNotificationPassword()
+			if !continueProcessing {
+				return false
+			}
+		}
+	}
+
+	config.ShelterConfig.Notification.SMTPServer.Server = smtpServer
+	config.ShelterConfig.Notification.SMTPServer.Port = port
+
+	switch authenticationType {
+	case "None":
+		config.ShelterConfig.Notification.SMTPServer.Auth.Type = config.AuthenticationTypeNone
+	case "Plain":
+		config.ShelterConfig.Notification.SMTPServer.Auth.Type = config.AuthenticationTypePlain
+	case "CRAM-MD5":
+		config.ShelterConfig.Notification.SMTPServer.Auth.Type = config.AuthenticationTypeCRAMMD5Auth
+	}
+
+	config.ShelterConfig.Notification.SMTPServer.Auth.Username = username
+	config.ShelterConfig.Notification.SMTPServer.Auth.Password = password
+	return true
+}
+
+func readNotificationSMTPServer() (string, bool) {
+	host := "smtp.gmail.com.___________________________________"
+	title := "Notification Configurations"
+	description := "Please inform the hostname or IP address of the SMTP server:"
+	return manageInputTextScreen(title, description, host, hostnameOrIPInput,
+		func(input string) (bool, string) {
+			if len(input) == 0 {
+				return false, "Hostname or IP field cannot be empty"
+			}
+
+			return true, ""
+		})
+}
+
+func readNotificationPort() (int, bool) {
+	port := "587_"
+	title := "Notification Configurations"
+	description := "Please inform the port for the SMTP server:"
+	return manageInputNumberScreen(title, description, port)
+}
+
+func readNotificationAuthType() (string, bool) {
+	options := []Option{
+		{Value: "None", Selected: false},
+		{Value: "Plain", Selected: true},
+		{Value: "CRAM-MD5", Selected: false},
+	}
+
+	title := "Notification Configurations"
+	description := "Please inform the SMTP authentication type:"
+
+	options, continueProcessing :=
+		manageInputOptionsScreen(title, description, options,
+			func(options []Option, optionIndex int) []Option {
+				for index, _ := range options {
+					if options[optionIndex].Selected && index != optionIndex {
+						options[index].Selected = false
+
+					} else if !options[optionIndex].Selected && index == optionIndex {
+						options[index].Selected = true
+					}
+				}
+
+				return options
+			})
+
+	if !continueProcessing {
+		return "", false
+	}
+
+	for _, option := range options {
+		if option.Selected {
+			return option.Value, true
+		}
+	}
+
+	return "", false
+}
+
+func readNotificationUsername() (string, bool) {
+	host := "anonymous_________________________________________"
+	title := "Notification Configurations"
+	description := "Please inform the SMTP username:"
+	return manageInputTextScreen(title, description, host, alphaNumericInput,
+		func(input string) (bool, string) {
+			if len(input) == 0 {
+				return false, "SMTP username cannot be empty"
+			}
+
+			return true, ""
+		})
+}
+
+func readNotificationPassword() (string, bool) {
+	host := "__________________________________________________"
+	title := "Notification Configurations"
+	description := "Please inform the SMTP password:"
+	return manageInputTextScreen(title, description, host, alphaNumericInput,
+		func(input string) (bool, string) {
+			if len(input) == 0 {
+				return false, "SMTP password cannot be empty"
+			}
+
+			return true, ""
+		})
 }
 
 func readInput(inputsDraw func(), inputsAction func(termbox.Event) bool) bool {
@@ -1015,7 +1185,7 @@ func manageInputTextOptionsScreen(
 				if !valid {
 					draw(func() {
 						inputsDraw()
-						writeText("ERROR: "+msg, 2, 13)
+						writeText("ERROR: "+msg, 2, 12+len(options))
 					})
 
 					return true
@@ -1067,12 +1237,12 @@ func generateCertificates(prefix, hostname string) (cert, key string) {
 	}
 
 	cert = prefix + "-cert.pem"
-	if err := moveFile(basePath+"/etc/keys/cert.pem", cert); err != nil {
+	if err := moveFile(basePath+"/etc/keys/"+cert, "cert.pem"); err != nil {
 		log.Println("Error copying file cert.pem. Details:", err)
 	}
 
 	key = prefix + "-key.pem"
-	if err := moveFile(basePath+"/etc/keys/key.pem", key); err != nil {
+	if err := moveFile(basePath+"/etc/keys/"+key, "key.pem"); err != nil {
 		log.Println("Error copying file key.pem. Details:", err)
 	}
 
