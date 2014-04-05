@@ -30,20 +30,11 @@ RUN apt-get install -y mongodb-10gen
 # Create the MongoDB data directory
 RUN mkdir -p /data/db
 
-# Create project structure
-RUN mkdir -p /usr/shelter/bin
-RUN mkdir -p /usr/shelter/templates
-RUN mkdir -p /usr/shelter/var/log
-RUN mkdir -p /usr/shelter/etc/keys
+# Copy necessary files to container
+ADD container /usr/shelter
 
-# Download the necessary files
-ADD container/bin/shelter /usr/shelter/bin/shelter
-ADD container/bin/container-entrypoint.sh /usr/shelter/bin/container-entrypoint.sh
-ADD container/templates /usr/shelter/templates
-ADD container/etc/shelter.conf /usr/shelter/etc/shelter.conf
-ADD container/etc/messages.conf /usr/shelter/etc/messages.conf
-ADD container/etc/keys/key.pem /usr/shelter/etc/keys/key.pem
-ADD container/etc/keys/cert.pem /usr/shelter/etc/keys/cert.pem
+# Create project structure for logging
+RUN mkdir -p /usr/shelter/var/log
 
 # Expose REST port and web client port to the outside world
 EXPOSE 4443
