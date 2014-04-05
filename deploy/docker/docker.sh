@@ -49,11 +49,11 @@ go run $workspace/src/github.com/rafaeljusto/shelter/deploy/debian/generate_cert
 cd ../../../
 
 # Create container
-sudo docker build -t shelter . 
+sudo docker login
+sudo docker build -t $username/shelter . 
 
 # Remove deploy data 
 rm -fr container
 
 # Push the container to the index
-sudo docker login
 sudo docker push $username/shelter
