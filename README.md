@@ -55,6 +55,7 @@ Also, to easy run the project tests you will need the following:
 * Python3 - http://www.python.org/
 * Karma and dependencies - http://karma-runner.github.io
   * npm install -g karma
+  * npm install -g karma-cli
   * npm install -g karma-jasmine
   * npm install -g karma-firefox-launcher
   * npm install -g karma-ng-html2js-preprocessor
