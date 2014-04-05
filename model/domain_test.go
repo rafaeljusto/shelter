@@ -299,7 +299,7 @@ func TestNearDNSSECExpirationDate(t *testing.T) {
 		},
 	}
 
-	if !d.isNearDNSSECExpirationDate(10) {
+	if !d.isNearDNSSECExpirationDate(11) {
 		t.Error("Could not detect when the DNSSEC expiration is near")
 	}
 

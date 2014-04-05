@@ -11,7 +11,7 @@ describe("Scan controller", function() {
 
   beforeEach(inject(function($rootScope, $controller, $injector) {
     $httpBackend = $injector.get("$httpBackend");
-    $httpBackend.whenGET("/languages/en_US.json").respond(200, "{}");
+    $httpBackend.whenGET(/languages\/.+\.json/).respond(200, "{}");
     $httpBackend.flush()
 
     scope = $rootScope.$new();
@@ -20,9 +20,11 @@ describe("Scan controller", function() {
     });
   }));
 
-  it("should verify if the get language function returns the default language", function() {
-    expect(scope.getLanguage()).toBe("en_US");
-  });
+  it("should verify if the get language function returns the default language", inject(function($translate) {
+    expect(scope.getLanguage()).toBe($translate.preferredLanguage());
+    expect(scope.getLanguage()).not.toBe("");
+    expect(scope.getLanguage()).not.toBe(undefined);
+  }));
 
   it("should return the retrieved scans properly", inject(function($injector) {
     var result = {

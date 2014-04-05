@@ -9,8 +9,11 @@ package handler
 import (
 	"github.com/rafaeljusto/shelter/config"
 	"github.com/rafaeljusto/shelter/net/http/rest/check"
+	"net"
 	"net/http"
+	"net/url"
 	"strings"
+	"syscall"
 	"testing"
 )
 
@@ -154,7 +157,23 @@ func TestSignAndSend(t *testing.T) {
 
 	if _, err := signAndSend(r, nil); err != nil {
 		// Avoid connection error
-		if !strings.Contains(err.Error(), "connection refused") {
+		switch specificErr := err.(type) {
+		case *net.OpError:
+			if specificErr.Op != "read" {
+				t.Error(err)
+			}
+
+		case syscall.Errno:
+			if specificErr != syscall.ECONNREFUSED {
+				t.Error(err)
+			}
+
+		case *url.Error:
+			if specificErr.Op != "Get" {
+				t.Error(err)
+			}
+
+		default:
 			t.Error(err)
 		}
 	}
@@ -173,7 +192,23 @@ func TestSignAndSend(t *testing.T) {
 
 	if _, err := signAndSend(r, content); err != nil {
 		// Avoid connection error
-		if !strings.Contains(err.Error(), "connection refused") {
+		switch specificErr := err.(type) {
+		case *net.OpError:
+			if specificErr.Op != "read" {
+				t.Error(err)
+			}
+
+		case syscall.Errno:
+			if specificErr != syscall.ECONNREFUSED {
+				t.Error(err)
+			}
+
+		case *url.Error:
+			if specificErr.Op != "Get" {
+				t.Error(err)
+			}
+
+		default:
 			t.Error(err)
 		}
 	}

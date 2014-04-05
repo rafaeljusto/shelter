@@ -19,6 +19,10 @@ func TestDSChangeStatus(t *testing.T) {
 		LastCheckAt: timeMark,
 	}
 
+	// Wait for a while to make a difference between the first and the second
+	// LastCheck fields
+	time.Sleep(1 * time.Millisecond)
+
 	ds.ChangeStatus(DSStatusOK)
 
 	if ds.LastStatus != DSStatusOK {

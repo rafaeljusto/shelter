@@ -1,5 +1,5 @@
 {
-  "basePath": "/usr/local/shelter",
+  "basePath": "/usr/shelter",
   "logFilename": "var/log/shelter.log",
   "languages": [ "en-US", "pt-BR" ],
 

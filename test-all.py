@@ -127,9 +127,10 @@ def runInterfaceTests():
 
   success = True
   karmaConf = os.path.join("templates", "client", "tests", "karma.conf.js")
+  commandLine = subprocess.list2cmdline(["karma", "start", karmaConf, "--single-run"])
 
   try:
-    subprocess.check_call(["karma", "start", karmaConf, "--single-run"])
+    subprocess.check_call([commandLine], shell=True)
 
   except:
     success = False

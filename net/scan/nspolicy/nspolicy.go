@@ -11,7 +11,7 @@ import (
 	"github.com/rafaeljusto/shelter/model"
 	"github.com/rafaeljusto/shelter/net/scan/dnsutils"
 	"net"
-	"regexp"
+	"syscall"
 )
 
 var (
@@ -47,25 +47,31 @@ func NewDomainNSPolicy(domain *model.Domain) DomainNSPolicy {
 // When there's a error while sending a nameserver request over the network, this method
 // is responsable for detecting any usual problems. There's also some unknown problems
 // that are going to be treated as DNS error, for now we are not logging the generic
-// error, but maybe is a good idea if occurs to often
+// error, but maybe is a good idea if occurs too often
 func (d *DomainNSPolicy) CheckNetworkError(err error) model.NameserverStatus {
 	if err == nil {
 		return model.NameserverStatusOK
 	}
 
-	if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
+	if netError, ok := err.(net.Error); ok && netError.Timeout() {
 		return model.NameserverStatusTimeout
 	}
 
-	// Some erros we don't have a specific structure to detect it, so we are going to catch
-	// the problem analyzing the error message
+	switch t := err.(type) {
+	case *net.OpError:
+		if t.Op == "dial" {
+			return model.NameserverStatusUnknownHost
+		} else if t.Op == "read" {
+			return model.NameserverStatusConnectionRefused
+		}
 
-	if match, _ := regexp.MatchString(".*lookup.*", err.Error()); match {
-		return model.NameserverStatusUnknownHost
-	}
-
-	if match, _ := regexp.MatchString(".*connection refused.*", err.Error()); match {
-		return model.NameserverStatusConnectionRefused
+	case syscall.Errno:
+		switch t {
+		case syscall.ETIMEDOUT:
+			return model.NameserverStatusTimeout
+		case syscall.ECONNREFUSED:
+			return model.NameserverStatusConnectionRefused
+		}
 	}
 
 	return model.NameserverStatusError

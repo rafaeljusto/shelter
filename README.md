@@ -15,6 +15,23 @@ contributed with ideas for the project.
 
 For more information check the [Wiki](https://github.com/rafaeljusto/shelter/wiki).
 
+features
+========
+
+* Automatically detect DNS/DNSSEC configuration problems of the registered domains
+* Automatically sends e-mails notifying domain's owners of the configuration problems
+* System can be deployed on registry or provider back-end infrastructure, not letting
+critical data to spread to other networks
+* Uses REST architecture to allow a distributted system and easy integration with other
+softwares
+* Multi-language support for notification's e-mails that can be distinct for each domain's
+owner
+* Built-in web client to manage domains easily without the necessity to develop a REST
+client
+* IDNA support for domains' names
+* Optimized scan strategy to verify all registered domains configurations
+* On-the-fly domain verification interface
+
 building
 ========
 
@@ -42,6 +59,20 @@ Also, to easy run the project tests you will need the following:
   * npm install -g karma-firefox-launcher
   * npm install -g karma-ng-html2js-preprocessor
 
+Remember that the project directory should respect the path bellow, because the source
+code dependencies can make references to this structure.
+
+```
+<GOPATH>/src/github.com/rafaeljusto/shelter
+```
+
+You can automatically retrieve the project with the desired structure using the following
+command:
+
+```
+go get -u github.com/rafaeljusto/shelter
+```
+
 And finally, to build the project, just run the following command on the project root:
 
 ```
@@ -61,6 +92,8 @@ To deploy the project you will need one of the programs bellow, depending on the
 operational system that you choose.
 
 * FPM - https://github.com/jordansissel/fpm (Debian packages)
+* Termbox - https://github.com/nsf/termbox-go (Debian packages)
+* Docker - http://docker.io/
 
 All necessary scripts to generate the packages are under the deploy folder in the project
 root.
