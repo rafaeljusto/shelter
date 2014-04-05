@@ -22,15 +22,32 @@ cd $workspace/src/github.com/rafaeljusto/shelter
 # Build main binary
 go build shelter.go
 
+# <src> must be the path to a file or directory relative
+# to the source directory being built (also called the 
+# context of the build) or a remote file URL.
+cd deploy/docker
+
+rm -fr container
+mkdir -p container/bin
+mkdir -p container/etc/keys
+
+mv ../../shelter container/bin/
+cp container-entrypoint.sh container/bin/
+cp ../../etc/shelter.conf.sample container/etc/shelter.conf
+cp ../../etc/messages.conf container/etc/
+cp -r ../../templates container/
+
+
 # Generate certificates for container
-go run deploy/debian/generate_cert.go --host=localhost
+cd container/etc/keys
+go run $workspace/src/github.com/rafaeljusto/shelter/deploy/debian/generate_cert.go --host=localhost
+cd ../../../
 
 # Create container
-sudo docker build -t shelter deploy/docker/Dockerfile 
+sudo docker build -t shelter . 
 
-# Remove certificates
-rm -f key.pem
-rm -f cert.pem
+# Remove deploy data 
+rm -fr container
 
 # Push the container to the index
 docker push $username/shelter

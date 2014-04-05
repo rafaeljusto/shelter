@@ -20,8 +20,8 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10
 RUN echo 'deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen' | tee /etc/apt/sources.list.d/10gen.list
 
 # Hack for initctl not being available in Ubuntu
-RUN dpkg-divert --local --rename --add /sbin/initctl
-RUN ln -s /bin/true /sbin/initctl
+#RUN dpkg-divert --local --rename --add /sbin/initctl
+#RUN ln -s /bin/true /sbin/initctl
 
 # Install MongoDB
 RUN apt-get update
@@ -37,13 +37,13 @@ RUN mkdir -p /usr/shelter/var/log
 RUN mkdir -p /usr/shelter/etc/keys
 
 # Download the necessary files
-ADD shelter /usr/shelter/bin/shelter
-ADD templates /usr/shelter/templates
-ADD etc/shelter.conf.sample /usr/shelter/etc/shelter.conf
-ADD etc/messages.conf /usr/shelter/etc/messages.conf
-ADD key.pem /usr/shelter/etc/keys/key.pem
-ADD cert.pem /usr/shelter/etc/keys/cert.pem
-ADD deploy/docker/container-entrypoint.sh /usr/shelter/bin/container-entrypoint.sh
+ADD container/bin/shelter /usr/shelter/bin/shelter
+ADD container/bin/container-entrypoint.sh /usr/shelter/bin/container-entrypoint.sh
+ADD container/templates /usr/shelter/templates
+ADD container/etc/shelter.conf /usr/shelter/etc/shelter.conf
+ADD container/etc/messages.conf /usr/shelter/etc/messages.conf
+ADD container/etc/keys/key.pem /usr/shelter/etc/keys/key.pem
+ADD container/etc/keys/cert.pem /usr/shelter/etc/keys/cert.pem
 
 # Expose REST port and web client port to the outside world
 EXPOSE 4443
