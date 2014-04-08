@@ -5,14 +5,19 @@
 package main
 
 import (
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
+	"crypto/x509/pkix"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"github.com/nsf/termbox-go"
 	"github.com/rafaeljusto/shelter/config"
 	"io"
 	"io/ioutil"
 	"log"
-	"math/rand"
+	"math/big"
 	"net"
 	"os"
 	"os/exec"
@@ -47,10 +52,6 @@ var (
 type Option struct {
 	Value    string
 	Selected bool
-}
-
-func init() {
-	rand.Seed(time.Now().Unix())
 }
 
 func main() {
@@ -438,7 +439,13 @@ func readRESTSecret() bool {
 	var secret string
 	if generateAutomatically {
 		for i := 0; i < 30; i++ {
-			secret += string(secretAlphabet[rand.Int()%len(secretAlphabet)])
+			randNumber, err := rand.Int(rand.Reader, big.NewInt(int64(len(secretAlphabet))))
+			if err != nil {
+				log.Println("Error generating random numbers. Details:", err)
+				return false
+			}
+
+			secret += string(secretAlphabet[randNumber.Int64()])
 		}
 
 	} else {
@@ -1224,27 +1231,86 @@ func manageInputTextOptionsScreen(
 }
 
 func generateCertificates(prefix, hostname string) (cert, key string) {
-	cmd := exec.Command(basePath+"/bin/generate_cert", "--host", hostname)
-	if err := cmd.Run(); err != nil {
-		log.Println("Error generating certificates. Details:", err)
-		return
-	}
-
 	err := os.MkdirAll(basePath+"/etc/keys", os.ModeDir|0600)
 	if err != nil {
 		log.Println("Error creating certificates directory. Details:", err)
 		return
 	}
 
-	cert = prefix + "-cert.pem"
-	if err := moveFile(basePath+"/etc/keys/"+cert, "cert.pem"); err != nil {
-		log.Println("Error copying file cert.pem. Details:", err)
+	priv, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		log.Println("Error creating certificates. Details:", err)
+		return
 	}
 
-	key = prefix + "-key.pem"
-	if err := moveFile(basePath+"/etc/keys/"+key, "key.pem"); err != nil {
-		log.Println("Error copying file key.pem. Details:", err)
+	notBefore := time.Now()
+	notAfter := notBefore.Add(365 * 24 * time.Hour)
+
+	// end of ASN.1 time
+	endOfTime := time.Date(2049, 12, 31, 23, 59, 59, 0, time.UTC)
+	if notAfter.After(endOfTime) {
+		notAfter = endOfTime
 	}
+
+	name := pkix.Name{
+		CommonName:         hostname,
+		Organization:       []string{"Shelter project"},
+		OrganizationalUnit: []string{"TI"},
+		SerialNumber:       "1",
+	}
+
+	template := x509.Certificate{
+		Version:               1,
+		SerialNumber:          new(big.Int).SetInt64(1),
+		Issuer:                name,
+		Subject:               name,
+		NotBefore:             notBefore,
+		NotAfter:              notAfter,
+		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature | KeyUsageCertSign,
+		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		BasicConstraintsValid: true,
+		IsCA: true,
+	}
+
+	if ip := net.ParseIP(hostname); ip != nil {
+		template.IPAddresses = append(template.IPAddresses, ip)
+	} else {
+		template.DNSNames = append(template.DNSNames, hostname)
+	}
+
+	derBytes, err := x509.CreateCertificate(rand.Reader, &template,
+		&template, &priv.PublicKey, priv)
+	if err != nil {
+		log.Println("Error creating certificates. Details:", err)
+		return
+	}
+
+	cert = prefix + "-cert.pem"
+	certOut, err := os.Create(basePath + "/etc/keys/" + cert)
+	if err != nil {
+		log.Println("Error creating certificates. Details:", err)
+		return
+	}
+
+	pem.Encode(certOut, &pem.Block{
+		Type:  "CERTIFICATE",
+		Bytes: derBytes,
+	})
+	certOut.Close()
+
+	key = prefix + "-key.pem"
+	keyOut, err := os.OpenFile(basePath+"/etc/keys/"+key,
+		os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+	if err != nil {
+		log.Println("Error creating certificates. Details:", err)
+		return
+	}
+
+	pem.Encode(keyOut, &pem.Block{
+		Type:  "RSA PRIVATE KEY",
+		Bytes: x509.MarshalPKCS1PrivateKey(priv),
+	})
+	keyOut.Close()
 
 	return
 }

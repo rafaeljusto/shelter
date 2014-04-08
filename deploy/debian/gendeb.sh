@@ -36,7 +36,6 @@ cd $workspace
 go build shelter.go
 cd $workspace/deploy/debian
 go build config_init.go
-go build generate_cert.go
 cd $current_dir
 
 if [ -f $pack_name*.deb ]; then
@@ -56,7 +55,6 @@ cp -r $workspace/etc $project_root/
 cp -r $workspace/templates $project_root/
 mv $workspace/shelter $project_root/bin/
 mv $workspace/deploy/debian/config_init $project_root/bin/
-mv $workspace/deploy/debian/generate_cert $project_root/bin/
 
 fpm -s dir -t deb \
   --after-install $project_root/bin/config_init \
