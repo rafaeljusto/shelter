@@ -30,7 +30,7 @@ import (
 const (
 	basePath             = "/usr/shelter"
 	configFilePath       = basePath + "/etc/shelter.conf"
-	sampleConfigFilePath = basePath + "/etc/shelter.conf.sample"
+	sampleConfigFilePath = basePath + "/etc/shelter.conf.unix.sample"
 )
 
 var (

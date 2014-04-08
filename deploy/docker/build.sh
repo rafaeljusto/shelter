@@ -67,7 +67,7 @@ mkdir -p container/etc/keys
 
 mv ../../shelter container/bin/
 cp entrypoint.sh container/bin/
-cp ../../etc/shelter.conf.sample container/etc/shelter.conf
+cp ../../etc/shelter.conf.unix.sample container/etc/shelter.conf
 cp ../../etc/messages.conf container/etc/
 cp -r ../../templates container/
 
