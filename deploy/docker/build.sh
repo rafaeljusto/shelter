@@ -12,39 +12,32 @@ usage() {
 }
 
 generate_certs() {
-  # generate root key
-  openssl genrsa -out root-key.pem 2048
+  echo ""
+  echo "######################################"
+  echo "#### Generating HTTPS private key ####"
+  echo "######################################"
+  echo ""
 
-  # generate root certificate
-  openssl req -new -x509 -days 3650 -key root-key.pem -out root.pem
+  # Generate a Private Key
+  openssl genrsa -des3 -out key.pem 1024
 
-  # generate server and client keys
-  openssl genrsa -out key.pem 2048
-  openssl genrsa -out client-key.pem 2048
+  # Remove Passphrase from Key
+  cp key.pem key.pem.org
+  openssl rsa -in key.pem.org -out key.pem
+  rm -f key.pem.org
 
-  # generate server and client certificate requests
+  echo ""
+  echo "######################################"
+  echo "#### Generating HTTPS certificate ####"
+  echo "######################################"
+  echo ""
+
+  # Generate a CSR (Certificate Signing Request)
   openssl req -new -key key.pem -out server.csr
-  openssl req -new -key client-key.pem -out client.csr
 
-  # generate server certificate
-  mkdir -p demoCA
-  touch demoCA/index.txt
-  echo 01 > demoCA/serial
-  openssl ca -out cert.pem -days 3650 -keyfile root-key.pem -cert root.pem -outdir . -infiles server.csr
-  rm -rf demoCA
+  # Generating a Self-Signed Certificate
+  openssl x509 -req -days 365 -in server.csr -signkey key.pem -out cert.pem
   rm -f server.csr
-
-  # generate client certificate
-  mkdir -p demoCA
-  touch demoCA/index.txt
-  echo 02 > demoCA/serial
-  openssl ca -out client-cert.pem -days 3650 -keyfile root-key.pem -cert root.pem -outdir . -infiles client.csr
-  rm -rf demoCA
-  rm -f client.csr
-
-  # Merge files and remove temporary ones
-  cat client-cert.pem client-key.pem > client.pem
-  rm -f client-key.pem client-cert.pem
 }
 
 username=$1
@@ -81,11 +74,10 @@ cp -r ../../templates container/
 
 # Generate certificates for container
 cd container/etc/keys
-go run ../../../../debian/generate_cert.go --host=localhost --ca
+generate_certs
 cd ../../../
 
 # Create container
-sudo docker login
 sudo docker build --rm -t $username/shelter .
 
 # Remove deploy data
@@ -93,5 +85,6 @@ rm -fr container
 
 # Push the container to the index
 if [ "$2" = "--push" ]; then
+  sudo docker login
   sudo docker push $username/shelter
 fi
