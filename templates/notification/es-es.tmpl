@@ -1,0 +1,104 @@
+{{$domain := .}}
+
+From: {{.From}}
+To: {{.To}}
+Subject: Problema de configuración con el dominio {{$domain.FQDN}}
+
+
+Estimado Sr./Sra.,
+
+Durante la validación periódica de dominio, un problema de configuración se detectó con el
+dominio {{$domain.FQDN}}.
+
+{{range $nameserver := $domain.Nameservers}}
+  {{if nsStatusEq $nameserver.LastStatus "TIMEOUT"}}
+  * Servidor DNS {{$nameserver.Host}} no está respondiendo a las consultas DNS.
+    Se recomienda consultar los firewalls y servidor DNS para asegurar que este servicio
+    no está bloqueado en la puerta 53 través del protocolo UDP y TCP.
+
+  {{else if nsStatusEq $nameserver.LastStatus "NOAA"}}
+  * Servidor DNS {{$nameserver.Host}} no tiene autoridad para el dominio
+    {{$domain.FQDN}}. Por favor, compruebe la configuración de tu servidor.
+
+  {{else if nsStatusEq $nameserver.LastStatus "UDN"}}
+  * Servidor DNS {{$nameserver.Host}} no tiene información sobre el dominio
+    {{$domain.FQDN}}.
+
+  {{else if nsStatusEq $nameserver.LastStatus "UH"}}
+  * Servidor DNS {{$nameserver.Host}} no encontrado.
+
+  {{else if nsStatusEq $nameserver.LastStatus "SERVFAIL"}}
+  * Servidor DNS {{$nameserver.Host}} genera un error interno al recibir una petición DNS.
+    Por favor, compruebe los registros para detectar y resolver el problema.
+
+  {{else if nsStatusEq $nameserver.LastStatus "QREFUSED"}}
+  * Servidor DNS {{$nameserver.Host}} se negó a responder a las peticiones DNS. Probablemente el
+    servidor DNS está limitando el acceso a una lista de clientes. Los servidores DNS
+    autoritario no debe limitar sus respuestas a clientes específicos, por favor
+    compruebe la configuración de su servidor DNS.
+
+  {{else if nsStatusEq $nameserver.LastStatus "CREFUSED"}}
+  * Servidor DNS {{$nameserver.Host}} negó la conexión durante una consulta DNS.
+    Esto ocurrió probablemente por alguna regla de firewall. Los firewalls
+    deben permitir tráfico en la puerta 53 para los protocolos TCP y UDP.
+
+  {{else if nsStatusEq $nameserver.LastStatus "CNAME"}}
+  * Servidor DNS {{$nameserver.Host}} tine un registro CNAME en la zona de APEX. Conforme
+    la RFC 1034 - sección 3.6.2 y RFC 1912 - sección 2.4 el registro CNAME no puede
+    existir con otro registro de mismo nombre en la zona. Como se requiere el registro SOA
+    en APEX de la zona, el registro CNAME no debería existir en este punto.
+
+  {{else if nsStatusEq $nameserver.LastStatus "NOTSYNCH"}}
+  * Servidor DNS {{$nameserver.Host}} no está sincronizado con los otros servidores DNS
+    de el dominio {{$domain.FQDN}}. Compruebe el número de serie del registro SOA en cada
+    zona de los servidores DNS.
+
+  {{else if nsStatusEq $nameserver.LastStatus "ERROR"}}
+  * Servidor DNS {{$nameserver.Host}} obtuve un error inesperado.
+
+  {{end}}
+{{end}}
+
+{{range $ds := $domain.DSSet}}
+  {{if dsStatusEq $ds.LastStatus "TIMEOUT"}}
+  * DS con keytag {{$ds.Keytag}} no está respondiendo a las consultas DNS.
+    Se recomienda consultar los firewalls y el servidor DNS para asegurar que este servicio
+    no está bloqueado en la puerta 53 través del protocolo UDP y TCP. También puedes ver si la red
+    apoya los paquetes fragmentados UDP y paquetes UDP con un tamaño superior a 512 bytes (para
+    más información ver EDNS0).
+
+  {{else if dsStatusEq $ds.LastStatus "NOSIG"}}
+  * DS con keytag {{$ds.Keytag}} hace referencia a un registro DNSKEY que no tiene un
+    record RRSIG (firma). Por favor firme la zona con el registro DNSKEY.
+
+  {{else if dsStatusEq $ds.LastStatus "EXPSIG"}}
+  * DS com keytag {{$ds.Keytag}} hace referencia a un registro DNSKEY con una firma
+    expirado. Por favor firme de nuevo la zona tan pronto como sea posible.
+
+  {{else if dsStatusEq $ds.LastStatus "NOKEY"}}
+  * DS con keytag {{$ds.Keytag}} hace referencia a un registro DNSKEY que no existe en
+    la zona.
+
+  {{else if dsStatusEq $ds.LastStatus "NOSEP"}}
+  * DS con keytag {{$ds.Keytag}} hace referencia a un registro DNSKEY que no es un punto de
+    asegure la entrada. Algunos servidores DNS recursivos pueden invalidar la cadena de confianza
+    por esta razón. Por favor, use un registro DNSKEY con el bit de SEP.
+
+  {{else if dsStatusEq $ds.LastStatus "SIGERR"}}
+  * DS con keytag {{$ds.Keytag}} hace referencia a un registro DNSKEY que tiene un
+    firma no válida. Por favor firme de nuevo la zona para solucionar el problema.
+
+  {{else if dsStatusEq $ds.LastStatus "DNSERR"}}
+  * DS con keytag {{$ds.Keytag}} no puede ser verificado por un problema en los servidores
+    DNS.
+
+  {{else if isNearExpiration $ds}}
+  * DS con keytag {{$ds.Keytag}} hace referencia a un registro DNSKEY que tiene firmas
+    que están cerca de la fecha de caducidad. Por favor firme de nuevo la zona antes de que
+    las firmas caducan para evitar problemas de resolución.
+
+  {{end}}
+{{end}}
+
+Saludos,
+LACTLD

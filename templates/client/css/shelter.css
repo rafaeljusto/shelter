@@ -86,7 +86,7 @@ section {
   width: 98%;
 }
 
-@media (min-width: 461px) {
+@media (min-width: 470px) {
   h1 {
     font-size: 3em;
   }
@@ -137,7 +137,7 @@ nav ul li:hover {
   color: #fff;
 }
 
-@media (min-width: 461px) {
+@media (min-width: 470px) {
   nav ul {
     text-align: center;
   }
@@ -165,6 +165,14 @@ nav ul li:hover {
 .languages a {
   color: #fff;
   cursor: pointer;
+}
+
+.languages a:after {
+  content: " | ";
+}
+
+.languages a:last-child:after {
+  content: " ";
 }
 
 /**********************************/

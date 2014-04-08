@@ -18,7 +18,7 @@ domínio {{$domain.FQDN}}.
 
   {{else if nsStatusEq $nameserver.LastStatus "NOAA"}}
   * Servidor DNS {{$nameserver.Host}} não possui autoridade para o domínio
-    {{$domain.FQDN}}. Por favor verifica as configurações do seu servidor.
+    {{$domain.FQDN}}. Por favor verifique as configurações do seu servidor.
 
   {{else if nsStatusEq $nameserver.LastStatus "UDN"}}
   * Servidor DNS {{$nameserver.Host}} não possui informações sobre o dominio
