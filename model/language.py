@@ -84,12 +84,11 @@ def buildLanguages(data):
 def writeLanguages(languages, regions, outputPath):
   output = open(outputPath, "w")
 
-  print("""// model - Description of the objects
-//
-// Copyright 2014 Rafael Dantas Justo. All rights reserved.
+  print("""// Copyright 2014 Rafael Dantas Justo. All rights reserved.
 // Use of this source code is governed by a GPL
 // license that can be found in the LICENSE file.""", file=output)
-  print("package model", file=output)
+  print("""// Package model describes the objects of the system
+    package model""", file=output)
   print("""
 // File generated using the language.py script, that is responsable for parsing the IANA
 // Language Subtag Registry file obtained from

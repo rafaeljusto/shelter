@@ -1,9 +1,8 @@
-// log - Centralized log of the Shelter system
-//
 // Copyright 2014 Rafael Dantas Justo. All rights reserved.
 // Use of this source code is governed by a GPL
 // license that can be found in the LICENSE file.
 
+// Package log is a centralized log of the Shelter system
 package log
 
 import (

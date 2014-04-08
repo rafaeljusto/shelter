@@ -1,9 +1,8 @@
-// dspolicy - DS record policies for DNSSEC configuration checks
-//
 // Copyright 2014 Rafael Dantas Justo. All rights reserved.
 // Use of this source code is governed by a GPL
 // license that can be found in the LICENSE file.
 
+// Package dspolicy store the DS record policies for DNSSEC configuration checks
 package dspolicy
 
 import (

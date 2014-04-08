@@ -1,9 +1,8 @@
-// dnsutils - Useful features for DNS
-//
 // Copyright 2014 Rafael Dantas Justo. All rights reserved.
 // Use of this source code is governed by a GPL
 // license that can be found in the LICENSE file.
 
+// Package dnsutils contains useful features to manage DNS structures
 package dnsutils
 
 import (

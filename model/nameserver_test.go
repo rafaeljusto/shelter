@@ -1,9 +1,8 @@
-// model - Description of the objects
-//
 // Copyright 2014 Rafael Dantas Justo. All rights reserved.
 // Use of this source code is governed by a GPL
 // license that can be found in the LICENSE file.
 
+// Package model describes the objects of the system
 package model
 
 import (

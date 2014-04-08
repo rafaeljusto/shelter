@@ -1,9 +1,8 @@
-// notification - Notification service
-//
 // Copyright 2014 Rafael Dantas Justo. All rights reserved.
 // Use of this source code is governed by a GPL
 // license that can be found in the LICENSE file.
 
+// Package notification is the notification service
 package notification
 
 import (
