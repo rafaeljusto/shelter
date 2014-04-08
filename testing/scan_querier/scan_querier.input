@@ -18,10 +18,19 @@ ac. NS b.nic.io.
 ac. NS b.ns13.net.
 ac. NS ns1.communitydns.net.
 ac. NS ns3.icb.co.uk.
-AC. DS 14403 7 1 3884DE2E920F38E01B659CC5F37B6749BB0DC818
-AC. DS 14403 7 2 584BCEE9B917FC92AFBDD0FC8AF12AB31B3A7B0754894688DA3C57F5CA7D8E56
+AC. DS 23014 8 2 9F135B4B4C69C92383B997632E821E3C8AB9699658674CC96FDE5405ACB68B65
 a.nic.ac. A 64.251.31.177
 b.nic.ac. A 78.104.145.37
+academy. NS demand.beta.aridns.net.au.
+academy. NS demand.alpha.aridns.net.au.
+academy. NS demand.delta.aridns.net.au.
+academy. NS demand.gamma.aridns.net.au.
+ACADEMY. DS 47032 8 2 E2A2DAE3CC55E8CE27E9AEA6217BDA4A835BF2270C40749AD278E9A9B4ABA132
+actor. NS demand.beta.aridns.net.au.
+actor. NS demand.alpha.aridns.net.au.
+actor. NS demand.delta.aridns.net.au.
+actor. NS demand.gamma.aridns.net.au.
+ACTOR. DS 2845 8 2 AC0176E6CD52693433CF3806BDD2A2D54DD518236A7AEFA992C866896E6AF24A
 ad. NS ad.ns.nic.es.
 ad. NS ad.cctld.authdns.ripe.net.
 ad. NS ns3.nic.fr.
@@ -67,6 +76,11 @@ ag. NS c0.cctld.afilias-nst.info.
 ag. NS d0.cctld.afilias-nst.org.
 AG. DS 55656 7 1 57F9FF89CE3A02AE33EC017A7C83ED54D925AA13
 AG. DS 55656 7 2 B8DC00C070D5BFC5C1C3BA08E5205A1E7F15EABFBFD6359D11E0E62D2FFFA57F
+agency. NS demand.beta.aridns.net.au.
+agency. NS demand.alpha.aridns.net.au.
+agency. NS demand.delta.aridns.net.au.
+agency. NS demand.gamma.aridns.net.au.
+AGENCY. DS 43582 8 2 50CC5CB5EC1AFFF1E70ED524F6DDD4F7978D15B4041FA7C5E5F854343967DDCF
 ai. NS ns1.pair.com.
 ai. NS ns2.offshore.ai.
 ai. NS whois.ai.
@@ -110,6 +124,7 @@ aq. NS fork.sth.dnsnode.net.
 aq. NS ns99.dns.net.nz.
 aq. NS sns-pb.isc.org.
 ns1.dns.aq. A 203.119.56.132
+ar. NS a.dns.ar.
 ar. NS ar.cctld.authdns.ripe.net.
 ar. NS ns2.switch.ch.
 ar. NS athea.ar.
@@ -117,7 +132,14 @@ ar. NS ctina.ar.
 ar. NS relay1.mecon.gov.ar.
 athea.ar. A 200.16.98.2
 ctina.ar. A 200.16.97.17
+a.dns.ar. A 200.108.145.50
+a.dns.ar. AAAA 2801:140:0:0:0:0:0:10
 relay1.mecon.gov.ar. A 168.101.16.10
+archi. NS ns1a.ksregistry.net.
+archi. NS ns1b.ksregistry.net.
+archi. NS ns2a.ksregistry.com.
+archi. NS ns2b.ksregistry.com.
+ARCHI. DS 10604 8 2 B0D6BFBA488683BAD270C5D8A1B85FBE010B8ECA41C3B1382DE5CAB342CFC9B6
 arpa. NS a.root-servers.net.
 arpa. NS b.root-servers.net.
 arpa. NS c.root-servers.net.
@@ -160,7 +182,11 @@ at. NS ns1.univie.ac.at.
 at. NS ns2.univie.ac.at.
 at. NS ns9.univie.ac.at.
 AT. DS 56489 8 2 2E48D4AAE2F5D5022F156516846803A58F3B2F8A854AAD238EC766DE6AD98AF2
-AT. DS 61234 8 2 616B10EBCF1947FF44C12552C1FA20FAC46802359FBDF4DD6751799B8ED91610
+AT. DS 60836 8 2 6BB14AC9AB00B37AFE0BB5570048DFD13B16C8BF3512846C627CE560F026CE39
+dns-hr.univie.ac.at. A 78.104.145.7
+dns-hr.univie.ac.at. AAAA 2001:628:453:bb:0:0:0:7
+dns-mk.univie.ac.at. A 78.104.145.4
+dns-mk.univie.ac.at. AAAA 2001:628:453:bb:0:0:0:4
 ns1.univie.ac.at. A 78.104.144.2
 ns1.univie.ac.at. AAAA 2001:628:2030:4301:0:0:0:2
 ns2.univie.ac.at. A 192.92.125.2
@@ -173,7 +199,7 @@ d.ns.at. A 81.91.161.98
 d.ns.at. AAAA 2a02:568:20:1:0:0:0:d
 j.ns.at. A 194.146.106.50
 j.ns.at. AAAA 2001:67c:1010:12:0:0:0:53
-n.ns.at. A 87.233.175.130
+n.ns.at. A 81.91.173.130
 r.ns.at. A 194.0.25.10
 r.ns.at. AAAA 2001:678:20:0:0:0:0:10
 u.ns.at. A 195.66.241.82
@@ -226,14 +252,49 @@ y.au. A 37.209.196.5
 y.au. AAAA 2001:dcd:3:0:0:0:0:5
 z.au. A 37.209.198.5
 z.au. AAAA 2001:dcd:4:0:0:0:0:5
-aw. NS ns1.setarnet.aw.
-aw. NS ns2.setarnet.aw.
-aw. NS ns-aw-ext1.sidn.nl.
-ns1.setarnet.aw. A 209.88.128.25
-ns2.setarnet.aw. A 209.88.128.26
+aw. NS ns1.dns.aw.
+aw. NS ns2.dns.aw.
+aw. NS ns3.dns.aw.
+aw. NS ns4.dns.aw.
+aw. NS ns5.dns.aw.
+aw. NS aw01.setarnet.aw.
+aw. NS aw02.setarnet.aw.
+AW. DS 44906 8 2 034DC020D9FA4AE44DCAA10B0EAA7919C97CF701AB06549F54D852CA62841775
+ns1.dns.aw. A 193.176.144.13
+ns1.dns.aw. AAAA 2a00:d78:0:102:193:176:144:13
+ns2.dns.aw. A 213.154.241.88
+ns2.dns.aw. AAAA 2001:7b8:606:0:0:0:0:88
+ns3.dns.aw. A 194.171.17.13
+ns3.dns.aw. AAAA 2001:610:0:800d:0:0:0:13
+ns4.dns.aw. A 95.142.99.215
+ns4.dns.aw. AAAA 2a00:1188:5:0:0:0:0:215
+ns5.dns.aw. A 194.0.28.2
+ns5.dns.aw. AAAA 2001:678:2c:0:194:0:28:2
+aw01.setarnet.aw. A 201.229.0.26
+aw02.setarnet.aw. A 201.229.0.27
 ax. NS ns1.aalnet.net.
 ax. NS ns2.aalnet.net.
 ax. NS ns3.aalnet.net.
+axa. NS ns1.dns.nic.axa.
+axa. NS ns2.dns.nic.axa.
+axa. NS ns3.dns.nic.axa.
+axa. NS ns4.dns.nic.axa.
+axa. NS ns5.dns.nic.axa.
+axa. NS ns6.dns.nic.axa.
+AXA. DS 277 8 1 A0726AE6D5E790D31241680C3C079C9789C12398
+AXA. DS 277 8 2 5BAB7EC649761AED8BBD36A6FC057B7D00F0EE3C7B722F3AF504619B50B5C3F6
+ns1.dns.nic.axa. A 156.154.144.20
+ns1.dns.nic.axa. AAAA 2610:a1:1071:0:0:0:0:14
+ns2.dns.nic.axa. A 156.154.145.20
+ns2.dns.nic.axa. AAAA 2610:a1:1072:0:0:0:0:14
+ns3.dns.nic.axa. A 156.154.159.20
+ns3.dns.nic.axa. AAAA 2610:a1:1073:0:0:0:0:14
+ns4.dns.nic.axa. A 156.154.156.20
+ns4.dns.nic.axa. AAAA 2610:a1:1074:0:0:0:0:14
+ns5.dns.nic.axa. A 156.154.157.20
+ns5.dns.nic.axa. AAAA 2610:a1:1075:0:0:0:0:14
+ns6.dns.nic.axa. A 156.154.158.20
+ns6.dns.nic.axa. AAAA 2610:a1:1076:0:0:0:0:14
 az. NS az.hostmaster.ua.
 az. NS ns.demos.su.
 az. NS rip.psg.com.
@@ -244,6 +305,25 @@ ba. NS auth03.ns.uu.net.
 ba. NS munnari.oz.au.
 sava.utic.net.ba. A 195.130.35.3
 ns.ba. A 195.130.35.5
+bar. NS a.nic.bar.
+bar. NS b.nic.bar.
+bar. NS c.nic.bar.
+bar. NS d.nic.bar.
+BAR. DS 55406 8 1 EECF54C6DAB2CF3FA76EFFCE97B78F432050DA9E
+BAR. DS 55406 8 2 8E8E102E6751DA62E354BD322C9BDD42C29BF6A413B29DA5BDC579E2ED3C8DA1
+a.nic.bar. A 194.169.218.56
+a.nic.bar. AAAA 2001:67c:13cc:0:0:0:1:56
+b.nic.bar. A 185.24.64.56
+b.nic.bar. AAAA 2a04:2b00:13cc:0:0:0:1:56
+c.nic.bar. A 194.0.2.2
+c.nic.bar. AAAA 2001:678:5:0:0:0:0:2
+d.nic.bar. A 194.0.1.45
+d.nic.bar. AAAA 2001:678:4:0:0:0:0:2d
+bargains. NS demand.beta.aridns.net.au.
+bargains. NS demand.alpha.aridns.net.au.
+bargains. NS demand.delta.aridns.net.au.
+bargains. NS demand.gamma.aridns.net.au.
+BARGAINS. DS 64582 8 2 B5B3BD40B9913CE466F392BE4F1E72316690BE19FD9E1E850CA3380DF1BCF7A2
 bb. NS ns1.barbadosdomain.net.
 bb. NS ns2.barbadosdomain.net.
 bd. NS dns.bd.
@@ -257,6 +337,7 @@ be. NS b.ns.dns.be.
 be. NS c.ns.dns.be.
 be. NS d.ns.dns.be.
 be. NS x.ns.dns.be.
+be. NS y.ns.dns.be.
 BE. DS 12664 8 1 59462E9CB5520A36DD248D9DDC4EAA44672A5ED1
 BE. DS 12664 8 2 75141E9B1188A95A7A855BF47E278A742A5E3F2DDEED8E995D749D48F2F0E72D
 BE. DS 16684 8 1 8BD0806315E077B56D3D0E235727F31D8CB9BF3C
@@ -271,6 +352,41 @@ d.ns.dns.be. A 194.0.44.1
 d.ns.dns.be. AAAA 2001:678:6c:0:0:0:0:1
 x.ns.dns.be. A 194.0.1.10
 x.ns.dns.be. AAAA 2001:678:4:0:0:0:0:a
+y.ns.dns.be. A 120.29.253.8
+y.ns.dns.be. AAAA 2001:dcd:7:0:0:0:0:8
+berlin. NS a.dns.nic.berlin.
+berlin. NS b.dns.nic.berlin.
+berlin. NS c.dns.nic.berlin.
+BERLIN. DS 10394 8 1 41B409894CD48EBBD0877427D5320C92ED2879DD
+BERLIN. DS 10394 8 2 B0D792359CB13AB1093CFA9D3754EC6933CAE2B2335A257017BDF63BCB682564
+BERLIN. DS 15259 8 1 77F489BD4EA570DF28EA5AE752798AACC900C547
+BERLIN. DS 15259 8 2 D7B794C41E4F2FFB19B22E307B7D5314C8665A0C77464A471305AC32FC0BDAF3
+a.dns.nic.berlin. A 194.0.25.16
+a.dns.nic.berlin. AAAA 2001:678:20:0:0:0:0:16
+b.dns.nic.berlin. A 193.170.61.5
+b.dns.nic.berlin. AAAA 2001:62a:a:2000:0:0:0:5
+c.dns.nic.berlin. A 193.170.187.5
+c.dns.nic.berlin. AAAA 2001:62a:a:3000:0:0:0:5
+best. NS ns1.dns.nic.best.
+best. NS ns2.dns.nic.best.
+best. NS ns3.dns.nic.best.
+best. NS ns4.dns.nic.best.
+best. NS ns5.dns.nic.best.
+best. NS ns6.dns.nic.best.
+BEST. DS 13891 8 1 7BA8044052DD9EE3800258F6A74E2EA71758D63D
+BEST. DS 13891 8 2 1EA72B6C84425B7BE18766B90CF3AFD3B8C410656B306D8D9134E905DDE6792B
+ns1.dns.nic.best. A 156.154.144.24
+ns1.dns.nic.best. AAAA 2610:a1:1071:0:0:0:0:18
+ns2.dns.nic.best. A 156.154.145.24
+ns2.dns.nic.best. AAAA 2610:a1:1072:0:0:0:0:18
+ns3.dns.nic.best. A 156.154.159.24
+ns3.dns.nic.best. AAAA 2610:a1:1073:0:0:0:0:18
+ns4.dns.nic.best. A 156.154.156.24
+ns4.dns.nic.best. AAAA 2610:a1:1074:0:0:0:0:18
+ns5.dns.nic.best. A 156.154.157.24
+ns5.dns.nic.best. AAAA 2610:a1:1075:0:0:0:0:18
+ns6.dns.nic.best. A 156.154.158.24
+ns6.dns.nic.best. AAAA 2610:a1:1076:0:0:0:0:18
 bf. NS ns1.ird.fr.
 bf. NS ns1.as6453.net.
 bf. NS ns2.as6453.net.
@@ -311,6 +427,26 @@ anyns.nic.bi. A 204.61.216.61
 anyns.nic.bi. AAAA 2001:500:14:6061:ad:0:0:1
 ns.nic.bi. A 196.2.8.205
 ns1.nic.bi. A 196.2.12.205
+bid. NS ns1.dns.nic.bid.
+bid. NS ns2.dns.nic.bid.
+bid. NS ns3.dns.nic.bid.
+bid. NS ns4.dns.nic.bid.
+bid. NS ns5.dns.nic.bid.
+bid. NS ns6.dns.nic.bid.
+BID. DS 59092 8 1 B8A3E0245C6C37310CC9301137045C3A8ED4E81F
+BID. DS 59092 8 2 C11A1074B5A0AC487E7F8023456550A895A03CC71CC54B989E8F7C75247BF5F8
+ns1.dns.nic.bid. A 156.154.144.25
+ns1.dns.nic.bid. AAAA 2610:a1:1071:0:0:0:0:19
+ns2.dns.nic.bid. A 156.154.145.25
+ns2.dns.nic.bid. AAAA 2610:a1:1072:0:0:0:0:19
+ns3.dns.nic.bid. A 156.154.159.25
+ns3.dns.nic.bid. AAAA 2610:a1:1073:0:0:0:0:19
+ns4.dns.nic.bid. A 156.154.156.25
+ns4.dns.nic.bid. AAAA 2610:a1:1074:0:0:0:0:19
+ns5.dns.nic.bid. A 156.154.157.25
+ns5.dns.nic.bid. AAAA 2610:a1:1075:0:0:0:0:19
+ns6.dns.nic.bid. A 156.154.158.25
+ns6.dns.nic.bid. AAAA 2610:a1:1076:0:0:0:0:19
 bike. NS demand.beta.aridns.net.au.
 bike. NS demand.alpha.aridns.net.au.
 bike. NS demand.delta.aridns.net.au.
@@ -340,6 +476,34 @@ bj. NS ns-bj.afrinic.net.
 bj. NS nakayo.leland.bj.
 ns1.intnet.bj. A 81.91.225.18
 nakayo.leland.bj. A 81.91.225.1
+black. NS a0.nic.black.
+black. NS a2.nic.black.
+black. NS b0.nic.black.
+black. NS c0.nic.black.
+BLACK. DS 39 7 1 A1462CF4F5B99C3A9BF14777D4FB2835ADE492E0
+BLACK. DS 39 7 2 44D91C33FF67B97266CC4AC23D0455F5A99D7DCB2B85BC2C08F222DD1AE77B7E
+a0.nic.black. A 65.22.68.33
+a0.nic.black. AAAA 2a01:8840:42:0:0:0:0:33
+a2.nic.black. A 65.22.71.33
+a2.nic.black. AAAA 2a01:8840:45:0:0:0:0:33
+b0.nic.black. A 65.22.69.33
+b0.nic.black. AAAA 2a01:8840:43:0:0:0:0:33
+c0.nic.black. A 65.22.70.33
+c0.nic.black. AAAA 2a01:8840:44:0:0:0:0:33
+blue. NS a0.nic.blue.
+blue. NS a2.nic.blue.
+blue. NS b0.nic.blue.
+blue. NS c0.nic.blue.
+BLUE. DS 26950 7 1 A6DE389755ABBAF7B58547B03F0D46E3C210687B
+BLUE. DS 26950 7 2 AECA57D8557C1F9F486AD18216FAE2DA2E8539E6F157DBF876BA6DF1FEE1604D
+a0.nic.blue. A 65.22.28.9
+a0.nic.blue. AAAA 2a01:8840:1e:0:0:0:0:9
+a2.nic.blue. A 65.22.31.9
+a2.nic.blue. AAAA 2a01:8840:21:0:0:0:0:9
+b0.nic.blue. A 65.22.29.9
+b0.nic.blue. AAAA 2a01:8840:1f:0:0:0:0:9
+c0.nic.blue. A 65.22.30.9
+c0.nic.blue. AAAA 2a01:8840:20:0:0:0:0:9
 bm. NS ns.uu.net.
 bm. NS ns1.bm.
 bm. NS ns1.ibl.bm.
@@ -368,6 +532,11 @@ bo. NS anycast.ns.nic.bo.
 utama.bolnet.bo. A 166.114.1.40
 anycast.ns.nic.bo. A 204.61.216.48
 anycast.ns.nic.bo. AAAA 2001:500:14:6048:ad:0:0:1
+boutique. NS demand.beta.aridns.net.au.
+boutique. NS demand.alpha.aridns.net.au.
+boutique. NS demand.delta.aridns.net.au.
+boutique. NS demand.gamma.aridns.net.au.
+BOUTIQUE. DS 48127 8 2 3400E946A0A57CB11A176DEAC77AB42934513EFE0A8B5BE0203921AB1888EE81
 br. NS a.dns.br.
 br. NS b.dns.br.
 br. NS c.dns.br.
@@ -403,6 +572,47 @@ ns2.druknet.bt. A 202.144.128.210
 ns2.druknet.bt. AAAA 2405:d000:0:100:0:0:0:210
 ns3.druknet.bt. A 204.61.216.17
 ns3.druknet.bt. AAAA 2001:500:14:6017:ad:0:0:1
+build. NS a.nic.build.
+build. NS b.nic.build.
+build. NS c.nic.build.
+build. NS d.nic.build.
+BUILD. DS 18634 8 2 97A275D8F2C987FB681D6E7C650FEFBF8EAE8ED9743822A3D9767F0DC3502938
+a.nic.build. A 37.209.192.10
+a.nic.build. AAAA 2001:dcd:1:0:0:0:0:10
+b.nic.build. A 37.209.194.10
+b.nic.build. AAAA 2001:dcd:2:0:0:0:0:10
+c.nic.build. A 37.209.196.10
+c.nic.build. AAAA 2001:dcd:3:0:0:0:0:10
+d.nic.build. A 37.209.198.10
+d.nic.build. AAAA 2001:dcd:4:0:0:0:0:10
+builders. NS demand.beta.aridns.net.au.
+builders. NS demand.alpha.aridns.net.au.
+builders. NS demand.delta.aridns.net.au.
+builders. NS demand.gamma.aridns.net.au.
+BUILDERS. DS 58759 8 2 37BDBEAC742E662C91717356028143903ECD1DE08FA2D8CAA5367790A94D3110
+buzz. NS ns1.dns.nic.buzz.
+buzz. NS ns2.dns.nic.buzz.
+buzz. NS ns3.dns.nic.buzz.
+buzz. NS ns4.dns.nic.buzz.
+buzz. NS ns5.dns.nic.buzz.
+buzz. NS ns6.dns.nic.buzz.
+buzz. NS ns7.dns.nic.buzz.
+BUZZ. DS 47864 8 1 455F2C4738D8D597E70EE16AD30C249839C13EC9
+BUZZ. DS 47864 8 2 A7178B083CB8C38492BBA8B7BF71F2D86B892CD851FECB81EE2FFFB55097F78A
+ns1.dns.nic.buzz. A 156.154.144.29
+ns1.dns.nic.buzz. AAAA 2610:a1:1071:0:0:0:0:1d
+ns2.dns.nic.buzz. A 156.154.145.29
+ns2.dns.nic.buzz. AAAA 2610:a1:1072:0:0:0:0:1d
+ns3.dns.nic.buzz. A 156.154.159.29
+ns3.dns.nic.buzz. AAAA 2610:a1:1073:0:0:0:0:1d
+ns4.dns.nic.buzz. A 156.154.156.29
+ns4.dns.nic.buzz. AAAA 2610:a1:1074:0:0:0:0:1d
+ns5.dns.nic.buzz. A 156.154.157.29
+ns5.dns.nic.buzz. AAAA 2610:a1:1075:0:0:0:0:1d
+ns6.dns.nic.buzz. A 156.154.158.29
+ns6.dns.nic.buzz. AAAA 2610:a1:1076:0:0:0:0:1d
+ns7.dns.nic.buzz. A 207.34.5.10
+ns7.dns.nic.buzz. AAAA 2001:503:7bbb:ffff:ffff:ffff:ffff:ff7e
 bv. NS nn.uninett.no.
 bv. NS nac.no.
 bv. NS server.nordu.net.
@@ -421,6 +631,7 @@ by. NS dns3.tld.tutby.com.
 by. NS dns4.tld.tutby.com.
 by. NS dns5.tld.tutby.com.
 by. NS dns6.tld.tutby.com.
+by. NS dns7.tld.tutby.com.
 BY. DS 43875 7 1 B5667014733F0FD07D096B2FA2AD175186ADF48C
 BY. DS 43875 7 2 27A33067E54A8C4CEE091DB22156EF02A79A76CCC1E48D6D195DFEF6D520C48E
 bz. NS a0.cctld.afilias-nst.info.
@@ -431,18 +642,18 @@ bz. NS c0.cctld.afilias-nst.info.
 bz. NS d0.cctld.afilias-nst.org.
 BZ. DS 16455 7 1 409AA5CD776352AEAB7A46B64EE7BA8061CB9374
 BZ. DS 16455 7 2 457C64669C357AF4AABDEB16A6A119B22D3FCB339BBF3C1701AA84CBC3E105F3
-ca. NS a.ca-servers.ca.
 ca. NS c.ca-servers.ca.
 ca. NS e.ca-servers.ca.
 ca. NS j.ca-servers.ca.
 ca. NS k.ca-servers.ca.
 ca. NS l.ca-servers.ca.
 ca. NS z.ca-servers.ca.
+ca. NS any.ca-servers.ca.
 ca. NS tld.isc-sns.net.
 ca. NS sns-pb.isc.org.
-CA. DS 58156 8 2 04A3DBAA4C6B1FCFE998DCBC633A044148FB468CEB3C41182697942197E77974
-a.ca-servers.ca. A 199.253.251.2
-a.ca-servers.ca. AAAA 2001:500:80:5000:0:0:0:2
+CA. DS 10207 8 2 7187A87B74FFF32A8549A05BE7E12F1D8BEDD0DEA9C3D864095D83BF7C542A8F
+any.ca-servers.ca. A 199.4.144.2
+any.ca-servers.ca. AAAA 2001:500:a7:0:0:0:0:2
 c.ca-servers.ca. A 192.228.28.9
 e.ca-servers.ca. A 192.228.30.9
 j.ca-servers.ca. A 198.182.167.1
@@ -451,11 +662,31 @@ k.ca-servers.ca. A 156.154.100.4
 l.ca-servers.ca. A 156.154.101.4
 z.ca-servers.ca. A 192.228.25.66
 charles.cdec.polymtl.ca. A 132.207.144.2
+cab. NS demand.beta.aridns.net.au.
+cab. NS demand.alpha.aridns.net.au.
+cab. NS demand.delta.aridns.net.au.
+cab. NS demand.gamma.aridns.net.au.
+CAB. DS 20239 8 2 E03C2DF189D39BD14C37695B586DA73C58C89B39050DC9E618A97886B3A757BD
 camera. NS demand.beta.aridns.net.au.
 camera. NS demand.alpha.aridns.net.au.
 camera. NS demand.delta.aridns.net.au.
 camera. NS demand.gamma.aridns.net.au.
 CAMERA. DS 54385 8 2 DDD1231F35667A209FEAF0749906B8DBDA96CF1F9ED224C519B74FEB22F4888F
+camp. NS demand.beta.aridns.net.au.
+camp. NS demand.alpha.aridns.net.au.
+camp. NS demand.delta.aridns.net.au.
+camp. NS demand.gamma.aridns.net.au.
+CAMP. DS 64396 8 2 D2EDC9BFB5D3C98A155ACE7F93957C54EA8938F4E7AEDF32444A8D9E57AE69ED
+cards. NS demand.beta.aridns.net.au.
+cards. NS demand.alpha.aridns.net.au.
+cards. NS demand.delta.aridns.net.au.
+cards. NS demand.gamma.aridns.net.au.
+CARDS. DS 20929 8 2 B7D01F9CA7C523988E0E322D20D134038F37EA28719452D2884BBB4670008DAA
+careers. NS demand.beta.aridns.net.au.
+careers. NS demand.alpha.aridns.net.au.
+careers. NS demand.delta.aridns.net.au.
+careers. NS demand.gamma.aridns.net.au.
+CAREERS. DS 23944 8 2 7EE0E65346C011F8EECC3A94C8668EA463CCA44CB8159F0E30D436FE920F0DA7
 cat. NS ns.nic.cat.
 cat. NS cat.pch.net.
 cat. NS ns1.nic.es.
@@ -469,6 +700,11 @@ ns.nic.cat. A 84.88.0.162
 ns.nic.cat. AAAA 2001:40b0:1:3:0:0:0:2
 switch.nic.cat. A 130.59.138.49
 switch.nic.cat. AAAA 2001:620:0:1b:5054:ff:fe74:8780
+catering. NS demand.beta.aridns.net.au.
+catering. NS demand.alpha.aridns.net.au.
+catering. NS demand.delta.aridns.net.au.
+catering. NS demand.gamma.aridns.net.au.
+CATERING. DS 44659 8 2 6E17C42238536AD3B94314FBDF2E1816B9A01F177B999A78197841A636D196B4
 cc. NS a5.nstld.com.
 cc. NS c5.nstld.com.
 cc. NS d5.nstld.com.
@@ -484,6 +720,34 @@ cd. NS igubu.saix.net.
 cd. NS sabela.saix.net.
 ns1.pch.nic.cd. A 204.61.216.66
 ns1.pch.nic.cd. AAAA 2001:500:14:6066:ad:0:0:1
+center. NS demand.beta.aridns.net.au.
+center. NS demand.alpha.aridns.net.au.
+center. NS demand.delta.aridns.net.au.
+center. NS demand.gamma.aridns.net.au.
+CENTER. DS 61060 8 2 F7B5230B71155E51F6E9EBE8467338CA2644DC34B08722E33105D498A9226ACD
+ceo. NS ns1.dns.nic.ceo.
+ceo. NS ns2.dns.nic.ceo.
+ceo. NS ns3.dns.nic.ceo.
+ceo. NS ns4.dns.nic.ceo.
+ceo. NS ns5.dns.nic.ceo.
+ceo. NS ns6.dns.nic.ceo.
+ceo. NS ns7.dns.nic.ceo.
+CEO. DS 63689 8 1 DB7A8F6AADCEE147D241A9778857E94707234D4E
+CEO. DS 63689 8 2 F2AB788C2802C3F219D53F37E7E1687ECF2E453E04BC5ABCC0B444FC0E35B1EE
+ns1.dns.nic.ceo. A 156.154.144.37
+ns1.dns.nic.ceo. AAAA 2610:a1:1071:0:0:0:0:25
+ns2.dns.nic.ceo. A 156.154.145.37
+ns2.dns.nic.ceo. AAAA 2610:a1:1072:0:0:0:0:25
+ns3.dns.nic.ceo. A 156.154.159.37
+ns3.dns.nic.ceo. AAAA 2610:a1:1073:0:0:0:0:25
+ns4.dns.nic.ceo. A 156.154.156.37
+ns4.dns.nic.ceo. AAAA 2610:a1:1074:0:0:0:0:25
+ns5.dns.nic.ceo. A 156.154.157.37
+ns5.dns.nic.ceo. AAAA 2610:a1:1075:0:0:0:0:25
+ns6.dns.nic.ceo. A 156.154.158.37
+ns6.dns.nic.ceo. AAAA 2610:a1:1076:0:0:0:0:25
+ns7.dns.nic.ceo. A 207.34.5.10
+ns7.dns.nic.ceo. AAAA 2001:503:7bbb:ffff:ffff:ffff:ffff:ff7e
 cf. NS a.ns.cf.
 cf. NS b.ns.cf.
 cf. NS c.ns.cf.
@@ -523,6 +787,17 @@ f.nic.ch. AAAA 2001:67c:1010:2:0:0:0:53
 h.nic.ch. A 194.42.48.120
 ns2.switch.ch. A 130.59.138.49
 ns2.switch.ch. AAAA 2001:620:0:1b:5054:ff:fe74:8780
+cheap. NS demand.beta.aridns.net.au.
+cheap. NS demand.alpha.aridns.net.au.
+cheap. NS demand.delta.aridns.net.au.
+cheap. NS demand.gamma.aridns.net.au.
+CHEAP. DS 37507 8 2 1F76AD552F924D9182B3D34973F8608A14458D8AE0C994C367FF3573289DE494
+christmas. NS a.ns.uniregistry.net.
+christmas. NS tld.isc-sns.com.
+christmas. NS tld.isc-sns.net.
+christmas. NS tld.isc-sns.info.
+CHRISTMAS. DS 20642 5 1 361A66199F41F24CD073A238992D7A3F281AE8EB
+CHRISTMAS. DS 20642 5 2 358DC846F2A706039DC1644E97BD17C0864FE7258B4DBBEA813761326E1107C5
 ci. NS ci.cctld.authdns.ripe.net.
 ci. NS ci.hosting.nic.fr.
 ci. NS ns.nic.ci.
@@ -531,7 +806,7 @@ ci. NS ns1.nic.ci.
 ci. NS ns-ci.afrinic.net.
 ci. NS phloem.uoregon.edu.
 ns.nic.ci. A 213.136.100.81
-ns1.nic.ci. A 213.136.106.214
+ns1.nic.ci. A 213.136.100.83
 ck. NS circa.mcs.vuw.ac.nz.
 ck. NS parau.oyster.net.ck.
 ck. NS poiparau.oyster.net.ck.
@@ -550,11 +825,39 @@ b.nic.cl. A 200.7.4.7
 b.nic.cl. AAAA 2001:1398:274:0:200:7:4:7
 c.nic.cl. A 200.16.112.16
 ns-ext.nic.cl. A 200.1.123.14
+cleaning. NS demand.beta.aridns.net.au.
+cleaning. NS demand.alpha.aridns.net.au.
+cleaning. NS demand.delta.aridns.net.au.
+cleaning. NS demand.gamma.aridns.net.au.
+CLEANING. DS 19882 8 2 A3CE012A2C5D7F2E29DACD0AC6B72F17FCAEAF88A3A3FC626C4EB0607E8D05CA
 clothing. NS demand.beta.aridns.net.au.
 clothing. NS demand.alpha.aridns.net.au.
 clothing. NS demand.delta.aridns.net.au.
 clothing. NS demand.gamma.aridns.net.au.
 CLOTHING. DS 28024 8 2 A7E284ED01F675CFDB1161FC8B23680B2196CC78FF1D757120E45D28EA02606E
+club. NS ns1.dns.nic.club.
+club. NS ns2.dns.nic.club.
+club. NS ns3.dns.nic.club.
+club. NS ns4.dns.nic.club.
+club. NS ns5.dns.nic.club.
+club. NS ns6.dns.nic.club.
+club. NS ns7.dns.nic.club.
+CLUB. DS 9346 8 1 3E247E0A6BC2660B58ABF34967A2EA60B7944568
+CLUB. DS 9346 8 2 3668A7F42E8BDCE70C17B8A8DE9F4505F8E10D4C1E95BBD3FB0DE6A488450C47
+ns1.dns.nic.club. A 156.154.144.215
+ns1.dns.nic.club. AAAA 2610:a1:1071:0:0:0:0:d7
+ns2.dns.nic.club. A 156.154.145.215
+ns2.dns.nic.club. AAAA 2610:a1:1072:0:0:0:0:d7
+ns3.dns.nic.club. A 156.154.159.215
+ns3.dns.nic.club. AAAA 2610:a1:1073:0:0:0:0:d7
+ns4.dns.nic.club. A 156.154.156.215
+ns4.dns.nic.club. AAAA 2610:a1:1074:0:0:0:0:d7
+ns5.dns.nic.club. A 156.154.157.215
+ns5.dns.nic.club. AAAA 2610:a1:1075:0:0:0:0:d7
+ns6.dns.nic.club. A 156.154.158.215
+ns6.dns.nic.club. AAAA 2610:a1:1076:0:0:0:0:d7
+ns7.dns.nic.club. A 207.34.5.10
+ns7.dns.nic.club. AAAA 2001:503:7bbb:ffff:ffff:ffff:ffff:ff7e
 cm. NS cm.cctld.authdns.ripe.net.
 cm. NS ns.itu.ch.
 cm. NS kim.camnet.cm.
@@ -571,6 +874,14 @@ cn. NS d.dns.cn.
 cn. NS e.dns.cn.
 cn. NS ns.cernet.net.
 CN. DS 54694 8 2 ED958DDCD959A23D3181CCC4610AE4B2166A072A057B95DDDCCD423256441C1A
+ns1.conac.cn. A 111.235.161.1
+ns1.conac.cn. AAAA 2401:b400:1:0:0:0:0:1
+ns2.conac.cn. A 111.235.162.1
+ns2.conac.cn. AAAA 2401:b400:8:0:0:0:0:1
+ns3.conac.cn. A 111.235.163.1
+ns3.conac.cn. AAAA 2401:b400:9:0:0:0:0:1
+ns4.conac.cn. A 111.235.164.1
+ns5.conac.cn. A 111.235.165.1
 a.dns.cn. A 203.119.25.1
 a.dns.cn. AAAA 2001:dc7:0:0:0:0:0:1
 b.dns.cn. A 203.119.26.1
@@ -585,14 +896,22 @@ i.dns.cn. AAAA 2001:dc7:ffff:0:0:0:0:1
 j.dns.cn. A 125.208.34.1
 k.dns.cn. A 125.208.35.1
 l.dns.cn. A 125.208.36.1
+a.ngtld.cn. A 125.208.40.1
+a.ngtld.cn. AAAA 2001:dc7:ffc1:0:0:0:0:1
+b.ngtld.cn. A 125.208.41.1
+b.ngtld.cn. AAAA 2001:dc7:ffc2:0:0:0:0:1
+c.ngtld.cn. A 125.208.42.1
+c.ngtld.cn. AAAA 2001:dc7:ffc3:0:0:0:0:1
+d.ngtld.cn. A 125.208.43.1
+e.ngtld.cn. A 125.208.44.1
 co. NS ns1.cctld.co.
 co. NS ns2.cctld.co.
 co. NS ns3.cctld.co.
 co. NS ns4.cctld.co.
 co. NS ns5.cctld.co.
 co. NS ns6.cctld.co.
-CO. DS 27859 8 1 63D2DAEB4D479BD4DFF4202D9BDC82B309C2CCD5
-CO. DS 27859 8 2 EF8F5B56FA9A79EF29A82330DB625BA19CE3A5B140B24287855DDAAA03EA369B
+CO. DS 53851 8 1 C657A15BB7DB976EA26019E87B9FA264F1338286
+CO. DS 53851 8 2 1CD67D439868C9E37694A3EBD5380512822823BC46BA75CBEEB58DAB7973EA21
 ns1.cctld.co. A 156.154.100.25
 ns1.cctld.co. AAAA 2001:502:2eda:0:0:0:0:21
 ns2.cctld.co. A 156.154.101.25
@@ -605,6 +924,21 @@ ns5.cctld.co. A 156.154.104.25
 ns5.cctld.co. AAAA 2610:a1:1011:0:0:0:0:21
 ns6.cctld.co. A 156.154.105.25
 ns6.cctld.co. AAAA 2610:a1:1012:0:0:0:0:21
+codes. NS demand.beta.aridns.net.au.
+codes. NS demand.alpha.aridns.net.au.
+codes. NS demand.delta.aridns.net.au.
+codes. NS demand.gamma.aridns.net.au.
+CODES. DS 27250 8 2 FE5F7FDA8B08DB3EF8B4B05DD3ED27C9387DAE66543F9D5870E402D11D7B2DDF
+coffee. NS demand.beta.aridns.net.au.
+coffee. NS demand.alpha.aridns.net.au.
+coffee. NS demand.delta.aridns.net.au.
+coffee. NS demand.gamma.aridns.net.au.
+COFFEE. DS 41122 8 2 6CCD81F37B53B3959B28C8BE299BD41FACBE306676E636FFF9556AEAA1948F2C
+cologne. NS anycast9.irondns.net.
+cologne. NS anycast10.irondns.net.
+cologne. NS anycast23.irondns.net.
+cologne. NS anycast24.irondns.net.
+COLOGNE. DS 59932 10 2 5945882FC8A2104BDF82FEFC2856DC07D6E26D89928C93C0054B980B2F543D55
 com. NS a.gtld-servers.net.
 com. NS b.gtld-servers.net.
 com. NS c.gtld-servers.net.
@@ -644,6 +978,10 @@ ns1.iafrica.com. A 196.7.0.139
 hoppy.iom.com. A 217.23.163.140
 pebbles.iom.com. A 80.168.83.242
 tld.isc-sns.com. A 38.103.2.3
+ns2a.ksregistry.com. A 203.119.88.76
+ns2a.ksregistry.com. AAAA 2001:dd8:7:6076:dc:0:0:1
+ns2b.ksregistry.com. A 72.0.48.76
+ns2b.ksregistry.com. AAAA 2620:171:a00:ad:0:0:0:76
 ns-mg.malagasy.com. A 87.98.132.231
 ns1.neoip.com. A 62.90.247.118
 ns2.neoip.com. A 208.109.17.150
@@ -657,11 +995,13 @@ d6.nstld.com. A 192.31.80.35
 f5.nstld.com. A 192.35.51.34
 f5.nstld.com. AAAA 2001:503:d414:0:0:0:2:34
 f6.nstld.com. A 192.35.51.35
+f6.nstld.com. AAAA 2001:503:d414:0:0:0:2:35
 g5.nstld.com. A 192.42.93.34
 g6.nstld.com. A 192.42.93.35
 h5.nstld.com. A 192.54.112.34
 h5.nstld.com. AAAA 2001:502:8cc:0:0:0:2:34
 h6.nstld.com. A 192.54.112.35
+h6.nstld.com. AAAA 2001:502:8cc:0:0:0:2:35
 j6.nstld.com. A 192.48.79.35
 k6.nstld.com. A 192.52.178.35
 l5.nstld.com. A 192.41.162.34
@@ -687,22 +1027,76 @@ dns3.tld.tutby.com. AAAA 2a01:d8:2:1:0:0:0:2
 dns4.tld.tutby.com. A 62.212.73.101
 dns5.tld.tutby.com. A 46.165.217.94
 dns6.tld.tutby.com. A 108.59.8.66
+dns7.tld.tutby.com. A 103.23.93.36
 dns1.u-registry.com. A 184.22.82.74
 dns1.u-registry.com. AAAA 2607:f878:3:39c:0:0:0:2
+a.zdnscloud.com. A 1.8.240.1
+b.zdnscloud.com. A 1.8.241.1
+c.zdnscloud.com. A 1.8.242.1
+d.zdnscloud.com. A 1.8.243.1
+e.zdnscloud.com. A 119.167.248.154
+f.zdnscloud.com. A 182.131.23.22
+g.zdnscloud.com. A 111.12.148.111
+i.zdnscloud.com. AAAA 2401:8d00:1:0:0:0:0:1
+j.zdnscloud.com. AAAA 2401:8d00:2:0:0:0:0:1
+community. NS demand.beta.aridns.net.au.
+community. NS demand.alpha.aridns.net.au.
+community. NS demand.delta.aridns.net.au.
+community. NS demand.gamma.aridns.net.au.
+COMMUNITY. DS 53317 8 2 755228E2F18777FFC5DA203D2984565804E3236ABC72B3762E832171E977C423
+company. NS demand.beta.aridns.net.au.
+company. NS demand.alpha.aridns.net.au.
+company. NS demand.delta.aridns.net.au.
+company. NS demand.gamma.aridns.net.au.
+COMPANY. DS 1405 8 2 DD824CAD96C6CBC6A29CF7847CABAD991908ADC0F88EE9EA52763F41C93A99CF
+computer. NS demand.beta.aridns.net.au.
+computer. NS demand.alpha.aridns.net.au.
+computer. NS demand.delta.aridns.net.au.
+computer. NS demand.gamma.aridns.net.au.
+COMPUTER. DS 7609 8 2 9DE689F8D8A206CDC040867BED094D9095468046181CB2EF827964CA4C1FBED5
+condos. NS demand.beta.aridns.net.au.
+condos. NS demand.alpha.aridns.net.au.
+condos. NS demand.delta.aridns.net.au.
+condos. NS demand.gamma.aridns.net.au.
+CONDOS. DS 12556 8 2 FDA54CFCD39DF1AC5D591A48BF5E398A5648856DE2CCC607DC4811C098B34DA5
 construction. NS demand.beta.aridns.net.au.
 construction. NS demand.alpha.aridns.net.au.
 construction. NS demand.delta.aridns.net.au.
 construction. NS demand.gamma.aridns.net.au.
 CONSTRUCTION. DS 25387 8 2 0E55A903286DA4CCADC2AEDCB01AEC17D9C7DF3AA8199435C6384CD0ACB1544C
+consulting. NS demand.beta.aridns.net.au.
+consulting. NS demand.alpha.aridns.net.au.
+consulting. NS demand.delta.aridns.net.au.
+consulting. NS demand.gamma.aridns.net.au.
+CONSULTING. DS 55117 8 2 976888C95415E6B0B8877FC753E83667CDEAF309E597A92D1F959467B422ABC0
 contractors. NS demand.beta.aridns.net.au.
 contractors. NS demand.alpha.aridns.net.au.
 contractors. NS demand.delta.aridns.net.au.
 contractors. NS demand.gamma.aridns.net.au.
 CONTRACTORS. DS 41329 8 2 7CEAEF507AFD5AE73139D4D7E66A40C8B779B5360ABDDCFD7E420C503D51A34F
+cooking. NS a.ns.nic.cooking.
+cooking. NS b.ns.nic.cooking.
+COOKING. DS 57727 8 2 8899B23CE9872CA38EB6753A566D58F716313098726158CA6F292A9207C615ED
+a.ns.nic.cooking. A 72.0.50.10
+a.ns.nic.cooking. AAAA 2620:171:a02:ad:0:0:0:10
+b.ns.nic.cooking. A 72.42.114.10
+b.ns.nic.cooking. AAAA 2620:171:d02:dc:0:0:0:10
+cool. NS demand.beta.aridns.net.au.
+cool. NS demand.alpha.aridns.net.au.
+cool. NS demand.delta.aridns.net.au.
+cool. NS demand.gamma.aridns.net.au.
+COOL. DS 42496 8 2 A929B4028524A61985D70357680987D69D74444331A25A049A3FE950F8F734A4
 coop. NS coop1.dyntld.net.
 coop. NS coop2.dyntld.net.
 coop. NS coop3.dyntld.net.
 coop. NS coop4.dyntld.net.
+country. NS a.ns.nic.country.
+country. NS b.ns.nic.country.
+COUNTRY. DS 2705 8 2 6EE6B796B61C72E15174930066AA40B92E0183A406561272E6B574770551652E
+a.ns.nic.country. A 72.0.50.17
+a.ns.nic.country. AAAA 2620:171:a02:ad:0:0:0:17
+b.ns.nic.country. A 72.42.114.17
+b.ns.nic.country. AAAA 2620:171:d02:dc:0:0:0:17
 cr. NS a.ns.cr.
 cr. NS b.ns.cr.
 cr. NS c.ns.cr.
@@ -722,6 +1116,11 @@ e.ns.cr. A 72.52.71.3
 e.ns.cr. AAAA 2001:470:1a:0:0:0:0:3
 f.ns.cr. A 63.243.194.3
 f.ns.cr. AAAA 2001:5a0:10:0:0:0:0:3
+cruises. NS demand.beta.aridns.net.au.
+cruises. NS demand.alpha.aridns.net.au.
+cruises. NS demand.delta.aridns.net.au.
+cruises. NS demand.gamma.aridns.net.au.
+CRUISES. DS 31021 8 2 AB930FB0F84D38B94BB4B8DC273B67232194F334D43BF5A826D04891B35C3023
 cu. NS cu.cctld.authdns.ripe.net.
 cu. NS ns.dns.br.
 cu. NS ns.ceniai.net.cu.
@@ -777,6 +1176,16 @@ c.ns.nic.cz. A 194.0.14.1
 c.ns.nic.cz. AAAA 2001:678:11:0:0:0:0:1
 d.ns.nic.cz. A 193.29.206.1
 d.ns.nic.cz. AAAA 2001:678:1:0:0:0:0:1
+dance. NS demand.beta.aridns.net.au.
+dance. NS demand.alpha.aridns.net.au.
+dance. NS demand.delta.aridns.net.au.
+dance. NS demand.gamma.aridns.net.au.
+DANCE. DS 9412 8 2 46C6FA36DEC09F2C90C528D30FD86378FAC1F11A1D90AF55C42DA92C1EB19EFF
+dating. NS demand.beta.aridns.net.au.
+dating. NS demand.alpha.aridns.net.au.
+dating. NS demand.delta.aridns.net.au.
+dating. NS demand.gamma.aridns.net.au.
+DATING. DS 55639 8 2 40AE1E3A7DAB8C5285D43ACA37EEC730D5FC604F770AE3B40C4C282A165B3555
 de. NS a.nic.de.
 de. NS f.nic.de.
 de. NS l.de.net.
@@ -796,6 +1205,11 @@ f.nic.de. A 81.91.164.5
 f.nic.de. AAAA 2a02:568:0:2:0:0:0:53
 nsc.nic.de. A 81.91.161.84
 z.nic.de. A 194.246.96.1
+democrat. NS demand.beta.aridns.net.au.
+democrat. NS demand.alpha.aridns.net.au.
+democrat. NS demand.delta.aridns.net.au.
+democrat. NS demand.gamma.aridns.net.au.
+DEMOCRAT. DS 31357 8 2 FFFEB75D5303AEA99EEDA8535BEDC3672FDF4C49329FF4A2FDCBFBFFA24D1A44
 diamonds. NS demand.beta.aridns.net.au.
 diamonds. NS demand.alpha.aridns.net.au.
 diamonds. NS demand.delta.aridns.net.au.
@@ -832,6 +1246,12 @@ dm. NS ns2.nic.dm.
 dm. NS ns2.blacknightsolutions.com.
 ns.anycast.nic.dm. A 204.61.216.18
 ns2.nic.dm. A 199.127.197.69
+dnp. NS a.gmoregistry.net.
+dnp. NS b.gmoregistry.net.
+dnp. NS c.gmoregistry.net.
+dnp. NS d.gmoregistry.net.
+dnp. NS e.gmoregistry.net.
+DNP. DS 40076 8 2 04D41AC4BED7B61738B8ADF602E53B21F23B2A47A90CEC1D6E9F2011A8A359B9
 do. NS ns.nic.do.
 do. NS ns1.nic.do.
 do. NS ns2.nic.do.
@@ -848,6 +1268,11 @@ ns2.nic.do. A 200.16.90.162
 ns2.nic.do. AAAA 2001:13e0:5d0:101:0:0:0:162
 ns3.nic.do. A 149.20.61.87
 ns3.nic.do. AAAA 2001:4f8:3:3d:2e0:81ff:fe46:41f2
+domains. NS demand.beta.aridns.net.au.
+domains. NS demand.alpha.aridns.net.au.
+domains. NS demand.delta.aridns.net.au.
+domains. NS demand.gamma.aridns.net.au.
+DOMAINS. DS 28162 8 2 5712C07D52BDFB21F425E2DFCE866A42EE94B37D230876FF68A27FA64920C0B9
 dz. NS dz.cctld.authdns.ripe.net.
 dz. NS ns1.nic.dz.
 dz. NS ns2.nic.dz.
@@ -883,14 +1308,19 @@ dns.princeton.edu. A 128.112.129.15
 pendragon.cs.purdue.edu. A 128.10.2.5
 phloem.uoregon.edu. A 128.223.32.35
 phloem.uoregon.edu. AAAA 2001:468:d01:20:0:0:80df:2023
+education. NS demand.beta.aridns.net.au.
+education. NS demand.alpha.aridns.net.au.
+education. NS demand.delta.aridns.net.au.
+education. NS demand.gamma.aridns.net.au.
+EDUCATION. DS 10039 8 2 B3147D88A4193F29D94867E05365EE734BFAD6C1BD480DBF024B974CB03CDDCF
 ee. NS b.tld.ee.
 ee. NS e.tld.ee.
 ee. NS ee.aso.ee.
 ee. NS ns.ut.ee.
 ee. NS ns.tld.ee.
 ee. NS ns.eenet.ee.
-ee. NS ns.uninet.ee.
 ee. NS sunic.sunet.se.
+EE. DS 34382 8 2 000A3D89DC6CD4BA00EA8AFFEE3967D3A26DE7A545FBEFE16BA07518FC8D54F6
 ee.aso.ee. A 213.184.51.122
 ee.aso.ee. AAAA 2a02:88:0:21:0:0:0:2
 ns.eenet.ee. A 193.40.56.245
@@ -900,8 +1330,6 @@ b.tld.ee. AAAA 2001:67c:1010:28:0:0:0:53
 e.tld.ee. A 204.61.216.36
 e.tld.ee. AAAA 2001:678:94:53:0:0:0:53
 ns.tld.ee. A 195.43.87.10
-ns.uninet.ee. A 194.204.0.1
-ns.uninet.ee. AAAA 2001:1530:60:10:0:0:0:1
 ns.ut.ee. A 193.40.5.99
 eg. NS ns5.univie.ac.at.
 eg. NS rip.psg.com.
@@ -910,6 +1338,11 @@ ns1.dotmasr.eg. A 81.21.97.155
 ns2.dotmasr.eg. A 81.21.99.11
 ns3.dotmasr.eg. A 81.10.38.11
 frcu.eun.eg. A 193.227.1.1
+email. NS demand.beta.aridns.net.au.
+email. NS demand.alpha.aridns.net.au.
+email. NS demand.delta.aridns.net.au.
+email. NS demand.gamma.aridns.net.au.
+EMAIL. DS 51466 8 2 2F1D54E81A3F873361603A8985FB4F19823FA63B9399A9AA5A6A58456C66597F
 enterprises. NS demand.beta.aridns.net.au.
 enterprises. NS demand.alpha.aridns.net.au.
 enterprises. NS demand.delta.aridns.net.au.
@@ -971,6 +1404,26 @@ x.dns.eu. AAAA 2001:678:4:0:0:0:0:13
 y.dns.eu. A 194.146.106.90
 y.dns.eu. AAAA 2001:67c:1010:23:0:0:0:53
 ns6.nominum.eu. A 81.200.69.35
+events. NS demand.beta.aridns.net.au.
+events. NS demand.alpha.aridns.net.au.
+events. NS demand.delta.aridns.net.au.
+events. NS demand.gamma.aridns.net.au.
+EVENTS. DS 7336 8 2 055F2E21896937741F81668C05CAD2185F2E5DE61A099F5C80C06DCE4DC787CF
+expert. NS demand.beta.aridns.net.au.
+expert. NS demand.alpha.aridns.net.au.
+expert. NS demand.delta.aridns.net.au.
+expert. NS demand.gamma.aridns.net.au.
+EXPERT. DS 23641 8 2 69D4659BE016123C984DB12560A72D36F49104DC165E4CB9A76B5A320BA8A18F
+exposed. NS demand.beta.aridns.net.au.
+exposed. NS demand.alpha.aridns.net.au.
+exposed. NS demand.delta.aridns.net.au.
+exposed. NS demand.gamma.aridns.net.au.
+EXPOSED. DS 42577 8 2 5B0A7E7BE8DD77925CB00F1C5C71EB1E096039885113625CCB2385976B1BC892
+farm. NS demand.beta.aridns.net.au.
+farm. NS demand.alpha.aridns.net.au.
+farm. NS demand.delta.aridns.net.au.
+farm. NS demand.gamma.aridns.net.au.
+FARM. DS 50122 8 2 3782D7D15479D12AF978FD07490A34E80ED9254154FC92808ED393F0F8A48604
 fi. NS a.fi.
 fi. NS b.fi.
 fi. NS c.fi.
@@ -998,6 +1451,18 @@ g.fi. A 156.154.101.26
 h.fi. A 156.154.102.26
 i.fi. A 156.154.103.26
 i.fi. AAAA 2001:502:2eda:0:0:0:0:26
+fish. NS demand.beta.aridns.net.au.
+fish. NS demand.alpha.aridns.net.au.
+fish. NS demand.delta.aridns.net.au.
+fish. NS demand.gamma.aridns.net.au.
+FISH. DS 1804 8 2 D3D959707B228AB83448E17F68DF46352088C882D80380C509E8CD9E9F4450B6
+fishing. NS a.ns.nic.fishing.
+fishing. NS b.ns.nic.fishing.
+FISHING. DS 64262 8 2 0FB7BC6935F3E4B3EE50474615D238A21CBD0ED00CD1C2E029AF21FF86F3AD4D
+a.ns.nic.fishing. A 72.0.50.5
+a.ns.nic.fishing. AAAA 2620:171:a02:ad:0:0:0:5
+b.ns.nic.fishing. A 72.42.114.5
+b.ns.nic.fishing. AAAA 2620:171:d02:dc:0:0:0:5
 fj. NS rip.psg.com.
 fj. NS manu.usp.ac.fj.
 fj. NS teri.usp.ac.fj.
@@ -1011,6 +1476,16 @@ fk. NS euro-ns1.cw.net.
 fk. NS euro-ns2.cw.net.
 fk. NS euro-ns3.cw.net.
 ns.horizon.net.fk. A 195.248.193.250
+flights. NS demand.beta.aridns.net.au.
+flights. NS demand.alpha.aridns.net.au.
+flights. NS demand.delta.aridns.net.au.
+flights. NS demand.gamma.aridns.net.au.
+FLIGHTS. DS 38524 8 2 7E4BE1C25AA25C163A1B0A90BF8029514DEBBA89FB4878914588196EE5E8B86E
+florist. NS demand.beta.aridns.net.au.
+florist. NS demand.alpha.aridns.net.au.
+florist. NS demand.delta.aridns.net.au.
+florist. NS demand.gamma.aridns.net.au.
+FLORIST. DS 65482 8 2 E3ABDDF92C74C5A28B71A0A51245854F5D702EBCA2B70E535F51144F77EAB6CA
 fm. NS tld1.ultradns.net.
 fm. NS tld2.ultradns.net.
 fm. NS tld3.ultradns.org.
@@ -1029,13 +1504,18 @@ copenhagen.nic.fo. AAAA 2a01:630:0:40:0:0:0:12
 frankfurt.nic.fo. A 81.91.161.88
 pch.nic.fo. A 204.61.216.65
 pch.nic.fo. AAAA 2001:500:14:6065:ad:0:0:1
+foundation. NS demand.beta.aridns.net.au.
+foundation. NS demand.alpha.aridns.net.au.
+foundation. NS demand.delta.aridns.net.au.
+foundation. NS demand.gamma.aridns.net.au.
+FOUNDATION. DS 23554 8 2 1EFE518D433FBC2E604D44FBC7EBF29F629F12047A58BF6E73290FD0639AE683
 fr. NS d.ext.nic.fr.
 fr. NS d.nic.fr.
 fr. NS e.ext.nic.fr.
 fr. NS f.ext.nic.fr.
 fr. NS g.ext.nic.fr.
-FR. DS 1336 8 2 C7AEE4D32904728741DB270E72899673D7DFAF212E517F2400C9424B231CF56B
 FR. DS 20122 8 2 A4208B55FFB352EDC816D9329283DD8BBDDE44C585395AF9AA7275ABE3CF6795
+FR. DS 35095 8 2 23C6CAADC9927EE98061F2B52C9B8DA6B53F3F648F814A4A86A0FAF9843E2C4E
 dns.inria.fr. A 193.51.208.13
 censvrns0001.ird.fr. A 91.203.32.147
 ns1.ird.fr. A 193.50.53.3
@@ -1063,6 +1543,11 @@ ns2.nic.fr. AAAA 2001:660:3005:1:0:0:1:2
 ns3.nic.fr. A 192.134.0.49
 ns3.nic.fr. AAAA 2001:660:3006:1:0:0:1:1
 bow.rain.fr. A 194.51.3.49
+futbol. NS demand.beta.aridns.net.au.
+futbol. NS demand.alpha.aridns.net.au.
+futbol. NS demand.delta.aridns.net.au.
+futbol. NS demand.gamma.aridns.net.au.
+FUTBOL. DS 40054 8 2 F97B9AFEA65B08BB51164C416BD49F78912F6CD662C8A4A096299BE4A9C10892
 ga. NS a.ns.ga.
 ga. NS b.ns.ga.
 ga. NS c.ns.ga.
@@ -1093,7 +1578,6 @@ ge. NS ns2.nic.fr.
 ns.nic.ge. A 212.72.130.11
 gf. NS ns1-gp.mediaserv.net.
 gf. NS ns1-mq.mediaserv.net.
-gg. NS a.ci-servers.net.
 gg. NS b.ci-servers.org.
 gg. NS c.ci-servers.org.
 gg. NS d.ci-servers.je.
@@ -1116,6 +1600,12 @@ gi. NS c0.cctld.afilias-nst.info.
 gi. NS d0.cctld.afilias-nst.org.
 GI. DS 40935 7 1 A6110BBAB0C51F4712CF1DF57F960CC73C7645F6
 GI. DS 40935 7 2 9F19CCCE0100976D6A4ED5D0AFA3D66E88C6974722D62EE6251F9D3DFA74A23F
+gift. NS a.ns.uniregistry.net.
+gift. NS tld.isc-sns.com.
+gift. NS tld.isc-sns.net.
+gift. NS tld.isc-sns.info.
+GIFT. DS 42194 5 1 61379C5FD2BA15B4401F9E74D1CCDF613FA469E4
+GIFT. DS 42194 5 2 365F45C35B61F891A7111CF3BD587EF8A0088D6EB7286E791F1016B56EA01850
 gl. NS a.nuuk.nic.gl.
 gl. NS b.nic.gl.
 gl. NS d.nic.gl.
@@ -1129,6 +1619,11 @@ b.nic.gl. AAAA 2001:67c:3c0:112:0:0:0:10
 d.nic.gl. A 204.61.216.49
 d.nic.gl. AAAA 2001:500:14:6049:ad:0:0:1
 a.nuuk.nic.gl. A 194.177.224.13
+glass. NS demand.beta.aridns.net.au.
+glass. NS demand.alpha.aridns.net.au.
+glass. NS demand.delta.aridns.net.au.
+glass. NS demand.gamma.aridns.net.au.
+GLASS. DS 13816 8 2 B8CDEB1147512B2413992A08B6B28DDD6127E18F7E2969F7897D2F348A2C1AF7
 gm. NS ns1.nic.gm.
 gm. NS ns2.nic.gm.
 gm. NS ns-gm.afrinic.net.
@@ -1139,6 +1634,13 @@ gn. NS rip.psg.com.
 gn. NS fork.sth.dnsnode.net.
 gn. NS hippo.ru.ac.za.
 GN. DS 31346 8 2 65E9984147AAF1940DF87B8DBB38190736999249DE0F39B88419147FA4AFD01A
+gop. NS a.ns.nic.gop.
+gop. NS b.ns.nic.gop.
+GOP. DS 3380 8 2 1A7111EAD180BD47D1A86E35D8B3A3936691C4DD2C4B7AFA39ACE1BF0A7BDB8A
+a.ns.nic.gop. A 72.0.50.19
+a.ns.nic.gop. AAAA 2620:171:a02:ad:0:0:0:19
+b.ns.nic.gop. A 72.42.114.19
+b.ns.nic.gop. AAAA 2620:171:d02:dc:0:0:0:19
 gov. NS a.gov-servers.net.
 gov. NS b.gov-servers.net.
 GOV. DS 7698 8 1 6F109B46A80CEA9613DC86D5A3E065520505AAFE
@@ -1203,16 +1705,20 @@ gu. NS nsuog.edu.gu.
 ns.edu.gu. A 168.123.2.50
 nsuog.edu.gu. A 67.98.164.133
 ns.gu. A 168.123.4.10
+guitars. NS a.ns.uniregistry.net.
+guitars. NS tld.isc-sns.com.
+guitars. NS tld.isc-sns.net.
+guitars. NS tld.isc-sns.info.
+GUITARS. DS 62849 5 1 7AFB61D09960E51EF0B0337834B17BA533E26D3F
+GUITARS. DS 62849 5 2 84B9ECF472CD56FF8EFDE4FBFEB45C2933369870062A0453E2D7F3A2286F9A5E
 guru. NS demand.beta.aridns.net.au.
 guru. NS demand.alpha.aridns.net.au.
 guru. NS demand.delta.aridns.net.au.
 guru. NS demand.gamma.aridns.net.au.
 GURU. DS 61402 8 2 A5A658ABCC39ED42CDA94B7279375D690AFFB28B99A1F326CD20F417B15AAE58
 gw. NS ns1.nic.gw.
-gw. NS ns2.nic.gw.
 gw. NS ns3.nic.gw.
 ns1.nic.gw. A 81.91.170.10
-ns2.nic.gw. A 87.233.175.20
 ns3.nic.gw. A 193.171.255.35
 gy. NS gy.cctld.authdns.ripe.net.
 gy. NS ns1.gtt.co.gy.
@@ -1222,6 +1728,11 @@ gy. NS phloem.uoregon.edu.
 gy. NS sns-pb.isc.org.
 ns1.gtt.co.gy. A 190.80.0.41
 ns2.gtt.co.gy. A 190.80.0.42
+haus. NS demand.beta.aridns.net.au.
+haus. NS demand.alpha.aridns.net.au.
+haus. NS demand.delta.aridns.net.au.
+haus. NS demand.gamma.aridns.net.au.
+HAUS. DS 63880 8 2 78A67DB13F2471258BF8294DE987CBD351074E6054040AD39682F2243E6E9D3E
 hk. NS a.hkirc.net.hk.
 hk. NS b.hkirc.net.hk.
 hk. NS s.hkirc.net.hk.
@@ -1233,7 +1744,7 @@ hk. NS x.hkirc.net.hk.
 hk. NS y.hkirc.net.hk.
 hk. NS z.hkirc.net.hk.
 ns2.cuhk.edu.hk. A 137.189.6.21
-ns2.cuhk.edu.hk. AAAA 2405:3000:3:60:0:0:0:21
+ns2.cuhk.edu.hk. AAAA 2405:3000:3:6:0:0:0:15
 a.hkirc.net.hk. A 203.119.2.18
 b.hkirc.net.hk. A 203.119.87.19
 b.hkirc.net.hk. AAAA 2001:dca:1000:0:0:0:cb77:5713
@@ -1271,8 +1782,25 @@ holdings. NS demand.alpha.aridns.net.au.
 holdings. NS demand.delta.aridns.net.au.
 holdings. NS demand.gamma.aridns.net.au.
 HOLDINGS. DS 11149 8 2 CC43CE2E88871B831D3160979357A360F32D2CEF4FC6FC2B013921ACBD6D1BE0
-hr. NS ns5.univie.ac.at.
+holiday. NS demand.beta.aridns.net.au.
+holiday. NS demand.alpha.aridns.net.au.
+holiday. NS demand.delta.aridns.net.au.
+holiday. NS demand.gamma.aridns.net.au.
+HOLIDAY. DS 35209 8 2 605926A35E2424BD2C7782F22B5E55157AFA1688AC643C0F45B3B6DEA435D47D
+horse. NS a.ns.nic.horse.
+horse. NS b.ns.nic.horse.
+HORSE. DS 36637 8 2 665BE35CF145D55C223033FBF7B126B7E9E5D7D8A4C3A3F7CA2EA5609442FE05
+a.ns.nic.horse. A 72.0.50.8
+a.ns.nic.horse. AAAA 2620:171:a02:ad:0:0:0:8
+b.ns.nic.horse. A 72.42.114.8
+b.ns.nic.horse. AAAA 2620:171:d02:dc:0:0:0:8
+house. NS demand.beta.aridns.net.au.
+house. NS demand.alpha.aridns.net.au.
+house. NS demand.delta.aridns.net.au.
+house. NS demand.gamma.aridns.net.au.
+HOUSE. DS 45637 8 2 FCE9DE111696A86214B6A3E1EA0FA42A193E1A7756C52187215099E99B7ACAE2
 hr. NS n3ns.nic.es.
+hr. NS dns-hr.univie.ac.at.
 hr. NS sns-pb.isc.org.
 hr. NS hr-ns-1.carnet.hr.
 hr-ns-1.carnet.hr. A 161.53.160.100
@@ -1281,21 +1809,21 @@ ht. NS dns.princeton.edu.
 ht. NS ns3.nic.fr.
 ht. NS ht-ns.anycast.pch.net.
 ht. NS charles.cdec.polymtl.ca.
+hu. NS a.hu.
 hu. NS b.hu.
 hu. NS c.hu.
 hu. NS d.hu.
 hu. NS e.hu.
-hu. NS ns.nic.hu.
 hu. NS ns2.nic.fr.
 hu. NS ns-com.nic.hu.
+a.hu. A 193.239.148.1
+a.hu. AAAA 2001:738:4:8000:0:0:0:48
 b.hu. A 193.239.149.161
 b.hu. AAAA 2001:738:4:4000:0:0:0:3
 c.hu. A 193.6.16.1
 d.hu. A 195.70.35.250
 e.hu. A 194.0.25.11
 e.hu. AAAA 2001:678:20:0:0:0:0:11
-ns.nic.hu. A 193.239.148.48
-ns.nic.hu. AAAA 2001:738:4:8000:0:0:0:48
 ns-com.nic.hu. A 194.0.1.12
 ns-com.nic.hu. AAAA 2001:678:4:0:0:0:0:c
 id. NS g.dns.id.
@@ -1351,6 +1879,11 @@ im. NS ns4.ja.net.
 im. NS hoppy.iom.com.
 im. NS barney.advsys.co.uk.
 im. NS pebbles.iom.com.
+immobilien. NS demand.beta.aridns.net.au.
+immobilien. NS demand.alpha.aridns.net.au.
+immobilien. NS demand.delta.aridns.net.au.
+immobilien. NS demand.gamma.aridns.net.au.
+IMMOBILIEN. DS 60322 8 2 7BB72F07C2FE7F5BB0DF667556FBC9BF5CFB31D66121D4AB5BCFDD0D29D39FCC
 in. NS a0.in.afilias-nst.info.
 in. NS a1.in.afilias-nst.in.
 in. NS a2.in.afilias-nst.info.
@@ -1365,6 +1898,11 @@ a1.in.afilias-nst.in. A 115.249.164.142
 a1.in.afilias-nst.in. AAAA 2001:4528:fff:13:0:0:0:142
 b1.in.afilias-nst.in. A 125.19.40.90
 b1.in.afilias-nst.in. AAAA 2404:a800:2:1e:0:0:19:90
+industries. NS demand.beta.aridns.net.au.
+industries. NS demand.alpha.aridns.net.au.
+industries. NS demand.delta.aridns.net.au.
+industries. NS demand.gamma.aridns.net.au.
+INDUSTRIES. DS 62155 8 2 23815E96451BA903FEA41D830AABDB5440DD1B62D06A80C9265F31ACF73CFEA3
 info. NS a0.info.afilias-nst.info.
 info. NS a2.info.afilias-nst.info.
 info. NS b0.info.afilias-nst.org.
@@ -1438,11 +1976,35 @@ c0.xxx.afilias-nst.info. AAAA 2001:500:a2:0:0:0:0:1
 tld.isc-sns.info. A 72.52.71.3
 tld.isc-sns.info. AAAA 2001:470:1a:0:0:0:0:3
 tld5.ultradns.info. A 192.100.59.11
+ink. NS a.nic.ink.
+ink. NS b.nic.ink.
+ink. NS c.nic.ink.
+ink. NS d.nic.ink.
+INK. DS 45674 8 1 653BB38ACC065903EC1E49E61E38D264BA26AC95
+INK. DS 45674 8 2 459C2A6319421C6FFCE3A7862DE5612875DAB5DB1A5AE8145569A45CFCD164D3
+a.nic.ink. A 194.169.218.41
+a.nic.ink. AAAA 2001:67c:13cc:0:0:0:1:41
+b.nic.ink. A 185.24.64.41
+b.nic.ink. AAAA 2a04:2b00:13cc:0:0:0:1:41
+c.nic.ink. A 194.0.2.2
+c.nic.ink. AAAA 2001:678:5:0:0:0:0:2
+d.nic.ink. A 194.0.1.45
+d.nic.ink. AAAA 2001:678:4:0:0:0:0:2d
+institute. NS demand.beta.aridns.net.au.
+institute. NS demand.alpha.aridns.net.au.
+institute. NS demand.delta.aridns.net.au.
+institute. NS demand.gamma.aridns.net.au.
+INSTITUTE. DS 33412 8 2 049FCBEE91ADA923921C8A4204D7AAA3CEABE0ABC33021385EB491D6CB865C15
 int. NS ns.uu.net.
 int. NS ns.icann.org.
 int. NS ns0.ja.net.
 int. NS ns1.cs.ucl.ac.uk.
 int. NS sec2.authdns.ripe.net.
+international. NS demand.beta.aridns.net.au.
+international. NS demand.alpha.aridns.net.au.
+international. NS demand.delta.aridns.net.au.
+international. NS demand.gamma.aridns.net.au.
+INTERNATIONAL. DS 11137 8 2 F09799F34E9A973DBCF4C647D03C6A2C2E41976D04218F41B82ED6F8CCAFB2DC
 io. NS a.nic.io.
 io. NS a.ns13.net.
 io. NS b.nic.ac.
@@ -1450,8 +2012,7 @@ io. NS b.nic.io.
 io. NS b.ns13.net.
 io. NS ns1.communitydns.net.
 io. NS ns3.icb.co.uk.
-IO. DS 13395 7 1 C048489AEC2420E18F5F423192F132106C3691C1
-IO. DS 13395 7 2 070BBE5BE5A4BE6271C543BDE99E9981E5D4191740E531AF2585C5D1619C83F0
+IO. DS 64744 8 2 2E7D661097A76EAC145858E4FF8F3DDAE5EAEDFD527725BC6F8A943E4FE23A29
 a.nic.io. A 64.251.31.179
 b.nic.io. A 194.0.2.1
 b.nic.io. AAAA 2001:678:5:0:0:0:0:1
@@ -1503,7 +2064,6 @@ seth.namex.it. A 193.201.40.7
 seth.namex.it. AAAA 2001:7f8:10:f00a:0:0:0:7
 dns.nic.it. A 192.12.192.5
 dns.nic.it. AAAA 2a00:d40:1:1:0:0:0:5
-je. NS a.ci-servers.net.
 je. NS b.ci-servers.org.
 je. NS c.ci-servers.org.
 je. NS d.ci-servers.je.
@@ -1511,6 +2071,26 @@ je. NS e.ci-servers.gg.
 je. NS ns0.ja.net.
 je. NS ns99.dns.net.nz.
 d.ci-servers.je. A 193.201.42.178
+jetzt. NS ns1.dns.nic.jetzt.
+jetzt. NS ns2.dns.nic.jetzt.
+jetzt. NS ns3.dns.nic.jetzt.
+jetzt. NS ns4.dns.nic.jetzt.
+jetzt. NS ns5.dns.nic.jetzt.
+jetzt. NS ns6.dns.nic.jetzt.
+JETZT. DS 34000 8 1 5861FF082B0163062408995CD18E403B6C382DC7
+JETZT. DS 34000 8 2 1071A69A1C24B933C32F9B398BF90CDAD7575D8DCD916E4CD1DD740C39C53B06
+ns1.dns.nic.jetzt. A 156.154.144.86
+ns1.dns.nic.jetzt. AAAA 2610:a1:1071:0:0:0:0:56
+ns2.dns.nic.jetzt. A 156.154.145.86
+ns2.dns.nic.jetzt. AAAA 2610:a1:1072:0:0:0:0:56
+ns3.dns.nic.jetzt. A 156.154.159.86
+ns3.dns.nic.jetzt. AAAA 2610:a1:1073:0:0:0:0:56
+ns4.dns.nic.jetzt. A 156.154.156.86
+ns4.dns.nic.jetzt. AAAA 2610:a1:1074:0:0:0:0:56
+ns5.dns.nic.jetzt. A 156.154.157.86
+ns5.dns.nic.jetzt. AAAA 2610:a1:1075:0:0:0:0:56
+ns6.dns.nic.jetzt. A 156.154.158.86
+ns6.dns.nic.jetzt. AAAA 2610:a1:1076:0:0:0:0:56
 jm. NS jm.cctld.authdns.ripe.net.
 jm. NS ns.jm.
 jm. NS ns.utechjamaica.edu.jm.
@@ -1543,8 +2123,6 @@ jp. NS f.dns.jp.
 jp. NS g.dns.jp.
 JP. DS 60700 8 1 96591579EBE5582AF021571AB2359D274A20E62F
 JP. DS 60700 8 2 FC26CDBBDB18FAB2D9D0DA6933DA77D7384BE4BBC2DAF75AF9CE3CC99797C086
-ns20.iij.ad.jp. A 202.232.2.161
-ns20.iij.ad.jp. AAAA 2001:240:0:0:0:0:0:161
 a.dns.jp. A 203.119.1.1
 a.dns.jp. AAAA 2001:dc4:0:0:0:0:0:1
 b.dns.jp. A 202.12.30.131
@@ -1558,10 +2136,17 @@ e.dns.jp. AAAA 2001:200:c000:0:0:0:0:35
 f.dns.jp. A 150.100.6.8
 f.dns.jp. AAAA 2001:2f8:0:100:0:0:0:153
 g.dns.jp. A 203.119.40.1
+kaufen. NS demand.beta.aridns.net.au.
+kaufen. NS demand.alpha.aridns.net.au.
+kaufen. NS demand.delta.aridns.net.au.
+kaufen. NS demand.gamma.aridns.net.au.
+KAUFEN. DS 23962 8 2 EF294C18A9BB33EE9D090585EF1C0F1575AA3F7A59CB07DBDDDE9CEC4D67BD93
 ke. NS ns.anycast.kenic.or.ke.
 ke. NS ns1.coza.net.za.
 ke. NS mzizi.kenic.or.ke.
 ke. NS ns-ke.afrinic.net.
+KE. DS 37471 5 1 05BEACA628DC8A283B5C88612A0883AB862D1CBB
+KE. DS 37471 5 2 502A5D3BE6C48572CB22AD5D9008A11FBD1E4EB2458B1D4C630252C42C1EE0AA
 ns.anycast.kenic.or.ke. A 204.61.216.7
 ns.anycast.kenic.or.ke. AAAA 2001:500:14:6007:ad:0:0:1
 mzizi.kenic.or.ke. A 196.1.4.130
@@ -1588,11 +2173,32 @@ ki. NS sns-pb.isc.org.
 KI. DS 59540 8 2 FD3B27E5C171B883FE2815DDE7FBBE7F2E5AF826BFF47C33B5970F53E2A855DE
 pch.nic.ki. A 204.61.216.26
 pch.nic.ki. AAAA 2001:500:14:6026:ad:0:0:1
+kim. NS a0.nic.kim.
+kim. NS a2.nic.kim.
+kim. NS b0.nic.kim.
+kim. NS c0.nic.kim.
+KIM. DS 24474 7 1 2DD484EEF79401CBFCA231E6CBF4F1BB165CCE14
+KIM. DS 24474 7 2 2384A0380782DA192D1C1F6DA55A106551EF4C5233CD479536101921D35411E5
+a0.nic.kim. A 65.22.28.1
+a0.nic.kim. AAAA 2a01:8840:1e:0:0:0:0:1
+a2.nic.kim. A 65.22.31.1
+a2.nic.kim. AAAA 2a01:8840:21:0:0:0:0:1
+b0.nic.kim. A 65.22.29.1
+b0.nic.kim. AAAA 2a01:8840:1f:0:0:0:0:1
+c0.nic.kim. A 65.22.30.1
+c0.nic.kim. AAAA 2a01:8840:20:0:0:0:0:1
 kitchen. NS demand.beta.aridns.net.au.
 kitchen. NS demand.alpha.aridns.net.au.
 kitchen. NS demand.delta.aridns.net.au.
 kitchen. NS demand.gamma.aridns.net.au.
 KITCHEN. DS 64009 8 2 4B1DD622AF68E8DC6E5CBB00AFE42399B8A15591891203D4B745EF0FA03EA2C9
+kiwi. NS a.ns.nic.kiwi.
+kiwi. NS b.ns.nic.kiwi.
+KIWI. DS 5786 8 2 ADFED621AFE74743D01AF9CD0F380F4F95EF756080321CD541A1D6B31B3FDD30
+a.ns.nic.kiwi. A 72.0.50.4
+a.ns.nic.kiwi. AAAA 2620:171:a02:ad:0:0:0:4
+b.ns.nic.kiwi. A 72.42.114.4
+b.ns.nic.kiwi. AAAA 2620:171:d02:dc:0:0:0:4
 km. NS dns1.nic.km.
 km. NS dns2.nic.km.
 km. NS ns-km.afrinic.net.
@@ -1601,6 +2207,11 @@ dns2.nic.km. A 197.255.224.66
 kn. NS a.dns.tw.
 kn. NS b.dns.tw.
 kn. NS c.dns.tw.
+koeln. NS anycast9.irondns.net.
+koeln. NS anycast10.irondns.net.
+koeln. NS anycast23.irondns.net.
+koeln. NS anycast24.irondns.net.
+KOELN. DS 6046 10 2 72629095CBD39549967DDC7685372E9BB38B25F0412C6DF8F90CF09128E92627
 kp. NS ns1.kptc.kp.
 kp. NS ns2.kptc.kp.
 ns1.kptc.kp. A 175.45.176.15
@@ -1611,6 +2222,7 @@ kr. NS d.dns.kr.
 kr. NS e.dns.kr.
 kr. NS f.dns.kr.
 kr. NS g.dns.kr.
+KR. DS 10746 7 2 A626C147CF76351B03CD26C03EBCC78C0DE48D87DD81F0919995824336236F96
 KR. DS 17625 7 2 FB939059F4B67BBA1E8AC37E35811E506488B2D8CFF807AF873B2116B5676B5C
 b.dns.kr. A 61.74.75.1
 c.dns.kr. A 203.248.246.220
@@ -1620,6 +2232,26 @@ e.dns.kr. AAAA 2001:dcc:5:0:0:0:0:100
 f.dns.kr. A 218.38.181.90
 g.dns.kr. A 202.31.190.1
 g.dns.kr. AAAA 2001:dc5:a:0:0:0:0:1
+kred. NS ns1.dns.nic.kred.
+kred. NS ns2.dns.nic.kred.
+kred. NS ns3.dns.nic.kred.
+kred. NS ns4.dns.nic.kred.
+kred. NS ns5.dns.nic.kred.
+kred. NS ns6.dns.nic.kred.
+KRED. DS 11480 8 1 74E467BCA5017FCD4F9F52618BBA52BAAB535461
+KRED. DS 11480 8 2 A9C2AD21A0CAFA1DB04731EF4647140962C88A2DA406C53E8A9D4B3CC46F7F9F
+ns1.dns.nic.kred. A 156.154.144.99
+ns1.dns.nic.kred. AAAA 2610:a1:1071:0:0:0:0:63
+ns2.dns.nic.kred. A 156.154.145.99
+ns2.dns.nic.kred. AAAA 2610:a1:1072:0:0:0:0:63
+ns3.dns.nic.kred. A 156.154.159.99
+ns3.dns.nic.kred. AAAA 2610:a1:1073:0:0:0:0:63
+ns4.dns.nic.kred. A 156.154.156.99
+ns4.dns.nic.kred. AAAA 2610:a1:1074:0:0:0:0:63
+ns5.dns.nic.kred. A 156.154.157.99
+ns5.dns.nic.kred. AAAA 2610:a1:1075:0:0:0:0:63
+ns6.dns.nic.kred. A 156.154.158.99
+ns6.dns.nic.kred. AAAA 2610:a1:1076:0:0:0:0:63
 kw. NS dns1.kw.
 kw. NS dns2.kw.
 kw. NS dns3.kw.
@@ -1643,8 +2275,8 @@ la. NS ns2.nic.la.
 la. NS ns3.nic.la.
 la. NS ns4.nic.la.
 la. NS ns5.nic.la.
-LA. DS 54086 7 1 C468E20FD427F2EB5E4658B1E1D24840768DC8E1
-LA. DS 54086 7 2 28339FCEDF2C52583595DD1460A6B07D9FA5692A5BA8E6E5F34EE30635230541
+LA. DS 42973 7 1 1F0CEFA420E9101BB5791F3AB93E85917A72978B
+LA. DS 42973 7 2 E7D0C3BCDF60E8D842E882D90B4EC263C8889B760098492C798841C13B4EA13F
 ns1.nic.la. A 194.0.2.2
 ns1.nic.la. AAAA 2001:678:5:0:0:0:0:2
 ns2.nic.la. A 194.169.218.14
@@ -1700,6 +2332,17 @@ lighting. NS demand.alpha.aridns.net.au.
 lighting. NS demand.delta.aridns.net.au.
 lighting. NS demand.gamma.aridns.net.au.
 LIGHTING. DS 1345 8 2 AFA5667D4D9B2FBDD72F0C364EE3A3AD3286BAE800DD959E3A28F2E3EA6EFA08
+limo. NS demand.beta.aridns.net.au.
+limo. NS demand.alpha.aridns.net.au.
+limo. NS demand.delta.aridns.net.au.
+limo. NS demand.gamma.aridns.net.au.
+LIMO. DS 7285 8 2 5B4855A49D19A3D8A6BC6D32AAA778D5CC62A186E17303559766C6646428BE0A
+link. NS a.ns.uniregistry.net.
+link. NS tld.isc-sns.com.
+link. NS tld.isc-sns.net.
+link. NS tld.isc-sns.info.
+LINK. DS 16378 5 1 4BAC0A7FB788380C75B12257AF422CF2F32EE828
+LINK. DS 16378 5 2 22F61A68A2F1BFE7A3B8A71DE8DB12BAC9A51D98D8D1F44C1717396E395C180B
 lk. NS c.nic.lk.
 lk. NS d.nic.lk.
 lk. NS l.nic.lk.
@@ -1728,6 +2371,13 @@ p.nic.lk. AAAA 2001:500:14:6027:ad:0:0:1
 ripe.nic.lk. A 193.0.9.88
 ripe.nic.lk. AAAA 2001:67c:e0:0:0:0:0:88
 t.nic.lk. A 203.94.66.129
+london. NS a.ns.nic.london.
+london. NS b.ns.nic.london.
+LONDON. DS 27077 8 2 2756E9F7A79F2C26BA652C0C9BE19056AB89A0C7CFE90468713FDE7182DD393B
+a.ns.nic.london. A 72.0.50.11
+a.ns.nic.london. AAAA 2620:171:a02:ad:0:0:0:11
+b.ns.nic.london. A 72.42.114.11
+b.ns.nic.london. AAAA 2620:171:d02:dc:0:0:0:11
 lr. NS rip.psg.com.
 lr. NS fork.sth.dnsnode.net.
 lr. NS hippo.ru.ac.za.
@@ -1741,8 +2391,7 @@ lt. NS c.tld.lt.
 lt. NS d.tld.lt.
 lt. NS e.tld.lt.
 lt. NS f.tld.lt.
-LT. DS 24556 8 1 A9D06FA34F1C9D57062899824F5702041188DE97
-LT. DS 24556 8 2 DEA1E077D98EA2DE8750281B40ACEBC14687AEB8FE49506333C903D501F6C620
+LT. DS 23086 8 2 1ACE0E153397336E60DC36F80F2906FEDA3FA37C38D561FE67613B800DE222FD
 a.tld.lt. A 195.8.218.131
 b.tld.lt. A 194.0.20.1
 b.tld.lt. AAAA 2001:678:19:0:0:0:0:1
@@ -1774,6 +2423,19 @@ ns1.dns.lu. AAAA 2001:a18:4:1:0:0:0:18
 ns5.dns.lu. A 81.91.161.100
 p.dns.lu. A 194.0.42.42
 p.dns.lu. AAAA 2001:678:60:0:0:0:42:42
+luxury. NS a.nic.luxury.
+luxury. NS b.nic.luxury.
+luxury. NS c.nic.luxury.
+luxury. NS d.nic.luxury.
+LUXURY. DS 3664 8 2 D602E8F4FD9729146D1FB1D249544DCEECE615E528EB2E4997FB1760B004D67E
+a.nic.luxury. A 37.209.192.10
+a.nic.luxury. AAAA 2001:dcd:1:0:0:0:0:10
+b.nic.luxury. A 37.209.194.10
+b.nic.luxury. AAAA 2001:dcd:2:0:0:0:0:10
+c.nic.luxury. A 37.209.196.10
+c.nic.luxury. AAAA 2001:dcd:3:0:0:0:0:10
+d.nic.luxury. A 37.209.198.10
+d.nic.luxury. AAAA 2001:dcd:4:0:0:0:0:10
 lv. NS a.nic.lv.
 lv. NS b.nic.lv.
 lv. NS c.nic.lv.
@@ -1781,7 +2443,7 @@ lv. NS d.nic.lv.
 lv. NS lv.cctld.authdns.ripe.net.
 lv. NS sunic.sunet.se.
 LV. DS 42018 8 2 7E932A4F9CF9B1CD047C277E3CD323A53D42347D47C7BF1DD6018FF4B344FC1C
-a.nic.lv. A 91.198.156.99
+a.nic.lv. A 194.0.48.1
 a.nic.lv. AAAA 2a02:500:4400:700:0:0:0:4
 b.nic.lv. A 92.240.70.1
 c.nic.lv. A 194.0.1.24
@@ -1805,6 +2467,26 @@ dns3.menara.ma. A 81.192.108.164
 ns1.iam.net.ma. A 212.217.0.10
 ns2.iam.net.ma. A 81.192.53.23
 ns3.iam.net.ma. A 212.217.1.13
+maison. NS demand.beta.aridns.net.au.
+maison. NS demand.alpha.aridns.net.au.
+maison. NS demand.delta.aridns.net.au.
+maison. NS demand.gamma.aridns.net.au.
+MAISON. DS 51619 8 2 DEAF5A832203A71DE6CD976C84CB79E0E253F140B6540C1FF852292847A146EC
+management. NS demand.beta.aridns.net.au.
+management. NS demand.alpha.aridns.net.au.
+management. NS demand.delta.aridns.net.au.
+management. NS demand.gamma.aridns.net.au.
+MANAGEMENT. DS 29419 8 2 DE87320C9CC67BFF04B718F11EF3B58F3DDE54CB615882F97D2EAB6C295EE843
+mango. NS anycast9.irondns.net.
+mango. NS anycast10.irondns.net.
+mango. NS anycast23.irondns.net.
+mango. NS anycast24.irondns.net.
+MANGO. DS 42309 10 2 3AFD388DCC7DE7AD4FA84EC0F897B59FAEF31877F80EF4D55E5ACBDFD8AB98DE
+marketing. NS demand.beta.aridns.net.au.
+marketing. NS demand.alpha.aridns.net.au.
+marketing. NS demand.delta.aridns.net.au.
+marketing. NS demand.gamma.aridns.net.au.
+MARKETING. DS 4267 8 2 64CC06CC6F4A935A5319A723AFE75D8BE89ACD73C4A766AB9BDF4E0C02059869
 mc. NS mc.cctld.authdns.ripe.net.
 mc. NS ns1.nic.mc.
 mc. NS ns2.nic.mc.
@@ -1831,6 +2513,33 @@ ME. DS 2569 7 1 09BA1EB4D20402620881FD9848994417800DB26A
 ME. DS 2569 7 2 94E798106F033500E67567B197AE9132C0E916764DC743C55A9ECA3C7BF559E2
 ns.nic.me. A 89.188.44.44
 ns2.nic.me. A 89.188.44.88
+meet. NS a0.nic.meet.
+meet. NS a2.nic.meet.
+meet. NS b0.nic.meet.
+meet. NS c0.nic.meet.
+MEET. DS 18298 7 1 36F9AEACD7BD3AD7D62EC0F7B3138ABB73A28E96
+MEET. DS 18298 7 2 62C67C8413A0D3DB5C15B21D38E7765E301BD13853EA238597F7D623308D5979
+a0.nic.meet. A 65.22.68.25
+a0.nic.meet. AAAA 2a01:8840:42:0:0:0:0:25
+a2.nic.meet. A 65.22.71.25
+a2.nic.meet. AAAA 2a01:8840:45:0:0:0:0:25
+b0.nic.meet. A 65.22.69.25
+b0.nic.meet. AAAA 2a01:8840:43:0:0:0:0:25
+c0.nic.meet. A 65.22.70.25
+c0.nic.meet. AAAA 2a01:8840:44:0:0:0:0:25
+menu. NS a.nic.menu.
+menu. NS b.nic.menu.
+menu. NS c.nic.menu.
+menu. NS d.nic.menu.
+MENU. DS 51916 8 2 AA3C98EE447CFA3BBF57D8A2899626324DE2097353FB5DBF031519A4FE6964E6
+a.nic.menu. A 37.209.192.10
+a.nic.menu. AAAA 2001:dcd:1:0:0:0:0:10
+b.nic.menu. A 37.209.194.10
+b.nic.menu. AAAA 2001:dcd:2:0:0:0:0:10
+c.nic.menu. A 37.209.196.10
+c.nic.menu. AAAA 2001:dcd:3:0:0:0:0:10
+d.nic.menu. A 37.209.198.10
+d.nic.menu. AAAA 2001:dcd:4:0:0:0:0:10
 mg. NS mg.cctld.authdns.ripe.net.
 mg. NS ns.dts.mg.
 mg. NS ns.nic.mg.
@@ -1844,6 +2553,13 @@ ns.dts.mg. A 196.192.32.2
 ns.nic.mg. A 196.192.42.153
 mh. NS ns.ntamar.net.
 mh. NS ns.amarshallinc.com.
+miami. NS a.ns.nic.miami.
+miami. NS b.ns.nic.miami.
+MIAMI. DS 18562 8 2 35491922D8DB01E6C5B9AFEF48AEAC489F445A643F2373906673869D9C2BEA42
+a.ns.nic.miami. A 72.0.50.21
+a.ns.nic.miami. AAAA 2620:171:a02:ad:0:0:0:21
+b.ns.nic.miami. A 72.42.114.21
+b.ns.nic.miami. AAAA 2620:171:d02:dc:0:0:0:21
 mil. NS con1.nipr.mil.
 mil. NS con2.nipr.mil.
 mil. NS eur1.nipr.mil.
@@ -1858,12 +2574,11 @@ eur1.nipr.mil. A 199.252.154.234
 eur2.nipr.mil. A 199.252.143.234
 pac1.nipr.mil. A 199.252.180.234
 pac2.nipr.mil. A 199.252.155.234
+mk. NS d.ext.nic.cz.
 mk. NS ns2.arnes.si.
-mk. NS ns5.univie.ac.at.
-mk. NS rip.psg.com.
-mk. NS kitka.marnet.net.mk.
-kitka.marnet.net.mk. A 194.149.131.2
-kitka.marnet.net.mk. AAAA 2a02:e48:0:3:0:0:0:2
+mk. NS tld1.marnet.mk.
+mk. NS dns-mk.univie.ac.at.
+tld1.marnet.mk. A 194.149.137.168
 ml. NS a.ns.ml.
 ml. NS b.ns.ml.
 ml. NS c.ns.ml.
@@ -1921,6 +2636,44 @@ mobi. NS b0.mobi.afilias-nst.org.
 mobi. NS b2.mobi.afilias-nst.org.
 mobi. NS c0.mobi.afilias-nst.info.
 mobi. NS d0.mobi.afilias-nst.org.
+moda. NS demand.beta.aridns.net.au.
+moda. NS demand.alpha.aridns.net.au.
+moda. NS demand.delta.aridns.net.au.
+moda. NS demand.gamma.aridns.net.au.
+MODA. DS 38596 8 2 63CCF0EB3E518D41F9E52DBE7DC0762567BB8A6CFF1162A3305A445FA42ACDFD
+moe. NS ns1.dns.nic.moe.
+moe. NS ns2.dns.nic.moe.
+moe. NS ns3.dns.nic.moe.
+moe. NS ns4.dns.nic.moe.
+moe. NS ns5.dns.nic.moe.
+moe. NS ns6.dns.nic.moe.
+MOE. DS 53752 8 1 03E44314F5CC5A2ECA20AE2DB5548F67F412F740
+MOE. DS 53752 8 2 126A3A4446C04641ED8FC06C3D6D606C1170D6C030308A17F349EB47EB646DC4
+ns1.dns.nic.moe. A 156.154.144.114
+ns1.dns.nic.moe. AAAA 2610:a1:1071:0:0:0:0:72
+ns2.dns.nic.moe. A 156.154.145.114
+ns2.dns.nic.moe. AAAA 2610:a1:1072:0:0:0:0:72
+ns3.dns.nic.moe. A 156.154.159.114
+ns3.dns.nic.moe. AAAA 2610:a1:1073:0:0:0:0:72
+ns4.dns.nic.moe. A 156.154.156.114
+ns4.dns.nic.moe. AAAA 2610:a1:1074:0:0:0:0:72
+ns5.dns.nic.moe. A 156.154.157.114
+ns5.dns.nic.moe. AAAA 2610:a1:1075:0:0:0:0:72
+ns6.dns.nic.moe. A 156.154.158.114
+ns6.dns.nic.moe. AAAA 2610:a1:1076:0:0:0:0:72
+monash. NS a.nic.monash.
+monash. NS b.nic.monash.
+monash. NS c.nic.monash.
+monash. NS d.nic.monash.
+MONASH. DS 6355 8 2 BC8C82B3E65FC95A0610ED0F56190D4D0B78033F437EB48C2DD54F0E0AEB3BBD
+a.nic.monash. A 37.209.192.9
+a.nic.monash. AAAA 2001:dcd:1:0:0:0:0:9
+b.nic.monash. A 37.209.194.9
+b.nic.monash. AAAA 2001:dcd:2:0:0:0:0:9
+c.nic.monash. A 37.209.196.9
+c.nic.monash. AAAA 2001:dcd:3:0:0:0:0:9
+d.nic.monash. A 37.209.198.9
+d.nic.monash. AAAA 2001:dcd:4:0:0:0:0:9
 mp. NS ns1.nic.mp.
 mp. NS ns2.nic.mp.
 mp. NS ns3.nic.mp.
@@ -1963,6 +2716,7 @@ mu. NS fork.sth.dnsnode.net.
 mu. NS udns1.tld.mu.
 mu. NS udns2.tld.mu.
 mu. NS anycast1.irondns.net.
+cctld-vu.orange.mu. A 196.192.110.15
 udns1.tld.mu. A 204.61.216.10
 udns1.tld.mu. AAAA 2001:500:14:6010:ad:0:0:1
 udns2.tld.mu. A 193.0.9.98
@@ -2007,7 +2761,6 @@ my. NS ns2.cuhk.edu.hk.
 my. NS ns5.jaring.my.
 my. NS ns6.jaring.my.
 my. NS dns2.mynic.net.my.
-my. NS ns20.iij.ad.jp.
 my. NS ns30.cdns.net.
 my. NS ns-my.nic.fr.
 MY. DS 49551 8 1 486D0A0DAF13FCE34AEF9BE1B68075B016B84ECF
@@ -2042,6 +2795,12 @@ na. NS merlin.net.na.
 na. NS sns-pb.isc.org.
 NA. DS 24484 5 1 EFC19D4685751FF8E11F96142A083DCB9C708912
 merlin.net.na. A 204.152.184.96
+nagoya. NS a.gmoregistry.net.
+nagoya. NS b.gmoregistry.net.
+nagoya. NS c.gmoregistry.net.
+nagoya. NS d.gmoregistry.net.
+nagoya. NS e.gmoregistry.net.
+NAGOYA. DS 23314 8 2 E686F634DBA3E8BDF0AA3775D744844B9768683D1851F0063F98B10DBE8D500C
 name. NS a6.nstld.com.
 name. NS c6.nstld.com.
 name. NS d6.nstld.com.
@@ -2052,6 +2811,7 @@ name. NS j6.nstld.com.
 name. NS k6.nstld.com.
 name. NS l6.nstld.com.
 name. NS m6.nstld.com.
+NAME. DS 52563 8 2 4E2671F0DBC3927D842053044C6A0CBF8B21E1E657DE8BBA99A4835031A85A41
 nc. NS nc.cctld.authdns.ripe.net.
 nc. NS ns1.nc.
 nc. NS ns2.nc.
@@ -2106,6 +2866,7 @@ ns-dz.afrinic.net. AAAA 2001:43f8:120:0:0:0:0:36
 ns-gm.afrinic.net. A 196.216.168.29
 ns-gm.afrinic.net. AAAA 2001:43f8:120:0:0:0:0:29
 ns-ke.afrinic.net. A 196.216.168.22
+ns-ke.afrinic.net. AAAA 2001:43f8:120:0:0:0:0:22
 ns-km.afrinic.net. A 196.216.168.46
 ns-km.afrinic.net. AAAA 2001:43f8:120:0:0:0:0:46
 ns-ls.afrinic.net. A 196.216.168.70
@@ -2118,6 +2879,8 @@ ns-ne.afrinic.net. A 196.216.168.45
 ns-ne.afrinic.net. AAAA 2001:43f8:120:0:0:0:0:45
 ns-rw.afrinic.net. A 196.216.168.28
 ns-rw.afrinic.net. AAAA 2001:43f8:120:0:0:0:0:28
+ns-sd.afrinic.net. A 196.216.168.26
+ns-sd.afrinic.net. AAAA 2001:43f8:120:0:0:0:0:26
 ns-td.afrinic.net. A 196.216.168.31
 ns-td.afrinic.net. AAAA 2001:43f8:120:0:0:0:0:31
 ns-tn.afrinic.net. A 196.216.168.25
@@ -2151,7 +2914,6 @@ ns30.cdns.net. AAAA 2001:678:4:0:0:0:0:1e
 ns7.cdns.net. A 194.0.1.7
 ns7.cdns.net. AAAA 2001:678:4:0:0:0:0:7
 ns.cernet.net. A 202.112.0.44
-a.ci-servers.net. A 87.117.194.160
 root-b.cloud9global.net. A 50.22.82.251
 ns1.cobex.net. A 216.152.192.71
 ns2.cobex.net. A 216.152.192.72
@@ -2175,6 +2937,7 @@ cl1.dnsnode.net. AAAA 2001:67c:1010:8:0:0:0:53
 nl1.dnsnode.net. A 194.146.106.42
 nl1.dnsnode.net. AAAA 2001:67c:1010:10:0:0:0:53
 pe1.dnsnode.net. A 194.146.106.82
+pe1.dnsnode.net. AAAA 2001:67c:1010:20:0:0:0:53
 fork.sth.dnsnode.net. A 77.72.229.254
 fork.sth.dnsnode.net. AAAA 2a01:3f0:0:306:0:0:0:53
 za1.dnsnode.net. A 194.146.106.78
@@ -2245,6 +3008,15 @@ d.gq.globalanycastcloud.freenom.net. AAAA 2a04:1b00:b:0:0:0:0:2
 tld.gdns.net. A 68.178.129.149
 news-tokyo.gip.net. A 204.59.64.222
 ns2.gip.net. A 204.59.1.222
+a.gmoregistry.net. A 72.52.71.9
+a.gmoregistry.net. AAAA 2001:470:1a:0:0:0:0:9
+b.gmoregistry.net. A 38.103.2.9
+c.gmoregistry.net. A 63.243.194.9
+c.gmoregistry.net. AAAA 2001:5a0:10:0:0:0:0:9
+d.gmoregistry.net. A 120.29.252.11
+d.gmoregistry.net. AAAA 2001:dcd:5:0:0:0:0:11
+e.gmoregistry.net. A 120.29.254.11
+e.gmoregistry.net. AAAA 2001:dcd:6:0:0:0:0:11
 a.gov-servers.net. A 69.36.157.30
 a.gov-servers.net. AAAA 2001:500:4431:0:0:0:2:30
 b.gov-servers.net. A 209.112.123.30
@@ -2290,6 +3062,10 @@ kwns.kems.net. A 168.187.5.12
 ns1.krnic.net. A 202.30.50.51
 gd-ns.ksregistry.net. A 194.0.11.103
 gd-ns.ksregistry.net. AAAA 2001:678:e:103:0:0:0:53
+ns1a.ksregistry.net. A 203.119.88.75
+ns1a.ksregistry.net. AAAA 2001:dd8:7:6075:dc:0:0:1
+ns1b.ksregistry.net. A 72.0.48.75
+ns1b.ksregistry.net. AAAA 2620:171:a00:ad:0:0:0:75
 dns.lttnet.net. A 62.240.36.9
 dns1.lttnet.net. A 62.68.42.9
 ns1-fr.mediaserv.net. A 188.165.38.14
@@ -2468,6 +3244,7 @@ a.root-servers.net. A 198.41.0.4
 a.root-servers.net. AAAA 2001:503:ba3e:0:0:0:2:30
 b.root-servers.net. A 192.228.79.201
 c.root-servers.net. A 192.33.4.12
+c.root-servers.net. AAAA 2001:500:2:0:0:0:0:c
 d.root-servers.net. A 199.7.91.13
 d.root-servers.net. AAAA 2001:500:2d:0:0:0:0:d
 e.root-servers.net. A 192.203.230.10
@@ -2514,6 +3291,29 @@ auth200.ns.uu.net. AAAA 2001:600:1c0:e000:0:0:35:2
 auth210.ns.uu.net. A 195.129.12.74
 auth210.ns.uu.net. AAAA 2001:600:1c0:e001:0:0:35:2
 auth61.ns.uu.net. A 198.6.1.182
+neustar. NS ns1.dns.nic.neustar.
+neustar. NS ns2.dns.nic.neustar.
+neustar. NS ns3.dns.nic.neustar.
+neustar. NS ns4.dns.nic.neustar.
+neustar. NS ns5.dns.nic.neustar.
+neustar. NS ns6.dns.nic.neustar.
+neustar. NS ns7.dns.nic.neustar.
+NEUSTAR. DS 10205 8 1 33B4D5A00F3CE58745AEFA2D2454ECE8D44FEA79
+NEUSTAR. DS 10205 8 2 1FE9AB86833B13A7D0C334D891B1581D5FB81E5829E670352355755306385C6C
+ns1.dns.nic.neustar. A 204.74.112.250
+ns1.dns.nic.neustar. AAAA 2001:502:d399:0:0:0:0:250
+ns2.dns.nic.neustar. A 204.74.113.250
+ns2.dns.nic.neustar. AAAA 2610:a1:1007:0:0:0:0:250
+ns3.dns.nic.neustar. A 199.7.66.250
+ns3.dns.nic.neustar. AAAA 2610:a1:1008:0:0:0:0:250
+ns4.dns.nic.neustar. A 199.7.67.250
+ns4.dns.nic.neustar. AAAA 2001:502:100e:0:0:0:0:250
+ns5.dns.nic.neustar. A 192.100.59.250
+ns5.dns.nic.neustar. AAAA 2610:a1:1013:0:0:0:0:250
+ns6.dns.nic.neustar. A 198.133.199.250
+ns6.dns.nic.neustar. AAAA 2610:a1:1021:0:0:0:0:250
+ns7.dns.nic.neustar. A 207.34.5.10
+ns7.dns.nic.neustar. AAAA 2001:503:7bbb:ffff:ffff:ffff:ffff:ff7e
 nf. NS ns.anycast.nic.nf.
 nf. NS nf1.dyntld.net.
 nf. NS nf3.dyntld.net.
@@ -2544,6 +3344,11 @@ ns.tmx.com.ni. A 200.62.64.1
 ns.ideay.net.ni. A 200.9.190.130
 ns.ni. A 165.98.1.2
 ns2.ni. A 200.9.187.2
+ninja. NS demand.beta.aridns.net.au.
+ninja. NS demand.alpha.aridns.net.au.
+ninja. NS demand.delta.aridns.net.au.
+ninja. NS demand.gamma.aridns.net.au.
+NINJA. DS 55045 8 2 5E37FAE7300F5183057D2FAAD662FCCBEC710849DFED3D31E066E36232B1FE07
 nl. NS nl1.dnsnode.net.
 nl. NS ns1.dns.nl.
 nl. NS ns2.dns.nl.
@@ -2565,8 +3370,6 @@ ns5.dns.nl. A 194.0.28.53
 ns5.dns.nl. AAAA 2001:678:2c:0:194:0:28:53
 ns-pt.nlnetlabs.nl. A 213.154.224.141
 ns-pt.nlnetlabs.nl. AAAA 2001:7b8:206:1:0:0:4:141
-ns-aw-ext1.sidn.nl. A 193.176.144.23
-ns-aw-ext1.sidn.nl. AAAA 2a00:d78:0:102:193:176:144:23
 no. NS i.nic.no.
 no. NS x.nic.no.
 no. NS y.nic.no.
@@ -2609,6 +3412,26 @@ b.nic.nu. A 65.22.164.1
 b.nic.nu. AAAA 2a01:8840:10:0:0:0:0:1
 c.nic.nu. A 192.36.144.107
 c.nic.nu. AAAA 2a01:3f0:0:301:0:0:0:53
+nyc. NS ns1.dns.nic.nyc.
+nyc. NS ns2.dns.nic.nyc.
+nyc. NS ns3.dns.nic.nyc.
+nyc. NS ns4.dns.nic.nyc.
+nyc. NS ns5.dns.nic.nyc.
+nyc. NS ns6.dns.nic.nyc.
+NYC. DS 28484 8 1 3126DF0202D1B35CF95167B92A3927BD9E4213AC
+NYC. DS 28484 8 2 0966D2F0A166F4F8A64F112BFFA0E70F394B26800494734D4944339AD838B760
+ns1.dns.nic.nyc. A 156.154.144.125
+ns1.dns.nic.nyc. AAAA 2610:a1:1071:0:0:0:0:7d
+ns2.dns.nic.nyc. A 156.154.145.125
+ns2.dns.nic.nyc. AAAA 2610:a1:1072:0:0:0:0:7d
+ns3.dns.nic.nyc. A 156.154.159.125
+ns3.dns.nic.nyc. AAAA 2610:a1:1073:0:0:0:0:7d
+ns4.dns.nic.nyc. A 156.154.156.125
+ns4.dns.nic.nyc. AAAA 2610:a1:1074:0:0:0:0:7d
+ns5.dns.nic.nyc. A 156.154.157.125
+ns5.dns.nic.nyc. AAAA 2610:a1:1075:0:0:0:0:7d
+ns6.dns.nic.nyc. A 156.154.158.125
+ns6.dns.nic.nyc. AAAA 2610:a1:1076:0:0:0:0:7d
 nz. NS ns1.dns.net.nz.
 nz. NS ns2.dns.net.nz.
 nz. NS ns3.dns.net.nz.
@@ -2616,8 +3439,8 @@ nz. NS ns4.dns.net.nz.
 nz. NS ns5.dns.net.nz.
 nz. NS ns6.dns.net.nz.
 nz. NS ns7.dns.net.nz.
-NZ. DS 19889 8 1 A67187009210FC3432B2136FE22A82BE5B20CBC4
-NZ. DS 19889 8 2 6B4593378969D7077FD31443235A86F0226D3780382143919CF0FF2D62EB47D8
+NZ. DS 22552 8 1 FC46E6DA263A530DF4A5EC1C28D493C48C6F342E
+NZ. DS 22552 8 2 4B78F4917376CD58BA771776F5AC76D928634FDB8F5F8DBA87A46FB02DACF546
 circa.mcs.vuw.ac.nz. A 130.195.5.12
 downstage.mcs.vuw.ac.nz. A 130.195.6.10
 ns1.dns.net.nz. A 202.46.190.130
@@ -2635,14 +3458,34 @@ ns7.dns.net.nz. AAAA 2001:67c:1010:13:0:0:0:53
 ns99.dns.net.nz. A 202.46.190.131
 ns99.dns.net.nz. AAAA 2001:dce:2000:2:0:0:0:131
 iq.dns.cocca.org.nz. A 203.119.84.235
+okinawa. NS a.gmoregistry.net.
+okinawa. NS b.gmoregistry.net.
+okinawa. NS c.gmoregistry.net.
+okinawa. NS d.gmoregistry.net.
+okinawa. NS e.gmoregistry.net.
+OKINAWA. DS 37465 8 2 24360AC31BA64BABB9BE69B260A308D58025CE92E7548D92BC9D37DF8702A543
 om. NS ns1.registry.om.
 om. NS ns2.registry.om.
 om. NS cctld.beta.aridns.net.au.
 om. NS cctld.alpha.aridns.net.au.
 om. NS cctld.delta.aridns.net.au.
 om. NS cctld.gamma.aridns.net.au.
-ns1.registry.om. A 212.72.15.101
+ns1.registry.om. A 185.27.90.101
 ns2.registry.om. A 185.27.91.69
+onl. NS a0.nic.onl.
+onl. NS a2.nic.onl.
+onl. NS b0.nic.onl.
+onl. NS c0.nic.onl.
+ONL. DS 28830 7 1 43C8D1479E0457EAD6020024017FDEC8CCE2260D
+ONL. DS 28830 7 2 18EB9FAA635692104783C62A7F6F51AA17365BB07689093A247183D39B88338D
+a0.nic.onl. A 65.22.136.1
+a0.nic.onl. AAAA 2a01:8840:86:0:0:0:0:1
+a2.nic.onl. A 65.22.139.1
+a2.nic.onl. AAAA 2a01:8840:89:0:0:0:0:1
+b0.nic.onl. A 65.22.137.1
+b0.nic.onl. AAAA 2a01:8840:87:0:0:0:0:1
+c0.nic.onl. A 65.22.138.1
+c0.nic.onl. AAAA 2a01:8840:88:0:0:0:0:1
 org. NS a0.org.afilias-nst.info.
 org. NS a2.org.afilias-nst.info.
 org. NS b0.org.afilias-nst.org.
@@ -2733,10 +3576,24 @@ pa. NS sns-pb.isc.org.
 ns.nic.pa. A 168.77.8.4
 ns.pa. A 168.77.8.2
 ns2.pa. A 168.77.8.7
+partners. NS demand.beta.aridns.net.au.
+partners. NS demand.alpha.aridns.net.au.
+partners. NS demand.delta.aridns.net.au.
+partners. NS demand.gamma.aridns.net.au.
+PARTNERS. DS 29647 8 2 0F82C921590203C66ED30225E243E8DB59EFC29743D8743025A5785E2992C6FA
+parts. NS demand.beta.aridns.net.au.
+parts. NS demand.alpha.aridns.net.au.
+parts. NS demand.delta.aridns.net.au.
+parts. NS demand.gamma.aridns.net.au.
+PARTS. DS 44569 8 2 31D8F131BF0D8D2EF2147A4B85242A8D8B4CF868777A584EFD342C0E536253E1
+pe. NS pch.rcp.pe.
 pe. NS pe1.dnsnode.net.
 pe. NS quipu.rcp.net.pe.
 pe. NS sns-pb.isc.org.
+PE. DS 7981 8 2 7C4B12C0D916694718131C7B7607561393FB86E2A3159CE7A74EA9E29AFB26F3
 quipu.rcp.net.pe. A 200.1.176.4
+pch.rcp.pe. A 204.61.216.85
+pch.rcp.pe. AAAA 2001:500:14:6085:ad:0:0:1
 pf. NS ns1.mana.pf.
 pf. NS ns2.mana.pf.
 ns1.mana.pf. A 202.3.225.10
@@ -2754,11 +3611,42 @@ ph. NS ph.communitydns.net.
 ph. NS ns2.cuhk.edu.hk.
 ph. NS sec4.apnic.net.
 ph. NS sns-pb.isc.org.
+photo. NS a.ns.uniregistry.net.
+photo. NS tld.isc-sns.com.
+photo. NS tld.isc-sns.net.
+photo. NS tld.isc-sns.info.
+PHOTO. DS 11884 5 1 5452469C278FB3EF65B9D47B709DBDDA025FD6DA
+PHOTO. DS 11884 5 2 80ADEC219929825CE490E0B9CAAC5CAD806FC8AD4C4E0D48017F62F5408D6FF5
 photography. NS demand.beta.aridns.net.au.
 photography. NS demand.alpha.aridns.net.au.
 photography. NS demand.delta.aridns.net.au.
 photography. NS demand.gamma.aridns.net.au.
 PHOTOGRAPHY. DS 59776 8 2 D456A9A0648D15BA511E0CEC9AE8BE1B39E7F8443FB037E58E9313CE9275F3CC
+photos. NS demand.beta.aridns.net.au.
+photos. NS demand.alpha.aridns.net.au.
+photos. NS demand.delta.aridns.net.au.
+photos. NS demand.gamma.aridns.net.au.
+PHOTOS. DS 45481 8 2 19BD8DD90A5EC536C0474423CDD38E482628539FD8A4B95EBCE1C0B3676F9A68
+pics. NS a.ns.uniregistry.net.
+pics. NS tld.isc-sns.com.
+pics. NS tld.isc-sns.net.
+pics. NS tld.isc-sns.info.
+PICS. DS 22037 5 1 128E4D7B181F80FBEF51811B5396FFE83E6517BD
+PICS. DS 22037 5 2 FAA0D15E50168840E97AAA27E7D6F010ECE0C3BDCFD7F26827DA1B062AAD9291
+pink. NS a0.nic.pink.
+pink. NS a2.nic.pink.
+pink. NS b0.nic.pink.
+pink. NS c0.nic.pink.
+PINK. DS 45756 7 1 D4496FF46E35CC9A206DA310B24C36AF205A2BD1
+PINK. DS 45756 7 2 71CDA61FCA2B38FD3C93B8A69B2300CD7BC91FF32C306F1F3F831BBA7686A149
+a0.nic.pink. A 65.22.28.17
+a0.nic.pink. AAAA 2a01:8840:1e:0:0:0:0:17
+a2.nic.pink. A 65.22.31.17
+a2.nic.pink. AAAA 2a01:8840:21:0:0:0:0:17
+b0.nic.pink. A 65.22.29.17
+b0.nic.pink. AAAA 2a01:8840:1f:0:0:0:0:17
+c0.nic.pink. A 65.22.30.17
+c0.nic.pink. AAAA 2a01:8840:20:0:0:0:0:17
 pk. NS root-b.cloud9global.net.
 pk. NS root-p.pknic.pk.
 pk. NS root-s.pknic.pk.
@@ -2772,9 +3660,9 @@ pl. NS f-dns.pl.
 pl. NS g-dns.pl.
 pl. NS h-dns.pl.
 pl. NS i-dns.pl.
-PL. DS 30301 8 1 5C7E8A7ABE6C921B2BEDF1F9106D34C23A0E14B1
-PL. DS 30301 8 2 80B26C3DB3907D23531ED9C3B027BB3AFA00422A764D2E1A0DEB70ECA67CE474
-a-dns.pl. A 195.187.245.44
+PL. DS 27236 8 1 DC037E771F7C4CEA0C6BB65C6EDA62DAE18693A0
+PL. DS 27236 8 2 16E41465F64D6FE884E5079FD2781C3C3585E899D7EB495E47138CB1D7DFC98C
+a-dns.pl. A 194.181.87.156
 c-dns.pl. A 195.47.235.226
 d-dns.pl. A 213.172.174.70
 e-dns.pl. A 195.80.237.162
@@ -2796,7 +3684,7 @@ pm. NS e.ext.nic.fr.
 pm. NS f.ext.nic.fr.
 pm. NS g.ext.nic.fr.
 PM. DS 35911 8 2 BCCB9BB0CAB68D8C3C64A4FF4ECF3309743D14C5366738F54D4C031E74EA99F1
-PM. DS 41402 8 2 A471CE5E038A05430C5B13EC457C272AF48BCC12EF5B572CF2B87544B284A006
+PM. DS 56192 8 2 B49959AB8FFF95A45BF5F7130AB1A64C7EF1CEFB6F50CA1BE003281503325F67
 pn. NS ns0.pitcairn.net.pn.
 pn. NS ns2.pitcairn.net.pn.
 pn. NS fork.sth.dnsnode.net.
@@ -2820,13 +3708,25 @@ PR. DS 53986 5 1 C2B7576022FE56A3340409053A7AA5D6EED8EB09
 descartes.nic.pr. A 134.202.1.120
 do-dns.nic.pr. A 134.202.1.121
 golomb.nic.pr. A 134.202.6.100
+golomb.nic.pr. AAAA 2001:500:10:0:0:0:6:100
 pascal.nic.pr. A 134.202.0.120
+pascal.nic.pr. AAAA 2001:500:10:0:0:0:0:120
 pro. NS a0.pro.afilias-nst.info.
 pro. NS a2.pro.afilias-nst.info.
 pro. NS b0.pro.afilias-nst.org.
 pro. NS b2.pro.afilias-nst.org.
 pro. NS c0.pro.afilias-nst.info.
 pro. NS d0.pro.afilias-nst.org.
+productions. NS demand.beta.aridns.net.au.
+productions. NS demand.alpha.aridns.net.au.
+productions. NS demand.delta.aridns.net.au.
+productions. NS demand.gamma.aridns.net.au.
+PRODUCTIONS. DS 34015 8 2 9852EB881B7A5FA22178AA1841D5A8FCF21F87B716A242BD734A101D360403C8
+properties. NS demand.beta.aridns.net.au.
+properties. NS demand.alpha.aridns.net.au.
+properties. NS demand.delta.aridns.net.au.
+properties. NS demand.gamma.aridns.net.au.
+PROPERTIES. DS 14056 8 2 0752CCCA4D5E34BD858FD57956440DBE1DA9CC899E8964B368897189A881158E
 ps. NS ps.cctld.authdns.ripe.net.
 ps. NS ns1.pnina.ps.
 ps. NS rip.psg.com.
@@ -2858,6 +3758,11 @@ ns02.fccn.pt. AAAA 2001:690:a80:4001:0:0:0:200
 ns03.fccn.pt. A 138.246.255.249
 ns03.fccn.pt. AAAA 2001:4ca0:106:0:250:56ff:fea9:3fd
 phobos.fccn.pt. A 193.136.7.17
+pub. NS demand.beta.aridns.net.au.
+pub. NS demand.alpha.aridns.net.au.
+pub. NS demand.delta.aridns.net.au.
+pub. NS demand.gamma.aridns.net.au.
+PUB. DS 31165 8 2 789620193F8456413A6DFCA65FAE6D23267B44C8010FF36A4A57D7038BFE7CD6
 pw. NS ns1.nic.pw.
 pw. NS ns2.nic.pw.
 pw. NS ns3.nic.pw.
@@ -2911,16 +3816,116 @@ i.registry.qa. AAAA 2001:500:14:6062:ad:0:0:1
 j.registry.qa. A 38.103.2.3
 k.registry.qa. A 72.52.71.3
 k.registry.qa. AAAA 2001:470:1a:0:0:0:0:3
+qpon. NS ns1.dns.nic.qpon.
+qpon. NS ns2.dns.nic.qpon.
+qpon. NS ns3.dns.nic.qpon.
+qpon. NS ns4.dns.nic.qpon.
+qpon. NS ns5.dns.nic.qpon.
+qpon. NS ns6.dns.nic.qpon.
+qpon. NS ns7.dns.nic.qpon.
+QPON. DS 45064 8 1 9CEDBA9EF47AF7B7B5D86F79C7E9C5587CA3D3AE
+QPON. DS 45064 8 2 F8EE0C2B01E4E2F5959100914C6018645897B8EEE26071C5E94910F7E10AC352
+ns1.dns.nic.qpon. A 156.154.169.32
+ns1.dns.nic.qpon. AAAA 2610:a1:1071:0:0:0:1:20
+ns2.dns.nic.qpon. A 156.154.170.32
+ns2.dns.nic.qpon. AAAA 2610:a1:1072:0:0:0:1:20
+ns3.dns.nic.qpon. A 156.154.171.32
+ns3.dns.nic.qpon. AAAA 2610:a1:1073:0:0:0:1:20
+ns4.dns.nic.qpon. A 156.154.172.32
+ns4.dns.nic.qpon. AAAA 2610:a1:1074:0:0:0:1:20
+ns5.dns.nic.qpon. A 156.154.173.32
+ns5.dns.nic.qpon. AAAA 2610:a1:1075:0:0:0:1:20
+ns6.dns.nic.qpon. A 156.154.174.32
+ns6.dns.nic.qpon. AAAA 2610:a1:1076:0:0:0:1:20
+ns7.dns.nic.qpon. A 207.34.5.10
+ns7.dns.nic.qpon. AAAA 2001:503:7bbb:ffff:ffff:ffff:ffff:ff7e
 re. NS d.ext.nic.fr.
 re. NS d.nic.fr.
 re. NS e.ext.nic.fr.
 re. NS f.ext.nic.fr.
 re. NS g.ext.nic.fr.
 RE. DS 18007 8 2 91325EB53782EB94B7B6EA3B6FD5F05F86A0247858B160883AF018667101AA1A
-RE. DS 45706 8 2 FB2BB4925BA253FC13CFB1E341DB0DFD8541FE27B4C6373D7D180AEC19BC1471
+RE. DS 27026 8 2 FC7F430D839FA81CE34FBBC3C687834184685E3312FA3284354B00AFF6C9F2D2
+recipes. NS demand.beta.aridns.net.au.
+recipes. NS demand.alpha.aridns.net.au.
+recipes. NS demand.delta.aridns.net.au.
+recipes. NS demand.gamma.aridns.net.au.
+RECIPES. DS 7912 8 2 BD8F8D2BA244B97C11C8D26B8C5BCDA19294C5E2A1B21BF01D029F849F130D3B
+red. NS a0.nic.red.
+red. NS a2.nic.red.
+red. NS b0.nic.red.
+red. NS c0.nic.red.
+RED. DS 20431 7 1 429A68CBBF8ACE08D911071D13FD47892B1EFEF7
+RED. DS 20431 7 2 7ED8016E603F6E4B0AEBDA756B01AAE19AE9C65D9A8DA32C1FD1CC74BCE999F4
+a0.nic.red. A 65.22.36.25
+a0.nic.red. AAAA 2a01:8840:26:0:0:0:0:25
+a2.nic.red. A 65.22.39.25
+a2.nic.red. AAAA 2a01:8840:29:0:0:0:0:25
+b0.nic.red. A 65.22.37.25
+b0.nic.red. AAAA 2a01:8840:27:0:0:0:0:25
+c0.nic.red. A 65.22.38.25
+c0.nic.red. AAAA 2a01:8840:28:0:0:0:0:25
+ren. NS a.zdnscloud.com.
+ren. NS b.zdnscloud.com.
+ren. NS c.zdnscloud.com.
+ren. NS d.zdnscloud.com.
+ren. NS e.zdnscloud.com.
+ren. NS f.zdnscloud.com.
+ren. NS g.zdnscloud.com.
+ren. NS i.zdnscloud.com.
+ren. NS j.zdnscloud.com.
+REN. DS 37192 8 2 B5358217959349BD6AA687EC21A6DDDE54C4912FE719D235D4E00F17D308C681
+rentals. NS demand.beta.aridns.net.au.
+rentals. NS demand.alpha.aridns.net.au.
+rentals. NS demand.delta.aridns.net.au.
+rentals. NS demand.gamma.aridns.net.au.
+RENTALS. DS 28552 8 2 90883BB13557F00736DD756933776E88CE4401D479E8ED97557CCDB2BF8D39F8
+repair. NS demand.beta.aridns.net.au.
+repair. NS demand.alpha.aridns.net.au.
+repair. NS demand.delta.aridns.net.au.
+repair. NS demand.gamma.aridns.net.au.
+REPAIR. DS 28645 8 2 67D9F251132F0B9866A5CFDD96CB41D39C5634150852B2B20C4B876C88726BFD
+report. NS demand.beta.aridns.net.au.
+report. NS demand.alpha.aridns.net.au.
+report. NS demand.delta.aridns.net.au.
+report. NS demand.gamma.aridns.net.au.
+REPORT. DS 4402 8 2 1C0B936E362F166533149019C016422647DBAA9790AD2965D24DE7C0296EA523
+rest. NS a.nic.rest.
+rest. NS b.nic.rest.
+rest. NS c.nic.rest.
+rest. NS d.nic.rest.
+REST. DS 25199 8 1 C43AF7DEC8B165D6C8B832BCB984C2407EF5ED8D
+REST. DS 25199 8 2 8F477474F47C387D246B6849202CA0C54C4D5A50D322C79718A98100314D08B7
+a.nic.rest. A 194.169.218.35
+a.nic.rest. AAAA 2001:67c:13cc:0:0:0:1:35
+b.nic.rest. A 185.24.64.35
+b.nic.rest. AAAA 2a04:2b00:13cc:0:0:0:1:35
+c.nic.rest. A 194.0.2.2
+c.nic.rest. AAAA 2001:678:5:0:0:0:0:2
+d.nic.rest. A 194.0.1.45
+d.nic.rest. AAAA 2001:678:4:0:0:0:0:2d
+reviews. NS demand.beta.aridns.net.au.
+reviews. NS demand.alpha.aridns.net.au.
+reviews. NS demand.delta.aridns.net.au.
+reviews. NS demand.gamma.aridns.net.au.
+REVIEWS. DS 1474 8 2 5F1451001B43664AF30F330F1BC78B7D8FDDB57BF2B396A3FFDF93F7D5A28293
+rich. NS a0.nic.rich.
+rich. NS a2.nic.rich.
+rich. NS b0.nic.rich.
+rich. NS c0.nic.rich.
+RICH. DS 49764 7 1 75DDCB6A3233AD81CD65DF3138D299592937DA35
+RICH. DS 49764 7 2 AE19443051C6CBCBB411285F529394ECBAABCC764810B4D1117C76DB6635F74B
+a0.nic.rich. A 65.22.136.17
+a0.nic.rich. AAAA 2a01:8840:86:0:0:0:0:17
+a2.nic.rich. A 65.22.139.17
+a2.nic.rich. AAAA 2a01:8840:89:0:0:0:0:17
+b0.nic.rich. A 65.22.137.17
+b0.nic.rich. AAAA 2a01:8840:87:0:0:0:0:17
+c0.nic.rich. A 65.22.138.17
+c0.nic.rich. AAAA 2a01:8840:88:0:0:0:0:17
 ro. NS dns-at.rotld.ro.
 ro. NS dns-ro.denic.de.
-ro. NS ns-ext.isc.org.
+ro. NS sns-pb.isc.org.
 ro. NS primary.rotld.ro.
 ro. NS sec-dns-a.rotld.ro.
 ro. NS sec-dns-b.rotld.ro.
@@ -2934,6 +3939,13 @@ sec-dns-a.rotld.ro. A 192.162.16.20
 sec-dns-a.rotld.ro. AAAA 2a03:5e80:0:4:192:162:16:20
 sec-dns-b.rotld.ro. A 193.230.31.230
 sec-dns-b.rotld.ro. AAAA 2a03:5e80:0:5:193:230:31:230
+rodeo. NS a.ns.nic.rodeo.
+rodeo. NS b.ns.nic.rodeo.
+RODEO. DS 28172 8 2 643B5BAC898709DE1EE7AE9D08D74B001085380E908D04E0903DC68FC3F81ACE
+a.ns.nic.rodeo. A 72.0.50.3
+a.ns.nic.rodeo. AAAA 2620:171:a02:ad:0:0:0:3
+b.ns.nic.rodeo. A 72.42.114.3
+b.ns.nic.rodeo. AAAA 2620:171:d02:dc:0:0:0:3
 rs. NS a.nic.rs.
 rs. NS b.nic.rs.
 rs. NS d.nic.rs.
@@ -2959,12 +3971,23 @@ ru. NS b.dns.ripn.net.
 ru. NS d.dns.ripn.net.
 ru. NS e.dns.ripn.net.
 ru. NS f.dns.ripn.net.
-RU. DS 14072 8 2 DFFBFE59FBBD3289D0C3819F05F94610A1E03B556D64540A2CC5F8C4158A00E7
+RU. DS 51272 8 2 13ECAF18251EEC90C6BC8F16E2730F1F597F6D7E406C4A8FF1D4FD7D760D6EEE
+ruhr. NS anycast9.irondns.net.
+ruhr. NS anycast10.irondns.net.
+ruhr. NS anycast23.irondns.net.
+ruhr. NS anycast24.irondns.net.
+RUHR. DS 25131 10 2 EC453960C396742EFA2EF815FA9C9DBA146E838F86F11643704C1630424F4E78
 rw. NS ns1.ricta.org.rw.
 rw. NS fork.sth.dnsnode.net.
 rw. NS ns-rw.afrinic.net.
 rw. NS sns-pb.isc.org.
 ns1.ricta.org.rw. A 41.74.173.250
+ryukyu. NS a.gmoregistry.net.
+ryukyu. NS b.gmoregistry.net.
+ryukyu. NS c.gmoregistry.net.
+ryukyu. NS d.gmoregistry.net.
+ryukyu. NS e.gmoregistry.net.
+RYUKYU. DS 25636 8 2 6CEFA0F0C2BC4E43FC6C01676B57260FC92D055A4D8A790641A7DDB219B7EFDC
 sa. NS sa.cctld.authdns.ripe.net.
 sa. NS ns1.isu.net.sa.
 sa. NS ns1.nic.net.sa.
@@ -2977,6 +4000,11 @@ ns1.nic.net.sa. A 86.111.192.9
 ns1.nic.net.sa. AAAA 2001:67c:130:410:0:0:0:9
 ns2.nic.net.sa. A 86.111.196.9
 ns2.nic.net.sa. AAAA 2001:67c:130:10:0:0:0:9
+saarland. NS ns1a.ksregistry.net.
+saarland. NS ns1b.ksregistry.net.
+saarland. NS ns2a.ksregistry.com.
+saarland. NS ns2b.ksregistry.com.
+SAARLAND. DS 62044 8 2 13991EFC59B20270630C059A229C5ED42FD96BFE5B1931CD489460A2035AEFEA
 sb. NS pch.nic.sb.
 sb. NS sb1.dyntld.net.
 sb. NS sb3.dyntld.net.
@@ -3001,6 +4029,7 @@ sd. NS ns2.uaenic.ae.
 sd. NS ans1.sis.sd.
 sd. NS ans1.canar.sd.
 sd. NS ans2.canar.sd.
+sd. NS ns-sd.afrinic.net.
 ans1.canar.sd. A 196.29.180.14
 ans2.canar.sd. A 196.29.164.14
 ans1.sis.sd. A 196.29.166.134
@@ -3051,9 +4080,27 @@ sh. NS b.nic.io.
 sh. NS b.ns13.net.
 sh. NS ns1.communitydns.net.
 sh. NS ns3.icb.co.uk.
-SH. DS 3846 7 1 8E142703EAEABD49F84213E72015350CD3D28DF5
-SH. DS 3846 7 2 493B17DB412EBBA011AF0E596F2424B25C9379A9960586FFC9A2FB774536DE66
+SH. DS 6040 8 2 AB4FEB07A4A5C297A747B7C0CC0616401A3BF6D658AF8408F0207FFFD4B4A57B
 a.nic.sh. A 64.251.31.178
+shiksha. NS a0.nic.shiksha.
+shiksha. NS a2.nic.shiksha.
+shiksha. NS b0.nic.shiksha.
+shiksha. NS c0.nic.shiksha.
+SHIKSHA. DS 19339 7 1 A8F93C5CA81D7F38880F12CAD5D43F8BC522747C
+SHIKSHA. DS 19339 7 2 CCDBBE400E7FCE7C2CAF32B1315D1CDF09289E69988ABD89A9E0A4280D0752AD
+a0.nic.shiksha. A 65.22.32.33
+a0.nic.shiksha. AAAA 2a01:8840:22:0:0:0:0:33
+a2.nic.shiksha. A 65.22.35.33
+a2.nic.shiksha. AAAA 2a01:8840:25:0:0:0:0:33
+b0.nic.shiksha. A 65.22.33.33
+b0.nic.shiksha. AAAA 2a01:8840:23:0:0:0:0:33
+c0.nic.shiksha. A 65.22.34.33
+c0.nic.shiksha. AAAA 2a01:8840:24:0:0:0:0:33
+shoes. NS demand.beta.aridns.net.au.
+shoes. NS demand.alpha.aridns.net.au.
+shoes. NS demand.delta.aridns.net.au.
+shoes. NS demand.gamma.aridns.net.au.
+SHOES. DS 48574 8 2 FFCCEBC433B0B008AB8D3113A3B009D9F399CA666883CCA43D43699C60AA7E61
 si. NS b.dns.si.
 si. NS c.dns.si.
 si. NS d.dns.si.
@@ -3062,8 +4109,8 @@ si. NS f.dns.si.
 si. NS g.dns.si.
 si. NS h.dns.si.
 si. NS sss.dns.si.
-SI. DS 45566 8 1 84329CC60B017DE0957FB99CD1C330F9FFAEF30F
-SI. DS 45566 8 2 F437BD473AA5FC0B6CE8FAC005157C7AB17E39455E6EC77B3CC24F75DDB25F60
+SI. DS 17770 8 1 7BF07EAD2EBA601C72225CD05C26A8F0A3B37600
+SI. DS 17770 8 2 306AEC05741E1F03BD3B8DD5B4503F338EFF7F8A5F61D9F6EC19A7FB9DE65FB2
 ns2.arnes.si. A 193.2.1.91
 ns2.arnes.si. AAAA 2001:1470:8000:0:0:0:0:91
 b.dns.si. A 193.2.1.91
@@ -3130,6 +4177,31 @@ a.nic.so. AAAA 2001:470:1a:0:0:0:0:4
 b.nic.so. A 38.103.2.4
 c.nic.so. A 63.243.194.4
 c.nic.so. AAAA 2001:5a0:10:0:0:0:0:4
+social. NS demand.beta.aridns.net.au.
+social. NS demand.alpha.aridns.net.au.
+social. NS demand.delta.aridns.net.au.
+social. NS demand.gamma.aridns.net.au.
+SOCIAL. DS 1300 8 2 8A42E9D39037DF3605E4DD07BEEA497B9C181FF38AA148FB712DB03C03BEA8AE
+sohu. NS a.zdnscloud.com.
+sohu. NS b.zdnscloud.com.
+sohu. NS c.zdnscloud.com.
+sohu. NS d.zdnscloud.com.
+sohu. NS e.zdnscloud.com.
+sohu. NS f.zdnscloud.com.
+sohu. NS g.zdnscloud.com.
+sohu. NS i.zdnscloud.com.
+sohu. NS j.zdnscloud.com.
+SOHU. DS 2036 8 2 9F56066DA3352034A1E3D7251D18127303A7509A8F4374ABD9AA18B8F3E8017B
+solar. NS demand.beta.aridns.net.au.
+solar. NS demand.alpha.aridns.net.au.
+solar. NS demand.delta.aridns.net.au.
+solar. NS demand.gamma.aridns.net.au.
+SOLAR. DS 6739 8 2 E72104FA55B919CFAC81D28277FE041BACA75957A0E530FC83827195C5FF89DF
+solutions. NS demand.beta.aridns.net.au.
+solutions. NS demand.alpha.aridns.net.au.
+solutions. NS demand.delta.aridns.net.au.
+solutions. NS demand.gamma.aridns.net.au.
+SOLUTIONS. DS 57742 8 2 6536350D40C0AA3DBF8A29604A2291F89966BFC74C363E99D75733885B8AAA49
 sr. NS ns1.sr.net.
 sr. NS ns2.sr.net.
 st. NS ns1.bahnhof.net.
@@ -3146,6 +4218,21 @@ su. NS f.dns.ripn.net.
 SU. DS 16101 7 2 951F84877CC34730CCF3DBDB0692BBCDE8E41529A88CD1BDBFEE41D5E629B284
 ns.demos.su. A 194.87.0.8
 ns.demos.su. A 194.87.0.9
+supplies. NS demand.beta.aridns.net.au.
+supplies. NS demand.alpha.aridns.net.au.
+supplies. NS demand.delta.aridns.net.au.
+supplies. NS demand.gamma.aridns.net.au.
+SUPPLIES. DS 10846 8 2 9C5876B0F046921F7F37E3D369C4FAEDBC9F9633A088B7FF83FFA399AA0A4B7C
+supply. NS demand.beta.aridns.net.au.
+supply. NS demand.alpha.aridns.net.au.
+supply. NS demand.delta.aridns.net.au.
+supply. NS demand.gamma.aridns.net.au.
+SUPPLY. DS 23479 8 2 26BC0DA7DE8F0B1D54845CFAC9AD268BF0A20BEE7C2A5C8DF7E3D7A79D647DEA
+support. NS demand.beta.aridns.net.au.
+support. NS demand.alpha.aridns.net.au.
+support. NS demand.delta.aridns.net.au.
+support. NS demand.gamma.aridns.net.au.
+SUPPORT. DS 49741 8 2 07B35DA2B3CDC8457A2532E0893F20672414C797E96731377F7BB87B3ED70AA5
 sv. NS ns.cr.
 sv. NS ns.uu.net.
 sv. NS ns.dns.br.
@@ -3170,6 +4257,11 @@ pch.anycast.tld.sy. A 204.61.216.71
 pch.anycast.tld.sy. AAAA 2001:500:14:6071:ad:0:0:1
 ns1.tld.sy. A 82.137.200.85
 ns2.tld.sy. A 82.137.192.145
+systems. NS demand.beta.aridns.net.au.
+systems. NS demand.alpha.aridns.net.au.
+systems. NS demand.delta.aridns.net.au.
+systems. NS demand.gamma.aridns.net.au.
+SYSTEMS. DS 25054 8 2 687ABBCE3773EEA70CF1434E34C2EEF2748BC0DD91A0F5C2416E77431F1C2651
 sz. NS sz.cctld.authdns.ripe.net.
 sz. NS ns1.sispa.org.sz.
 sz. NS rip.psg.com.
@@ -3220,8 +4312,8 @@ tf. NS d.nic.fr.
 tf. NS e.ext.nic.fr.
 tf. NS f.ext.nic.fr.
 tf. NS g.ext.nic.fr.
-TF. DS 6502 8 2 2C6EA21F9B5EF3857586A10B1DDF05C9A95E25B6E968EB1A2F7B8D4FADA5544B
 TF. DS 13684 8 2 0D4413F0F5685FD9144C7B7D6FCF6A0CAE6A806A3380164A1EE14FC0232652F8
+TF. DS 63746 8 2 C80A503F9A4594065684E1B4C6CD5C9AAACF855A9F3B4D9B4546970C6C37C0E0
 tg. NS ns1.admin.net.
 tg. NS ns2.admin.net.
 tg. NS ns3.admin.net.
@@ -3242,6 +4334,11 @@ dns1.thnic.co.th. AAAA 2001:3c8:1209:1:0:0:0:22
 ns-a.thnic.co.th. A 61.19.242.38
 ns-e.thnic.co.th. A 194.0.1.28
 ns-e.thnic.co.th. AAAA 2001:678:4:0:0:0:0:1c
+tienda. NS demand.beta.aridns.net.au.
+tienda. NS demand.alpha.aridns.net.au.
+tienda. NS demand.delta.aridns.net.au.
+tienda. NS demand.gamma.aridns.net.au.
+TIENDA. DS 58465 8 2 3609AECF68EF07474D2D9CFC9735DDA2365FBC3C6E4EBC01957E7903E17467A2
 tips. NS demand.beta.aridns.net.au.
 tips. NS demand.alpha.aridns.net.au.
 tips. NS demand.delta.aridns.net.au.
@@ -3277,8 +4374,7 @@ tm. NS b.nic.io.
 tm. NS b.ns13.net.
 tm. NS ns1.communitydns.net.
 tm. NS ns3.icb.co.uk.
-TM. DS 28935 7 1 C9660594EFA1DCCCCA1B6B7359262F2E11052403
-TM. DS 28935 7 2 0C30AA64DF5149B0237F0CAD8E6AB22825BDC8CADBD7CC108F6FFC74AC428709
+TM. DS 36787 8 2 AF4A3A54AA5F73C114F9C6E4D9C3EF0040E387806A9F92AE85276FF38F33BCB5
 a.nic.tm. A 64.251.31.180
 tn. NS ns1.ati.tn.
 tn. NS ns2.ati.tn.
@@ -3307,6 +4403,17 @@ today. NS demand.alpha.aridns.net.au.
 today. NS demand.delta.aridns.net.au.
 today. NS demand.gamma.aridns.net.au.
 TODAY. DS 13939 8 2 CFED9FB12BD6FF22FF6FC7A6098428062D58B41236279221011BC3FDCCB1F3FF
+tokyo. NS a.gmoregistry.net.
+tokyo. NS b.gmoregistry.net.
+tokyo. NS c.gmoregistry.net.
+tokyo. NS d.gmoregistry.net.
+tokyo. NS e.gmoregistry.net.
+TOKYO. DS 32771 8 2 19E0438B0E13DE780175E4BCEBE46432C5287FDB9DFE2B4440FA4E3BFBB20BC6
+tools. NS demand.beta.aridns.net.au.
+tools. NS demand.alpha.aridns.net.au.
+tools. NS demand.delta.aridns.net.au.
+tools. NS demand.gamma.aridns.net.au.
+TOOLS. DS 62176 8 2 9107EBABED1AE73F93CE28DA7931F52EE237911FB318E0F1BAE6F9AAC73631FE
 tp. NS tp.cctld.authdns.ripe.net.
 tp. NS ns3.ns.esat.net.
 tp. NS auth01.connect.ie.
@@ -3326,6 +4433,31 @@ ns2.nic.tr. AAAA 2001:a98:30:ad:0:0:0:12
 ns3.nic.tr. A 213.248.162.131
 ns4.nic.tr. A 193.140.100.200
 ns5.nic.tr. A 178.251.42.18
+trade. NS ns1.dns.nic.trade.
+trade. NS ns2.dns.nic.trade.
+trade. NS ns3.dns.nic.trade.
+trade. NS ns4.dns.nic.trade.
+trade. NS ns5.dns.nic.trade.
+trade. NS ns6.dns.nic.trade.
+TRADE. DS 8536 8 1 32A35A60DB7B829CB28D11DA9C2337D29518392C
+TRADE. DS 8536 8 2 B0CB84566089CEF9BC8654B2B4966724E83473AAF8C2621F489EBD06E7AFA6E1
+ns1.dns.nic.trade. A 156.154.144.165
+ns1.dns.nic.trade. AAAA 2610:a1:1071:0:0:0:0:a5
+ns2.dns.nic.trade. A 156.154.145.165
+ns2.dns.nic.trade. AAAA 2610:a1:1072:0:0:0:0:a5
+ns3.dns.nic.trade. A 156.154.159.165
+ns3.dns.nic.trade. AAAA 2610:a1:1073:0:0:0:0:a5
+ns4.dns.nic.trade. A 156.154.156.165
+ns4.dns.nic.trade. AAAA 2610:a1:1074:0:0:0:0:a5
+ns5.dns.nic.trade. A 156.154.157.165
+ns5.dns.nic.trade. AAAA 2610:a1:1075:0:0:0:0:a5
+ns6.dns.nic.trade. A 156.154.158.165
+ns6.dns.nic.trade. AAAA 2610:a1:1076:0:0:0:0:a5
+training. NS demand.beta.aridns.net.au.
+training. NS demand.alpha.aridns.net.au.
+training. NS demand.delta.aridns.net.au.
+training. NS demand.gamma.aridns.net.au.
+TRAINING. DS 47485 8 2 C8DE27AC32C7BFBFD8502763B6A472CD4A90F15F4BD1427C712139A23D2C24D0
 travel. NS a.gtld.travel.
 travel. NS b.gtld.travel.
 travel. NS c.gtld.travel.
@@ -3429,7 +4561,6 @@ anycast.eahd.or.ug. AAAA 2001:500:14:6060:ad:0:0:1
 root.eahd.or.ug. A 212.88.97.132
 uk. NS ns1.nic.uk.
 uk. NS ns2.nic.uk.
-uk. NS ns3.nic.uk.
 uk. NS ns4.nic.uk.
 uk. NS ns5.nic.uk.
 uk. NS ns6.nic.uk.
@@ -3446,7 +4577,6 @@ tld6.ultradns.co.uk. A 198.133.199.11
 ns1.nic.uk. A 195.66.240.130
 ns1.nic.uk. AAAA 2a01:40:1001:35:0:0:0:2
 ns2.nic.uk. A 217.79.164.131
-ns3.nic.uk. A 213.219.13.131
 ns4.nic.uk. A 194.83.244.131
 ns4.nic.uk. AAAA 2001:630:181:35:0:0:0:83
 ns5.nic.uk. A 213.246.167.131
@@ -3457,6 +4587,29 @@ nsa.nic.uk. AAAA 2001:502:ad09:0:0:0:0:3
 nsb.nic.uk. A 156.154.101.3
 nsc.nic.uk. A 156.154.102.3
 nsd.nic.uk. A 156.154.103.3
+uno. NS ns1.dns.nic.uno.
+uno. NS ns2.dns.nic.uno.
+uno. NS ns3.dns.nic.uno.
+uno. NS ns4.dns.nic.uno.
+uno. NS ns5.dns.nic.uno.
+uno. NS ns6.dns.nic.uno.
+uno. NS ns7.dns.nic.uno.
+UNO. DS 57892 8 1 3B49FDC11DAEE5187A4170A5BADF77A917BCE481
+UNO. DS 57892 8 2 C156DD21B3B96A50FA94BE322CDF6F0144E86C9597E4AA56D53E9B490C94A537
+ns1.dns.nic.uno. A 156.154.144.173
+ns1.dns.nic.uno. AAAA 2610:a1:1071:0:0:0:0:ad
+ns2.dns.nic.uno. A 156.154.145.173
+ns2.dns.nic.uno. AAAA 2610:a1:1072:0:0:0:0:ad
+ns3.dns.nic.uno. A 156.154.159.173
+ns3.dns.nic.uno. AAAA 2610:a1:1073:0:0:0:0:ad
+ns4.dns.nic.uno. A 156.154.156.173
+ns4.dns.nic.uno. AAAA 2610:a1:1074:0:0:0:0:ad
+ns5.dns.nic.uno. A 156.154.157.173
+ns5.dns.nic.uno. AAAA 2610:a1:1075:0:0:0:0:ad
+ns6.dns.nic.uno. A 156.154.158.173
+ns6.dns.nic.uno. AAAA 2610:a1:1076:0:0:0:0:ad
+ns7.dns.nic.uno. A 207.34.5.10
+ns7.dns.nic.uno. AAAA 2001:503:7bbb:ffff:ffff:ffff:ffff:ff7e
 us. NS a.cctld.us.
 us. NS b.cctld.us.
 us. NS c.cctld.us.
@@ -3496,7 +4649,7 @@ ns3.uz. A 195.158.1.22
 ns4.uz. A 87.139.105.60
 ns5.uz. A 217.12.81.129
 ns6.uz. A 83.69.129.4
-ns7.uz. A 54.243.198.194
+ns7.uz. A 54.200.69.96
 va. NS va.cctld.authdns.ripe.net.
 va. NS dns.nic.it.
 va. NS john.vatican.va.
@@ -3507,6 +4660,11 @@ john.vatican.va. A 212.77.0.110
 john.vatican.va. AAAA 2a01:b8:0:1:212:77:0:110
 michael.vatican.va. A 212.77.0.2
 michael.vatican.va. AAAA 2a01:b8:0:1:212:77:0:2
+vacations. NS demand.beta.aridns.net.au.
+vacations. NS demand.alpha.aridns.net.au.
+vacations. NS demand.delta.aridns.net.au.
+vacations. NS demand.gamma.aridns.net.au.
+VACATIONS. DS 49996 8 2 71FF05D494C52DFF452874CD51C70DA38D4BFF7ECC262CC7BF152108E2ECBB49
 vc. NS a0.cctld.afilias-nst.info.
 vc. NS a2.cctld.afilias-nst.info.
 vc. NS b0.cctld.afilias-nst.org.
@@ -3526,6 +4684,20 @@ ns2.nic.ve. A 150.188.228.5
 ns2.nic.ve. AAAA 2001:1338:0:0:0:0:0:3
 ns3.nic.ve. A 190.9.129.56
 azmodan.ula.ve. A 150.185.130.16
+vegas. NS a0.nic.vegas.
+vegas. NS a2.nic.vegas.
+vegas. NS b0.nic.vegas.
+vegas. NS c0.nic.vegas.
+VEGAS. DS 33606 7 1 E9D5D36B05C18A59A093EA2FFCB8D5C0A89E84D1
+VEGAS. DS 33606 7 2 E9E9318A2607EF6645EFD73A7C5DAD01AAA2C506B9BBDE38D65F4803AB4076E2
+a0.nic.vegas. A 65.22.68.17
+a0.nic.vegas. AAAA 2a01:8840:42:0:0:0:0:17
+a2.nic.vegas. A 65.22.71.17
+a2.nic.vegas. AAAA 2a01:8840:45:0:0:0:0:17
+b0.nic.vegas. A 65.22.69.17
+b0.nic.vegas. AAAA 2a01:8840:43:0:0:0:0:17
+c0.nic.vegas. A 65.22.70.17
+c0.nic.vegas. AAAA 2a01:8840:44:0:0:0:0:17
 ventures. NS demand.beta.aridns.net.au.
 ventures. NS demand.alpha.aridns.net.au.
 ventures. NS demand.delta.aridns.net.au.
@@ -3544,6 +4716,21 @@ vi. NS ns1.krnic.net.
 vi. NS ns2.cobex.net.
 vi. NS auth100.ns.uu.net.
 vi. NS auth110.ns.uu.net.
+viajes. NS demand.beta.aridns.net.au.
+viajes. NS demand.alpha.aridns.net.au.
+viajes. NS demand.delta.aridns.net.au.
+viajes. NS demand.gamma.aridns.net.au.
+VIAJES. DS 57850 8 2 EA1ECA41F59D77BF61A09E8F01297DABB2852D0A4A31D558BFCDB7FFBA8B22D6
+villas. NS demand.beta.aridns.net.au.
+villas. NS demand.alpha.aridns.net.au.
+villas. NS demand.delta.aridns.net.au.
+villas. NS demand.gamma.aridns.net.au.
+VILLAS. DS 8707 8 2 EB65910E43E49C88D4A4EA6253BF7F349F831BBC7F4EFE511884B601BFCE950C
+vision. NS demand.beta.aridns.net.au.
+vision. NS demand.alpha.aridns.net.au.
+vision. NS demand.delta.aridns.net.au.
+vision. NS demand.gamma.aridns.net.au.
+VISION. DS 39172 8 2 3362435B766A32179418272D4B13CE30E3B7CF67112C3CA28DB5A6A4025DF1D1
 vn. NS a.dns-servers.vn.
 vn. NS b.dns-servers.vn.
 vn. NS c.dns-servers.vn.
@@ -3559,6 +4746,54 @@ c.dns-servers.vn. A 203.119.38.105
 d.dns-servers.vn. A 203.119.44.105
 e.dns-servers.vn. A 203.119.60.105
 f.dns-servers.vn. A 203.119.68.105
+vodka. NS a.ns.nic.vodka.
+vodka. NS b.ns.nic.vodka.
+VODKA. DS 60871 8 2 5B734FA00D28664C3451D5F219E8EB825FA22E54C5D25EB5712ACC3CCC34020D
+a.ns.nic.vodka. A 72.0.50.23
+a.ns.nic.vodka. AAAA 2620:171:a02:ad:0:0:0:23
+b.ns.nic.vodka. A 72.42.114.23
+b.ns.nic.vodka. AAAA 2620:171:d02:dc:0:0:0:23
+vote. NS a0.nic.vote.
+vote. NS a2.nic.vote.
+vote. NS b0.nic.vote.
+vote. NS c0.nic.vote.
+VOTE. DS 17586 7 1 A0B4BE7608D8A2C883939B318B4AFCBC1959E9A0
+VOTE. DS 17586 7 2 8E80CDB7CB91AD73A41B39196A25DEF591BC1B51EAE1AE255181BCB8E2814F60
+a0.nic.vote. A 65.22.168.9
+a0.nic.vote. AAAA 2a01:8840:a2:0:0:0:0:9
+a2.nic.vote. A 65.22.171.9
+a2.nic.vote. AAAA 2a01:8840:a5:0:0:0:0:9
+b0.nic.vote. A 65.22.169.9
+b0.nic.vote. AAAA 2a01:8840:a3:0:0:0:0:9
+c0.nic.vote. A 65.22.170.9
+c0.nic.vote. AAAA 2a01:8840:a4:0:0:0:0:9
+voting. NS a.dns.nic.voting.
+voting. NS b.dns.nic.voting.
+voting. NS c.dns.nic.voting.
+VOTING. DS 20851 8 1 D11FCEA2CD0A249908552DC274B7E5385596AEC9
+VOTING. DS 20851 8 2 CF3979C7E9FEAC1519E3661F76D5ED7A43DC7D8DC14DBECF0A2DC757F38061CE
+VOTING. DS 22301 8 1 916F42C6CE97C6CFF9D0545167E2203A179667C2
+VOTING. DS 22301 8 2 E505E22BD2DCA54354C9EA9B0F09D4972390C9DCC6F342D9438D47F347A03B7D
+a.dns.nic.voting. A 194.0.25.17
+a.dns.nic.voting. AAAA 2001:678:20:0:0:0:0:17
+b.dns.nic.voting. A 193.170.61.6
+b.dns.nic.voting. AAAA 2001:62a:a:2000:0:0:0:6
+c.dns.nic.voting. A 193.170.187.6
+c.dns.nic.voting. AAAA 2001:62a:a:3000:0:0:0:6
+voto. NS a0.nic.voto.
+voto. NS a2.nic.voto.
+voto. NS b0.nic.voto.
+voto. NS c0.nic.voto.
+VOTO. DS 8311 7 1 A538165168F076D2F400506D3A3FC7AE81E483A8
+VOTO. DS 8311 7 2 F689FF513836E44D785D8039338648D469B73D86D7000FB6D41624744A922DD6
+a0.nic.voto. A 65.22.168.1
+a0.nic.voto. AAAA 2a01:8840:a2:0:0:0:0:1
+a2.nic.voto. A 65.22.171.1
+a2.nic.voto. AAAA 2a01:8840:a5:0:0:0:0:1
+b0.nic.voto. A 65.22.169.1
+b0.nic.voto. AAAA 2a01:8840:a3:0:0:0:0:1
+c0.nic.voto. A 65.22.170.1
+c0.nic.voto. AAAA 2a01:8840:a4:0:0:0:0:1
 voyage. NS demand.beta.aridns.net.au.
 voyage. NS demand.alpha.aridns.net.au.
 voyage. NS demand.delta.aridns.net.au.
@@ -3567,18 +4802,94 @@ VOYAGE. DS 32134 8 2 F610100634FDC228FF5E4C1846E51D99DC3B0C2B8089933FBBF6D33ED54
 vu. NS efate.vanuatu.com.vu.
 vu. NS santo.vanuatu.com.vu.
 vu. NS futuna.vanuatu.com.vu.
-vu. NS maringo.vanuatu.com.vu.
+vu. NS cctld-vu.orange.mu.
 efate.vanuatu.com.vu. A 202.80.32.5
 futuna.vanuatu.com.vu. A 202.80.32.3
-maringo.vanuatu.com.vu. A 125.255.96.208
 santo.vanuatu.com.vu. A 202.80.32.7
+wang. NS a.zdnscloud.com.
+wang. NS b.zdnscloud.com.
+wang. NS c.zdnscloud.com.
+wang. NS d.zdnscloud.com.
+wang. NS e.zdnscloud.com.
+wang. NS f.zdnscloud.com.
+wang. NS g.zdnscloud.com.
+wang. NS i.zdnscloud.com.
+wang. NS j.zdnscloud.com.
+WANG. DS 26809 8 2 A7FDCE2D689D6C3CDC4275348667E0FE258136B879787E69C89A1C125CF23F67
+watch. NS demand.beta.aridns.net.au.
+watch. NS demand.alpha.aridns.net.au.
+watch. NS demand.delta.aridns.net.au.
+watch. NS demand.gamma.aridns.net.au.
+WATCH. DS 28750 8 2 104A558919E526604A35B4C96D6832FDD499E5EF07313C628AB27F1E715C39D9
+webcam. NS ns1.dns.nic.webcam.
+webcam. NS ns2.dns.nic.webcam.
+webcam. NS ns3.dns.nic.webcam.
+webcam. NS ns4.dns.nic.webcam.
+webcam. NS ns5.dns.nic.webcam.
+webcam. NS ns6.dns.nic.webcam.
+WEBCAM. DS 57952 8 1 5668F73A1C2480F6111FD821CAFC5A737E8D580C
+WEBCAM. DS 57952 8 2 E61F53AF35E6C31B45CC2AEB6F9DCE6B265F91E8CF2B0FE1BE3762F2A57D45EC
+ns1.dns.nic.webcam. A 156.154.169.60
+ns1.dns.nic.webcam. AAAA 2610:a1:1071:0:0:0:1:3c
+ns2.dns.nic.webcam. A 156.154.170.60
+ns2.dns.nic.webcam. AAAA 2610:a1:1072:0:0:0:1:3c
+ns3.dns.nic.webcam. A 156.154.171.60
+ns3.dns.nic.webcam. AAAA 2610:a1:1073:0:0:0:1:3c
+ns4.dns.nic.webcam. A 156.154.172.60
+ns4.dns.nic.webcam. AAAA 2610:a1:1074:0:0:0:1:3c
+ns5.dns.nic.webcam. A 156.154.173.60
+ns5.dns.nic.webcam. AAAA 2610:a1:1075:0:0:0:1:3c
+ns6.dns.nic.webcam. A 156.154.174.60
+ns6.dns.nic.webcam. AAAA 2610:a1:1076:0:0:0:1:3c
+wed. NS a.ns.nic.wed.
+wed. NS b.ns.nic.wed.
+wed. NS tld.isc-sns.com.
+wed. NS tld.isc-sns.net.
+wed. NS tld.isc-sns.info.
+WED. DS 23807 8 2 A1453299115DB6CC44E33B102BDF276CB93A6A103F6502EA5EF1D4ECF2172640
+a.ns.nic.wed. A 72.0.49.1
+a.ns.nic.wed. AAAA 2620:171:a01:ad:0:0:0:1
+b.ns.nic.wed. A 72.42.113.1
+b.ns.nic.wed. AAAA 2620:171:d01:dc:0:0:0:1
 wf. NS d.ext.nic.fr.
 wf. NS d.nic.fr.
 wf. NS e.ext.nic.fr.
 wf. NS f.ext.nic.fr.
 wf. NS g.ext.nic.fr.
 WF. DS 14407 8 2 7DA5F1EBDA6DDCA8B41F753D9C30C36B8D7D21C362819883D0F402A0484A6036
-WF. DS 47327 8 2 8BF50862B453E6674B141329948C2D2D2EB28B57ED59C230CFD61294144044AA
+WF. DS 33562 8 2 8FC2E75050231829A3468F447D14D28C3CB6A7A1DE814FDC6287180B06D23111
+wien. NS a.dns.nic.wien.
+wien. NS b.dns.nic.wien.
+wien. NS c.dns.nic.wien.
+WIEN. DS 14212 8 1 C13133146394C4D51F5821A57DF7714C7758B354
+WIEN. DS 14212 8 2 0C2459E744411A5077304E63B4E20E4E877B34F6E1FC3110FEA8133DD894BFBB
+WIEN. DS 23090 8 1 955DD806C0A98C7D91296E8C75A1EC636B1A3DD7
+WIEN. DS 23090 8 2 6A4B8394B41753028F4D627E86CF80EF6DE63FD48447A92E3B46854B9489798F
+a.dns.nic.wien. A 194.0.25.15
+a.dns.nic.wien. AAAA 2001:678:20:0:0:0:0:15
+b.dns.nic.wien. A 193.170.61.4
+b.dns.nic.wien. AAAA 2001:62a:a:2000:0:0:0:4
+c.dns.nic.wien. A 193.170.187.4
+c.dns.nic.wien. AAAA 2001:62a:a:3000:0:0:0:4
+wiki. NS a.nic.wiki.
+wiki. NS b.nic.wiki.
+wiki. NS c.nic.wiki.
+wiki. NS d.nic.wiki.
+WIKI. DS 4724 8 1 D72E942861438BD3EBA50D75B9C0555E3D7A2AAD
+WIKI. DS 4724 8 2 E907372D79E6E67D3BE4703456BAE27F824A7678964808134FABD6106A7897D8
+a.nic.wiki. A 194.169.218.30
+a.nic.wiki. AAAA 2001:67c:13cc:0:0:0:1:30
+b.nic.wiki. A 185.24.64.30
+b.nic.wiki. AAAA 2a04:2b00:13cc:0:0:0:1:30
+c.nic.wiki. A 194.0.2.2
+c.nic.wiki. AAAA 2001:678:5:0:0:0:0:2
+d.nic.wiki. A 194.0.1.45
+d.nic.wiki. AAAA 2001:678:4:0:0:0:0:2d
+works. NS demand.beta.aridns.net.au.
+works. NS demand.alpha.aridns.net.au.
+works. NS demand.delta.aridns.net.au.
+works. NS demand.gamma.aridns.net.au.
+WORKS. DS 16954 8 2 E60E67E7D2C27A10DD15E494009CF20208178D7E686EBA5C34AA60CF6BB4157A
 ws. NS ns2.dns.ws.
 ws. NS ns3.dns.ws.
 ws. NS ns4.dns.ws.
@@ -3591,6 +4902,30 @@ ns4.dns.ws. A 67.221.178.53
 ns5.dns.ws. A 64.70.19.70
 ns6.dns.ws. A 77.92.65.172
 ns7.dns.ws. A 77.92.65.174
+xn--3bst00m. NS a.zdnscloud.com.
+xn--3bst00m. NS b.zdnscloud.com.
+xn--3bst00m. NS c.zdnscloud.com.
+xn--3bst00m. NS d.zdnscloud.com.
+xn--3bst00m. NS e.zdnscloud.com.
+xn--3bst00m. NS f.zdnscloud.com.
+xn--3bst00m. NS g.zdnscloud.com.
+xn--3bst00m. NS i.zdnscloud.com.
+xn--3bst00m. NS j.zdnscloud.com.
+XN--3BST00M. DS 9059 8 2 E8079352130447DAA7F3E4809A9D5D208944FE4D99ED148D3BCC933C05D4133E
+xn--3ds443g. NS a0.nic.xn--3ds443g.
+xn--3ds443g. NS a2.nic.xn--3ds443g.
+xn--3ds443g. NS b0.nic.xn--3ds443g.
+xn--3ds443g. NS c0.nic.xn--3ds443g.
+XN--3DS443G. DS 16918 7 1 9A0C050DE2A06E4F656D4AF6E289B8AB76E524B0
+XN--3DS443G. DS 16918 7 2 5770C75D8F11887B7845A83A145DE52439BF7D86D3F71F07358112C87EA43B8B
+a0.nic.xn--3ds443g. A 65.22.188.9
+a0.nic.xn--3ds443g. AAAA 2a01:8840:b6:0:0:0:0:9
+a2.nic.xn--3ds443g. A 65.22.191.9
+a2.nic.xn--3ds443g. AAAA 2a01:8840:b9:0:0:0:0:9
+b0.nic.xn--3ds443g. A 65.22.189.9
+b0.nic.xn--3ds443g. AAAA 2a01:8840:b7:0:0:0:0:9
+c0.nic.xn--3ds443g. A 65.22.190.9
+c0.nic.xn--3ds443g. AAAA 2a01:8840:b8:0:0:0:0:9
 xn--3e0b707e. NS b.dns.kr.
 xn--3e0b707e. NS c.dns.kr.
 xn--3e0b707e. NS d.dns.kr.
@@ -3598,6 +4933,7 @@ xn--3e0b707e. NS e.dns.kr.
 xn--3e0b707e. NS f.dns.kr.
 xn--3e0b707e. NS g.dns.kr.
 XN--3E0B707E. DS 27573 7 2 A1C0A1B101F2B31DA2DD995BD0994A6C1E9E34E325FA007E2EA8721DFC4C6CB4
+XN--3E0B707E. DS 56335 7 2 ED307DC0902F1130ADBCB1B6FBA7C16F76927BD3E33D80FED23DAEFEFF2604C8
 xn--45brj9c. NS a0.cctld.afilias-nst.info.
 xn--45brj9c. NS a1.in.afilias-nst.in.
 xn--45brj9c. NS a2.in.afilias-nst.info.
@@ -3606,6 +4942,42 @@ xn--45brj9c. NS b1.in.afilias-nst.in.
 xn--45brj9c. NS b2.in.afilias-nst.org.
 xn--45brj9c. NS c0.cctld.afilias-nst.info.
 xn--45brj9c. NS d0.cctld.afilias-nst.org.
+xn--55qw42g. NS ns1.conac.cn.
+xn--55qw42g. NS ns2.conac.cn.
+xn--55qw42g. NS ns3.conac.cn.
+xn--55qw42g. NS ns4.conac.cn.
+xn--55qw42g. NS ns5.conac.cn.
+XN--55QW42G. DS 48226 8 2 A16754C480E58C0D17126B3BAF93F32BAC39A916CF9D1F6F3A1F5C33687BE80F
+xn--55qx5d. NS a.ngtld.cn.
+xn--55qx5d. NS b.ngtld.cn.
+xn--55qx5d. NS c.ngtld.cn.
+xn--55qx5d. NS d.ngtld.cn.
+xn--55qx5d. NS e.ngtld.cn.
+XN--55QX5D. DS 47359 8 2 D8FE897CE8AC620CB7CB9F6F4E887FC7A14C3ED80CB973DA4E30A17CECA1015B
+xn--6frz82g. NS a0.nic.xn--6frz82g.
+xn--6frz82g. NS a2.nic.xn--6frz82g.
+xn--6frz82g. NS b0.nic.xn--6frz82g.
+xn--6frz82g. NS c0.nic.xn--6frz82g.
+XN--6FRZ82G. DS 32256 7 1 FCE18B0EEE7F8DA4999A515CF554F4CFE6FBC8CE
+XN--6FRZ82G. DS 32256 7 2 AAA6B908BCDBFF82A49F4817A147A7E604A612616845FB3811E9B21B3BC6D2AF
+a0.nic.xn--6frz82g. A 65.22.24.9
+a0.nic.xn--6frz82g. AAAA 2a01:8840:1a:0:0:0:0:9
+a2.nic.xn--6frz82g. A 65.22.27.9
+a2.nic.xn--6frz82g. AAAA 2a01:8840:1d:0:0:0:0:9
+b0.nic.xn--6frz82g. A 65.22.25.9
+b0.nic.xn--6frz82g. AAAA 2a01:8840:1b:0:0:0:0:9
+c0.nic.xn--6frz82g. A 65.22.26.9
+c0.nic.xn--6frz82g. AAAA 2a01:8840:1c:0:0:0:0:9
+xn--6qq986b3xl. NS a.zdnscloud.com.
+xn--6qq986b3xl. NS b.zdnscloud.com.
+xn--6qq986b3xl. NS c.zdnscloud.com.
+xn--6qq986b3xl. NS d.zdnscloud.com.
+xn--6qq986b3xl. NS e.zdnscloud.com.
+xn--6qq986b3xl. NS f.zdnscloud.com.
+xn--6qq986b3xl. NS g.zdnscloud.com.
+xn--6qq986b3xl. NS i.zdnscloud.com.
+xn--6qq986b3xl. NS j.zdnscloud.com.
+XN--6QQ986B3XL. DS 37400 8 2 07C6728C4F51FFD6B1E829D5AFBDEE24A30E710EBEFC50C8D6AB7785223A0A0C
 xn--80ao21a. NS kz.cctld.authdns.ripe.net.
 xn--80ao21a. NS ns.nic.kz.
 xn--80asehdb. NS anycast9.irondns.net.
@@ -3624,10 +4996,71 @@ xn--90a3ac. NS g.nic.rs.
 xn--90a3ac. NS h.nic.rs.
 xn--90a3ac. NS k.nic.rs.
 xn--90a3ac. NS l.nic.rs.
+xn--c1avg. NS a0.nic.xn--c1avg.
+xn--c1avg. NS a2.nic.xn--c1avg.
+xn--c1avg. NS b0.nic.xn--c1avg.
+xn--c1avg. NS c0.nic.xn--c1avg.
+XN--C1AVG. DS 29304 7 1 AD1B769293160BEB9261F2875B9EF8AE6F4EC8CE
+XN--C1AVG. DS 29304 7 2 8E7C7ADD0480383F266C3A2A94097311EBAA6DC4F26610D5C4855A0DCE567028
+a0.nic.xn--c1avg. A 65.22.184.25
+a0.nic.xn--c1avg. AAAA 2a01:8840:b2:0:0:0:0:25
+a2.nic.xn--c1avg. A 65.22.187.25
+a2.nic.xn--c1avg. AAAA 2a01:8840:b5:0:0:0:0:25
+b0.nic.xn--c1avg. A 65.22.185.25
+b0.nic.xn--c1avg. AAAA 2a01:8840:b3:0:0:0:0:25
+c0.nic.xn--c1avg. A 65.22.186.25
+c0.nic.xn--c1avg. AAAA 2a01:8840:b4:0:0:0:0:25
+xn--cg4bki. NS b.dns.kr.
+xn--cg4bki. NS c.dns.kr.
+xn--cg4bki. NS d.dns.kr.
+xn--cg4bki. NS e.dns.kr.
+xn--cg4bki. NS f.dns.kr.
+xn--cg4bki. NS g.dns.kr.
+XN--CG4BKI. DS 4563 7 2 0E93A7A26450AF01D3ACB6088B38FF7F61F8B370E40C9FEE9DEB963528C4A811
 xn--clchc0ea0b2g2a9gcd. NS ns2.cuhk.edu.hk.
 xn--clchc0ea0b2g2a9gcd. NS sec3.apnic.net.
 xn--clchc0ea0b2g2a9gcd. NS dsany.sgnic.sg.
 xn--clchc0ea0b2g2a9gcd. NS sg-ns.anycast.pch.net.
+xn--czru2d. NS a.zdnscloud.com.
+xn--czru2d. NS b.zdnscloud.com.
+xn--czru2d. NS c.zdnscloud.com.
+xn--czru2d. NS d.zdnscloud.com.
+xn--czru2d. NS e.zdnscloud.com.
+xn--czru2d. NS f.zdnscloud.com.
+xn--czru2d. NS g.zdnscloud.com.
+xn--czru2d. NS i.zdnscloud.com.
+xn--czru2d. NS j.zdnscloud.com.
+XN--CZRU2D. DS 23405 8 2 AA34F0F8388AB5BEFABC0293CC9AE3AC376DC0109FF396C9E8A5C52A1E0474BD
+xn--d1acj3b. NS a.dns.ripn.net.
+xn--d1acj3b. NS b.dns.ripn.net.
+xn--d1acj3b. NS d.dns.ripn.net.
+xn--d1acj3b. NS e.dns.ripn.net.
+xn--d1acj3b. NS f.dns.ripn.net.
+XN--D1ACJ3B. DS 35444 8 2 2694CC8FD143378C5C15FEE79E3E72511B8A0E27A073A7E330A59ED1B85852E5
+xn--fiq228c5hs. NS a0.nic.xn--fiq228c5hs.
+xn--fiq228c5hs. NS a2.nic.xn--fiq228c5hs.
+xn--fiq228c5hs. NS b0.nic.xn--fiq228c5hs.
+xn--fiq228c5hs. NS c0.nic.xn--fiq228c5hs.
+XN--FIQ228C5HS. DS 39459 7 1 8CBCB513FF4387B8F6A006D414A50E1A5EA178CA
+XN--FIQ228C5HS. DS 39459 7 2 0CB316717E555D102A2E96D53D32EB0AB0AC73F10D3E66E2D225398C6A30B816
+a0.nic.xn--fiq228c5hs. A 65.22.188.1
+a0.nic.xn--fiq228c5hs. AAAA 2a01:8840:b6:0:0:0:0:1
+a2.nic.xn--fiq228c5hs. A 65.22.191.1
+a2.nic.xn--fiq228c5hs. AAAA 2a01:8840:b9:0:0:0:0:1
+b0.nic.xn--fiq228c5hs. A 65.22.189.1
+b0.nic.xn--fiq228c5hs. AAAA 2a01:8840:b7:0:0:0:0:1
+c0.nic.xn--fiq228c5hs. A 65.22.190.1
+c0.nic.xn--fiq228c5hs. AAAA 2a01:8840:b8:0:0:0:0:1
+xn--fiq64b. NS a.zdnscloud.com.
+xn--fiq64b. NS b.zdnscloud.com.
+xn--fiq64b. NS c.zdnscloud.com.
+xn--fiq64b. NS d.zdnscloud.com.
+xn--fiq64b. NS e.zdnscloud.com.
+xn--fiq64b. NS f.zdnscloud.com.
+xn--fiq64b. NS g.zdnscloud.com.
+xn--fiq64b. NS i.zdnscloud.com.
+xn--fiq64b. NS j.zdnscloud.com.
+XN--FIQ64B. DS 50027 8 2 BABDE7E86DF1408E3AFB68043296A68DDC12ABBA6BFA341C7D06C764E042BEE6
 xn--fiqs8s. NS h.dns.cn.
 xn--fiqs8s. NS i.dns.cn.
 xn--fiqs8s. NS j.dns.cn.
@@ -3674,6 +5107,26 @@ xn--h2brj9c. NS c0.cctld.afilias-nst.info.
 xn--h2brj9c. NS d0.cctld.afilias-nst.org.
 XN--H2BRJ9C. DS 18018 7 1 95E310B21C23FC8C6107A186D68C5FAEECA15A9F
 XN--H2BRJ9C. DS 18018 7 2 582ACB8BCAACC3A0AF31597260B8C8650555AC94DEA17C12110AEA90374559D4
+xn--i1b6b1a6a2e. NS a0.nic.xn--i1b6b1a6a2e.
+xn--i1b6b1a6a2e. NS a2.nic.xn--i1b6b1a6a2e.
+xn--i1b6b1a6a2e. NS b0.nic.xn--i1b6b1a6a2e.
+xn--i1b6b1a6a2e. NS c0.nic.xn--i1b6b1a6a2e.
+XN--I1B6B1A6A2E. DS 34428 7 1 D949DCFC31AB240A5C78ADD773E848509C77AD36
+XN--I1B6B1A6A2E. DS 34428 7 2 D4733D3B3E52A19A5670C7151D9E1A535C8832EFEBE9A10DC7BC372949C3BEE3
+a0.nic.xn--i1b6b1a6a2e. A 65.22.184.1
+a0.nic.xn--i1b6b1a6a2e. AAAA 2a01:8840:b2:0:0:0:0:1
+a2.nic.xn--i1b6b1a6a2e. A 65.22.187.1
+a2.nic.xn--i1b6b1a6a2e. AAAA 2a01:8840:b5:0:0:0:0:1
+b0.nic.xn--i1b6b1a6a2e. A 65.22.185.1
+b0.nic.xn--i1b6b1a6a2e. AAAA 2a01:8840:b3:0:0:0:0:1
+c0.nic.xn--i1b6b1a6a2e. A 65.22.186.1
+c0.nic.xn--i1b6b1a6a2e. AAAA 2a01:8840:b4:0:0:0:0:1
+xn--io0a7i. NS a.ngtld.cn.
+xn--io0a7i. NS b.ngtld.cn.
+xn--io0a7i. NS c.ngtld.cn.
+xn--io0a7i. NS d.ngtld.cn.
+xn--io0a7i. NS e.ngtld.cn.
+XN--IO0A7I. DS 47359 8 2 426DB7D3FB8E6058BE42D379ECD7742B2EFAB5DD0A7A95494D3518604B715B1E
 xn--j1amh. NS nsi.uanic.net.
 xn--j1amh. NS dns1.u-registry.com.
 xn--j1amh. NS dns2.u-registry.net.
@@ -3722,6 +5175,11 @@ xn--mgbaam7a8h. NS ns1.aedns.ae.
 xn--mgbaam7a8h. NS ns2.aedns.ae.
 xn--mgbaam7a8h. NS sns-pb.isc.org.
 xn--mgbaam7a8h. NS nsext-pch.aedns.ae.
+xn--mgbab2bd. NS anycast9.irondns.net.
+xn--mgbab2bd. NS anycast10.irondns.net.
+xn--mgbab2bd. NS anycast23.irondns.net.
+xn--mgbab2bd. NS anycast24.irondns.net.
+XN--MGBAB2BD. DS 47778 10 2 0EC09A1126F31B2C64C4CF2302EC87B2F12375485347BD4BFCBE93DE7D33B7D2
 xn--mgbayh7gpa. NS jo.cctld.authdns.ripe.net.
 xn--mgbayh7gpa. NS rip.psg.com.
 xn--mgbayh7gpa. NS amra.nic.gov.jo.
@@ -3748,11 +5206,10 @@ xn--mgbx4cd0ab. NS ns2.cuhk.edu.hk.
 xn--mgbx4cd0ab. NS ns5.jaring.my.
 xn--mgbx4cd0ab. NS ns6.jaring.my.
 xn--mgbx4cd0ab. NS dns2.mynic.net.my.
-xn--mgbx4cd0ab. NS ns20.iij.ad.jp.
 xn--mgbx4cd0ab. NS ns30.cdns.net.
 xn--mgbx4cd0ab. NS ns-my.nic.fr.
-XN--MGBX4CD0AB. DS 17106 8 1 95B6E1D09E818E13B8FBE777482C69109A614E4B
-XN--MGBX4CD0AB. DS 17106 8 2 BDB33EA391E14E2535C4F2E3770408D2139A892A1DC8B5CF5EB9DF42FFB6B1B4
+XN--MGBX4CD0AB. DS 3498 8 1 57691C29051080421037C3F0F190FC56F6BB23D5
+XN--MGBX4CD0AB. DS 3498 8 2 0562723A20DF271476FE5595D42FCC3F1D5540E12648AC3144E45CCCAEE97735
 XN--MGBX4CD0AB. DS 21138 8 1 B7B8D9E0586759075371771EC5FE4547438192AA
 XN--MGBX4CD0AB. DS 21138 8 2 CD5A25C027734679E3701C7C51413C525CBA12EDECD006549F93CE9AB1AC47C5
 xn--ngbc5azd. NS a.nic.xn--ngbc5azd.
@@ -3769,6 +5226,34 @@ c.nic.xn--ngbc5azd. A 37.209.196.3
 c.nic.xn--ngbc5azd. AAAA 2001:dcd:3:0:0:0:0:3
 d.nic.xn--ngbc5azd. A 37.209.198.3
 d.nic.xn--ngbc5azd. AAAA 2001:dcd:4:0:0:0:0:3
+xn--nqv7f. NS a0.nic.xn--nqv7f.
+xn--nqv7f. NS a2.nic.xn--nqv7f.
+xn--nqv7f. NS b0.nic.xn--nqv7f.
+xn--nqv7f. NS c0.nic.xn--nqv7f.
+XN--NQV7F. DS 3673 7 1 66C31A8845DEF74CEFEA62B709BAEBCB372AF076
+XN--NQV7F. DS 3673 7 2 94F0EC6BDB0D46BEB7C626A7682AD10E1A9E3CA5EE7221C38FBFC723BF013730
+a0.nic.xn--nqv7f. A 65.22.184.17
+a0.nic.xn--nqv7f. AAAA 2a01:8840:b2:0:0:0:0:17
+a2.nic.xn--nqv7f. A 65.22.187.17
+a2.nic.xn--nqv7f. AAAA 2a01:8840:b5:0:0:0:0:17
+b0.nic.xn--nqv7f. A 65.22.185.17
+b0.nic.xn--nqv7f. AAAA 2a01:8840:b3:0:0:0:0:17
+c0.nic.xn--nqv7f. A 65.22.186.17
+c0.nic.xn--nqv7f. AAAA 2a01:8840:b4:0:0:0:0:17
+xn--nqv7fs00ema. NS a0.nic.xn--nqv7fs00ema.
+xn--nqv7fs00ema. NS a2.nic.xn--nqv7fs00ema.
+xn--nqv7fs00ema. NS b0.nic.xn--nqv7fs00ema.
+xn--nqv7fs00ema. NS c0.nic.xn--nqv7fs00ema.
+XN--NQV7FS00EMA. DS 106 7 1 0D5EB1936CE26F7B0A75B7FA933F20373CC15E8C
+XN--NQV7FS00EMA. DS 106 7 2 AEF34BC7FD52709036788D65DC65213DBA93BB5F5A3D97655220DD30EC653D03
+a0.nic.xn--nqv7fs00ema. A 65.22.184.9
+a0.nic.xn--nqv7fs00ema. AAAA 2a01:8840:b2:0:0:0:0:9
+a2.nic.xn--nqv7fs00ema. A 65.22.187.9
+a2.nic.xn--nqv7fs00ema. AAAA 2a01:8840:b5:0:0:0:0:9
+b0.nic.xn--nqv7fs00ema. A 65.22.185.9
+b0.nic.xn--nqv7fs00ema. AAAA 2a01:8840:b3:0:0:0:0:9
+c0.nic.xn--nqv7fs00ema. A 65.22.186.9
+c0.nic.xn--nqv7fs00ema. AAAA 2a01:8840:b4:0:0:0:0:9
 xn--o3cw4h. NS ns.thnic.net.
 xn--o3cw4h. NS dns1.thnic.co.th.
 xn--o3cw4h. NS ns-a.thnic.co.th.
@@ -3795,6 +5280,26 @@ xn--q9jyb4c. NS ns-tld3.charlestonroadregistry.com.
 xn--q9jyb4c. NS ns-tld4.charlestonroadregistry.com.
 xn--q9jyb4c. NS ns-tld5.charlestonroadregistry.com.
 XN--Q9JYB4C. DS 20827 8 2 CFA6056748CB21C3CFE41EC0CDEE6D9FA1B78C0A76133B94393357BB71BE7E02
+xn--rhqv96g. NS ns1.dns.nic.xn--rhqv96g.
+xn--rhqv96g. NS ns2.dns.nic.xn--rhqv96g.
+xn--rhqv96g. NS ns3.dns.nic.xn--rhqv96g.
+xn--rhqv96g. NS ns4.dns.nic.xn--rhqv96g.
+xn--rhqv96g. NS ns5.dns.nic.xn--rhqv96g.
+xn--rhqv96g. NS ns6.dns.nic.xn--rhqv96g.
+XN--RHQV96G. DS 167 8 1 5A8EBBDDFE4D0E442138737A5FC1D3E34EBAE03F
+XN--RHQV96G. DS 167 8 2 34F9402AB776FFB050D28976320570ACAAB0AFCE393A589494C7CEA61DA3D53E
+ns1.dns.nic.xn--rhqv96g. A 156.154.144.191
+ns1.dns.nic.xn--rhqv96g. AAAA 2610:a1:1071:0:0:0:0:bf
+ns2.dns.nic.xn--rhqv96g. A 156.154.145.191
+ns2.dns.nic.xn--rhqv96g. AAAA 2610:a1:1072:0:0:0:0:bf
+ns3.dns.nic.xn--rhqv96g. A 156.154.159.191
+ns3.dns.nic.xn--rhqv96g. AAAA 2610:a1:1073:0:0:0:0:bf
+ns4.dns.nic.xn--rhqv96g. A 156.154.156.191
+ns4.dns.nic.xn--rhqv96g. AAAA 2610:a1:1074:0:0:0:0:bf
+ns5.dns.nic.xn--rhqv96g. A 156.154.157.191
+ns5.dns.nic.xn--rhqv96g. AAAA 2610:a1:1075:0:0:0:0:bf
+ns6.dns.nic.xn--rhqv96g. A 156.154.158.191
+ns6.dns.nic.xn--rhqv96g. AAAA 2610:a1:1076:0:0:0:0:bf
 xn--s9brj9c. NS a0.cctld.afilias-nst.info.
 xn--s9brj9c. NS a1.in.afilias-nst.in.
 xn--s9brj9c. NS a2.in.afilias-nst.info.
@@ -3846,12 +5351,32 @@ xn--ygbi2ammx. NS idn.pnina.ps.
 xn--ygbi2ammx. NS ns1.pnina.ps.
 xn--ygbi2ammx. NS dns1.gov.ps.
 xn--ygbi2ammx. NS dns3.gov.ps.
+xn--zfr164b. NS ns1.conac.cn.
+xn--zfr164b. NS ns2.conac.cn.
+xn--zfr164b. NS ns3.conac.cn.
+xn--zfr164b. NS ns4.conac.cn.
+xn--zfr164b. NS ns5.conac.cn.
+XN--ZFR164B. DS 51421 8 2 9D673623E84D7E10B2AA5B376A3F617665F8B38EF442E8A7E86F0F18161C7801
 xxx. NS a0.xxx.afilias-nst.info.
 xxx. NS a2.xxx.afilias-nst.info.
 xxx. NS b0.xxx.afilias-nst.org.
 xxx. NS b2.xxx.afilias-nst.org.
 xxx. NS c0.xxx.afilias-nst.info.
 xxx. NS d0.xxx.afilias-nst.org.
+xyz. NS x.nic.xyz.
+xyz. NS y.nic.xyz.
+xyz. NS z.nic.xyz.
+xyz. NS generationxyz.nic.xyz.
+XYZ. DS 3599 8 1 3FA3B264F45DB5F38BEDEAF1A88B76AA318C2C7F
+XYZ. DS 3599 8 2 B9733869BC84C86BB59D102BA5DA6B27B2088552332A39DCD54BC4E8D66B0499
+generationxyz.nic.xyz. A 194.0.1.45
+generationxyz.nic.xyz. AAAA 2001:678:4:0:0:0:0:2d
+x.nic.xyz. A 194.169.218.42
+x.nic.xyz. AAAA 2001:67c:13cc:0:0:0:1:42
+y.nic.xyz. A 185.24.64.42
+y.nic.xyz. AAAA 2a04:2b00:13cc:0:0:0:1:42
+z.nic.xyz. A 194.0.2.2
+z.nic.xyz. AAAA 2001:678:5:0:0:0:0:2
 ye. NS ns1.yemen.net.ye.
 ye. NS ns2.yemen.net.ye.
 ye. NS sah1.ye.
@@ -3860,13 +5385,19 @@ ns1.yemen.net.ye. A 65.162.184.33
 ns2.yemen.net.ye. A 65.162.184.34
 sah1.ye. A 195.94.0.34
 sah2.ye. A 195.94.0.35
+yokohama. NS a.gmoregistry.net.
+yokohama. NS b.gmoregistry.net.
+yokohama. NS c.gmoregistry.net.
+yokohama. NS d.gmoregistry.net.
+yokohama. NS e.gmoregistry.net.
+YOKOHAMA. DS 26075 8 2 6C94B781ECCDEF3C40E2A648C7D68BF63FA43EF268353C21744FEF85FC9F4BD2
 yt. NS d.ext.nic.fr.
 yt. NS d.nic.fr.
 yt. NS e.ext.nic.fr.
 yt. NS f.ext.nic.fr.
 yt. NS g.ext.nic.fr.
 YT. DS 18257 8 2 8109F3831FE1714980A8BD00AC12B56A8F7C2556C6F9FF6C02DAD2785D25B23F
-YT. DS 23161 8 2 8740A538FFE8CBD010BDFAC7CBAA24B7039D47E04DACBFF5A9E5E81E8F3F45AB
+YT. DS 50602 8 2 32C66E2C3E3B541B84AB453F7E6E9F12603586422ABD2FAFE3053574A417A403
 za. NS za1.dnsnode.net.
 za. NS disa.tenet.ac.za.
 za. NS nsza.is.co.za.
@@ -3886,6 +5417,11 @@ zm. NS ns-zm.afrinic.net.
 ns1.coppernet.zm. A 41.222.240.15
 ns1.zamnet.zm. A 196.46.192.26
 ns2.zamnet.zm. A 196.46.192.21
+zone. NS demand.beta.aridns.net.au.
+zone. NS demand.alpha.aridns.net.au.
+zone. NS demand.delta.aridns.net.au.
+zone. NS demand.gamma.aridns.net.au.
+ZONE. DS 48385 8 2 118C38D7EAFE8361DBA4C1BF929EAE5DFE8F3D0DEF61369478458CD942E14B46
 zw. NS ns1.telone.co.zw.
 zw. NS ns2.gip.net.
 zw. NS ns2.telone.co.zw.
