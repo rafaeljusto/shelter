@@ -39,109 +39,113 @@
           <h1>
 <a name="shelter" class="anchor" href="#shelter"><span class="octicon octicon-link"></span></a>shelter</h1>
 
-<p>Program created for registries to periodically validate and alert domains about DNS or
-DNSSEC misconfiguration</p>
+<p><a href="https://travis-ci.org/rafaeljusto/shelter"><img src="https://travis-ci.org/rafaeljusto/shelter.png?branch=master" alt="Build Status"></a>
+<a href="https://godoc.org/github.com/rafaeljusto/shelter"><img src="https://godoc.org/github.com/rafaeljusto/shelter?status.png" alt="GoDoc"></a></p>
+
+<p>System created for registries to periodically validate and alert domains about DNS or
+DNSSEC misconfiguration.</p>
+
+<p>The idea started at the roundtable "DNSSEC: cooperation for the uptake of regional
+initiatives" in LACTLD Tech Workshop occured in Panama City, Panama on September of 2013.
+The roundtable was leaded by Hugo Salgado (.cl); Rafael Dantas Justo (.br); Robert Martin-
+Legene (PCH). Many others participants from other registries of Latin America also
+contributed with ideas for the project.</p>
+
+<p>For more information check the <a href="https://github.com/rafaeljusto/shelter/wiki">Wiki</a>.</p>
 
 <h1>
-<a name="installation" class="anchor" href="#installation"><span class="octicon octicon-link"></span></a>installation</h1>
-
-<p>Shelter project depends on the following packages:</p>
+<a name="features" class="anchor" href="#features"><span class="octicon octicon-link"></span></a>features</h1>
 
 <ul>
-<li>labix.org/v2/mgo</li>
+<li>Automatically detect DNS/DNSSEC configuration problems of the registered domains</li>
+<li>Automatically sends e-mails notifying domain's owners of the configuration problems</li>
+<li>System can be deployed on registry or provider back-end infrastructure, not letting
+critical data to spread to other networks</li>
+<li>Uses REST architecture to allow a distributted system and easy integration with other
+softwares</li>
+<li>Multi-language support for notification's e-mails that can be distinct for each domain's
+owner</li>
+<li>Built-in web client to manage domains easily without the necessity to develop a REST
+client</li>
+<li>IDNA support for domains' names</li>
+<li>Optimized scan strategy to verify all registered domains configurations</li>
+<li>On-the-fly domain verification interface</li>
+</ul><h1>
+<a name="building" class="anchor" href="#building"><span class="octicon octicon-link"></span></a>building</h1>
+
+<p>The Shelter project was developed using the <a href="http://golang.org/">Go language</a>
+and it depends on the following Go packages:</p>
+
+<ul>
+<li>code.google.com/p/go.net/idna</li>
+<li>code.google.com/p/go.tools/cmd/cover</li>
 <li>github.com/miekg/dns</li>
+<li>labix.org/v2/mgo</li>
 </ul><p>All the above packages can be installed using the command:</p>
 
-<pre><code>go get &lt;package_name&gt;
+<pre><code>go get -u &lt;package_name&gt;
 </code></pre>
 
-<p>All system objects are persisted using a MongoDB database, this NoSQL database was choosen
-because we can embed dependency objects, and avoid table relations in a relational
-database scenario. Without the relations the code is cleaner and the database I/O is
-faster. To install it check the webpage <a href="http://www.mongodb.org/">http://www.mongodb.org/</a></p>
+<p>The objects are persisted using a MongoDB database.
+To install it check the webpage <a href="http://www.mongodb.org/">http://www.mongodb.org/</a></p>
+
+<p>Also, to easy run the project tests you will need the following:</p>
+
+<ul>
+<li>Python3 - <a href="http://www.python.org/">http://www.python.org/</a>
+</li>
+<li>Karma and dependencies - <a href="http://karma-runner.github.io">http://karma-runner.github.io</a>
+
+<ul>
+<li>npm install -g karma</li>
+<li>npm install -g karma-cli</li>
+<li>npm install -g karma-jasmine</li>
+<li>npm install -g karma-firefox-launcher</li>
+<li>npm install -g karma-ng-html2js-preprocessor</li>
+</ul>
+</li>
+</ul><p>Remember that the project directory should respect the path bellow, because the source
+code dependencies can make references to this structure.</p>
+
+<pre><code>&lt;GOPATH&gt;/src/github.com/rafaeljusto/shelter
+</code></pre>
+
+<p>You can automatically retrieve the project with the desired structure using the following
+command:</p>
+
+<pre><code>go get -u github.com/rafaeljusto/shelter
+</code></pre>
+
+<p>And finally, to build the project, just run the following command on the project root:</p>
+
+<pre><code>go build shelter.go
+</code></pre>
+
+<p>Optionally you can run the tests executing the following command on the project root:</p>
+
+<pre><code>python3 test-all.py
+</code></pre>
 
 <h1>
-<a name="performance" class="anchor" href="#performance"><span class="octicon octicon-link"></span></a>performance</h1>
+<a name="deploying" class="anchor" href="#deploying"><span class="octicon octicon-link"></span></a>deploying</h1>
 
-<p>The domain persistence performance is listed in the table bellow, where "#" represents the
-number of domains used in the operation. Each line was executed 5 times to calculate the
-average time. Also, the "find" operation represents 3 object searchs in differents parts
-of the range. For this results we are using 1000 concurrent agents (go routines) for
-insert and remove operations, in an Intel Core i7-2600 3.40GHz with 8GiB of memory, using
-the Ubuntu 12.10 (amd64) operational system.</p>
+<p>To deploy the project you will need one of the programs bellow, depending on the
+operational system that you choose.</p>
 
-<pre><code> #       | Total           | Insert          | Find         | Remove
------------------------------------------------------------------------------
- 10      |      3.513014ms |      1.442383ms |    558.179us |      1.512109ms
- 50      |      7.421929ms |      3.566502ms |    423.251us |      3.431936ms
- 100     |     11.027912ms |      4.701412ms |    420.808us |      5.905437ms
- 500     |      51.31504ms |     25.217248ms |     799.99us |     25.297463ms
- 1000    |     96.370863ms |     46.482595ms |    1.00416ms |     48.883654ms
- 5000    |      503.0236ms |    228.404845ms |   1.026406ms |    273.591873ms
- 10000   |    1.026367147s |    484.794695ms |   1.475828ms |    540.096072ms
- 50000   |    5.030043687s |    2.260250365s |  36.661348ms |    2.733131384s
- 100000  |   10.211076193s |    4.500565689s |  36.303439ms |    5.674206572s
- 500000  |    56.49850228s |   26.533725121s | 268.502266ms |   29.696274265s
- 1000000 | 1m53.999031752s |   52.733993985s | 489.089955ms |  1m0.775947206s
- 5000000 | 9m41.845527592s | 4m28.462709335s | 1.976624332s | 5m11.406193319s
-</code></pre>
-
-<p>Now the network layer that is responsable for sending, receiveing and analyzing the DNS
-packages had the performance shown in the table bellow, where "#" represents the number of
-domains used in the round of checks and QPS is the number of requests per second that the
-system could process. For this results were used 400 concurrent queriers (go routines)
-each one with an input wait list that can store 100 domains. The hardware used was an
-Intel Core i7-2600 3.40GHz with 8GiB of memory, using the Ubuntu 12.10 (amd64) operational
-system. All the requests were sent to a local DNS server.</p>
-
-<pre><code> #       | Total            | QPS  | Memory (MB)
------------------------------------------------------
- 10      |       2.817312ms |   10 |           1.08
- 50      |      14.766817ms |   50 |           1.24
- 100     |      25.443762ms |  100 |           1.91
- 500     |     1.059420731s |  500 |           4.31
- 1000    |     1.054760148s | 1000 |           4.31
- 5000    |     2.060903121s | 2500 |           8.07
- 10000   |     5.402801345s | 2000 |           9.50
- 50000   |    25.349122233s | 2000 |          24.69
- 100000  |    49.294494104s | 2040 |          50.19
- 500000  |   4m1.158914516s | 2074 |         390.90
- 1000000 |  8m16.682795099s | 2016 |         488.53
- 5000000 | 42m22.573865695s | 1966 |        4182.01
-</code></pre>
-
-<p>Bellow is the same test but for the root zone file.</p>
-
-<pre><code> #       | Total            | QPS  | Memory (MB)
----------------------------------------------------
- 341     |     7.154577009s |   48 |          12.18
-
-Nameserver Status
------------------
-              OK:  92.45%
-              UH:  0.16%
-        QREFUSED:  0.05%
-        NOTSYNCH:  5.11%
-        SERVFAIL:  0.11%
-            NOAA:  0.05%
-         TIMEOUT:  1.63%
-        CREFUSED:  0.16%
-           ERROR:  0.27%
-
-DS Status
----------
-              OK:  82.50%
-          SIGERR:  4.50%
-           NOSIG:  5.50%
-         TIMEOUT:  5.50%
-           NOKEY:  2.00%
-</code></pre>
+<ul>
+<li>FPM - <a href="https://github.com/jordansissel/fpm">https://github.com/jordansissel/fpm</a> (Debian packages)</li>
+<li>Termbox - <a href="https://github.com/nsf/termbox-go">https://github.com/nsf/termbox-go</a> (Debian packages)</li>
+<li>Docker - <a href="http://docker.io/">http://docker.io/</a>
+</li>
+<li>OpenSSL - <a href="https://www.openssl.org/%E2%80%8E">https://www.openssl.org/‎</a> (used in Docker build)</li>
+</ul><p>All necessary scripts to generate the packages are under the deploy folder in the project
+root.</p>
         </article>
       </div>
     </div>
     <footer>
       <div class="owner">
-      <p><a href="https://github.com/rafaeljusto" class="avatar"><img src="https://1.gravatar.com/avatar/7a981c7699ff90c283293ad941551625?d=https%3A%2F%2Fidenticons.github.com%2Ffd7267d876605fc274634160aec2f113.png&amp;r=x&amp;s=60" width="48" height="48"/></a> <a href="https://github.com/rafaeljusto">rafaeljusto</a> maintains <a href="https://github.com/rafaeljusto/shelter">Shelter</a></p>
+      <p><a href="https://github.com/rafaeljusto" class="avatar"><img src="https://avatars2.githubusercontent.com/u/611469?s=60" width="48" height="48"/></a> <a href="https://github.com/rafaeljusto">rafaeljusto</a> maintains <a href="https://github.com/rafaeljusto/shelter">Shelter</a></p>
 
 
       </div>
