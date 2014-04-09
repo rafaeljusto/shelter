@@ -100,6 +100,24 @@ func main() {
 	if err := cmd.Run(); err != nil {
 		log.Println("Error starting shelter. Details:", err)
 	}
+
+	fmt.Println("==========================================================================")
+	fmt.Printf("Edit advanced configurations on %s\n", configFilePath)
+
+	if webClientModule && len(config.ShelterConfig.WebClient.Listeners) > 0 {
+		ln := config.ShelterConfig.WebClient.Listeners[0]
+		url := ""
+
+		if ln.TLS {
+			url = fmt.Sprintf("https://%s:%d", ln.IP, ln.Port)
+		} else {
+			url = fmt.Sprintf("http://%s:%d", ln.IP, ln.Port)
+		}
+
+		fmt.Printf("Check the web client on %s\n", url)
+	}
+
+	fmt.Println("==========================================================================")
 }
 
 func readEnabledModules() bool {

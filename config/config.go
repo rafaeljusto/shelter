@@ -54,55 +54,149 @@ type Config struct {
 
 	// Store all variables related to a scan job in the Shelter system
 	Scan struct {
-		Enabled           bool
-		Time              string
-		IntervalHours     int
-		NumberOfQueriers  int
+		// Flag to enable or disable the scan module. Even if the module is disabled is a good
+		// idea to fill some information, because other modules can use it (like the
+		// VerificationIntervals for the notification module)
+		Enabled bool
+
+		// Time of the day that you want that the scan to run (e.g. 05:00:00 BRT or 08:00:00
+		// UTC). The scan will not occur exactly in the given time because of the scheduler
+		// architecture, it will probably have a delay of some minutes.
+		Time string
+
+		// Number of hours between each scan
+		IntervalHours int
+
+		// Number of parallel workers that will be sending queries to the registered
+		// nameservers. Remember that ideal number of queriers is defined by the hardware that
+		// you have
+		NumberOfQueriers int
+
+		// Size of the buffer that process the domains, retrieving from database, sending
+		// requests and saving into database. This should be defined thinking on the number of
+		// queriers, because if there're many queries they will empty the buffer faster
 		DomainsBufferSize int
-		ErrorsBufferSize  int
-		UDPMaxSize        uint16
-		SaveAtOnce        int
+
+		// Size of the buffer that store errors of the scan
+		ErrorsBufferSize int
+
+		// The maximum size of a UDP package that your network can receive without being
+		// droppped by a firewall. Please, check EDNS0 for more information
+		UDPMaxSize uint16
+
+		// Number of domains to accumulate before saving into database, this save us IO time
+		// and should be defined according to the number of queriers
+		SaveAtOnce int
+
+		// Number of times that a querier will retry to send the DNS request to the host.
+		// After that will consider a timeout problem
 		ConnectionRetries int
 
+		// Information about the recursive DNS server for specific services of the scan. Like
+		// QueryDomain, that retrieves the nameservers and DS records from a domain name
 		Resolver struct {
+			// IP address from the resolver
 			Address string
-			Port    int
+
+			// Port from the resolver
+			Port int
 		}
 
+		// Timeouts define the number of seconds that the system will wait for network
+		// operations
 		Timeouts struct {
-			DialSeconds  int
-			ReadSeconds  int
+			// Number of seconds that the system will wait while trying to connect to a remote
+			// host, for example, in a DNS request via TCP
+			DialSeconds int
+
+			// Number of seconds that the system will wait for a response from the remote host
+			ReadSeconds int
+
+			// Number of seconds that the system will wait to receive an ack for the message
+			// written to a remote host via TCP
 			WriteSeconds int
 		}
 
+		// Intervals days used for selecting registered domains to be scanned depending on the
+		// current domain state
 		VerificationIntervals struct {
-			MaxOKDays              int
-			MaxErrorDays           int
+			// Maximum number of days that a well configured domain will wait until it is
+			// scanned again
+			MaxOKDays int
+
+			// Maximum number of days that a domain with DNS or DNSSEC configuration problems
+			// will wait until it is scanned again
+			MaxErrorDays int
+
+			// Maximum number of days before the DNSSEC expiration date that a domain will be
+			// verified for DNS or DNSSEC problems, and mainly to check if it was already
+			// resigned
 			MaxExpirationAlertDays int
 		}
 	}
 
+	// Store all variables related to the REST server
 	RESTServer struct {
-		Enabled            bool
+		// Flag to enable or disable the REST server module. Even if the module is disabled is
+		// a good idea to fill the ACL and Secrets (for the WebClient module)
+		Enabled bool
+
+		// Path and filename of the REST messages file (messages.conf) that store all the
+		// messages that the REST server can return to a client on the desired language. The
+		// format of this file must follow JSON syntax and the following structure:
+		//
+		//     {
+		//       "default": "en-us",
+		//       "packs": [
+		//         {
+		//           "GenericName": "en",
+		//           "SpecificName": "en-us",
+		//           "Messages": {
+		//             "label1": "message1",
+		//             "label2": "message2",
+		//             ...
+		//             "labelN": "messageN"
+		//         }
+		//     }
 		LanguageConfigPath string
 
+		// TLS store the necessary data to allow an encrypted connection
 		TLS struct {
+			// X509 certificate (.pem) file
 			CertificatePath string
-			PrivateKeyPath  string
+
+			// X509 private key (.pem) file
+			PrivateKeyPath string
 		}
 
+		// Addresses that the REST server will listen to
 		Listeners []struct {
-			IP   string
+			// IP address that can be IPv4 or IPv6
+			IP string
+
+			// Port number that will be used
 			Port int
-			TLS  bool
+
+			// Flag that indicates if it will use HTTPS or not. All interfaces will use the same
+			// TLS certificates
+			TLS bool
 		}
 
+		// Number of seconds that the REST server will wait for network operations
 		Timeouts struct {
-			ReadSeconds  int
+			// Number of seconds that the system will wait for a response from the remote host
+			ReadSeconds int
+
+			// Number of seconds that the system will wait to receive an ack for the message
+			// written to a remote host
 			WriteSeconds int
 		}
 
-		ACL     []string
+		// List of IP ranges that are allowed to connect to the REST server, all other will
+		// receive a FORBIDDEN HTTP status code
+		ACL []string
+
+		// Store the shared secret keys used by the clients to sign the requests
 		Secrets map[string]string
 	}
 
