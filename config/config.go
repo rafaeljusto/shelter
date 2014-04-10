@@ -200,31 +200,70 @@ type Config struct {
 		Secrets map[string]string
 	}
 
+	// Store all necessary information for the web client
 	WebClient struct {
-		Enabled    bool
+		// Flag to enable or disable the web client module
+		Enabled bool
+
+		// Base path where all html static content is found, like index.html, CSS and
+		// javascripts
 		StaticPath string
 
+		// TLS store the necessary data to allow an encrypted connection
 		TLS struct {
+			// X509 certificate (.pem) file
 			CertificatePath string
-			PrivateKeyPath  string
+
+			// X509 private key (.pem) file
+			PrivateKeyPath string
 		}
 
+		// Addresses that the web client will listen to
 		Listeners []struct {
-			IP   string
+			// IP address that can be IPv4 or IPv6
+			IP string
+
+			// Port number that will be used
 			Port int
-			TLS  bool
+
+			// Flag that indicates if it will use HTTPS or not. All interfaces will use the same
+			// TLS certificates
+			TLS bool
 		}
 	}
 
+	// Store all notification related variables
 	Notification struct {
-		Enabled                    bool
-		Time                       string
-		IntervalHours              int
-		NameserverErrorAlertDays   int
+		// Flag to enable or disable the notification module
+		Enabled bool
+
+		// Time of the day that you want that the notification to run (e.g. 06:00:00 BRT or
+		// 09:00:00 UTC). The notification will not occur exactly in the given time because of
+		// the scheduler architecture, it will probably have a delay of some minutes. It is
+		// recommended to run the notification after the scan
+		Time string
+
+		// Number of hours between each notification
+		IntervalHours int
+
+		// How many days we will wait with a DNS misconfigured nameserver until we notify the
+		// domain's owners
+		NameserverErrorAlertDays int
+
+		// How many days we will wait with a unresponsive nameserver until we notify the
+		// domain's owners
 		NameserverTimeoutAlertDays int
-		DSErrorAlertDays           int
-		DSTimeoutAlertDays         int
-		From                       string
+
+		// How many days we will wait with a DNSSEC misconfigured nameserver until we notify the
+		// domain's owners
+		DSErrorAlertDays int
+
+		// How many days we will wait with a unresponsive nameserver for DNSSEC queries until
+		// we notify the domain's owners
+		DSTimeoutAlertDays int
+
+		// All notification e-mails are sent with this From
+		From string
 
 		// Define the path that has the template files. Each template file must have the
 		// filename related to the language that it uses in lowercase (e.g. en-us.tmpl, pt-
@@ -236,71 +275,95 @@ type Config struct {
 		//
 		//     From: {{.From}}
 		//     To: {{.To}}
-		//     Subject: Misconfiguration on domain {{$domain.FQDN}}
+		//     Subject: Title
 		//
-		//     Dear Sir/Madam,
-		//
-		//     During our periodically domain verification, a configuration problem was
-		//     detected with the domain {{$domain.FQDN}}.
+		//     Some introduction message.
 		//
 		//     {{range $nameserver := $domain.Nameservers}}
 		//       {{if nsStatusEq $nameserver.LastStatus "TIMEOUT"}}
+		//         Error description.
 		//
 		//       {{else if nsStatusEq $nameserver.LastStatus "NOAA"}}
+		//         Error description.
 		//
 		//       {{else if nsStatusEq $nameserver.LastStatus "UDN"}}
+		//         Error description.
 		//
 		//       {{else if nsStatusEq $nameserver.LastStatus "UH"}}
+		//         Error description.
 		//
 		//       {{else if nsStatusEq $nameserver.LastStatus "SERVFAIL"}}
+		//         Error description.
 		//
 		//       {{else if nsStatusEq $nameserver.LastStatus "QREFUSED"}}
+		//         Error description.
 		//
 		//       {{else if nsStatusEq $nameserver.LastStatus "CREFUSED"}}
+		//         Error description.
 		//
 		//       {{else if nsStatusEq $nameserver.LastStatus "CNAME"}}
+		//         Error description.
 		//
 		//       {{else if nsStatusEq $nameserver.LastStatus "NOTSYNCH"}}
+		//         Error description.
 		//
 		//       {{else if nsStatusEq $nameserver.LastStatus "ERROR"}}
+		//         Error description.
 		//
 		//       {{end}}
 		//     {{end}}
 		//
 		//     {{range $ds := $domain.DSSet}}
 		//       {{if dsStatusEq $ds.LastStatus "TIMEOUT"}}
+		//         Error description.
 		//
 		//       {{else if dsStatusEq $ds.LastStatus "NOSIG"}}
+		//         Error description.
 		//
 		//       {{else if dsStatusEq $ds.LastStatus "EXPSIG"}}
+		//         Error description.
 		//
 		//       {{else if dsStatusEq $ds.LastStatus "NOKEY"}}
+		//         Error description.
 		//
 		//       {{else if dsStatusEq $ds.LastStatus "NOSEP"}}
+		//         Error description.
 		//
 		//       {{else if dsStatusEq $ds.LastStatus "SIGERR"}}
+		//         Error description.
 		//
 		//       {{else if dsStatusEq $ds.LastStatus "DNSERR"}}
+		//         Error description.
 		//
 		//       {{else if isNearExpiration $ds}}
+		//         Error description.
 		//
 		//       {{end}}
 		//     {{end}}
 		//
-		//     Best regards,
-		//     LACTLD
+		//     Goodbye message.
 		//
 		// You can also use other variables in the template file, like {{$nameserver.Host}} or
 		// {{$ds.Keytag}} to create better user messages for the current scenario.
 		TemplatesPath string
 
+		// Store all necessary information to send notification e-mails using an SMTP server
 		SMTPServer struct {
+			// Name or IP address of the SMTP server
 			Server string
-			Port   int
 
+			// Port of the SMTP server
+			Port int
+
+			// Authentication information of the SMTP server
 			Auth struct {
-				Type     AuthenticationType
+				// Type of authentication, that can be empty, "PLAIN" or "CRAMMD5AUTH"
+				Type AuthenticationType
+
+				// Username used for authentication
 				Username string
+
+				// Passowrd used for authentication
 				Password string
 			}
 		}
