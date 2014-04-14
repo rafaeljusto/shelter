@@ -57,7 +57,7 @@ Also, to easy run the project tests you will need the following:
   * npm install -g karma
   * npm install -g karma-cli
   * npm install -g karma-jasmine
-  * npm install -g karma-firefox-launcher
+  * npm install -g karma-phantomjs-launcher
   * npm install -g karma-ng-html2js-preprocessor
 
 Remember that the project directory should respect the path bellow, because the source
@@ -96,6 +96,7 @@ operational system that you choose.
 * Termbox - https://github.com/nsf/termbox-go (Debian packages)
 * Docker - http://docker.io/
 * OpenSSL - https://www.openssl.org/‎ (used in Docker build)
+* Inno Setup - http://www.jrsoftware.org/isinfo.php (Windows)
 
 All necessary scripts to generate the packages are under the deploy folder in the project
 root.
