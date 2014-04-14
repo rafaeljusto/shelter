@@ -10,7 +10,7 @@ AppUpdatesURL=http://github.com/rafaeljusto/shelter
 DefaultDirName={pf}\shelter
 DefaultGroupName=shelter
 AllowNoIcons=yes
-LicenseFile={src}\LICENSE
+LicenseFile=..\..\LICENSE
 OutputBaseFilename=setup
 Compression=lzma
 SolidCompression=yes
@@ -21,9 +21,19 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
+[Dirs]
+Name: "{app}\templates\client"; Permissions: users-modify
+Name: "{app}\templates\notification"; Permissions: users-modify
+Name: "{app}\conf"; Permissions: users-modify
+
 [Files]
-Source: "{src}\shelter.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\..\shelter.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "config_init.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\..\etc\shelter.conf.windows.sample"; DestDir: "{app}\conf\shelter.conf.windows.sample"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\shelter"; Filename: "{app}\shelter.exe"
 Name: "{commondesktop}\shelter"; Filename: "{app}\shelter.exe"; Tasks: desktopicon
+
+[Run]
+Filename: "{app}\config_init.exe"

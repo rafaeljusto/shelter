@@ -143,15 +143,16 @@ def runInterfaceTests():
 
 def usage():
   print("")
-  print("Usage: " + sys.argv[0] + " [-h|--help] [-u|--unit] [-b|--bench] [-i|--interface]")
+  print("Usage: " + sys.argv[0] + " [-h|--help] [-u|--unit] [-b|--bench] [-n|--integration] [-i|--interface]")
   print("  Where -h or --help is for showing this usage")
   print("        -u or --unit is to run only the unit tests")
   print("        -b or --bench is to run unit tests with benchmark")
+  print("        -n or --integration is to run integration tests")
   print("        -i or --interface is to run only the interface tests")
 
 def main(argv):
   try:
-    opts, args = getopt.getopt(argv, "ubi", ["unit", "bench", "interface"])
+    opts, args = getopt.getopt(argv, "ubni", ["unit", "bench", "integration", "interface"])
 
   except getopt.GetoptError as err:
     print(str(err))
@@ -159,6 +160,7 @@ def main(argv):
     sys.exit(1)
 
   unitTestOnly = False
+  integrationTestOnly = False
   interfaceTestOnly = False
   benchmark = False
 
@@ -168,6 +170,9 @@ def main(argv):
 
     elif key in ("-b", "--bench"):
       benchmark = True
+
+    elif key in ("-n", "--integration"):
+      integrationTestOnly = True
 
     elif key in ("-i", "--interface"):
       interfaceTestOnly = True
@@ -181,13 +186,13 @@ def main(argv):
     changePath()
     buildMainBinary()
 
-    if unitTestOnly or not interfaceTestOnly:
+    if unitTestOnly or not (integrationTestOnly or interfaceTestOnly):
       runUnitTests(benchmark)
 
-    if not unitTestOnly and not interfaceTestOnly:
+    if integrationTestOnly or not (unitTestOnly or interfaceTestOnly):
       runIntegrationTests()
 
-    if interfaceTestOnly or not unitTestOnly:
+    if interfaceTestOnly or not (unitTestOnly or integrationTestOnly):
       runInterfaceTests()
 
   except KeyboardInterrupt:
