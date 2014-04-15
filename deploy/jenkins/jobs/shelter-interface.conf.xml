@@ -19,8 +19,8 @@
     <hudson.tasks.Shell>
       <command>#!/bin/sh
 
-cd $WORKSPACE/../../src/github.com/rafaeljusto/shelter/
-python3 test-all.py -n</command>
+cd $GOPATH/src/github.com/rafaeljusto/shelter/
+python3 test-all.py -i</command>
     </hudson.tasks.Shell>
   </builders>
   <publishers/>

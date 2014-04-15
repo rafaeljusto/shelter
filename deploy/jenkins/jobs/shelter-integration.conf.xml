@@ -19,11 +19,21 @@
     <hudson.tasks.Shell>
       <command>#!/bin/sh
 
-cd $WORKSPACE/../../src/github.com/rafaeljusto/shelter/
-python3 test-all.py -i</command>
+cd $GOPATH/src/github.com/rafaeljusto/shelter/
+python3 test-all.py -n</command>
     </hudson.tasks.Shell>
   </builders>
-  <publishers/>
+  <publishers>
+    <hudson.tasks.BuildTrigger>
+      <childProjects>shelter-interface</childProjects>
+      <threshold>
+        <name>SUCCESS</name>
+        <ordinal>0</ordinal>
+        <color>BLUE</color>
+        <completeBuild>true</completeBuild>
+      </threshold>
+    </hudson.tasks.BuildTrigger>
+  </publishers>
   <buildWrappers>
     <EnvInjectBuildWrapper plugin="envinject@1.89">
       <info>

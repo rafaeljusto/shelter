@@ -1,8 +1,0 @@
-The server that is running Jenkins must install Go in
-/usr/local/go path, and MongoDB and git via apt-get command.
-
-Using the following Jenkins plugins:
-
-  * Build Pipeline Plugin
-  * Environment Injector Plugin
-  * GIT plugin

@@ -8,24 +8,37 @@
       <projectUrl>https://github.com/rafaeljusto/shelter/</projectUrl>
     </com.coravy.hudson.plugins.github.GithubProjectProperty>
   </properties>
-  <scm class="hudson.scm.NullSCM"/>
+  <scm class="hudson.plugins.git.GitSCM" plugin="git@2.2.1">
+    <configVersion>2</configVersion>
+    <userRemoteConfigs>
+      <hudson.plugins.git.UserRemoteConfig>
+        <url>https://github.com/rafaeljusto/shelter.git</url>
+      </hudson.plugins.git.UserRemoteConfig>
+    </userRemoteConfigs>
+    <branches>
+      <hudson.plugins.git.BranchSpec>
+        <name>*/master</name>
+      </hudson.plugins.git.BranchSpec>
+    </branches>
+    <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
+    <submoduleCfg class="list"/>
+    <extensions/>
+  </scm>
+  <scmCheckoutRetryCount>2</scmCheckoutRetryCount>
   <canRoam>true</canRoam>
   <disabled>false</disabled>
   <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
   <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
-  <triggers/>
+  <triggers>
+    <com.cloudbees.jenkins.GitHubPushTrigger plugin="github@1.8">
+      <spec></spec>
+    </com.cloudbees.jenkins.GitHubPushTrigger>
+  </triggers>
   <concurrentBuild>false</concurrentBuild>
-  <builders>
-    <hudson.tasks.Shell>
-      <command>#!/bin/sh
-
-cd $WORKSPACE/../../src/github.com/rafaeljusto/shelter/
-python3 test-all.py -u</command>
-    </hudson.tasks.Shell>
-  </builders>
+  <builders/>
   <publishers>
     <hudson.tasks.BuildTrigger>
-      <childProjects>shelter-integration</childProjects>
+      <childProjects>shelter-build</childProjects>
       <threshold>
         <name>SUCCESS</name>
         <ordinal>0</ordinal>
@@ -39,6 +52,10 @@ python3 test-all.py -u</command>
       <info>
         <propertiesContent>PATH=$PATH:/usr/local/go/bin
 GOPATH=$WORKSPACE/../..</propertiesContent>
+        <scriptContent>#!/bin/sh
+mkdir -p $GOPATH/src/github.com/rafaeljusto/shelter
+mv $WORKSPACE/* $GOPATH/src/github.com/rafaeljusto/shelter/
+rm -fr $WORKSPACE/*</scriptContent>
         <loadFilesFromMaster>false</loadFilesFromMaster>
       </info>
     </EnvInjectBuildWrapper>
