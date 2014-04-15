@@ -2,11 +2,11 @@ Installation
 ============
 
 The tests were made using an Amazon EC2 ms1.small instance, with 24GB of disk. The disk
-space is an issue here, because the MongoDB test enviroment accumulates data really fast,
-so we should always erasing this temporary data (the best approach would change the tests
-to erase the database).
+space is an issue here, because the integration tests accumulates MongoDB data really fast
+(the best approach would be changing the tests to erase the database). For now the
+integration tests job is erasing the databases via shell script.
 
-1. Go
+## Go
 
 ```
 wget http://go.googlecode.com/files/go1.2.1.linux-amd64.tar.gz
@@ -14,19 +14,19 @@ tar -xzf go1.2.1.linux-amd64.tar.gz
 sudo mv go /usr/local/
 ```
 
-2. MongoDB
+## MongoDB
 
 ```
 sudo apt-get install mongodb
 ```
 
-3. Git
+## Git
 
 ```
 sudo apt-get install git
 ```
 
-4. Jenkins
+## Jenkins
 
 ```
 wget -q -O - http://pkg.jenkins-ci.org/debian/jenkins-ci.org.key | sudo apt-key add -
@@ -35,10 +35,12 @@ sudo apt-get update
 sudo apt-get install jenkins
 ```
 
-5. Jenkins plugins (via Jenkins web interface)
+## Jenkins plugins (via Jenkins web interface)
 
 * Build Pipeline Plugin
 * Environment Injector Plugin
 * GIT plugin
 
-6. Import jobs into Jenkins (via Jenkins web interface)
+## Import jobs into Jenkins (via Jenkins web interface)
+
+All jobs are found in `<shelter>/deploy/jenkins/jobs`.
