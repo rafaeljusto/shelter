@@ -42,7 +42,16 @@ and it depends on the following Go packages:
 * github.com/miekg/dns
 * labix.org/v2/mgo
 
-All the above packages can be installed using the command:
+All the above packages can be installed using [gopack](https://github.com/d2fn/gopack)
+with the following command:
+
+```
+./gp installdeps
+```
+
+The above command will retrive the packages (except for the cover package) in the
+compatible version whith the shelter binary. But you could also retrieve the last version
+of all package dependencies with the command bellow.
 
 ```
 go get -u <package_name>
