@@ -6,6 +6,12 @@ space is an issue here, because the integration tests accumulates MongoDB data r
 (the best approach would be changing the tests to erase the database). For now the
 integration tests job is erasing the databases via shell script.
 
+## Locale
+
+```
+sudo update-locale LANG=en_US.utf8 LC_MESSAGES=POSIX
+```
+
 ## Go
 
 ```
@@ -26,6 +32,24 @@ sudo apt-get install mongodb
 sudo apt-get install git
 ```
 
+## Karma
+
+```
+sudo apt-get install npm
+sudo npm install -g karma
+sudo npm install -g karma-cli
+sudo npm install -g karma-jasmine
+sudo npm install -g karma-phantomjs-launcher
+sudo npm install -g karma-ng-html2js-preprocessor
+```
+
+## FPM
+
+```
+sudo apt-get install rubygems
+sudo gem install fpm
+```
+
 ## Jenkins
 
 ```
@@ -43,4 +67,16 @@ sudo apt-get install jenkins
 
 ## Import jobs into Jenkins (via Jenkins web interface)
 
-All jobs are found in `<shelter>/deploy/jenkins/jobs`.
+All jobs are found in `<shelter>/deploy/jenkins/jobs`. You should follow the pipeline:
+
+1. shelter-retrieve
+2. shelter-build
+3. shelter-unit-test
+4. shelter-integration
+5. shelter-interface
+6. shelter-deploy
+
+## Update API key
+
+Update API key from job shelter-deploy. This key can be found in https://bintray.com
+account, under user settings.

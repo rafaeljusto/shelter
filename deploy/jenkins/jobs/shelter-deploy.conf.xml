@@ -19,16 +19,16 @@
     <hudson.tasks.Shell>
       <command>#!/bin/sh
 
-cd $GOPATH/src/github.com/rafaeljusto/shelter/
-python3 test-all.py -i</command>
+go get -u github.com/nsf/termbox-go
+
+cd $GOPATH/src/github.com/rafaeljusto/shelter
+version=`cat shelter.go | grep &quot;Shelter version&quot; | grep -Eo &quot;[0-9]\.([0-9]|\.)+&quot;`
+./deploy/debian/gendeb.sh
+
+curl -f -T shelter_0.1_amd64.deb -urafaeljusto:<apikey> https://api.bintray.com/content/rafaeljusto/deb/shelter/$version/shelter_${version}_amd64.deb</command>
     </hudson.tasks.Shell>
   </builders>
-  <publishers>
-    <au.com.centrumsystems.hudson.plugin.buildpipeline.trigger.BuildPipelineTrigger plugin="build-pipeline-plugin@1.4.2">
-      <configs/>
-      <downstreamProjectNames>shelter-deploy</downstreamProjectNames>
-    </au.com.centrumsystems.hudson.plugin.buildpipeline.trigger.BuildPipelineTrigger>
-  </publishers>
+  <publishers/>
   <buildWrappers>
     <EnvInjectBuildWrapper plugin="envinject@1.89">
       <info>

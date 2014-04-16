@@ -97,6 +97,7 @@ operational system that you choose.
 * Docker - http://docker.io/
 * OpenSSL - https://www.openssl.org/‎ (used in Docker build)
 * Inno Setup - http://www.jrsoftware.org/isinfo.php (Windows)
+* Jenkins - http://jenkins-ci.org/
 
 All necessary scripts to generate the packages are under the deploy folder in the project
 root.
