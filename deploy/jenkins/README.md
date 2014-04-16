@@ -72,9 +72,9 @@ All jobs are found in `<shelter>/deploy/jenkins/jobs`. You should follow the pip
 1. shelter-retrieve
 2. shelter-build
 3. shelter-unit-test
-4. shelter-integration
-5. shelter-interface
-6. shelter-deploy
+4. shelter-integration-test
+5. shelter-interface-test
+6. shelter-publish
 
 ## Update API key
 

@@ -26,7 +26,7 @@ python3 test-all.py -i</command>
   <publishers>
     <au.com.centrumsystems.hudson.plugin.buildpipeline.trigger.BuildPipelineTrigger plugin="build-pipeline-plugin@1.4.2">
       <configs/>
-      <downstreamProjectNames>shelter-deploy</downstreamProjectNames>
+      <downstreamProjectNames>shelter-publish</downstreamProjectNames>
     </au.com.centrumsystems.hudson.plugin.buildpipeline.trigger.BuildPipelineTrigger>
   </publishers>
   <buildWrappers>

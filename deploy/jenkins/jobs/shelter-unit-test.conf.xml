@@ -25,7 +25,7 @@ python3 test-all.py -u</command>
   </builders>
   <publishers>
     <hudson.tasks.BuildTrigger>
-      <childProjects>shelter-integration</childProjects>
+      <childProjects>shelter-integration-test</childProjects>
       <threshold>
         <name>SUCCESS</name>
         <ordinal>0</ordinal>

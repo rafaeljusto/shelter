@@ -22,10 +22,11 @@
 go get -u github.com/nsf/termbox-go
 
 cd $GOPATH/src/github.com/rafaeljusto/shelter
-version=`cat shelter.go | grep &quot;Shelter version&quot; | grep -Eo &quot;[0-9]\.([0-9]|\.)+&quot;`
+version=`cat shelter.go | grep "Shelter version" | grep -Eo "[0-9]\.([0-9]|\.)+"`
 ./deploy/debian/gendeb.sh
 
-curl -f -T shelter_0.1_amd64.deb -urafaeljusto:<apikey> https://api.bintray.com/content/rafaeljusto/deb/shelter/$version/shelter_${version}_amd64.deb</command>
+curl -f -T shelter_0.1_amd64.deb -urafaeljusto:<apiKey> https://api.bintray.com/content/rafaeljusto/deb/shelter/$version/shelter_${version}_amd64.deb
+curl -f -H "Content-Type:application/json" -X POST -d "{}" -urafaeljusto:<apiKey> https://api.bintray.com/content/rafaeljusto/deb/shelter/$version/publish</command>
     </hudson.tasks.Shell>
   </builders>
   <publishers/>

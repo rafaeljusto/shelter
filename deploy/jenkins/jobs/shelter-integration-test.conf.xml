@@ -44,7 +44,7 @@ mongo shelter_test_scan_injector --eval "db.dropDatabase()"
   </builders>
   <publishers>
     <hudson.tasks.BuildTrigger>
-      <childProjects>shelter-interface</childProjects>
+      <childProjects>shelter-interface-test</childProjects>
       <threshold>
         <name>SUCCESS</name>
         <ordinal>0</ordinal>
