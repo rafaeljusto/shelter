@@ -4,13 +4,30 @@
 # Use of this source code is governed by a GPL
 # license that can be found in the LICENSE file.
 
+usage() {
+  echo "Usage: $1 <version> <release>"
+}
+
 pack_name="shelter"
-version="0.1"
+version="$1"
+release="$2"
 vendor="Rafael Dantas Justo"
 maintainer="Rafael Dantas Justo <adm@rafael.net.br>"
 url="http://github.com/rafaeljusto/shelter"
 license="GPL"
 description="System that checks periodically DNS servers for DNS and DNSSEC misconfigurations"
+
+if [ -z "$version" ]; then
+  echo "Version not defined!"
+  usage $0
+  exit 1
+fi
+
+if [ -z "$release" ]; then
+  echo "Release not defined!"
+  usage $0
+  exit 1
+fi
 
 # https://www.debian.org/doc/debian-policy/ch-opersys.html - section 9.1.2
 #
@@ -58,7 +75,7 @@ mv $workspace/deploy/debian/config_init $project_root/bin/
 
 fpm -s dir -t deb \
   --after-install $project_root/bin/config_init \
-  --exclude=.git -n $pack_name -v $version --vendor "$vendor" \
+  --exclude=.git -n $pack_name -v "$version" --iteration "$release" --vendor "$vendor" \
   --maintainer "$maintainer" --url $url --license $license --description "$description" \
   --deb-upstart $workspace/deploy/debian/shelter.upstart \
   --deb-user root --deb-group root \

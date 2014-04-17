@@ -64,6 +64,7 @@ sudo apt-get install jenkins
 * Build Pipeline Plugin
 * Environment Injector Plugin
 * GIT plugin
+* Github OAuth Plugin
 
 ## Import jobs into Jenkins (via Jenkins web interface)
 

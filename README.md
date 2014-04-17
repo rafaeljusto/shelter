@@ -37,10 +37,10 @@ building
 
 The Shelter project was developed using the [Go language](http://golang.org/)
 and it depends on the following Go packages:
-* code.google.com/p/go.net/idna (commit c17ad62118ea511e1051721b429779fa40bddc74)
-* code.google.com/p/go.tools/cmd/cover (commit c4573b888c074b46d3dfc364dd486254ceccdc8a)
-* github.com/miekg/dns (commit 5592ee41726b2674881d3d2f90bdb12c0609ef51)
-* labix.org/v2/mgo (tag r2014.03.12)
+* code.google.com/p/go.net/idna
+* code.google.com/p/go.tools/cmd/cover
+* github.com/miekg/dns
+* labix.org/v2/mgo
 
 All the above packages can be installed using the command:
 
@@ -93,7 +93,7 @@ To deploy the project you will need one of the programs bellow, depending on the
 operational system that you choose.
 
 * FPM - https://github.com/jordansissel/fpm (Debian packages)
-* Termbox - https://github.com/nsf/termbox-go (Debian packages, commit 9057ff8444202d6f81a268bee037da71c3b15625)
+* Termbox - https://github.com/nsf/termbox-go (Debian packages)
 * Docker - http://docker.io/
 * OpenSSL - https://www.openssl.org/‎ (used in Docker build)
 * Inno Setup - http://www.jrsoftware.org/isinfo.php (Windows)
