@@ -53,8 +53,12 @@
         <propertiesContent>PATH=$PATH:/usr/local/go/bin
 GOPATH=$WORKSPACE/../..</propertiesContent>
         <scriptContent>#!/bin/sh
+rm -fr $GOPATH/src/github.com/rafaeljusto/shelter
 mkdir -p $GOPATH/src/github.com/rafaeljusto/shelter
 mv $WORKSPACE/* $GOPATH/src/github.com/rafaeljusto/shelter/
+mv $WORKSPACE/.git $GOPATH/src/github.com/rafaeljusto/shelter/.git
+mv $WORKSPACE/.gitignore $GOPATH/src/github.com/rafaeljusto/shelter/.gitignore
+mv $WORKSPACE/.travis.yml $GOPATH/src/github.com/rafaeljusto/shelter/.travis.yml
 rm -fr $WORKSPACE/*</scriptContent>
         <loadFilesFromMaster>false</loadFilesFromMaster>
       </info>

@@ -23,10 +23,18 @@ go get -u github.com/nsf/termbox-go
 
 cd $GOPATH/src/github.com/rafaeljusto/shelter
 version=`cat shelter.go | grep "Shelter version" | grep -Eo "[0-9]\.([0-9]|\.)+"`
-./deploy/debian/gendeb.sh
+./deploy/debian/gendeb.sh "$version" "$BUILD_NUMBER"
 
-curl -f -T shelter_0.1_amd64.deb -urafaeljusto:<apiKey> https://api.bintray.com/content/rafaeljusto/deb/shelter/$version/shelter_${version}_amd64.deb
-curl -f -H "Content-Type:application/json" -X POST -d "{}" -urafaeljusto:<apiKey> https://api.bintray.com/content/rafaeljusto/deb/shelter/$version/publish</command>
+id="${version}-${BUILD_NUMBER}"
+
+curl -f -T shelter_${id}_amd64.deb -urafaeljusto:ed289c90347fd046c9967dbe698a2c0d3021357d https://api.bintray.com/content/rafaeljusto/deb/shelter/${id}/shelter_${id}_amd64.deb
+curl -f -H "Content-Type:application/json" -X POST -d "{}" -urafaeljusto:ed289c90347fd046c9967dbe698a2c0d3021357d https://api.bintray.com/content/rafaeljusto/deb/shelter/${id}/publish
+
+git config --global user.name "Rafael Justo"
+git config --global user.email adm@rafael.net.br
+git remote set-url origin "ssh://git@github.com/rafaeljusto/shelter.git"
+git tag -a -m "Version ${version}, Release ${BUILD_NUMBER}" "${id}"
+git push origin "${id}"</command>
     </hudson.tasks.Shell>
   </builders>
   <publishers/>
