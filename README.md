@@ -3,6 +3,7 @@ shelter
 
 [![Build Status](https://travis-ci.org/rafaeljusto/shelter.png?branch=master)](https://travis-ci.org/rafaeljusto/shelter)
 [![GoDoc](https://godoc.org/github.com/rafaeljusto/shelter?status.png)](https://godoc.org/github.com/rafaeljusto/shelter)
+[![Download](https://api.bintray.com/packages/rafaeljusto/deb/shelter/images/download.png) ](https://bintray.com/rafaeljusto/deb/shelter/_latestVersion)
 
 System created for registries to periodically validate and alert domains about DNS or
 DNSSEC misconfiguration.
