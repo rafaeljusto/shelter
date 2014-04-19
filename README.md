@@ -90,8 +90,8 @@ python3 test-all.py
 deploying
 =========
 
-To deploy the project you will need one of the programs bellow, depending on the
-operational system that you choose.
+To deploy the project you will need one or more programs bellow, depending on the operational system
+that you choose, and if you want a CI enviroment.
 
 * FPM - https://github.com/jordansissel/fpm (Debian packages)
 * Termbox - https://github.com/nsf/termbox-go (Debian packages)
@@ -99,6 +99,7 @@ operational system that you choose.
 * OpenSSL - https://www.openssl.org/‎ (used in Docker build)
 * Inno Setup - http://www.jrsoftware.org/isinfo.php (Windows)
 * Jenkins - http://jenkins-ci.org/
+* Chef - http://www.getchef.com/
 
 All necessary scripts to generate the packages are under the deploy folder in the project
 root.
