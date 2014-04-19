@@ -41,11 +41,6 @@
     "enabled": true,
     "languageConfigPath": "etc/messages.conf",
 
-    "tls": {
-      "certificatePath": "etc/keys/cert.pem",
-      "privateKeyPath": "etc/keys/key.pem"
-    },
-
     "listeners": [
       {
         "ip": "0.0.0.0",
@@ -68,11 +63,6 @@
   "webClient": {
     "enabled": true,
     "staticPath": "templates/client",
-
-    "tls": {
-      "certificatePath": "etc/keys/cert.pem",
-      "privateKeyPath": "etc/keys/key.pem"
-    },
 
     "listeners": [
       {
@@ -100,8 +90,8 @@
 
       "auth": {
         "type": "PLAIN",
-        "username": "user",
-        "password": "password"
+        "username": "<%= @smtp_auth_user %>",
+        "password": "<%= @smtp_auth_pwd %>"
       }
     }
   }

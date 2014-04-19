@@ -41,16 +41,11 @@
     "enabled": true,
     "languageConfigPath": "etc/messages.conf",
 
-    "tls": {
-      "certificatePath": "etc/keys/cert.pem",
-      "privateKeyPath": "etc/keys/key.pem"
-    },
-
     "listeners": [
       {
         "ip": "0.0.0.0",
         "port": 4443,
-        "tls": true
+        "tls": false
       }
     ],
 
@@ -69,16 +64,11 @@
     "enabled": true,
     "staticPath": "templates/client",
 
-    "tls": {
-      "certificatePath": "etc/keys/cert.pem",
-      "privateKeyPath": "etc/keys/key.pem"
-    },
-
     "listeners": [
       {
         "ip": "0.0.0.0",
         "port": 4444,
-        "tls": true
+        "tls": false
       }
     ]
   },
