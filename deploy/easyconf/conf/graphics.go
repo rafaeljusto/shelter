@@ -2,8 +2,8 @@
 // Use of this source code is governed by a GPL
 // license that can be found in the LICENSE file.
 
-// Package deploy has the necessary structures to build terminal screens
-package deploy
+// Package conf is responsable for creating an interactive menu to fill configuration variables
+package conf
 
 import (
 	"github.com/nsf/termbox-go"

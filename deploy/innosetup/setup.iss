@@ -24,16 +24,16 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 [Dirs]
 Name: "{app}\templates\client"; Permissions: users-modify
 Name: "{app}\templates\notification"; Permissions: users-modify
-Name: "{app}\conf"; Permissions: users-modify
+Name: "{app}\etc"; Permissions: users-modify
 
 [Files]
 Source: "..\..\shelter.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "config_init.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\..\etc\shelter.conf.windows.sample"; DestDir: "{app}\conf\shelter.conf.windows.sample"; Flags: ignoreversion
+Source: "easyconf.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\..\etc\shelter.conf.windows.sample"; DestDir: "{app}\etc\shelter.conf.windows.sample"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\shelter"; Filename: "{app}\shelter.exe"
 Name: "{commondesktop}\shelter"; Filename: "{app}\shelter.exe"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\config_init.exe"
+Filename: "{app}\easyconf.exe -sample={app}\etc\shelter.conf.windows.sample"
