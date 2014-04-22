@@ -1,6 +1,6 @@
 {
-  "basePath": "c:\Program Files\shelter",
-  "logFilename": "log\shelter.log",
+  "basePath": "c:\\Program Files\\shelter",
+  "logFilename": "log\\shelter.log",
   "languages": [ "en-US", "pt-BR" ],
 
   "database": {
@@ -39,7 +39,7 @@
 
   "restServer": {
     "enabled": true,
-    "languageConfigPath": "conf\messages.conf",
+    "languageConfigPath": "conf\\messages.conf",
 
     "listeners": [
       {
@@ -62,7 +62,7 @@
 
   "webClient": {
     "enabled": true,
-    "staticPath": "templates\client",
+    "staticPath": "templates\\client",
 
     "listeners": [
       {
@@ -82,7 +82,7 @@
     "dsErrorAlertDays": 1,
     "dsTimeoutAlertDays": 7,
     "from": "shelter@example.com.br.",
-    "templatesPath": "templates\notification",
+    "templatesPath": "templates\\notification",
 
     "smtpServer": {
       "server": "smtp.gmail.com",
