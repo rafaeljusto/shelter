@@ -6,10 +6,10 @@
 
 include_recipe "mongodb::default"
 
-shelter_latest = Chef::Config[:file_cache_path] + "/rafaeljusto/deb/shelter/_latestVersio"
+shelter_latest = Chef::Config[:file_cache_path] + "/shelter_latest_amd64.deb"
 
 remote_file shelter_latest do
-  source "https://bintray.com/rafaeljusto/deb/shelter/_latestVersion"
+  source "http://dl.bintray.com/rafaeljusto/deb/shelter_latest_amd64.deb"
   mode "0644"
 end
 
@@ -33,4 +33,8 @@ template "/usr/shelter/etc/shelter.conf" do
     :smtp_auth_user     => node["shelter"]["smtp_auth_user"],
     :smtp_auth_pwd      => node["shelter"]["smtp_auth_pwd"]
   )
+end
+
+execute "run-shelter" do
+  command "service shelter start"
 end

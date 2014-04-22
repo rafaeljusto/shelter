@@ -1,0 +1,7 @@
+{
+  "shelter": {
+    "smtp_auth_user": "user",
+    "smtp_auth_pwd": "password"
+  },
+  "run_list": [ "recipe[apt]", "recipe[shelter]" ]
+}
