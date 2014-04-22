@@ -63,7 +63,7 @@ sudo apt-get install jenkins
 
 * Build Pipeline Plugin
 * Environment Injector Plugin
-* GIT plugin
+* Git plugin
 * Github OAuth Plugin
 
 ## Import jobs into Jenkins (via Jenkins web interface)
@@ -76,6 +76,12 @@ All jobs are found in `<shelter>/deploy/jenkins/jobs`. You should follow the pip
 4. shelter-integration-test
 5. shelter-interface-test
 6. shelter-publish
+
+You can import each job using the command:
+
+```
+java -jar jenkins-cli.jar -s http://server create-job newmyjob < myjob.xml
+```
 
 ## Update API key
 
