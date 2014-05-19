@@ -49,8 +49,13 @@ func main() {
 	defer finishRESTServer()
 	utils.StartWebClient()
 
-	database, databaseSession, err := mongodb.Open(config.ShelterConfig.Database.URI,
-		config.ShelterConfig.Database.Name)
+	database, databaseSession, err := mongodb.Open(
+		config.ShelterConfig.Database.URIs,
+		config.ShelterConfig.Database.Name,
+		config.ShelterConfig.Database.Auth.Enabled,
+		config.ShelterConfig.Database.Auth.Username,
+		config.ShelterConfig.Database.Auth.Password,
+	)
 
 	if err != nil {
 		utils.Fatalln("Error connecting the database", err)

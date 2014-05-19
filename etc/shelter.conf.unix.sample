@@ -5,7 +5,10 @@
 
   "database": {
     "name": "shelter",
-    "uri": "localhost:27017"
+    "uris": [ "localhost:27017" ],
+    "auth": {
+      "enabled": false
+    }
   },
 
   "scan": {

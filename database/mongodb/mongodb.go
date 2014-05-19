@@ -8,6 +8,7 @@ package mongodb
 import (
 	"labix.org/v2/mgo"
 	"sync"
+	"time"
 )
 
 var (
@@ -22,14 +23,26 @@ var (
 	// https://groups.google.com/forum/#!topic/mgo-users/tDmuztwViDg
 	session     *mgo.Session
 	sessionLock sync.Mutex
+
+	// Timeout is the amount of time to wait for a server to respond when
+	// first connecting and on follow up operations in the session. If
+	// timeout is zero, the call may block forever waiting for a connection
+	// to be established.
+	Timeout = time.Duration(5) * time.Second
 )
 
 // Open a new connection to a MongoDB database. For now we are using all default timeout
 // values. The production database for the project will be shelter, but for tests
 // purpouses we make this parameter configurable. We are also returning the session,
 // because the caller must close it after use
-func Open(uri, databaseName string) (*mgo.Database, *mgo.Session, error) {
-	if err := initializeSession(uri); err != nil {
+func Open(
+	uris []string,
+	databaseName string,
+	auth bool,
+	username, password string,
+) (*mgo.Database, *mgo.Session, error) {
+
+	if err := initializeSession(uris, databaseName, auth, username, password); err != nil {
 		return nil, nil, err
 	}
 
@@ -62,7 +75,13 @@ func RegisterIndexFunction(indexFunction func(*mgo.Database) error) {
 // initializeSession verify if the session was already created, if not creates it
 // otherwise use the already created session. We are reusing the session because Gustavo
 // Niemeyer said that this should be the correct behaviour of the system
-func initializeSession(uri string) error {
+func initializeSession(
+	uris []string,
+	databaseName string,
+	auth bool,
+	username, password string,
+) error {
+
 	sessionLock.Lock()
 	defer sessionLock.Unlock()
 
@@ -70,8 +89,27 @@ func initializeSession(uri string) error {
 		return nil
 	}
 
+	var dialInfo mgo.DialInfo
+
+	if auth {
+		dialInfo = mgo.DialInfo{
+			Addrs:    uris,
+			Timeout:  Timeout,
+			Database: databaseName,
+			Username: username,
+			Password: password,
+		}
+
+	} else {
+		dialInfo = mgo.DialInfo{
+			Addrs:    uris,
+			Timeout:  Timeout,
+			Database: databaseName,
+		}
+	}
+
 	// Connect to the database
 	var err error
-	session, err = mgo.Dial(uri)
+	session, err = mgo.DialWithInfo(&dialInfo)
 	return err
 }

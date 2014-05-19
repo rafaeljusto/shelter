@@ -32,6 +32,7 @@ client
 * IDNA support for domains' names
 * Optimized scan strategy to verify all registered domains configurations
 * On-the-fly domain verification interface
+* Allow a cluster of MongoDB servers for data persistency
 
 building
 ========

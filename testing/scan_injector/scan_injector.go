@@ -68,7 +68,12 @@ func main() {
 		utils.Fatalln("Error reading configuration file", err)
 	}
 
-	database, databaseSession, err := mongodb.Open(config.Database.URI, config.Database.Name)
+	database, databaseSession, err := mongodb.Open(
+		[]string{config.Database.URI},
+		config.Database.Name,
+		false, "", "",
+	)
+
 	if err != nil {
 		utils.Fatalln("Error connecting the database", err)
 	}

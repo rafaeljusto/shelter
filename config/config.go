@@ -48,8 +48,21 @@ type Config struct {
 		// Name of the database
 		Name string
 
-		// URI used by MongoDB to connect to the database
-		URI string
+		// URIs used by MongoDB to connect to the database. More than one server can be used
+		// to allow a cluster of MongoDBs
+		URIs []string
+
+		// Auth stores the authentication information of the database connection
+		Auth struct {
+			// Flag to enable authentication layer over the database connection
+			Enabled bool
+
+			// Username used for authentication
+			Username string
+
+			// Password used for authentication
+			Password string
+		}
 	}
 
 	// Store all variables related to a scan job in the Shelter system
