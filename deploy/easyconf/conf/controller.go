@@ -175,7 +175,8 @@ func readDatabaseParameters() bool {
 		}
 	}
 
-	config.ShelterConfig.Database.URI = fmt.Sprintf("%s:%d", address, port)
+	config.ShelterConfig.Database.URIs = append(config.ShelterConfig.Database.URIs,
+		fmt.Sprintf("%s:%d", address, port))
 	config.ShelterConfig.Database.Name = name
 	return true
 }
