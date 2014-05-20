@@ -323,9 +323,12 @@ func TestDNSSECPolicyMissingSignature(t *testing.T) {
 		},
 	}
 
-	if domainDSPolicy.dnssecPolicy(dnsResponseMessage) ||
-		domain.DSSet[0].LastStatus != model.DSStatusNoSignature {
-		t.Error("Not detecting missing signature")
+	// We changed the behaviour of the system, allowing DNSKEYs without RRSIGs because of
+	// key rollovers scenarios (pre-publish)
+	if !domainDSPolicy.dnssecPolicy(dnsResponseMessage) {
+		t.Errorf("Not allowing missing signature. Expected status %s and got %s",
+			model.DSStatusToString(model.DSStatusOK),
+			model.DSStatusToString(domain.DSSet[0].LastStatus))
 	}
 }
 
