@@ -3,7 +3,7 @@ shelter
 
 [![Build Status](https://travis-ci.org/rafaeljusto/shelter.png?branch=master)](https://travis-ci.org/rafaeljusto/shelter)
 [![GoDoc](https://godoc.org/github.com/rafaeljusto/shelter?status.png)](https://godoc.org/github.com/rafaeljusto/shelter)
-[![Download](https://api.bintray.com/packages/rafaeljusto/deb/shelter/images/download.png) ](http://dl.bintray.com/rafaeljusto/deb/shelter_latest_amd64.deb)
+[![Download](https://api.bintray.com/packages/rafaeljusto/deb/shelter/images/download.png) ](http://dl.bintray.com/rafaeljusto/deb/shelter/_latestVersion)
 
 System created for registries to periodically validate and alert domains about DNS or
 DNSSEC misconfiguration.
@@ -99,8 +99,6 @@ that you choose, and if you want a CI enviroment.
 * Docker - http://docker.io/
 * OpenSSL - https://www.openssl.org/‎ (used in Docker build)
 * Inno Setup - http://www.jrsoftware.org/isinfo.php (Windows)
-* Jenkins - http://jenkins-ci.org/
-* Chef - http://www.getchef.com/
 
 All necessary scripts to generate the packages are under the deploy folder in the project
 root.
