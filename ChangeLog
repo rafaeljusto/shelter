@@ -1,6 +1,13 @@
 Shelter
 =======
 
+version 0.2:
+  New Feature:
+  * Allow MongoDB authentication
+  * Allow a cluster of MongoDB servers for data persistency
+  Fix:
+  * Checking QPS for nameservers with glue records
+
 version 0.1:
   New Feature:
   * Automatically detect DNS/DNSSEC configuration problems of the registered domains
@@ -16,4 +23,3 @@ version 0.1:
   * IDNA support for domains
   * Optimized scan strategy to verify all registered domains configurations
   * On-the-fly domain verification interface
-  * Allow a cluster of MongoDB servers for data persistency

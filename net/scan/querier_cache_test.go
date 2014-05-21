@@ -6,6 +6,8 @@
 package scan
 
 import (
+	"github.com/rafaeljusto/shelter/model"
+	"net"
 	"testing"
 	"time"
 )
@@ -66,7 +68,7 @@ func TestQueriesPerSecondExceeded(t *testing.T) {
 func TestQuerierCacheGet(t *testing.T) {
 	querierCache.hosts = make(map[string]*hostCache)
 
-	addresses, err := querierCache.Get("localhost")
+	addresses, err := querierCache.Get(model.Nameserver{Host: "localhost"}, "example.com.")
 	if err != nil {
 		t.Fatal("Not resolving a valid nameserver")
 	}
@@ -88,7 +90,7 @@ func TestQuerierCacheGet(t *testing.T) {
 		}
 	}
 
-	_, err = querierCache.Get("localhost")
+	_, err = querierCache.Get(model.Nameserver{Host: "localhost"}, "example.com.")
 	if err != nil {
 		t.Fatal("Not recovering correctly from local cache")
 	}
@@ -103,6 +105,37 @@ func TestQuerierCacheGet(t *testing.T) {
 		t.Error("Storing different data from the returned one")
 	}
 
+	// Get when nameserver have glue records
+
+	addresses, err = querierCache.Get(model.Nameserver{
+		Host: "ns1.example.com.",
+		IPv4: net.ParseIP("127.0.0.1"),
+		IPv6: net.ParseIP("::1"),
+	}, "example.com.")
+
+	if err != nil {
+		t.Fatal("Not resolving a nameserver with glue record")
+	}
+
+	if len(addresses) != 2 {
+		t.Fatal("Something wrong with the number of IP address obtained from nameserver " +
+			"with glue records")
+	}
+
+	if addresses[0].String() != "127.0.0.1" && addresses[1].String() != "::1" {
+		t.Error("Not resolving correctly the nameserver with glue records")
+	}
+
+	h, exists = querierCache.hosts["ns1.example.com."]
+
+	if !exists {
+		t.Fatal("Not storing results into cache for nameservers with glue records")
+	}
+
+	if len(h.addresses) != len(addresses) {
+		t.Error("Storing different data from the returned one on nameservers with glue records")
+	}
+
 	// The tests bellow are really fast, but there's a little chance to fail when the epoch
 	// from the created object is different from the current epoch. This will happen if we
 	// are creating the object in the end of a second. After some tests using shell scripts
@@ -113,7 +146,7 @@ func TestQuerierCacheGet(t *testing.T) {
 	h.timeouts = 0
 	querierCache.hosts["localhost"] = h
 
-	addresses, err = querierCache.Get("localhost")
+	addresses, err = querierCache.Get(model.Nameserver{Host: "localhost"}, "example.com.")
 	if err != ErrHostQPSExceeded {
 		t.Error("Not returning error when maximum QPS per host is exceeded")
 	}
@@ -123,12 +156,12 @@ func TestQuerierCacheGet(t *testing.T) {
 	h.timeouts = maxTimeoutsPerHost + 1
 	querierCache.hosts["localhost"] = h
 
-	addresses, err = querierCache.Get("localhost")
+	addresses, err = querierCache.Get(model.Nameserver{Host: "localhost"}, "example.com.")
 	if err != ErrHostTimeout {
 		t.Error("Not returning error when maximum timeouts in the host is exceeded")
 	}
 
-	_, err = querierCache.Get("abc123idontexist321cba.com.br")
+	_, err = querierCache.Get(model.Nameserver{Host: "abc123idontexist321cba.com.br"}, "example.com.")
 	if err == nil {
 		t.Error("Resolving an unknown name")
 	}
@@ -137,7 +170,7 @@ func TestQuerierCacheGet(t *testing.T) {
 func TestQuerierCacheTimeout(t *testing.T) {
 	querierCache.hosts = make(map[string]*hostCache)
 
-	_, err := querierCache.Get("localhost")
+	_, err := querierCache.Get(model.Nameserver{Host: "localhost"}, "example.com.")
 	if err != nil {
 		t.Fatal("Not resolving a valid nameserver")
 	}
@@ -169,7 +202,7 @@ func TestQuerierCacheQuery(t *testing.T) {
 		t.Error("Creating cache entry when alerting about a query")
 	}
 
-	_, err := querierCache.Get("localhost")
+	_, err := querierCache.Get(model.Nameserver{Host: "localhost"}, "example.com.")
 	if err != nil {
 		t.Fatal("Not resolving a valid nameserver")
 	}
@@ -223,7 +256,7 @@ func TestQuerierCacheQuery(t *testing.T) {
 func TestQuerierCacheClear(t *testing.T) {
 	querierCache.hosts = make(map[string]*hostCache)
 
-	_, err := querierCache.Get("localhost")
+	_, err := querierCache.Get(model.Nameserver{Host: "localhost"}, "example.com.")
 	if err != nil {
 		t.Fatal("Not resolving a valid nameserver")
 	}

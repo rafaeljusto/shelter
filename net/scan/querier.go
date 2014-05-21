@@ -312,19 +312,8 @@ func (q *querier) sendDNSRequest(host string, dnsRequestMessage *dns.Msg) (dnsRe
 // change because of glue records needs or not. This function alsos resolve hostnames and
 // store the addresses in a cache
 func getHost(fqdn string, nameserver model.Nameserver) (string, error) {
-	if nameserver.NeedsGlue(fqdn) {
-		// Nameserver with glue record. For now we are giving preference for IPv4 addresses,
-		// in the future it would be nice to have an algorithm using both addresses, and
-		// keeping the status from both
-		if nameserver.IPv4 != nil {
-			return "[" + nameserver.IPv4.String() + "]:" + strconv.Itoa(DNSPort), nil
-		} else {
-			return "[" + nameserver.IPv6.String() + "]:" + strconv.Itoa(DNSPort), nil
-		}
-	}
-
 	// Using cache to store host addresses when there's no glue
-	if addresses, err := querierCache.Get(nameserver.Host); err == nil || len(addresses) > 0 {
+	if addresses, err := querierCache.Get(nameserver, fqdn); err == nil || len(addresses) > 0 {
 		// Found information in cache, lets use it to speed up the scan. We are using the
 		// first returned address, that can be IPv4 or IPv6. Usually IPv4 is the first index,
 		// and for now we are giving preference for IPv4

@@ -7,6 +7,7 @@ package scan
 
 import (
 	"errors"
+	"github.com/rafaeljusto/shelter/model"
 	"net"
 	"sync"
 	"sync/atomic"
@@ -76,9 +77,9 @@ type QuerierCache struct {
 
 // Method used to retrieve addresses of a given nameserver, if the address does not exist
 // in the local cache the system will lookup for the domain and will store the result
-func (q *QuerierCache) Get(name string) ([]net.IP, error) {
+func (q *QuerierCache) Get(nameserver model.Nameserver, fqdn string) ([]net.IP, error) {
 	q.hostsMutex.RLock()
-	host, found := q.hosts[name]
+	host, found := q.hosts[nameserver.Host]
 	q.hostsMutex.RUnlock()
 
 	if found {
@@ -93,14 +94,31 @@ func (q *QuerierCache) Get(name string) ([]net.IP, error) {
 		}
 	}
 
-	// Not found in cache, lets discover the address of this name sending DNS requests
-	addresses, err := net.LookupIP(name)
-	if err != nil {
-		return nil, err
+	// Not found in cache, lets discover the address of this name sending DNS requests or
+	// retrieving from the namserver object (glue record)
+	var addresses []net.IP
+
+	if nameserver.NeedsGlue(fqdn) {
+		if nameserver.IPv4 != nil {
+			addresses = append(addresses, nameserver.IPv4)
+		}
+
+		if nameserver.IPv6 != nil {
+			addresses = append(addresses, nameserver.IPv6)
+		}
+	}
+
+	// In case that the nameserver doesn't have a glue record we try to resolve the hostname
+	if len(addresses) == 0 {
+		var err error
+		addresses, err = net.LookupIP(nameserver.Host)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	q.hostsMutex.Lock()
-	q.hosts[name] = &hostCache{
+	q.hosts[nameserver.Host] = &hostCache{
 		addresses:        addresses,
 		lastEpoch:        0,
 		queriesPerSecond: 0,
