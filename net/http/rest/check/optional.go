@@ -7,7 +7,6 @@ package check
 
 import (
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -52,7 +51,7 @@ func HTTPIfUnmodifiedSince(r *http.Request, lastModifiedAt time.Time) (bool, err
 	return true, nil
 }
 
-func HTTPIfMatch(r *http.Request, revision int) (bool, error) {
+func HTTPIfMatch(r *http.Request, etag string) (bool, error) {
 	ifMatch := r.Header.Get("If-Match")
 	ifMatch = strings.TrimSpace(ifMatch)
 
@@ -68,15 +67,10 @@ func HTTPIfMatch(r *http.Request, revision int) (bool, error) {
 		// If "*" is given and no current entity exists, the server MUST NOT perform the
 		// requested method, and MUST return a 412 (Precondition Failed) response
 		if ifMatchPart == "*" {
-			return (revision > 0), nil
+			return len(etag) > 0 && etag != "0", nil
 		}
 
-		etag, err := strconv.Atoi(ifMatchPart)
-		if err != nil {
-			return false, err
-		}
-
-		if etag == revision {
+		if ifMatchPart == etag {
 			return true, nil
 		}
 	}
@@ -86,7 +80,7 @@ func HTTPIfMatch(r *http.Request, revision int) (bool, error) {
 	return false, nil
 }
 
-func HTTPIfNoneMatch(r *http.Request, revision int) (bool, error) {
+func HTTPIfNoneMatch(r *http.Request, etag string) (bool, error) {
 	ifNoneMatch := r.Header.Get("If-None-Match")
 	ifNoneMatch = strings.TrimSpace(ifNoneMatch)
 
@@ -104,15 +98,10 @@ func HTTPIfNoneMatch(r *http.Request, revision int) (bool, error) {
 		// resource's modification date fails to match that supplied in an If-Modified-Since
 		// header field in the request
 		if ifNoneMatchPart == "*" {
-			return (revision == 0), nil
+			return len(etag) == 0 || etag == "0", nil
 		}
 
-		etag, err := strconv.Atoi(ifNoneMatchPart)
-		if err != nil {
-			return false, err
-		}
-
-		if etag == revision {
+		if ifNoneMatchPart == etag {
 			// Instead, if the request method was GET or HEAD, the server SHOULD respond with a
 			// 304 (Not Modified) response, including the cache-related header fields
 			// (particularly ETag) of one of the entities that matched. For all other request

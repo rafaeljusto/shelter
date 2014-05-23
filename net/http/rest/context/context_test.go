@@ -91,6 +91,18 @@ func TestResponse(t *testing.T) {
 	if context.ResponseHTTPStatus != http.StatusNotFound {
 		t.Error("Not setting the return status code properly")
 	}
+
+	// Test if Response method clear the response body
+	context.JSONResponse(http.StatusOK, struct {
+		Key string `json:"key"`
+	}{
+		Key: "value",
+	})
+
+	context.Response(http.StatusNotFound)
+	if len(context.ResponseContent) > 0 {
+		t.Error("Not clearing the response body")
+	}
 }
 
 func TestMessageReponse(t *testing.T) {

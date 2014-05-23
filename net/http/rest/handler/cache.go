@@ -10,7 +10,6 @@ import (
 	"github.com/rafaeljusto/shelter/net/http/rest/check"
 	"github.com/rafaeljusto/shelter/net/http/rest/context"
 	"net/http"
-	"strconv"
 	"time"
 )
 
@@ -18,13 +17,13 @@ func CheckHTTPCacheHeaders(
 	r *http.Request,
 	context *context.Context,
 	lastModified time.Time,
-	revision int,
+	etag string,
 ) bool {
 
 	return checkIfModifiedSince(r, context, lastModified) &&
 		checkIfUnmodifiedSince(r, context, lastModified) &&
-		checkIfMatch(r, context, revision) &&
-		checkIfNoneMatch(r, context, revision)
+		checkIfMatch(r, context, etag) &&
+		checkIfNoneMatch(r, context, etag)
 }
 
 func checkIfModifiedSince(r *http.Request, context *context.Context, lastModified time.Time) bool {
@@ -71,8 +70,8 @@ func checkIfUnmodifiedSince(r *http.Request, context *context.Context, lastModif
 	return true
 }
 
-func checkIfMatch(r *http.Request, context *context.Context, revision int) bool {
-	match, err := check.HTTPIfMatch(r, revision)
+func checkIfMatch(r *http.Request, context *context.Context, etag string) bool {
+	match, err := check.HTTPIfMatch(r, etag)
 	if err != nil {
 		if err := context.MessageResponse(http.StatusBadRequest,
 			"invalid-if-match", r.URL.RequestURI()); err != nil {
@@ -98,8 +97,8 @@ func checkIfMatch(r *http.Request, context *context.Context, revision int) bool 
 	return true
 }
 
-func checkIfNoneMatch(r *http.Request, context *context.Context, revision int) bool {
-	noneMatch, err := check.HTTPIfNoneMatch(r, revision)
+func checkIfNoneMatch(r *http.Request, context *context.Context, etag string) bool {
+	noneMatch, err := check.HTTPIfNoneMatch(r, etag)
 	if err != nil {
 		if err := context.MessageResponse(http.StatusBadRequest,
 			"invalid-if-none-match", r.URL.RequestURI()); err != nil {
@@ -115,7 +114,7 @@ func checkIfNoneMatch(r *http.Request, context *context.Context, revision int) b
 		// (particularly ETag) of one of the entities that matched. For all other request
 		// methods, the server MUST respond with a status of 412 (Precondition Failed)
 		if r.Method == "GET" || r.Method == "HEAD" {
-			context.AddHeader("ETag", strconv.Itoa(revision))
+			context.AddHeader("ETag", etag)
 			if err := context.MessageResponse(http.StatusNotModified,
 				"if-match-none-failed", r.URL.RequestURI()); err != nil {
 

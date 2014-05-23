@@ -62,7 +62,7 @@ func retrieveDomain(r *http.Request, context *context.Context, fqdn string) {
 		return
 	}
 
-	if !CheckHTTPCacheHeaders(r, context, domain.LastModifiedAt, domain.Revision) {
+	if !CheckHTTPCacheHeaders(r, context, domain.LastModifiedAt, strconv.Itoa(domain.Revision)) {
 		return
 	}
 
@@ -103,7 +103,7 @@ func createUpdateDomain(r *http.Request, context *context.Context, fqdn string) 
 	// user, if the domain does not exist yet thats alright because we will create it
 	domain, _ := domainDAO.FindByFQDN(fqdn)
 
-	if !CheckHTTPCacheHeaders(r, context, domain.LastModifiedAt, domain.Revision) {
+	if !CheckHTTPCacheHeaders(r, context, domain.LastModifiedAt, strconv.Itoa(domain.Revision)) {
 		return
 	}
 
@@ -182,7 +182,7 @@ func removeDomain(r *http.Request, context *context.Context, fqdn string) {
 		return
 	}
 
-	if !CheckHTTPCacheHeaders(r, context, domain.LastModifiedAt, domain.Revision) {
+	if !CheckHTTPCacheHeaders(r, context, domain.LastModifiedAt, strconv.Itoa(domain.Revision)) {
 		return
 	}
 

@@ -28,7 +28,7 @@ func TestHTTPCacheHeaders(t *testing.T) {
 	}
 
 	lastModified := time.Now().Add(2 * time.Second)
-	if !CheckHTTPCacheHeaders(r, &c, lastModified, 2) {
+	if !CheckHTTPCacheHeaders(r, &c, lastModified, "2") {
 		t.Error("Not detecting a valid scenario")
 	}
 }
@@ -113,11 +113,11 @@ func TestCheckIfMatch(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if !checkIfMatch(r, &c, 1) {
+	if !checkIfMatch(r, &c, "1") {
 		t.Error("Not detecting when If-Match matched")
 	}
 
-	if checkIfMatch(r, &c, 2) {
+	if checkIfMatch(r, &c, "2") {
 		t.Error("Not detecting when If-Match did not match")
 	}
 
@@ -125,8 +125,8 @@ func TestCheckIfMatch(t *testing.T) {
 		t.Error("Not returning correct status when If-Match did not match")
 	}
 
-	r.Header.Set("If-Match", "This is not an revision identifier")
-	if checkIfMatch(r, &c, 1) {
+	r.Header.Set("If-Match", "This is not an etag identifier")
+	if checkIfMatch(r, &c, "1") {
 		t.Error("Not detecting invalid header field")
 	}
 }
@@ -143,7 +143,7 @@ func TestCheckIfNoneMatch(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if checkIfNoneMatch(r, &c, 1) {
+	if checkIfNoneMatch(r, &c, "1") {
 		t.Error("Not detecting when If-None-Match matched")
 	}
 
@@ -151,13 +151,8 @@ func TestCheckIfNoneMatch(t *testing.T) {
 		t.Error("Not returning correct status when If-None-Match matched for GET")
 	}
 
-	if !checkIfNoneMatch(r, &c, 2) {
+	if !checkIfNoneMatch(r, &c, "2") {
 		t.Error("Not detecting when If-None-Match did not match")
-	}
-
-	r.Header.Set("If-None-Match", "This is not an revision identifier")
-	if checkIfNoneMatch(r, &c, 1) {
-		t.Error("Not detecting invalid header field")
 	}
 
 	r, err = http.NewRequest("PUT", "", nil)
@@ -166,7 +161,7 @@ func TestCheckIfNoneMatch(t *testing.T) {
 	}
 	r.Header.Set("If-None-Match", "1")
 
-	if checkIfNoneMatch(r, &c, 1) {
+	if checkIfNoneMatch(r, &c, "1") {
 		t.Error("Not detecting when If-None-Match matched")
 	}
 

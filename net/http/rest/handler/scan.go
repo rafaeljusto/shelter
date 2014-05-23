@@ -65,7 +65,7 @@ func retrieveScan(r *http.Request, context *context.Context, date time.Time) {
 		return
 	}
 
-	if !CheckHTTPCacheHeaders(r, context, scan.LastModifiedAt, scan.Revision) {
+	if !CheckHTTPCacheHeaders(r, context, scan.LastModifiedAt, strconv.Itoa(scan.Revision)) {
 		return
 	}
 

@@ -63,6 +63,7 @@ func (c *Context) JSONRequest(object interface{}) error {
 // Store only the HTTP status, for no content responses
 func (c *Context) Response(httpStatus int) {
 	c.ResponseHTTPStatus = httpStatus
+	c.ResponseContent = []byte{}
 }
 
 // Store a message response, translating the message id to the proper language message

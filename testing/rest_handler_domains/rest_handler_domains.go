@@ -17,6 +17,7 @@ import (
 	"labix.org/v2/mgo"
 	"net/http"
 	"strings"
+	"time"
 )
 
 var (
@@ -29,6 +30,11 @@ type RESTHandlerDomainsTestConfigFile struct {
 		URI  string
 		Name string
 	}
+}
+
+type DomainsCacheTestData struct {
+	HeaderValue        string
+	ExpectedHTTPStatus int
 }
 
 func init() {
@@ -72,6 +78,10 @@ func main() {
 	createDomains(database)
 	retrieveDomains(database)
 	retrieveDomainsMetadata(database)
+	retrieveDomainsIfModifiedSince(database)
+	retrieveDomainsIfUnmodifiedSince(database)
+	retrieveDomainsIfMatch(database)
+	retrieveDomainsIfNoneMatch(database)
 	deleteDomains(database)
 
 	utils.Println("SUCCESS!")
@@ -209,6 +219,92 @@ func retrieveDomainsMetadata(database *mgo.Database) {
 	}
 }
 
+func retrieveDomainsIfModifiedSince(database *mgo.Database) {
+	r, err := http.NewRequest("GET", "/domains", nil)
+	if err != nil {
+		utils.Fatalln("Error creating the HTTP request", err)
+	}
+
+	domainsCacheTest(database, r, "If-Modified-Since", []DomainsCacheTestData{
+		{
+			HeaderValue:        "abcdef",
+			ExpectedHTTPStatus: http.StatusBadRequest,
+		},
+		{
+			HeaderValue:        time.Now().Add(1 * time.Second).UTC().Format(time.RFC1123),
+			ExpectedHTTPStatus: http.StatusNotModified,
+		},
+	})
+}
+
+func retrieveDomainsIfUnmodifiedSince(database *mgo.Database) {
+	r, err := http.NewRequest("GET", "/domains", nil)
+	if err != nil {
+		utils.Fatalln("Error creating the HTTP request", err)
+	}
+
+	domainsCacheTest(database, r, "If-Unmodified-Since", []DomainsCacheTestData{
+		{
+			HeaderValue:        "abcdef",
+			ExpectedHTTPStatus: http.StatusBadRequest,
+		},
+		{
+			HeaderValue:        time.Now().Add(-10 * time.Second).UTC().Format(time.RFC1123),
+			ExpectedHTTPStatus: http.StatusPreconditionFailed,
+		},
+	})
+}
+
+func retrieveDomainsIfMatch(database *mgo.Database) {
+	r, err := http.NewRequest("GET", "/domains", nil)
+	if err != nil {
+		utils.Fatalln("Error creating the HTTP request", err)
+	}
+
+	context, err := context.NewContext(r, database)
+	if err != nil {
+		utils.Fatalln("Error creating context", err)
+	}
+
+	handler.HandleDomains(r, &context)
+
+	domainsCacheTest(database, r, "If-Match", []DomainsCacheTestData{
+		{
+			HeaderValue:        context.HTTPHeader["ETag"] + "x",
+			ExpectedHTTPStatus: http.StatusPreconditionFailed,
+		},
+		{
+			HeaderValue:        context.HTTPHeader["ETag"],
+			ExpectedHTTPStatus: http.StatusOK,
+		},
+	})
+}
+
+func retrieveDomainsIfNoneMatch(database *mgo.Database) {
+	r, err := http.NewRequest("GET", "/domains", nil)
+	if err != nil {
+		utils.Fatalln("Error creating the HTTP request", err)
+	}
+
+	context, err := context.NewContext(r, database)
+	if err != nil {
+		utils.Fatalln("Error creating context", err)
+	}
+
+	handler.HandleDomains(r, &context)
+
+	domainsCacheTest(database, r, "If-None-Match", []DomainsCacheTestData{
+		{
+			HeaderValue:        context.HTTPHeader["ETag"],
+			ExpectedHTTPStatus: http.StatusNotModified,
+		},
+		{
+			HeaderValue:        context.HTTPHeader["ETag"] + "x",
+			ExpectedHTTPStatus: http.StatusOK,
+		},
+	})
+}
+
 func deleteDomains(database *mgo.Database) {
 	for i := 0; i < 100; i++ {
 		r, err := http.NewRequest("DELETE", fmt.Sprintf("/domain/example%d.com.br.", i), nil)
@@ -226,6 +322,28 @@ func deleteDomains(database *mgo.Database) {
 		if context.ResponseHTTPStatus != http.StatusNoContent {
 			utils.Fatalln("Error removing domain",
 				errors.New(string(context.ResponseContent)))
+		}
+	}
+}
+
+func domainsCacheTest(database *mgo.Database, r *http.Request,
+	header string, domainsCacheTestData []DomainsCacheTestData) {
+
+	context, err := context.NewContext(r, database)
+	if err != nil {
+		utils.Fatalln("Error creating context", err)
+	}
+
+	for _, item := range domainsCacheTestData {
+		r.Header.Set(header, item.HeaderValue)
+
+		handler.HandleDomains(r, &context)
+
+		if context.ResponseHTTPStatus != item.ExpectedHTTPStatus {
+			utils.Fatalln(fmt.Sprintf("Error in %s test using %s [%s] "+
+				"HTTP header. Expected HTTP status code %d and got %d",
+				r.Method, header, item.HeaderValue, item.ExpectedHTTPStatus,
+				context.ResponseHTTPStatus), errors.New(string(context.ResponseContent)))
 		}
 	}
 }

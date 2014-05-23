@@ -6,6 +6,8 @@
 package handler
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"github.com/rafaeljusto/shelter/dao"
 	"github.com/rafaeljusto/shelter/log"
 	"github.com/rafaeljusto/shelter/net/http/rest/context"
@@ -14,6 +16,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func init() {
@@ -151,4 +154,28 @@ func retrieveDomains(r *http.Request, context *context.Context) {
 		log.Println("Error while writing response. Details:", err)
 		context.Response(http.StatusInternalServerError)
 	}
+
+	hash := md5.New()
+	if _, err := hash.Write(context.ResponseContent); err != nil {
+		log.Println("Error calculating response ETag. Details:", err)
+		context.Response(http.StatusInternalServerError)
+	}
+
+	// The ETag header will be the hash of the content on list services
+	etag := hex.EncodeToString(hash.Sum(nil))
+
+	// Last-Modified is going to be the most recent date of the list
+	var lastModifiedAt time.Time
+	for _, domain := range domains {
+		if domain.LastModifiedAt.After(lastModifiedAt) {
+			lastModifiedAt = domain.LastModifiedAt
+		}
+	}
+
+	if !CheckHTTPCacheHeaders(r, context, lastModifiedAt, etag) {
+		return
+	}
+
+	context.AddHeader("ETag", etag)
+	context.AddHeader("Last-Modified", lastModifiedAt.Format(time.RFC1123))
 }

@@ -330,11 +330,15 @@ func retrieveDomainIfMatch(database *mgo.Database) {
 	domainCacheTest(database, r, "If-Match", []DomainCacheTestData{
 		{
 			HeaderValue:        "abcdef",
-			ExpectedHTTPStatus: http.StatusBadRequest,
+			ExpectedHTTPStatus: http.StatusPreconditionFailed,
 		},
 		{
 			HeaderValue:        "3",
 			ExpectedHTTPStatus: http.StatusPreconditionFailed,
+		},
+		{
+			HeaderValue:        "2",
+			ExpectedHTTPStatus: http.StatusOK,
 		},
 	})
 }
@@ -348,7 +352,7 @@ func retrieveDomainIfNoneMatch(database *mgo.Database) {
 	domainCacheTest(database, r, "If-None-Match", []DomainCacheTestData{
 		{
 			HeaderValue:        "abcdef",
-			ExpectedHTTPStatus: http.StatusBadRequest,
+			ExpectedHTTPStatus: http.StatusOK,
 		},
 		{
 			HeaderValue:        "2",
@@ -429,11 +433,15 @@ func updateDomainIfMatch(database *mgo.Database) {
 	domainCacheTest(database, r, "If-Match", []DomainCacheTestData{
 		{
 			HeaderValue:        "abcdef",
-			ExpectedHTTPStatus: http.StatusBadRequest,
+			ExpectedHTTPStatus: http.StatusPreconditionFailed,
 		},
 		{
 			HeaderValue:        "3",
 			ExpectedHTTPStatus: http.StatusPreconditionFailed,
+		},
+		{
+			HeaderValue:        "2",
+			ExpectedHTTPStatus: http.StatusNoContent,
 		},
 	})
 }
@@ -455,12 +463,12 @@ func updateDomainIfNoneMatch(database *mgo.Database) {
 
 	domainCacheTest(database, r, "If-None-Match", []DomainCacheTestData{
 		{
-			HeaderValue:        "abcdef",
-			ExpectedHTTPStatus: http.StatusBadRequest,
+			HeaderValue:        "3",
+			ExpectedHTTPStatus: http.StatusPreconditionFailed,
 		},
 		{
-			HeaderValue:        "2",
-			ExpectedHTTPStatus: http.StatusPreconditionFailed,
+			HeaderValue:        "abcdef",
+			ExpectedHTTPStatus: http.StatusNoContent,
 		},
 	})
 }
@@ -510,10 +518,10 @@ func deleteDomainIfMatch(database *mgo.Database) {
 	domainCacheTest(database, r, "If-Match", []DomainCacheTestData{
 		{
 			HeaderValue:        "abcdef",
-			ExpectedHTTPStatus: http.StatusBadRequest,
+			ExpectedHTTPStatus: http.StatusPreconditionFailed,
 		},
 		{
-			HeaderValue:        "3",
+			HeaderValue:        "2",
 			ExpectedHTTPStatus: http.StatusPreconditionFailed,
 		},
 	})
@@ -527,11 +535,7 @@ func deleteDomainIfNoneMatch(database *mgo.Database) {
 
 	domainCacheTest(database, r, "If-None-Match", []DomainCacheTestData{
 		{
-			HeaderValue:        "abcdef",
-			ExpectedHTTPStatus: http.StatusBadRequest,
-		},
-		{
-			HeaderValue:        "2",
+			HeaderValue:        "4",
 			ExpectedHTTPStatus: http.StatusPreconditionFailed,
 		},
 	})
