@@ -5,6 +5,7 @@ version 0.2:
   New Feature:
   * Allow MongoDB authentication
   * Allow a cluster of MongoDB servers for data persistency
+  * List services now accepts cache HTTP headers
   Fix:
   * Checking QPS for nameservers with glue records
 
