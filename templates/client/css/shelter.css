@@ -390,10 +390,12 @@ progress {
   display: inline-block;
 }
 
+.pagination > span,
 .pagination-item {
   margin: 20px 10px 20px 10px;
 }
 
+.pagination > span,
 .pagination-item > span,
 .pagination-item > button {
   border-radius: 3px;
@@ -411,6 +413,7 @@ progress {
   text-shadow: 1px 1px 0px #1570cd;
 }
 
+.pagination > span,
 .pagination-item > span {
   background-color: #f24537;
   border: 1px solid #d02718;

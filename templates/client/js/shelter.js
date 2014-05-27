@@ -628,6 +628,7 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
 
         } else {
           $scope.etag = response.headers.Etag;
+          $scope.pagination.page = response.data.page;
           $scope.pagination.numberOfItems = response.data.numberOfItems;
           $scope.pagination.numberOfPages = response.data.numberOfPages;
           $scope.pagination.pageSize = response.data.pageSize;
@@ -789,6 +790,7 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
 
         } else {
           $scope.etag = response.headers.Etag;
+          $scope.pagination.page = response.data.page;
           $scope.pagination.numberOfItems = response.data.numberOfItems;
           $scope.pagination.numberOfPages = response.data.numberOfPages;
           $scope.pagination.pageSize = response.data.pageSize;

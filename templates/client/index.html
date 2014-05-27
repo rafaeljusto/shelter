@@ -72,6 +72,7 @@
 
       <div class="pagination">
         <label translate>Page</label>
+        <span>{{pagination.page}}</span>
         <div data-ng-repeat="link in pagination.links">
           <div data-ng-repeat="type in link.types" class="pagination-item">
             <button data-ng-click="retrieveDomainsByURI(link.href)">
@@ -140,10 +141,10 @@
 
       <div class="pagination">
         <label translate>Page</label>
+        <span>{{pagination.page}}</span>
         <div data-ng-repeat="link in pagination.links">
           <div data-ng-repeat="type in link.types" class="pagination-item">
             <button data-ng-click="retrieveScansByURI(link.href)">
-              <i class="fa fa-dot-circle-o" data-ng-if="type == 'current'"></i>
               <i class="fa fa-forward" data-ng-if="type == 'next'"></i>
               <i class="fa fa-backward" data-ng-if="type == 'prev'"></i>
               <i class="fa fa-fast-backward" data-ng-if="type == 'first'"></i>

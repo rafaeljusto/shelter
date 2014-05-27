@@ -45,10 +45,6 @@ func ScansToScansResponse(scans []model.Scan, pagination dao.ScanDAOPagination) 
 	// handler because we are going to have a cross-reference problem
 	links := []Link{
 		{
-			Types: []LinkType{LinkTypeCurrent},
-			HRef:  "/scans/current",
-		},
-		{
 			Types: []LinkType{LinkTypeFirst},
 			HRef:  fmt.Sprintf("/scans/?pagesize=%d&page=%d&orderby=%s", pagination.PageSize, 1, orderBy),
 		},
