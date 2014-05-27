@@ -201,32 +201,12 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
               return response;
             });
       },
-      retrieveDomains: function(page, pageSize) {
-        var uri = "";
-
-        if (page != undefined) {
-          if (uri.length == 0) {
-            uri += "?";
-          } else {
-            uri += "&";
-          }
-
-          uri += "page=" + page;
-        }
-
-        if (pageSize != undefined) {
-          if (uri.length == 0) {
-            uri += "?";
-          } else {
-            uri += "&";
-          }
-
-          uri += "pagesize=" + pageSize;
-        }
-
-        uri = "/domains/" + uri;
-
-        return $http.get(uri)
+      retrieveDomains: function(uri, etag) {
+        return $http.get(uri, {
+            headers: {
+              "If-None-Match": etag
+            }
+        })
           .then(
             function(response) {
               return response;
@@ -607,53 +587,95 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
     $scope.pageSizes = [ 20, 40, 60, 80, 100 ];
 
     $scope.retrieveDomains = function(page, pageSize) {
-      domainService.retrieveDomains(page, pageSize).then(
-        function(response) {
-          if (response.status == 200) {
-            $scope.error = null;
+      var uri = "";
 
-            if (!$scope.pagination) {
-              $scope.pagination = response.data;
+      if (page != undefined) {
+        if (uri.length == 0) {
+          uri += "?";
+        } else {
+          uri += "&";
+        }
 
-            } else {
-              $scope.pagination.numberOfItems = response.data.numberOfItems;
-              $scope.pagination.numberOfPages = response.data.numberOfPages;
-              $scope.pagination.pageSize = response.data.pageSize;
+        uri += "page=" + page;
+      }
 
-              mergeList(response.data.domains,
-                $scope.pagination.domains,
-                function(networkDomain, domain) {
-                  return networkDomain.fqdn == domain.fqdn;
-                },
-                function(networkDomain, domain) {
-                  domain.nameservers = networkDomain.nameservers;
-                  domain.dsset = networkDomain.dsset;
-                  domain.owners = networkDomain.owners;
-                });
-            }
+      if (pageSize != undefined) {
+        if (uri.length == 0) {
+          uri += "?";
+        } else {
+          uri += "&";
+        }
 
-          } else if (response.status == 400) {
-            $scope.error = null;
-            $scope.error = response.data.message;
+        uri += "pagesize=" + pageSize;
+      }
 
-          } else {
-            $scope.success = null;
-            $translate("Server error").then(function(translation) {
-              $scope.error = translation;
-            });
-          }
+      uri = "/domains/" + uri;
 
-          $timeout(function() {
-            if ($scope.pagination) {
-              $scope.retrieveDomains($scope.pagination.page, $scope.pagination.pageSize);
-            } else {
-              $scope.retrieveDomains();
-            }
-          }, 5000);
-        });
+      $scope.retrieveDomainsURI = uri;
     };
 
-    $scope.retrieveDomains();
+    $scope.retrieveDomainsByURI = function(uri) {
+      $scope.retrieveDomainsURI = uri;
+    };
+
+    $scope.processDomainsResult = function(response) {
+      if (response.status == 200) {
+        $scope.success = null;
+        $scope.error = null;
+
+        if (!$scope.pagination) {
+          $scope.pagination = response.data;
+
+        } else {
+          $scope.etag = response.headers.Etag;
+          $scope.pagination.numberOfItems = response.data.numberOfItems;
+          $scope.pagination.numberOfPages = response.data.numberOfPages;
+          $scope.pagination.pageSize = response.data.pageSize;
+          $scope.pagination.links = response.data.links;
+
+          mergeList(response.data.domains,
+            $scope.pagination.domains,
+            function(networkDomain, domain) {
+              return networkDomain.fqdn == domain.fqdn;
+            },
+            function(networkDomain, domain) {
+              domain.nameservers = networkDomain.nameservers;
+              domain.dsset = networkDomain.dsset;
+              domain.owners = networkDomain.owners;
+            });
+        }
+
+      } else if (response.status == 304) {
+        // Not modified
+        $scope.success = null;
+        $scope.error = null;
+
+      } else if (response.status == 400) {
+        $scope.success = null;
+        $scope.error = response.data.message;
+
+      } else {
+        $scope.success = null;
+        $translate("Server error").then(function(translation) {
+          $scope.error = translation;
+        });
+      }
+    };
+
+    $scope.retrieveDomainsWorker = function() {
+      if (!$scope.retrieveDomainsURI) {
+        $scope.retrieveDomains();
+      }
+
+      domainService.retrieveDomains($scope.retrieveDomainsURI, $scope.etag).then(
+        function(response) {
+          $scope.processDomainsResult(response);
+        });
+
+      $timeout($scope.retrieveDomainsWorker, 1000);
+    };
+
+    $scope.retrieveDomainsWorker();
   })
 
 
@@ -664,32 +686,12 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
 
   .factory("scanService", function($http) {
     return {
-      retrieveScans: function(page, pageSize) {
-        var uri = "";
-
-        if (page != undefined) {
-          if (uri.length == 0) {
-            uri += "?";
-          } else {
-            uri += "&";
+      retrieveScans: function(uri, etag) {
+        return $http.get(uri, {
+          headers: {
+            "If-None-Match": etag
           }
-
-          uri += "page=" + page;
-        }
-
-        if (pageSize != undefined) {
-          if (uri.length == 0) {
-            uri += "?";
-          } else {
-            uri += "&";
-          }
-
-          uri += "pagesize=" + pageSize;
-        }
-
-        uri = "/scans/" + uri;
-
-        return $http.get(uri)
+        })
           .then(
             function(response) {
               return response;
@@ -698,8 +700,12 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
               return response;
             });
       },
-      retrieveCurrentScan: function() {
-        return $http.get("/scan/current")
+      retrieveCurrentScan: function(etag) {
+        return $http.get("/scan/current", {
+          headers: {
+            "If-None-Match": etag
+          }
+        })
           .then(
             function(response) {
               return response;
@@ -742,64 +748,98 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
     };
 
     $scope.retrieveScans = function(page, pageSize) {
-      scanService.retrieveScans(page, pageSize).then(
-        function(response) {
-          if (response.status == 200) {
-            $scope.error = null;
+      var uri = "";
 
-            if (!$scope.pagination) {
-              $scope.pagination = response.data;
+      if (page != undefined) {
+        if (uri.length == 0) {
+          uri += "?";
+        } else {
+          uri += "&";
+        }
 
-            } else {
-              $scope.pagination.numberOfItems = response.data.numberOfItems;
-              $scope.pagination.numberOfPages = response.data.numberOfPages;
-              $scope.pagination.pageSize = response.data.pageSize;
+        uri += "page=" + page;
+      }
 
-              mergeList(response.data.scans,
-                $scope.pagination.scans,
-                function(networkScan, scan) {
-                  return networkScan.startedAt == scan.startedAt;
-                },
-                function(networkScan, scan) {
-                  scan.status = networkScan.status;
-                  scan.finishedAt = networkScan.finishedAt;
-                  scan.domainsScanned = networkScan.domainsScanned;
-                  scan.domainsWithDNSSECScanned = networkScan.domainsWithDNSSECScanned;
-                  scan.nameserverStatistics = networkScan.nameserverStatistics;
-                  scan.dsStatistics = networkScan.dsStatistics;
-                });
-            }
+      if (pageSize != undefined) {
+        if (uri.length == 0) {
+          uri += "?";
+        } else {
+          uri += "&";
+        }
 
-          } else if (response.status == 400) {
-            $scope.error = null;
-            $scope.error = response.data.message;
+        uri += "pagesize=" + pageSize;
+      }
 
-          } else {
-            $scope.success = null;
-            $translate("Server error").then(function(translation) {
-              $scope.error = translation;
+      uri = "/scans/" + uri;
+
+      $scope.retrieveScansURI = uri;
+    };
+
+    $scope.retrieveScansByURI = function(uri) {
+      $scope.retrieveScansURI = uri;
+    };
+
+    $scope.processScansResult = function(response) {
+      if (response.status == 200) {
+        $scope.success = null;
+        $scope.error = null;
+
+        if (!$scope.pagination) {
+          $scope.pagination = response.data;
+
+        } else {
+          $scope.etag = response.headers.Etag;
+          $scope.pagination.numberOfItems = response.data.numberOfItems;
+          $scope.pagination.numberOfPages = response.data.numberOfPages;
+          $scope.pagination.pageSize = response.data.pageSize;
+          $scope.pagination.links = response.data.links;
+
+          mergeList(response.data.scans,
+            $scope.pagination.scans,
+            function(networkScan, scan) {
+              return networkScan.startedAt == scan.startedAt;
+            },
+            function(networkScan, scan) {
+              scan.status = networkScan.status;
+              scan.finishedAt = networkScan.finishedAt;
+              scan.domainsScanned = networkScan.domainsScanned;
+              scan.domainsWithDNSSECScanned = networkScan.domainsWithDNSSECScanned;
+              scan.nameserverStatistics = networkScan.nameserverStatistics;
+              scan.dsStatistics = networkScan.dsStatistics;
             });
-          }
+        }
 
-          $timeout(function() {
-            if ($scope.pagination) {
-              $scope.retrieveScans($scope.pagination.page, $scope.pagination.pageSize);
-            } else {
-              $scope.retrieveScans();
-            }
-          }, 5000);
+      } else if (response.status == 304) {
+        $scope.success = null;
+        $scope.error = null;
+
+      } else if (response.status == 400) {
+        $scope.success = null;
+        $scope.error = response.data.message;
+
+      } else {
+        $scope.success = null;
+        $translate("Server error").then(function(translation) {
+          $scope.error = translation;
         });
+      }
     };
 
     $scope.retrieveCurrentScan = function() {
-      scanService.retrieveCurrentScan().then(
+      scanService.retrieveCurrentScan($scope.currentScanEtag).then(
         function(response) {
           if (response.status == 200) {
+            $scope.success = null;
             $scope.error = null;
+            $scope.currentScanEtag = response.headers.Etag;
             $scope.currentScan = response.data;
 
-          } else if (response.status == 400) {
+          } else if (response.status == 304) {
+            $scope.success = null;
             $scope.error = null;
+
+          } else if (response.status == 400) {
+            $scope.success = null;
             $scope.error = response.data.message;
 
           } else {
@@ -813,6 +853,19 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
         });
     };
 
+    $scope.retrieveScansWorker = function() {
+      if (!$scope.retrieveScansURI) {
+        $scope.retrieveScans();
+      }
+
+      scanService.retrieveScans($scope.retrieveScansURI, $scope.etag).then(
+        function(response) {
+          $scope.processScansResult(response);
+        });
+
+      $timeout($scope.retrieveScansWorker, 1000);
+    };
+
     $scope.retrieveCurrentScan();
-    $scope.retrieveScans();
+    $scope.retrieveScansWorker();
   });

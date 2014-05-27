@@ -256,10 +256,6 @@ func retrieveCurrentScan(database *mgo.Database) {
 			errors.New(string(context.ResponseContent)))
 	}
 
-	if len(context.HTTPHeader["ETag"]) > 0 {
-		utils.Fatalln("Current scan does not have a version to come with ETag", nil)
-	}
-
 	if len(context.HTTPHeader["Last-Modified"]) > 0 {
 		utils.Fatalln("Current scan is not persisted to return Last-Modified header", nil)
 	}

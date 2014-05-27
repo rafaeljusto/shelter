@@ -65,4 +65,50 @@ describe("Domains controller", function() {
     expect(scope.pagination.domains.length).toBe(1);
     expect(scope.pagination.domains).toEqual(result.domains);
   }));
+
+  it("should retrieve the domains by URI", inject(function($injector) {
+    var result = {
+      numberOfItems: 1,
+      numberOfPages: 1,
+      pageSize: 20,
+      domains: [
+        {
+          fqdn: "br.",
+          nameservers: [
+            {
+              host: "a.dns.br",
+              ipv4: "200.160.0.10",
+              lastStatus: "OK",
+              lastOKAt: "2014-03-25T11:00:00-03:00",
+              lastCheckAt: "2014-03-25T11:00:00-03:00"
+            }
+          ],
+          dsset: [
+            {
+              keytag: 41674,
+              algorithm: 5,
+              digestType: 1,
+              digest: "EAA0978F38879DB70A53F9FF1ACF21D046A98B5C",
+              lastStatus: "OK",
+              lastOKAt: "2014-03-25T11:00:00-03:00",
+              lastCheckAt: "2014-03-25T11:00:00-03:00"
+            }
+          ]
+        }
+      ]
+    };
+
+    $httpBackend = $injector.get("$httpBackend");
+    $httpBackend.whenGET("/domains/").respond(200, result);
+    $httpBackend.whenGET("/domains/?page=1&pagesize=20").respond(200, result);
+
+    scope.retrieveDomainsByURI("/domains/?page=1&pagesize=20");
+    $httpBackend.flush()
+
+    expect(scope.pagination.numberOfItems).toBe(1);
+    expect(scope.pagination.numberOfPages).toBe(1);
+    expect(scope.pagination.pageSize).toBe(20);
+    expect(scope.pagination.domains.length).toBe(1);
+    expect(scope.pagination.domains).toEqual(result.domains);
+  }));
 });

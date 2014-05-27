@@ -71,6 +71,7 @@ func main() {
 	createScans(database)
 	retrieveScans()
 	retrieveScansWithPagination()
+	retrieveScansWithCache()
 
 	utils.Println("SUCCESS!")
 }
@@ -228,5 +229,49 @@ func retrieveScansWithPagination() {
 
 	if len(scansResponse.Scans) != scansResponse.PageSize {
 		utils.Fatalln("Not returning all desired scans", nil)
+	}
+}
+
+func retrieveScansWithCache() {
+	var client http.Client
+
+	url := ""
+	if len(config.ShelterConfig.WebClient.Listeners) > 0 {
+		url = fmt.Sprintf("http://%s:%d", config.ShelterConfig.WebClient.Listeners[0].IP,
+			config.ShelterConfig.WebClient.Listeners[0].Port)
+	}
+
+	if len(url) == 0 {
+		utils.Fatalln("There's no interface to connect to", nil)
+	}
+
+	r, err := http.NewRequest("GET", fmt.Sprintf("%s%s", url, "/scans"), nil)
+	if err != nil {
+		utils.Fatalln("Error creating the HTTP request", err)
+	}
+
+	utils.BuildHTTPHeader(r, nil)
+
+	response, err := client.Do(r)
+	if err != nil {
+		utils.Fatalln("Error sending request", err)
+	}
+
+	r, err = http.NewRequest("GET", fmt.Sprintf("%s%s", url, "/scans"), nil)
+	if err != nil {
+		utils.Fatalln("Error creating the HTTP request", err)
+	}
+
+	r.Header.Add("If-None-Match", response.Header.Get("ETag"))
+	utils.BuildHTTPHeader(r, nil)
+
+	response, err = client.Do(r)
+	if err != nil {
+		utils.Fatalln("Error sending request", err)
+	}
+
+	if response.StatusCode != http.StatusNotModified {
+		utils.Fatalln(fmt.Sprintf("Expected HTTP status %d and got %d for method GET and URI /scans",
+			http.StatusNotModified, response.StatusCode), nil)
 	}
 }

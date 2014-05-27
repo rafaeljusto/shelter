@@ -153,12 +153,14 @@ func retrieveDomains(r *http.Request, context *context.Context) {
 
 		log.Println("Error while writing response. Details:", err)
 		context.Response(http.StatusInternalServerError)
+		return
 	}
 
 	hash := md5.New()
 	if _, err := hash.Write(context.ResponseContent); err != nil {
 		log.Println("Error calculating response ETag. Details:", err)
 		context.Response(http.StatusInternalServerError)
+		return
 	}
 
 	// The ETag header will be the hash of the content on list services

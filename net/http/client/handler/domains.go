@@ -38,6 +38,7 @@ func HandleDomains(w http.ResponseWriter, r *http.Request) {
 	}
 
 	request.Header.Set("Accept-Language", r.Header.Get("Accept-Language"))
+	request.Header.Set("If-None-Match", r.Header.Get("If-None-Match"))
 
 	response, err := signAndSend(request, nil)
 	if err != nil {
@@ -47,6 +48,7 @@ func HandleDomains(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if response.StatusCode != http.StatusOK &&
+		response.StatusCode != http.StatusNotModified &&
 		response.StatusCode != http.StatusBadRequest {
 
 		w.WriteHeader(http.StatusInternalServerError)
@@ -56,6 +58,7 @@ func HandleDomains(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Add("Content-Type", "application/json")
+	w.Header().Add("Etag", response.Header.Get("Etag"))
 	w.WriteHeader(response.StatusCode)
 
 	if _, err := io.Copy(w, response.Body); err != nil {

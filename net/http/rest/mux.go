@@ -269,6 +269,7 @@ func (mux Mux) writeResponse(w http.ResponseWriter, r *http.Request,
 	// GET method. For more information check the RFC 2616 - 14.13.
 	if len(context.ResponseContent) > 0 && r.Method != "HEAD" {
 		if _, err := w.Write(context.ResponseContent); err != nil {
+			println(r.RequestURI, r.Method, context.ResponseHTTPStatus)
 			log.Println("Error writing message response. Details:", err)
 			return
 		}

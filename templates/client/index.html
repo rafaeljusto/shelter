@@ -72,19 +72,21 @@
 
       <div class="pagination">
         <label translate>Page</label>
-        <div data-ng-repeat="n in [] | range:pagination.numberOfPages">
-          <span data-ng-if="n+1 == pagination.page">{{n+1}}</span>
-          <button data-ng-if="n+1 != pagination.page"
-            data-ng-click="retrieveDomains(n+1, pagination.pageSize)">
-
-            {{n+1}}
-          </button>
+        <div data-ng-repeat="link in pagination.links">
+          <div data-ng-repeat="type in link.types" class="pagination-item">
+            <button data-ng-click="retrieveDomainsByURI(link.href)">
+              <i class="fa fa-forward" data-ng-if="type == 'next'"></i>
+              <i class="fa fa-backward" data-ng-if="type == 'prev'"></i>
+              <i class="fa fa-fast-backward" data-ng-if="type == 'first'"></i>
+              <i class="fa fa-fast-forward" data-ng-if="type == 'last'"></i>
+            </button>
+          </div>
         </div>
       </div>
 
       <div class="pagination">
         <label translate>Page size</label>
-        <div data-ng-repeat="pageSize in pageSizes" class="pagination">
+        <div data-ng-repeat="pageSize in pageSizes" class="pagination-item">
           <span data-ng-if="pageSize == pagination.pageSize">{{pageSize}}</span>
           <button data-ng-if="pageSize != pagination.pageSize"
             data-ng-click="retrieveDomains(pagination.page, pageSize)">
@@ -138,19 +140,22 @@
 
       <div class="pagination">
         <label translate>Page</label>
-        <div data-ng-repeat="n in [] | range:pagination.numberOfPages">
-          <span data-ng-if="n+1 == pagination.page">{{n+1}}</span>
-          <button data-ng-if="n+1 != pagination.page"
-            data-ng-click="retrieveScans(n+1, pagination.pageSize)">
-
-            {{n+1}}
-          </button>
+        <div data-ng-repeat="link in pagination.links">
+          <div data-ng-repeat="type in link.types" class="pagination-item">
+            <button data-ng-click="retrieveScansByURI(link.href)">
+              <i class="fa fa-dot-circle-o" data-ng-if="type == 'current'"></i>
+              <i class="fa fa-forward" data-ng-if="type == 'next'"></i>
+              <i class="fa fa-backward" data-ng-if="type == 'prev'"></i>
+              <i class="fa fa-fast-backward" data-ng-if="type == 'first'"></i>
+              <i class="fa fa-fast-forward" data-ng-if="type == 'last'"></i>
+            </button>
+          </div>
         </div>
       </div>
 
       <div class="pagination">
         <label translate>Page size</label>
-        <div data-ng-repeat="pageSize in pageSizes">
+        <div data-ng-repeat="pageSize in pageSizes" class="pagination-item">
           <span data-ng-if="pageSize == pagination.pageSize">{{pageSize}}</span>
           <button data-ng-if="pageSize != pagination.pageSize"
             data-ng-click="retrieveScans(pagination.page, pageSize)">

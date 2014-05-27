@@ -6,6 +6,8 @@
 package handler
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"github.com/rafaeljusto/shelter/dao"
 	"github.com/rafaeljusto/shelter/log"
 	"github.com/rafaeljusto/shelter/model"
@@ -46,12 +48,33 @@ func HandleScan(r *http.Request, context *context.Context) {
 }
 
 func retrieveCurrentScan(r *http.Request, context *context.Context) {
+	currentScan := model.GetCurrentScan()
+
 	if err := context.JSONResponse(http.StatusOK,
-		protocol.CurrentScanToScanResponse(model.GetCurrentScan())); err != nil {
+		protocol.CurrentScanToScanResponse(currentScan)); err != nil {
 
 		log.Println("Error while writing response. Details:", err)
 		context.Response(http.StatusInternalServerError)
+		return
 	}
+
+	hash := md5.New()
+	if _, err := hash.Write(context.ResponseContent); err != nil {
+		log.Println("Error calculating response ETag. Details:", err)
+		context.Response(http.StatusInternalServerError)
+		return
+	}
+
+	// The ETag header will be the hash of the content on list services
+	etag := hex.EncodeToString(hash.Sum(nil))
+
+	// TODO: We don't support Last-Modified related cache conditions, what are we going to
+	// do? Just remove the headers or give a bad request?
+	if !CheckHTTPCacheHeaders(r, context, time.Time{}, etag) {
+		return
+	}
+
+	context.AddHeader("ETag", etag)
 }
 
 func retrieveScan(r *http.Request, context *context.Context, date time.Time) {

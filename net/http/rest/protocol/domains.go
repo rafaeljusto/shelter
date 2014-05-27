@@ -50,16 +50,11 @@ func ToDomainsResponse(domains []model.Domain, pagination dao.DomainDAOPaginatio
 		},
 	}
 
-	// When there're no items, the first and the last page are the same
-	if pagination.NumberOfPages == 0 {
+	// Only add previous if theres a previous page
+	if pagination.Page-1 >= 1 {
 		links = append(links, Link{
-			Types: []LinkType{LinkTypeLast},
-			HRef:  fmt.Sprintf("/domains/?pagesize=%d&page=%d&orderby=%s", pagination.PageSize, 1, orderBy),
-		})
-	} else {
-		links = append(links, Link{
-			Types: []LinkType{LinkTypeLast},
-			HRef:  fmt.Sprintf("/domains/?pagesize=%d&page=%d&orderby=%s", pagination.PageSize, pagination.NumberOfPages, orderBy),
+			Types: []LinkType{LinkTypePrev},
+			HRef:  fmt.Sprintf("/domains/?pagesize=%d&page=%d&orderby=%s", pagination.PageSize, pagination.Page-1, orderBy),
 		})
 	}
 
@@ -71,11 +66,16 @@ func ToDomainsResponse(domains []model.Domain, pagination dao.DomainDAOPaginatio
 		})
 	}
 
-	// Only add previous if theres a previous page
-	if pagination.Page-1 >= 1 {
+	// When there're no items, the first and the last page are the same
+	if pagination.NumberOfPages == 0 {
 		links = append(links, Link{
-			Types: []LinkType{LinkTypePrev},
-			HRef:  fmt.Sprintf("/domains/?pagesize=%d&page=%d&orderby=%s", pagination.PageSize, pagination.Page-1, orderBy),
+			Types: []LinkType{LinkTypeLast},
+			HRef:  fmt.Sprintf("/domains/?pagesize=%d&page=%d&orderby=%s", pagination.PageSize, 1, orderBy),
+		})
+	} else {
+		links = append(links, Link{
+			Types: []LinkType{LinkTypeLast},
+			HRef:  fmt.Sprintf("/domains/?pagesize=%d&page=%d&orderby=%s", pagination.PageSize, pagination.NumberOfPages, orderBy),
 		})
 	}
 

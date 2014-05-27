@@ -114,13 +114,10 @@ func checkIfNoneMatch(r *http.Request, context *context.Context, etag string) bo
 		// (particularly ETag) of one of the entities that matched. For all other request
 		// methods, the server MUST respond with a status of 412 (Precondition Failed)
 		if r.Method == "GET" || r.Method == "HEAD" {
+			// The 304 response MUST NOT contain a message-body, and thus is always terminated
+			// by the first empty line after the header fields.
 			context.AddHeader("ETag", etag)
-			if err := context.MessageResponse(http.StatusNotModified,
-				"if-match-none-failed", r.URL.RequestURI()); err != nil {
-
-				log.Println("Error while writing response. Details:", err)
-				context.Response(http.StatusInternalServerError)
-			}
+			context.Response(http.StatusNotModified)
 
 		} else {
 			if err := context.MessageResponse(http.StatusPreconditionFailed,

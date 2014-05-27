@@ -67,6 +67,7 @@ func main() {
 	createDomains()
 	retrieveDomains()
 	retrieveDomainsWithPagination()
+	retrieveDomainsWithCache()
 	removeDomains()
 
 	utils.Println("SUCCESS!")
@@ -231,7 +232,7 @@ func retrieveDomainsWithPagination() {
 
 	if response.StatusCode != http.StatusOK {
 		utils.Fatalln(fmt.Sprintf("Expected HTTP status %d and got %d for method GET and URI /domains",
-			http.StatusCreated, response.StatusCode),
+			http.StatusOK, response.StatusCode),
 			errors.New(string(responseContent)),
 		)
 	}
@@ -259,6 +260,53 @@ func retrieveDomainsWithPagination() {
 
 	if len(domainsResponse.Domains) != domainsResponse.PageSize {
 		utils.Fatalln("Not returning all desired domains", nil)
+	}
+}
+
+func retrieveDomainsWithCache() {
+	var client http.Client
+
+	url := ""
+	if len(config.ShelterConfig.WebClient.Listeners) > 0 {
+		url = fmt.Sprintf("http://%s:%d", config.ShelterConfig.WebClient.Listeners[0].IP,
+			config.ShelterConfig.WebClient.Listeners[0].Port)
+	}
+
+	if len(url) == 0 {
+		utils.Fatalln("There's no interface to connect to", nil)
+	}
+
+	var r *http.Request
+	var err error
+
+	r, err = http.NewRequest("GET", fmt.Sprintf("%s%s", url, "/domains"), nil)
+	if err != nil {
+		utils.Fatalln("Error creating the HTTP request", err)
+	}
+
+	utils.BuildHTTPHeader(r, nil)
+
+	response, err := client.Do(r)
+	if err != nil {
+		utils.Fatalln("Error sending request", err)
+	}
+
+	r, err = http.NewRequest("GET", fmt.Sprintf("%s%s", url, "/domains"), nil)
+	if err != nil {
+		utils.Fatalln("Error creating the HTTP request", err)
+	}
+
+	r.Header.Add("If-None-Match", response.Header.Get("ETag"))
+	utils.BuildHTTPHeader(r, nil)
+
+	response, err = client.Do(r)
+	if err != nil {
+		utils.Fatalln("Error sending request", err)
+	}
+
+	if response.StatusCode != http.StatusNotModified {
+		utils.Fatalln(fmt.Sprintf("Expected HTTP status %d and got %d for method GET and URI /domains",
+			http.StatusNotModified, response.StatusCode), nil)
 	}
 }
 

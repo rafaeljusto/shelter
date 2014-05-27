@@ -54,16 +54,11 @@ func ScansToScansResponse(scans []model.Scan, pagination dao.ScanDAOPagination) 
 		},
 	}
 
-	// When there're no items, the first and the last page are the same
-	if pagination.NumberOfPages == 0 {
+	// Only add previous if theres a previous page
+	if pagination.Page-1 >= 1 {
 		links = append(links, Link{
-			Types: []LinkType{LinkTypeLast},
-			HRef:  fmt.Sprintf("/scans/?pagesize=%d&page=%d&orderby=%s", pagination.PageSize, 1, orderBy),
-		})
-	} else {
-		links = append(links, Link{
-			Types: []LinkType{LinkTypeLast},
-			HRef:  fmt.Sprintf("/scans/?pagesize=%d&page=%d&orderby=%s", pagination.PageSize, pagination.NumberOfPages, orderBy),
+			Types: []LinkType{LinkTypePrev},
+			HRef:  fmt.Sprintf("/scans/?pagesize=%d&page=%d&orderby=%s", pagination.PageSize, pagination.Page-1, orderBy),
 		})
 	}
 
@@ -75,11 +70,16 @@ func ScansToScansResponse(scans []model.Scan, pagination dao.ScanDAOPagination) 
 		})
 	}
 
-	// Only add previous if theres a previous page
-	if pagination.Page-1 >= 1 {
+	// When there're no items, the first and the last page are the same
+	if pagination.NumberOfPages == 0 {
 		links = append(links, Link{
-			Types: []LinkType{LinkTypePrev},
-			HRef:  fmt.Sprintf("/scans/?pagesize=%d&page=%d&orderby=%s", pagination.PageSize, pagination.Page-1, orderBy),
+			Types: []LinkType{LinkTypeLast},
+			HRef:  fmt.Sprintf("/scans/?pagesize=%d&page=%d&orderby=%s", pagination.PageSize, 1, orderBy),
+		})
+	} else {
+		links = append(links, Link{
+			Types: []LinkType{LinkTypeLast},
+			HRef:  fmt.Sprintf("/scans/?pagesize=%d&page=%d&orderby=%s", pagination.PageSize, pagination.NumberOfPages, orderBy),
 		})
 	}
 
