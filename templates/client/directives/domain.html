@@ -6,8 +6,8 @@
 
 <article data-ng-init="details = false">
   <header data-ng-click="details = !details"
-    data-ng-class="{'domain-error': hasProblems(domain),
-      'domain-ok': !hasProblems(domain) && wasChecked(domain)}">
+    data-ng-class="{'domain-error': hasErrors(domain),
+      'domain-ok': !hasErrors(domain) && wasChecked(domain)}">
     <h3>{{domain.fqdn}}</h3>
   </header>
 
