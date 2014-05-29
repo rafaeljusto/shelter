@@ -151,6 +151,46 @@ func retrieveDomains(database *mgo.Database) {
 				}
 			},
 		},
+		{
+			URI:                "/domains",
+			ExpectedHTTPStatus: http.StatusOK,
+			ContentCheck: func(content []byte) {
+				var domainsResponse protocol.DomainsResponse
+				json.Unmarshal(content, &domainsResponse)
+
+				if len(domainsResponse.Domains) == 0 {
+					utils.Fatalln("Error retrieving domains", nil)
+				}
+
+				if len(domainsResponse.Domains[0].Nameservers) == 0 {
+					utils.Fatalln("Error retrieving domains, no nameservers", nil)
+				}
+
+				if len(domainsResponse.Domains[0].Nameservers[0].Host) > 0 {
+					utils.Fatalln("Not compressing domains result", nil)
+				}
+			},
+		},
+		{
+			URI:                "/domains?expand",
+			ExpectedHTTPStatus: http.StatusOK,
+			ContentCheck: func(content []byte) {
+				var domainsResponse protocol.DomainsResponse
+				json.Unmarshal(content, &domainsResponse)
+
+				if len(domainsResponse.Domains) == 0 {
+					utils.Fatalln("Error retrieving domains", nil)
+				}
+
+				if len(domainsResponse.Domains[0].Nameservers) == 0 {
+					utils.Fatalln("Error retrieving domains, no nameservers", nil)
+				}
+
+				if len(domainsResponse.Domains[0].Nameservers[0].Host) == 0 {
+					utils.Fatalln("Compressing domains result when it's not necessary", nil)
+				}
+			},
+		},
 	}
 
 	for _, item := range data {

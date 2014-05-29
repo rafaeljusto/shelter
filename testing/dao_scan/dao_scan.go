@@ -75,8 +75,9 @@ func main() {
 
 	scanLifeCycle(scanDAO)
 	scanConcurrency(scanDAO)
-	scansPagination(scanDAO)
 	scanStatistics(scanDAO)
+	scansPagination(scanDAO)
+	scansExpand(scanDAO)
 
 	utils.Println("SUCCESS!")
 }
@@ -157,72 +158,6 @@ func scanConcurrency(scanDAO dao.ScanDAO) {
 	}
 }
 
-func scansPagination(scanDAO dao.ScanDAO) {
-	numberOfItems := 1000
-
-	for i := 0; i < numberOfItems; i++ {
-		scan := model.Scan{
-			StartedAt: time.Now().Add(time.Duration(-i) * time.Minute),
-		}
-
-		if err := scanDAO.Save(&scan); err != nil {
-			utils.Fatalln("Error saving scan in database", err)
-		}
-	}
-
-	pagination := dao.ScanDAOPagination{
-		PageSize: 10,
-		Page:     5,
-		OrderBy: []dao.ScanDAOSort{
-			{
-				Field:     dao.ScanDAOOrderByFieldStartedAt,
-				Direction: dao.DAOOrderByDirectionAscending,
-			},
-		},
-	}
-
-	scans, err := scanDAO.FindAll(&pagination)
-	if err != nil {
-		utils.Fatalln("Error retrieving scans", err)
-	}
-
-	if pagination.NumberOfItems != numberOfItems {
-		utils.Errorln("Number of items not calculated correctly", nil)
-	}
-
-	if pagination.NumberOfPages != numberOfItems/pagination.PageSize {
-		utils.Errorln("Number of pages not calculated correctly", nil)
-	}
-
-	if len(scans) != pagination.PageSize {
-		utils.Errorln("Number of scans not following page size", nil)
-	}
-
-	pagination = dao.ScanDAOPagination{
-		PageSize: 10000,
-		Page:     1,
-		OrderBy: []dao.ScanDAOSort{
-			{
-				Field:     dao.ScanDAOOrderByFieldStartedAt,
-				Direction: dao.DAOOrderByDirectionAscending,
-			},
-		},
-	}
-
-	scans, err = scanDAO.FindAll(&pagination)
-	if err != nil {
-		utils.Fatalln("Error retrieving scans", err)
-	}
-
-	if pagination.NumberOfPages != 1 {
-		utils.Fatalln("Calculating wrong number of pages when there's only one page", nil)
-	}
-
-	if err := scanDAO.RemoveAll(); err != nil {
-		utils.Fatalln("Error removing scans from database", err)
-	}
-}
-
 func scanStatistics(scanDAO dao.ScanDAO) {
 	scan := newScan()
 	scan.NameserverStatistics = map[string]uint64{
@@ -262,6 +197,125 @@ func scanStatistics(scanDAO dao.ScanDAO) {
 	}
 }
 
+func scansPagination(scanDAO dao.ScanDAO) {
+	numberOfItems := 1000
+
+	for i := 0; i < numberOfItems; i++ {
+		scan := model.Scan{
+			StartedAt: time.Now().Add(time.Duration(-i) * time.Minute),
+		}
+
+		if err := scanDAO.Save(&scan); err != nil {
+			utils.Fatalln("Error saving scan in database", err)
+		}
+	}
+
+	pagination := dao.ScanDAOPagination{
+		PageSize: 10,
+		Page:     5,
+		OrderBy: []dao.ScanDAOSort{
+			{
+				Field:     dao.ScanDAOOrderByFieldStartedAt,
+				Direction: dao.DAOOrderByDirectionAscending,
+			},
+		},
+	}
+
+	scans, err := scanDAO.FindAll(&pagination, true)
+	if err != nil {
+		utils.Fatalln("Error retrieving scans", err)
+	}
+
+	if pagination.NumberOfItems != numberOfItems {
+		utils.Errorln("Number of items not calculated correctly", nil)
+	}
+
+	if pagination.NumberOfPages != numberOfItems/pagination.PageSize {
+		utils.Errorln("Number of pages not calculated correctly", nil)
+	}
+
+	if len(scans) != pagination.PageSize {
+		utils.Errorln("Number of scans not following page size", nil)
+	}
+
+	pagination = dao.ScanDAOPagination{
+		PageSize: 10000,
+		Page:     1,
+		OrderBy: []dao.ScanDAOSort{
+			{
+				Field:     dao.ScanDAOOrderByFieldStartedAt,
+				Direction: dao.DAOOrderByDirectionAscending,
+			},
+		},
+	}
+
+	scans, err = scanDAO.FindAll(&pagination, true)
+	if err != nil {
+		utils.Fatalln("Error retrieving scans", err)
+	}
+
+	if pagination.NumberOfPages != 1 {
+		utils.Fatalln("Calculating wrong number of pages when there's only one page", nil)
+	}
+
+	if err := scanDAO.RemoveAll(); err != nil {
+		utils.Fatalln("Error removing scans from database", err)
+	}
+}
+
+func scansExpand(scanDAO dao.ScanDAO) {
+	newScans := newScans()
+	for _, scan := range newScans {
+		if err := scanDAO.Save(&scan); err != nil {
+			utils.Fatalln("Error creating scans", err)
+		}
+	}
+
+	pagination := dao.ScanDAOPagination{}
+	scans, err := scanDAO.FindAll(&pagination, false)
+
+	if err != nil {
+		utils.Fatalln("Error retrieving scans", err)
+	}
+
+	for _, scan := range scans {
+		if scan.DomainsScanned != 0 ||
+			scan.DomainsWithDNSSECScanned != 0 ||
+			!scan.FinishedAt.Equal(time.Time{}) ||
+			len(scan.NameserverStatistics) > 0 ||
+			len(scan.DSStatistics) > 0 {
+			utils.Fatalln("Not compressing scan in results", nil)
+		}
+	}
+
+	scans, err = scanDAO.FindAll(&pagination, true)
+
+	if err != nil {
+		utils.Fatalln("Error retrieving scans", err)
+	}
+
+	for _, scan := range scans {
+		if scan.DomainsScanned == 0 ||
+			scan.DomainsWithDNSSECScanned == 0 ||
+			scan.FinishedAt.Equal(time.Time{}) ||
+			scan.StartedAt.Equal(time.Time{}) ||
+			len(scan.NameserverStatistics) == 0 ||
+			len(scan.DSStatistics) == 0 {
+			fmt.Println(scan.DomainsScanned == 0,
+				scan.DomainsWithDNSSECScanned == 0,
+				scan.FinishedAt.Equal(time.Time{}),
+				scan.StartedAt.Equal(time.Time{}),
+				len(scan.NameserverStatistics) == 0,
+				len(scan.DSStatistics) == 0)
+			utils.Fatalln("Compressing scan in results when it shouldn't", nil)
+		}
+	}
+
+	if err := scanDAO.RemoveAll(); err != nil {
+		utils.Fatalln("Error removing scans", err)
+	}
+}
+
 // Function to mock a scan object
 func newScan() model.Scan {
 	return model.Scan{
@@ -271,8 +325,49 @@ func newScan() model.Scan {
 		LastModifiedAt:           time.Now().Add(-5 * time.Minute),
 		DomainsScanned:           50,
 		DomainsWithDNSSECScanned: 10,
-		NameserverStatistics:     make(map[string]uint64),
-		DSStatistics:             make(map[string]uint64),
+		NameserverStatistics: map[string]uint64{
+			"OK":      48,
+			"TIMEOUT": 2,
+		},
+		DSStatistics: map[string]uint64{
+			"OK": 10,
+		},
+	}
+}
+
+func newScans() []model.Scan {
+	return []model.Scan{
+		{
+			Status:                   model.ScanStatusExecuted,
+			StartedAt:                time.Now().Add(-10 * time.Minute),
+			FinishedAt:               time.Now().Add(-5 * time.Minute),
+			LastModifiedAt:           time.Now().Add(-5 * time.Minute),
+			DomainsScanned:           50,
+			DomainsWithDNSSECScanned: 10,
+			NameserverStatistics: map[string]uint64{
+				"OK":      48,
+				"TIMEOUT": 2,
+			},
+			DSStatistics: map[string]uint64{
+				"OK": 10,
+			},
+		},
+		{
+			Status:                   model.ScanStatusExecuted,
+			StartedAt:                time.Now().Add(-20 * time.Minute),
+			FinishedAt:               time.Now().Add(-15 * time.Minute),
+			LastModifiedAt:           time.Now().Add(-15 * time.Minute),
+			DomainsScanned:           20,
+			DomainsWithDNSSECScanned: 12,
+			NameserverStatistics: map[string]uint64{
+				"OK":      10,
+				"TIMEOUT": 10,
+			},
+			DSStatistics: map[string]uint64{
+				"OK":     10,
+				"EXPSIG": 2,
+			},
+		},
 	}
 }
 

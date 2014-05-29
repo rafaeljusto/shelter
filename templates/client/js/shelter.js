@@ -587,26 +587,14 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
     $scope.pageSizes = [ 20, 40, 60, 80, 100 ];
 
     $scope.retrieveDomains = function(page, pageSize) {
-      var uri = "";
+      var uri = "?expand";
 
       if (page != undefined) {
-        if (uri.length == 0) {
-          uri += "?";
-        } else {
-          uri += "&";
-        }
-
-        uri += "page=" + page;
+        uri += "&page=" + page;
       }
 
       if (pageSize != undefined) {
-        if (uri.length == 0) {
-          uri += "?";
-        } else {
-          uri += "&";
-        }
-
-        uri += "pagesize=" + pageSize;
+        uri += "&pagesize=" + pageSize;
       }
 
       uri = "/domains/" + uri;
@@ -673,7 +661,7 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
           $scope.processDomainsResult(response);
         });
 
-      $timeout($scope.retrieveDomainsWorker, 1000);
+      $timeout($scope.retrieveDomainsWorker, 5000);
     };
 
     $scope.retrieveDomainsWorker();
@@ -749,26 +737,14 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
     };
 
     $scope.retrieveScans = function(page, pageSize) {
-      var uri = "";
+      var uri = "?expand";
 
       if (page != undefined) {
-        if (uri.length == 0) {
-          uri += "?";
-        } else {
-          uri += "&";
-        }
-
-        uri += "page=" + page;
+        uri += "&page=" + page;
       }
 
       if (pageSize != undefined) {
-        if (uri.length == 0) {
-          uri += "?";
-        } else {
-          uri += "&";
-        }
-
-        uri += "pagesize=" + pageSize;
+        uri += "&pagesize=" + pageSize;
       }
 
       uri = "/scans/" + uri;
@@ -851,7 +827,7 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
             });
           }
 
-          $timeout($scope.retrieveCurrentScan, 1000);
+          $timeout($scope.retrieveCurrentScan, 5000);
         });
     };
 
@@ -865,7 +841,7 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
           $scope.processScansResult(response);
         });
 
-      $timeout($scope.retrieveScansWorker, 1000);
+      $timeout($scope.retrieveScansWorker, 5000);
     };
 
     $scope.retrieveCurrentScan();

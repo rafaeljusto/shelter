@@ -37,6 +37,7 @@ func HandleScans(r *http.Request, context *context.Context) {
 // mux while writing the response
 func retrieveScans(r *http.Request, context *context.Context) {
 	var pagination dao.ScanDAOPagination
+	expand := false
 
 	for key, values := range r.URL.Query() {
 		key = strings.TrimSpace(key)
@@ -133,6 +134,9 @@ func retrieveScans(r *http.Request, context *context.Context) {
 					}
 					return
 				}
+
+			case "expand":
+				expand = true
 			}
 		}
 	}
@@ -141,7 +145,7 @@ func retrieveScans(r *http.Request, context *context.Context) {
 		Database: context.Database,
 	}
 
-	scans, err := scanDAO.FindAll(&pagination)
+	scans, err := scanDAO.FindAll(&pagination, expand)
 	if err != nil {
 		log.Println("Error while searching scans objects. Details:", err)
 		context.Response(http.StatusInternalServerError)

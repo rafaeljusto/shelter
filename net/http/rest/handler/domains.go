@@ -37,6 +37,7 @@ func HandleDomains(r *http.Request, context *context.Context) {
 // mux while writing the response
 func retrieveDomains(r *http.Request, context *context.Context) {
 	var pagination dao.DomainDAOPagination
+	expand := false
 
 	for key, values := range r.URL.Query() {
 		key = strings.TrimSpace(key)
@@ -133,6 +134,9 @@ func retrieveDomains(r *http.Request, context *context.Context) {
 					}
 					return
 				}
+
+			case "expand":
+				expand = true
 			}
 		}
 	}
@@ -141,7 +145,7 @@ func retrieveDomains(r *http.Request, context *context.Context) {
 		Database: context.Database,
 	}
 
-	domains, err := domainDAO.FindAll(&pagination)
+	domains, err := domainDAO.FindAll(&pagination, expand)
 	if err != nil {
 		log.Println("Error while searching domains objects. Details:", err)
 		context.Response(http.StatusInternalServerError)

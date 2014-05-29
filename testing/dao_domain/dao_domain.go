@@ -86,6 +86,7 @@ func main() {
 	domainConcurrency(domainDAO)
 	domainsPagination(domainDAO)
 	domainsNotification(domainDAO)
+	domainsExpand(domainDAO)
 
 	// Domain DAO performance report is optional and only generated when the report file
 	// path parameter is given
@@ -110,7 +111,7 @@ func domainLifeCycle(domainDAO dao.DomainDAO) {
 		utils.Fatalln("Couldn't find created domain in database", err)
 
 	} else if !compareDomains(domain, domainRetrieved) {
-		utils.Fatalln("Domain created in being persisted wrongly", nil)
+		utils.Fatalln("Domain created is being persisted wrongly", nil)
 	}
 
 	// Update domain
@@ -124,7 +125,7 @@ func domainLifeCycle(domainDAO dao.DomainDAO) {
 		utils.Fatalln("Couldn't find updated domain in database", err)
 
 	} else if !compareDomains(domain, domainRetrieved) {
-		utils.Fatalln("Domain updated in being persisted wrongly", nil)
+		utils.Fatalln("Domain updated is being persisted wrongly", nil)
 	}
 
 	// Remove domain
@@ -158,7 +159,7 @@ func domainsLifeCycle(domainDAO dao.DomainDAO) {
 			utils.Fatalln(fmt.Sprintf("Couldn't find created domain %s in database", domain.FQDN), err)
 
 		} else if !compareDomains(*domain, domainRetrieved) {
-			utils.Fatalln(fmt.Sprintf("Domain %s created in being persisted wrongly", domain.FQDN), nil)
+			utils.Fatalln(fmt.Sprintf("Domain %s created is being persisted wrongly", domain.FQDN), nil)
 		}
 	}
 
@@ -361,7 +362,7 @@ func domainsPagination(domainDAO dao.DomainDAO) {
 		},
 	}
 
-	domains, err := domainDAO.FindAll(&pagination)
+	domains, err := domainDAO.FindAll(&pagination, true)
 	if err != nil {
 		utils.Fatalln("Error retrieving domains", err)
 	}
@@ -389,7 +390,7 @@ func domainsPagination(domainDAO dao.DomainDAO) {
 		},
 	}
 
-	domains, err = domainDAO.FindAll(&pagination)
+	domains, err = domainDAO.FindAll(&pagination, true)
 	if err != nil {
 		utils.Fatalln("Error retrieving domains", err)
 	}
@@ -572,6 +573,94 @@ func domainsNotification(domainDAO dao.DomainDAO) {
 	}
 }
 
+func domainsExpand(domainDAO dao.DomainDAO) {
+	newDomains := newDomains()
+	domainsResult := domainDAO.SaveMany(newDomains)
+	for _, domainResult := range domainsResult {
+		if domainResult.Error != nil {
+			utils.Fatalln("Error creating domains", domainResult.Error)
+		}
+	}
+
+	pagination := dao.DomainDAOPagination{}
+	domains, err := domainDAO.FindAll(&pagination, false)
+
+	if err != nil {
+		utils.Fatalln("Error retrieving domains", err)
+	}
+
+	for _, domain := range domains {
+		if len(domain.Owners) > 0 {
+			utils.Fatalln("Not compressing owners in results", nil)
+		}
+
+		for _, nameserver := range domain.Nameservers {
+			if len(nameserver.Host) > 0 ||
+				nameserver.IPv4 != nil ||
+				nameserver.IPv6 != nil ||
+				!nameserver.LastCheckAt.Equal(time.Time{}) ||
+				!nameserver.LastOKAt.Equal(time.Time{}) {
+				utils.Fatalln("Not compressing nameservers in results", nil)
+			}
+		}
+
+		for _, ds := range domain.DSSet {
+			if ds.Algorithm != 0 ||
+				len(ds.Digest) > 0 ||
+				ds.DigestType != 0 ||
+				ds.Keytag != 0 ||
+				!ds.ExpiresAt.Equal(time.Time{}) ||
+				!ds.LastCheckAt.Equal(time.Time{}) ||
+				!ds.LastOKAt.Equal(time.Time{}) {
+				utils.Fatalln("Not compressing ds set in results", nil)
+			}
+		}
+	}
+
+	domains, err = domainDAO.FindAll(&pagination, true)
+
+	if err != nil {
+		utils.Fatalln("Error retrieving domains", err)
+	}
+
+	for _, domain := range domains {
+		if len(domain.Owners) == 0 {
+			utils.Fatalln("Compressing owners in results when it shouldn't", nil)
+		}
+
+		for _, nameserver := range domain.Nameservers {
+			if len(nameserver.Host) == 0 ||
+				nameserver.IPv4 == nil ||
+				nameserver.IPv6 == nil ||
+				nameserver.LastCheckAt.Equal(time.Time{}) ||
+				nameserver.LastOKAt.Equal(time.Time{}) ||
+				nameserver.LastStatus != model.NameserverStatusOK {
+				utils.Fatalln("Compressing nameservers in results when it shouldn't", nil)
+			}
+		}
+
+		for _, ds := range domain.DSSet {
+			if ds.Algorithm == 0 ||
+				len(ds.Digest) == 0 ||
+				ds.DigestType == 0 ||
+				ds.Keytag == 0 ||
+				ds.ExpiresAt.Equal(time.Time{}) ||
+				ds.LastCheckAt.Equal(time.Time{}) ||
+				ds.LastOKAt.Equal(time.Time{}) ||
+				ds.LastStatus != model.DSStatusOK {
+				utils.Fatalln("Compressing ds set in results when it shouldn't", nil)
+			}
+		}
+	}
+
+	domainsResult = domainDAO.RemoveMany(newDomains)
+	for _, domainResult := range domainsResult {
+		if domainResult.Error != nil {
+			utils.Fatalln("Error removing domains", domainResult.Error)
+		}
+	}
+}
+
 // Generates a report with the amount of time for each operation in the domain DAO. For
 // more realistic values it does the same operation for the same amount of data X number
 // of times to get the average time of the operation. After some results, with indexes we
@@ -740,20 +829,31 @@ func newDomains() []*model.Domain {
 			FQDN: "test1.com.br",
 			Nameservers: []model.Nameserver{
 				{
-					Host: "ns1.test1.com.br",
-					IPv4: net.ParseIP("192.168.0.1"),
-					IPv6: net.ParseIP("::1"),
+					Host:        "ns1.test1.com.br",
+					IPv4:        net.ParseIP("192.168.0.1"),
+					IPv6:        net.ParseIP("::1"),
+					LastCheckAt: time.Now(),
+					LastOKAt:    time.Now(),
+					LastStatus:  model.NameserverStatusOK,
 				},
 				{
-					Host: "ns2.test1.com.br",
-					IPv4: net.ParseIP("192.168.1.2"),
+					Host:        "ns2.test1.com.br",
+					IPv4:        net.ParseIP("192.168.1.2"),
+					LastCheckAt: time.Now(),
+					LastOKAt:    time.Now(),
+					LastStatus:  model.NameserverStatusOK,
 				},
 			},
 			DSSet: []model.DS{
 				{
-					Keytag:    1324,
-					Algorithm: model.DSAlgorithmRSASHA256,
-					Digest:    "A790A11EA430A85DA77245F091891F73AA7404AA",
+					Keytag:      1324,
+					Algorithm:   model.DSAlgorithmRSASHA256,
+					Digest:      "A790A11EA430A85DA77245F091891F73AA7404AA",
+					DigestType:  model.DSDigestTypeSHA1,
+					ExpiresAt:   time.Now(),
+					LastCheckAt: time.Now(),
+					LastOKAt:    time.Now(),
+					LastStatus:  model.DSStatusOK,
 				},
 			},
 			Owners: []model.Owner{
@@ -767,20 +867,31 @@ func newDomains() []*model.Domain {
 			FQDN: "test2.com.br",
 			Nameservers: []model.Nameserver{
 				{
-					Host: "ns1.test2.com.br",
-					IPv4: net.ParseIP("192.168.0.3"),
-					IPv6: net.ParseIP("::2"),
+					Host:        "ns1.test2.com.br",
+					IPv4:        net.ParseIP("192.168.0.3"),
+					IPv6:        net.ParseIP("::2"),
+					LastCheckAt: time.Now(),
+					LastOKAt:    time.Now(),
+					LastStatus:  model.NameserverStatusOK,
 				},
 				{
-					Host: "ns2.test2.com.br",
-					IPv4: net.ParseIP("192.168.0.4"),
+					Host:        "ns2.test2.com.br",
+					IPv4:        net.ParseIP("192.168.0.4"),
+					LastCheckAt: time.Now(),
+					LastOKAt:    time.Now(),
+					LastStatus:  model.NameserverStatusOK,
 				},
 			},
 			DSSet: []model.DS{
 				{
-					Keytag:    4321,
-					Algorithm: model.DSAlgorithmECCGOST,
-					Digest:    "A790A11EA430A85DA77245F091891F73AA7404BB",
+					Keytag:      4321,
+					Algorithm:   model.DSAlgorithmECCGOST,
+					Digest:      "A790A11EA430A85DA77245F091891F73AA7404BB",
+					DigestType:  model.DSDigestTypeSHA1,
+					ExpiresAt:   time.Now(),
+					LastCheckAt: time.Now(),
+					LastOKAt:    time.Now(),
+					LastStatus:  model.DSStatusOK,
 				},
 			},
 			Owners: []model.Owner{
@@ -806,13 +917,13 @@ func compareDomains(d1, d2 model.Domain) bool {
 
 	for i := 0; i < len(d1.Nameservers); i++ {
 		// Cannot compare the nameservers directly with operator == because of the
-		// pointers for IP addresses
+		// pointers for IP addresses and dates
 		if d1.Nameservers[i].Host != d2.Nameservers[i].Host ||
 			d1.Nameservers[i].IPv4.String() != d2.Nameservers[i].IPv4.String() ||
 			d1.Nameservers[i].IPv6.String() != d2.Nameservers[i].IPv6.String() ||
 			d1.Nameservers[i].LastStatus != d2.Nameservers[i].LastStatus ||
-			d1.Nameservers[i].LastCheckAt != d2.Nameservers[i].LastCheckAt ||
-			d1.Nameservers[i].LastOKAt != d2.Nameservers[i].LastOKAt {
+			d1.Nameservers[i].LastCheckAt.Unix() != d2.Nameservers[i].LastCheckAt.Unix() ||
+			d1.Nameservers[i].LastOKAt.Unix() != d2.Nameservers[i].LastOKAt.Unix() {
 			return false
 		}
 	}
@@ -822,7 +933,15 @@ func compareDomains(d1, d2 model.Domain) bool {
 	}
 
 	for i := 0; i < len(d1.DSSet); i++ {
-		if d1.DSSet[i] != d2.DSSet[i] {
+		// Cannot compare the nameservers directly with operator == because of the dates
+		if d1.DSSet[i].Algorithm != d2.DSSet[i].Algorithm ||
+			d1.DSSet[i].Digest != d2.DSSet[i].Digest ||
+			d1.DSSet[i].DigestType != d2.DSSet[i].DigestType ||
+			d1.DSSet[i].ExpiresAt.Unix() != d2.DSSet[i].ExpiresAt.Unix() ||
+			d1.DSSet[i].Keytag != d2.DSSet[i].Keytag ||
+			d1.DSSet[i].LastCheckAt.Unix() != d2.DSSet[i].LastCheckAt.Unix() ||
+			d1.DSSet[i].LastOKAt.Unix() != d2.DSSet[i].LastOKAt.Unix() ||
+			d1.DSSet[i].LastStatus != d2.DSSet[i].LastStatus {
 			return false
 		}
 	}

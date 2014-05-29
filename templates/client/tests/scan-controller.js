@@ -56,8 +56,8 @@ describe("Scan controller", function() {
     };
 
     $httpBackend = $injector.get("$httpBackend");
-    $httpBackend.whenGET("/scans/").respond(200, result);
-    $httpBackend.whenGET("/scans/?page=1&pagesize=20").respond(200, result);
+    $httpBackend.whenGET("/scans/?expand").respond(200, result);
+    $httpBackend.whenGET("/scans/?expand&page=1&pagesize=20").respond(200, result);
     $httpBackend.whenGET("/scan/current").respond(200, current);
 
     scope.retrieveScans(1, 20);
@@ -100,11 +100,11 @@ describe("Scan controller", function() {
     };
 
     $httpBackend = $injector.get("$httpBackend");
-    $httpBackend.whenGET("/scans/").respond(200, result);
-    $httpBackend.whenGET("/scans/?page=1&pagesize=20").respond(200, result);
+    $httpBackend.whenGET("/scans/?expand").respond(200, result);
+    $httpBackend.whenGET("/scans/?expand&page=1&pagesize=20").respond(200, result);
     $httpBackend.whenGET("/scan/current").respond(200, current);
 
-    scope.retrieveScansByURI("/scans/?page=1&pagesize=20");
+    scope.retrieveScansByURI("/scans/?expand&page=1&pagesize=20");
     $httpBackend.flush()
 
     expect(scope.pagination.numberOfItems).toBe(1);
@@ -144,7 +144,7 @@ describe("Scan controller", function() {
     };
 
     $httpBackend = $injector.get("$httpBackend");
-    $httpBackend.whenGET("/scans/").respond(200, result);
+    $httpBackend.whenGET("/scans/?expand").respond(200, result);
     $httpBackend.whenGET("/scan/current").respond(200, current);
 
     $httpBackend.flush()

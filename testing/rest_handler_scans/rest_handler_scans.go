@@ -33,6 +33,11 @@ type RESTHandlerScansTestConfigFile struct {
 	}
 }
 
+type ScansCacheTestData struct {
+	HeaderValue        string
+	ExpectedHTTPStatus int
+}
+
 func init() {
 	utils.TestName = "RESTHandlerScans"
 	flag.StringVar(&configFilePath, "config", "", "Configuration file for RESTHandlerScans test")
@@ -74,6 +79,10 @@ func main() {
 	createScans(database)
 	retrieveScans(database)
 	retrieveScansMetadata(database)
+	retrieveScansIfModifiedSince(database)
+	retrieveScansIfUnmodifiedSince(database)
+	retrieveScansIfMatch(database)
+	retrieveScansIfNoneMatch(database)
 	deleteScans(database)
 
 	utils.Println("SUCCESS!")
@@ -138,6 +147,38 @@ func retrieveScans(database *mgo.Database) {
 
 				if len(scansResponse.Scans) != 10 {
 					utils.Fatalln("Error retrieving the wrong number of scans", nil)
+				}
+			},
+		},
+		{
+			URI:                "/scans",
+			ExpectedHTTPStatus: http.StatusOK,
+			ContentCheck: func(content []byte) {
+				var scansResponse protocol.ScansResponse
+				json.Unmarshal(content, &scansResponse)
+
+				if len(scansResponse.Scans) == 0 {
+					utils.Fatalln("Error retrieving scans", nil)
+				}
+
+				if scansResponse.Scans[0].DomainsScanned > 0 {
+					utils.Fatalln("Not compressing scans result", nil)
+				}
+			},
+		},
+		{
+			URI:                "/scans?expand",
+			ExpectedHTTPStatus: http.StatusOK,
+			ContentCheck: func(content []byte) {
+				var scansResponse protocol.ScansResponse
+				json.Unmarshal(content, &scansResponse)
+
+				if len(scansResponse.Scans) == 0 {
+					utils.Fatalln("Error retrieving scans", nil)
+				}
+
+				if scansResponse.Scans[0].DomainsScanned == 0 {
+					utils.Fatalln("Compressing scans result when it shouldn't", nil)
 				}
 			},
 		},
@@ -209,6 +250,92 @@ func retrieveScansMetadata(database *mgo.Database) {
 	}
 }
 
+func retrieveScansIfModifiedSince(database *mgo.Database) {
+	r, err := http.NewRequest("GET", "/scans", nil)
+	if err != nil {
+		utils.Fatalln("Error creating the HTTP request", err)
+	}
+
+	scansCacheTest(database, r, "If-Modified-Since", []ScansCacheTestData{
+		{
+			HeaderValue:        "abcdef",
+			ExpectedHTTPStatus: http.StatusBadRequest,
+		},
+		{
+			HeaderValue:        time.Now().Add(1 * time.Second).UTC().Format(time.RFC1123),
+			ExpectedHTTPStatus: http.StatusNotModified,
+		},
+	})
+}
+
+func retrieveScansIfUnmodifiedSince(database *mgo.Database) {
+	r, err := http.NewRequest("GET", "/scans", nil)
+	if err != nil {
+		utils.Fatalln("Error creating the HTTP request", err)
+	}
+
+	scansCacheTest(database, r, "If-Unmodified-Since", []ScansCacheTestData{
+		{
+			HeaderValue:        "abcdef",
+			ExpectedHTTPStatus: http.StatusBadRequest,
+		},
+		{
+			HeaderValue:        time.Now().Add(-10 * time.Second).UTC().Format(time.RFC1123),
+			ExpectedHTTPStatus: http.StatusPreconditionFailed,
+		},
+	})
+}
+
+func retrieveScansIfMatch(database *mgo.Database) {
+	r, err := http.NewRequest("GET", "/scans", nil)
+	if err != nil {
+		utils.Fatalln("Error creating the HTTP request", err)
+	}
+
+	context, err := context.NewContext(r, database)
+	if err != nil {
+		utils.Fatalln("Error creating context", err)
+	}
+
+	handler.HandleScans(r, &context)
+
+	scansCacheTest(database, r, "If-Match", []ScansCacheTestData{
+		{
+			HeaderValue:        context.HTTPHeader["ETag"] + "x",
+			ExpectedHTTPStatus: http.StatusPreconditionFailed,
+		},
+		{
+			HeaderValue:        context.HTTPHeader["ETag"],
+			ExpectedHTTPStatus: http.StatusOK,
+		},
+	})
+}
+
+func retrieveScansIfNoneMatch(database *mgo.Database) {
+	r, err := http.NewRequest("GET", "/scans", nil)
+	if err != nil {
+		utils.Fatalln("Error creating the HTTP request", err)
+	}
+
+	context, err := context.NewContext(r, database)
+	if err != nil {
+		utils.Fatalln("Error creating context", err)
+	}
+
+	handler.HandleScans(r, &context)
+
+	scansCacheTest(database, r, "If-None-Match", []ScansCacheTestData{
+		{
+			HeaderValue:        context.HTTPHeader["ETag"],
+			ExpectedHTTPStatus: http.StatusNotModified,
+		},
+		{
+			HeaderValue:        context.HTTPHeader["ETag"] + "x",
+			ExpectedHTTPStatus: http.StatusOK,
+		},
+	})
+}
+
 func deleteScans(database *mgo.Database) {
 	scanDAO := dao.ScanDAO{
 		Database: database,
@@ -216,5 +343,27 @@ func deleteScans(database *mgo.Database) {
 
 	if err := scanDAO.RemoveAll(); err != nil {
 		utils.Fatalln("Error removing scans", err)
+	}
+}
+
+func scansCacheTest(database *mgo.Database, r *http.Request,
+	header string, scansCacheTestData []ScansCacheTestData) {
+
+	context, err := context.NewContext(r, database)
+	if err != nil {
+		utils.Fatalln("Error creating context", err)
+	}
+
+	for _, item := range scansCacheTestData {
+		r.Header.Set(header, item.HeaderValue)
+
+		handler.HandleScans(r, &context)
+
+		if context.ResponseHTTPStatus != item.ExpectedHTTPStatus {
+			utils.Fatalln(fmt.Sprintf("Error in %s test using %s [%s] "+
+				"HTTP header. Expected HTTP status code %d and got %d",
+				r.Method, header, item.HeaderValue, item.ExpectedHTTPStatus,
+				context.ResponseHTTPStatus), errors.New(string(context.ResponseContent)))
+		}
 	}
 }

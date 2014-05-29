@@ -46,7 +46,7 @@ func ToDomainsResponse(domains []model.Domain, pagination dao.DomainDAOPaginatio
 	links := []Link{
 		{
 			Types: []LinkType{LinkTypeFirst},
-			HRef:  fmt.Sprintf("/domains/?pagesize=%d&page=%d&orderby=%s", pagination.PageSize, 1, orderBy),
+			HRef:  fmt.Sprintf("/domains/?expand&pagesize=%d&page=%d&orderby=%s", pagination.PageSize, 1, orderBy),
 		},
 	}
 
@@ -54,7 +54,7 @@ func ToDomainsResponse(domains []model.Domain, pagination dao.DomainDAOPaginatio
 	if pagination.Page-1 >= 1 {
 		links = append(links, Link{
 			Types: []LinkType{LinkTypePrev},
-			HRef:  fmt.Sprintf("/domains/?pagesize=%d&page=%d&orderby=%s", pagination.PageSize, pagination.Page-1, orderBy),
+			HRef:  fmt.Sprintf("/domains/?expand&pagesize=%d&page=%d&orderby=%s", pagination.PageSize, pagination.Page-1, orderBy),
 		})
 	}
 
@@ -62,7 +62,7 @@ func ToDomainsResponse(domains []model.Domain, pagination dao.DomainDAOPaginatio
 	if pagination.Page+1 <= pagination.NumberOfPages {
 		links = append(links, Link{
 			Types: []LinkType{LinkTypeNext},
-			HRef:  fmt.Sprintf("/domains/?pagesize=%d&page=%d&orderby=%s", pagination.PageSize, pagination.Page+1, orderBy),
+			HRef:  fmt.Sprintf("/domains/?expand&pagesize=%d&page=%d&orderby=%s", pagination.PageSize, pagination.Page+1, orderBy),
 		})
 	}
 
@@ -70,12 +70,12 @@ func ToDomainsResponse(domains []model.Domain, pagination dao.DomainDAOPaginatio
 	if pagination.NumberOfPages == 0 {
 		links = append(links, Link{
 			Types: []LinkType{LinkTypeLast},
-			HRef:  fmt.Sprintf("/domains/?pagesize=%d&page=%d&orderby=%s", pagination.PageSize, 1, orderBy),
+			HRef:  fmt.Sprintf("/domains/?expand&pagesize=%d&page=%d&orderby=%s", pagination.PageSize, 1, orderBy),
 		})
 	} else {
 		links = append(links, Link{
 			Types: []LinkType{LinkTypeLast},
-			HRef:  fmt.Sprintf("/domains/?pagesize=%d&page=%d&orderby=%s", pagination.PageSize, pagination.NumberOfPages, orderBy),
+			HRef:  fmt.Sprintf("/domains/?expand&pagesize=%d&page=%d&orderby=%s", pagination.PageSize, pagination.NumberOfPages, orderBy),
 		})
 	}
 

@@ -179,10 +179,13 @@ func (dao DomainDAO) SaveMany(domains []*model.Domain) []DomainResult {
 	return dao.executeMany(domains, dao.Save)
 }
 
-// Retrieve all domains using pagination control. This method is used by an end user to see all
-// domains that are already registered in the system. The user will probably wants pagination to
-// analyze the data in amounts. When pagination values are not informed, default values are adopted
-func (dao DomainDAO) FindAll(pagination *DomainDAOPagination) ([]model.Domain, error) {
+// Retrieve all domains using pagination control. This method is used by an end user to
+// see all domains that are already registered in the system. The user will probably wants
+// pagination to analyze the data in amounts. When pagination values are not informed,
+// default values are adopted. There's also an expand flag that can control if each domain
+// object from the list will have only the FQDN, last modification, nameserver and DS
+// status or the full information
+func (dao DomainDAO) FindAll(pagination *DomainDAOPagination, expand bool) ([]model.Domain, error) {
 	// Check if the programmer forgot to set the database in DomainDAO object
 	if dao.Database == nil {
 		return nil, ErrDomainDAOUndefinedDatabase
@@ -247,6 +250,28 @@ func (dao DomainDAO) FindAll(pagination *DomainDAOPagination) ([]model.Domain, e
 		pagination.NumberOfPages = pagination.NumberOfItems / pagination.PageSize
 		if pagination.NumberOfItems%pagination.PageSize > 0 {
 			pagination.NumberOfPages += 1
+		}
+	}
+
+	// When the expand flag if not defined, we should compress the domain object so the
+	// network data isn't too big. For now the compressed object will have the FQDN, last
+	// modification and the status of the nameservers and DS set, this is useful to detect
+	// quickly the domains that have some issue
+	if !expand {
+		for i := range domains {
+			for j := range domains[i].Nameservers {
+				domains[i].Nameservers[j] = model.Nameserver{
+					LastStatus: domains[i].Nameservers[j].LastStatus,
+				}
+			}
+
+			for j := range domains[i].DSSet {
+				domains[i].DSSet[j] = model.DS{
+					LastStatus: domains[i].DSSet[j].LastStatus,
+				}
+			}
+
+			domains[i].Owners = []model.Owner{}
 		}
 	}
 

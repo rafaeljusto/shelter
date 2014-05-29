@@ -171,10 +171,13 @@ func (dao ScanDAO) FindByStartedAt(startedAt time.Time) (model.Scan, error) {
 	return scan, err
 }
 
-// Retrieve all scans using pagination control. This method is used by an end user to see all scans
-// that were executed in the system. The user will probably wants pagination to analyze the data in
-// amounts. When pagination values are not informed, default values are adopted
-func (dao ScanDAO) FindAll(pagination *ScanDAOPagination) ([]model.Scan, error) {
+// Retrieve all scans using pagination control. This method is used by an end user to see
+// all scans that were executed in the system. The user will probably wants pagination to
+// analyze the data in amounts. When pagination values are not informed, default values
+// are adopted. There's also an expand flag that can control if each scan object from the
+// list will have only the started date and the last modification date or the full
+// information
+func (dao ScanDAO) FindAll(pagination *ScanDAOPagination, expand bool) ([]model.Scan, error) {
 	// Check if the programmer forgot to set the database in ScanDAO object
 	if dao.Database == nil {
 		return nil, ErrScanDAOUndefinedDatabase
@@ -241,6 +244,18 @@ func (dao ScanDAO) FindAll(pagination *ScanDAOPagination) ([]model.Scan, error) 
 		pagination.NumberOfPages = pagination.NumberOfItems / pagination.PageSize
 		if pagination.NumberOfItems%pagination.PageSize > 0 {
 			pagination.NumberOfPages += 1
+		}
+	}
+
+	// When the expand flag if not defined, we should compress the scan object so the
+	// network data isn't too big. For now the compressed object will have the start date
+	// and the last modification date
+	if !expand {
+		for i := range scans {
+			scans[i] = model.Scan{
+				StartedAt:      scans[i].StartedAt,
+				LastModifiedAt: scans[i].LastModifiedAt,
+			}
 		}
 	}
 
