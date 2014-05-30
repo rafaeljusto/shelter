@@ -45,11 +45,19 @@ func ScansToScansResponse(scans []model.Scan, pagination dao.ScanDAOPagination) 
 	// handler because we are going to have a cross-reference problem
 	links := []Link{
 		{
+			Types: []LinkType{LinkTypeCurrent},
+			HRef:  "/scan/current",
+		},
+	}
+
+	// Only add fast backward if we aren't in the first page
+	if pagination.Page > 1 {
+		links = append(links, Link{
 			Types: []LinkType{LinkTypeFirst},
 			HRef: fmt.Sprintf("/scans/?expand&pagesize=%d&page=%d&orderby=%s",
 				pagination.PageSize, 1, orderBy,
 			),
-		},
+		})
 	}
 
 	// Only add previous if theres a previous page
@@ -72,15 +80,8 @@ func ScansToScansResponse(scans []model.Scan, pagination dao.ScanDAOPagination) 
 		})
 	}
 
-	// When there're no items, the first and the last page are the same
-	if pagination.NumberOfPages == 0 {
-		links = append(links, Link{
-			Types: []LinkType{LinkTypeLast},
-			HRef: fmt.Sprintf("/scans/?expand&pagesize=%d&page=%d&orderby=%s",
-				pagination.PageSize, 1, orderBy,
-			),
-		})
-	} else {
+	// Only add the fast forward if we aren't on the last page
+	if pagination.Page < pagination.NumberOfPages {
 		links = append(links, Link{
 			Types: []LinkType{LinkTypeLast},
 			HRef: fmt.Sprintf("/scans/?expand&pagesize=%d&page=%d&orderby=%s",

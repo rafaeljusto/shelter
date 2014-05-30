@@ -12,7 +12,7 @@ describe("Domains controller", function() {
   beforeEach(inject(function($rootScope, $controller, $injector) {
     $httpBackend = $injector.get("$httpBackend");
     $httpBackend.whenGET(/languages\/.+\.json/).respond(200, "{}");
-    $httpBackend.flush()
+    $httpBackend.flush();
 
     scope = $rootScope.$new();
     ctrl = $controller("domainsCtrl", {
@@ -57,7 +57,7 @@ describe("Domains controller", function() {
     $httpBackend.whenGET("/domains/?expand&page=1&pagesize=20").respond(200, result);
 
     scope.retrieveDomains(1, 20);
-    $httpBackend.flush()
+    $httpBackend.flush();
 
     expect(scope.pagination.numberOfItems).toBe(1);
     expect(scope.pagination.numberOfPages).toBe(1);
@@ -103,7 +103,7 @@ describe("Domains controller", function() {
     $httpBackend.whenGET("/domains/?expand&page=1&pagesize=20").respond(200, result);
 
     scope.retrieveDomainsByURI("/domains/?expand&page=1&pagesize=20");
-    $httpBackend.flush()
+    $httpBackend.flush();
 
     expect(scope.pagination.numberOfItems).toBe(1);
     expect(scope.pagination.numberOfPages).toBe(1);

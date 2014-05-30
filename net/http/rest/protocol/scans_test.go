@@ -74,8 +74,8 @@ func TestScansToScansResponse(t *testing.T) {
 		t.Error("Pagination not storing number of pages properly")
 	}
 
-	// We can't show next when there's only one page, but the previous will be the current page
-	if len(scansResponse.Links) != 2 {
+	// We should show only the current link when there's only one page
+	if len(scansResponse.Links) != 1 {
 		t.Error("Response not adding the necessary links when there is only one page")
 	}
 }
@@ -123,7 +123,7 @@ func TestScansToScansResponseLinks(t *testing.T) {
 	scansResponse := ScansToScansResponse(scans, pagination)
 
 	// Show all actions when navigating in the middle of the pagination
-	if len(scansResponse.Links) != 4 {
+	if len(scansResponse.Links) != 5 {
 		t.Error("Response not adding the necessary links when we are navigating")
 	}
 
@@ -150,7 +150,7 @@ func TestScansToScansResponseLinks(t *testing.T) {
 
 	scansResponse = ScansToScansResponse(scans, pagination)
 
-	// On the first page we show as previous the current scan
+	// On the first page we show current, next and fast foward links
 	if len(scansResponse.Links) != 3 {
 		t.Error("Response not adding the necessary links when we are at the first page")
 	}
@@ -178,7 +178,7 @@ func TestScansToScansResponseLinks(t *testing.T) {
 
 	scansResponse = ScansToScansResponse(scans, pagination)
 
-	// Don't show next when we are in the last page
+	// Don't show next or fast foward when we are in the last page
 	if len(scansResponse.Links) != 3 {
 		t.Error("Response not adding the necessary links when we are in the last page")
 	}

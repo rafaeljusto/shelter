@@ -385,19 +385,14 @@ progress {
   color: #fff;
 }
 
-.pagination > div,
-.pagination-item {
+.pagination > div {
   display: inline-block;
-}
-
-.pagination > span,
-.pagination-item {
   margin: 20px 10px 20px 10px;
+  min-width: 45px;
 }
 
-.pagination > span,
-.pagination-item > span,
-.pagination-item > button {
+.pagination > div > span,
+.pagination > div > button {
   border-radius: 3px;
   box-shadow: inset 0px -3px 1px rgba(0, 0, 0, 0.45), 0px 2px 2px rgba(0, 0, 0, 0.25);
   color: #ffffff;
@@ -413,17 +408,16 @@ progress {
   text-shadow: 1px 1px 0px #1570cd;
 }
 
-.pagination > span,
-.pagination-item > span {
+.pagination > div > span {
   background-color: #f24537;
   border: 1px solid #d02718;
 }
 
-.pagination-item > button {
+.pagination > div > button {
   background-color: #3d94f6;
 }
 
-.pagination-item > button:active {
+.pagination > div > button:active {
   box-shadow: inset 0px -3px 1px rgba(255, 255, 255, 1), inset 0 0px 3px rgba(0, 0, 0, 0.9);
 }
 

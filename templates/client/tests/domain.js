@@ -13,7 +13,7 @@ describe("Domain directive", function() {
   beforeEach(inject(function($rootScope, $compile, $injector) {
     $httpBackend = $injector.get("$httpBackend");
     $httpBackend.whenGET(/languages\/.+\.json/).respond(200, "{}");
-    $httpBackend.flush()
+    $httpBackend.flush();
 
     var elm = angular.element("<domain domain='domain'></domain>");
 
@@ -194,7 +194,7 @@ describe("Domain directive", function() {
       ],
     });
 
-    $httpBackend.flush()
+    $httpBackend.flush();
 
     expect(ctrl.verifyResult).not.toBeUndefined();
     expect(ctrl.verifyResult.nameservers.length).toBe(1);
@@ -214,7 +214,7 @@ describe("Domain directive", function() {
     $httpBackend.whenDELETE("/domain/br.").respond(204, "");
 
     ctrl.removeDomain("br.");
-    $httpBackend.flush()
+    $httpBackend.flush();
 
     expect(ctrl.success).not.toBeUndefined();
     expect(ctrl.success).toBe("Domain removed");

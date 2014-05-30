@@ -72,16 +72,28 @@
 
       <div class="pagination">
         <label translate>Page</label>
-        <span>{{pagination.page}}</span>
-        <div data-ng-repeat="link in pagination.links">
-          <div data-ng-repeat="type in link.types" class="pagination-item">
-            <button data-ng-click="retrieveDomainsByURI(link.href)">
-              <i class="fa fa-forward" data-ng-if="type == 'next'"></i>
-              <i class="fa fa-backward" data-ng-if="type == 'prev'"></i>
-              <i class="fa fa-fast-backward" data-ng-if="type == 'first'"></i>
-              <i class="fa fa-fast-forward" data-ng-if="type == 'last'"></i>
-            </button>
-          </div>
+        <div data-ng-if="findLink(pagination, 'first') != ''">
+          <button data-ng-click="retrieveScansByURI(findLink(pagination, 'first'))">
+            <i class="fa fa-fast-backward"></i>
+          </button>
+        </div>
+        <div data-ng-if="findLink(pagination, 'prev') != ''">
+          <button data-ng-click="retrieveScansByURI(findLink(pagination, 'prev'))">
+            <i class="fa fa-backward"></i>
+          </button>
+        </div>
+        <div>
+          <span>{{pagination.page}}</span>
+        </div>
+        <div data-ng-if="findLink(pagination, 'next') != ''">
+          <button data-ng-click="retrieveScansByURI(findLink(pagination, 'next'))">
+            <i class="fa fa-forward"></i>
+          </button>
+        </div>
+        <div data-ng-if="findLink(pagination, 'last') != ''">
+          <button data-ng-click="retrieveScansByURI(findLink(pagination, 'last'))">
+            <i class="fa fa-fast-forward"></i>
+          </button>
         </div>
       </div>
 
@@ -141,22 +153,34 @@
 
       <div class="pagination">
         <label translate>Page</label>
-        <span>{{pagination.page}}</span>
-        <div data-ng-repeat="link in pagination.links">
-          <div data-ng-repeat="type in link.types" class="pagination-item">
-            <button data-ng-click="retrieveScansByURI(link.href)">
-              <i class="fa fa-forward" data-ng-if="type == 'next'"></i>
-              <i class="fa fa-backward" data-ng-if="type == 'prev'"></i>
-              <i class="fa fa-fast-backward" data-ng-if="type == 'first'"></i>
-              <i class="fa fa-fast-forward" data-ng-if="type == 'last'"></i>
-            </button>
-          </div>
+        <div data-ng-if="findLink(pagination, 'first') != ''">
+          <button data-ng-click="retrieveScansByURI(findLink(pagination, 'first'))">
+            <i class="fa fa-fast-backward"></i>
+          </button>
+        </div>
+        <div data-ng-if="findLink(pagination, 'prev') != ''">
+          <button data-ng-click="retrieveScansByURI(findLink(pagination, 'prev'))">
+            <i class="fa fa-backward"></i>
+          </button>
+        </div>
+        <div>
+          <span>{{pagination.page}}</span>
+        </div>
+        <div data-ng-if="findLink(pagination, 'next') != ''">
+          <button data-ng-click="retrieveScansByURI(findLink(pagination, 'next'))">
+            <i class="fa fa-forward"></i>
+          </button>
+        </div>
+        <div data-ng-if="findLink(pagination, 'last') != ''">
+          <button data-ng-click="retrieveScansByURI(findLink(pagination, 'last'))">
+            <i class="fa fa-fast-forward"></i>
+          </button>
         </div>
       </div>
 
       <div class="pagination">
         <label translate>Page size</label>
-        <div data-ng-repeat="pageSize in pageSizes" class="pagination-item">
+        <div data-ng-repeat="pageSize in pageSizes">
           <span data-ng-if="pageSize == pagination.pageSize">{{pageSize}}</span>
           <button data-ng-if="pageSize != pagination.pageSize"
             data-ng-click="retrieveScans(pagination.page, pageSize)">

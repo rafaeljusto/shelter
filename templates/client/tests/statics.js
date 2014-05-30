@@ -116,3 +116,54 @@ describe("mergeList", function() {
     expect(a).toBe(undefined);
   });
 });
+
+describe("findLink", function() {
+  it("should find a existing link", function() {
+    var links = [
+      {
+        href: "/path/to/object1",
+        types: ["first", "prev", "last"]
+      },
+      {
+        href: "/path/to/object2",
+        types: ["next"]
+      }
+    ];
+
+    expect(findLink(links, "first")).toBe("/path/to/object1");
+    expect(findLink(links, "prev")).toBe("/path/to/object1");
+    expect(findLink(links, "last")).toBe("/path/to/object1");
+    expect(findLink(links, "next")).toBe("/path/to/object2");
+  });
+
+  it("should return empty when the link doesn't exist", function() {
+    var links = [
+      {
+        href: "/path/to/object1",
+        types: ["first", "prev", "last"]
+      },
+      {
+        href: "/path/to/object2",
+        types: ["next"]
+      }
+    ];
+
+    expect(findLink(links, "current")).toBe("");
+  });
+
+  it("should return empty when the structures are undefined", function() {
+    var links = [
+      {
+        href: "/path/to/object1",
+        types: ["first", "prev", "last"]
+      },
+      {
+        href: "/path/to/object2",
+        types: ["next"]
+      }
+    ];
+
+    expect(findLink(undefined, "first")).toBe("");
+    expect(findLink(links, undefined)).toBe("");
+  });
+});

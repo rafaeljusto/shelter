@@ -6,8 +6,11 @@ version 0.2:
   * Allow MongoDB authentication
   * Allow a cluster of MongoDB servers for data persistency
   * List services now accepts cache HTTP headers
+  * List services by default receive compressed information
   Fix:
   * Checking QPS for nameservers with glue records
+  * Web client now generates pagination dynamically
+  * Web client domain status verification fixed (for colorful rows)
 
 version 0.1:
   New Feature:

@@ -69,8 +69,8 @@ func TestToDomainsResponse(t *testing.T) {
 		t.Error("Pagination not storing number of pages properly")
 	}
 
-	// We can't show next and previous when there's only one page
-	if len(domainsResponse.Links) != 2 {
+	// When we are on the first page, and there's no other page, don't show any link
+	if len(domainsResponse.Links) != 0 {
 		t.Error("Response not adding the necessary links when there is only one page")
 	}
 }
@@ -137,8 +137,8 @@ func TestToDomainsResponseLinks(t *testing.T) {
 
 	domainsResponse = ToDomainsResponse(domains, pagination)
 
-	// Don't show previous when we are in the first page
-	if len(domainsResponse.Links) != 3 {
+	// Don't show previous or fast backward when we are in the first page
+	if len(domainsResponse.Links) != 2 {
 		t.Error("Response not adding the necessary links when we are at the first page")
 	}
 
@@ -161,8 +161,8 @@ func TestToDomainsResponseLinks(t *testing.T) {
 
 	domainsResponse = ToDomainsResponse(domains, pagination)
 
-	// Don't show next when we are in the last page
-	if len(domainsResponse.Links) != 3 {
+	// Don't show next or fast foward when we are in the last page
+	if len(domainsResponse.Links) != 2 {
 		t.Error("Response not adding the necessary links when we are in the last page")
 	}
 }

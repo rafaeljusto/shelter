@@ -118,6 +118,30 @@ function mergeList(source, destination, areEqual, mergeObject) {
   }
 }
 
+// Look for a specific link href given a type. According to W3C link can have many types
+// for a given URL (http://www.w3.org/TR/html401/types.html#type-links), so we use this
+// function to make our life easier
+function findLink(links, expectedType) {
+  var href = "";
+  if (!links) {
+    return href;
+  }
+
+  links.forEach(function(link) {
+    if (!link.types) {
+      return;
+    }
+
+    link.types.forEach(function(type) {
+      if (type == expectedType) {
+        href = link.href;
+      }
+    });
+  });
+
+  return href;
+}
+
 angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
 
   .config(function($translateProvider, $httpProvider) {
@@ -610,12 +634,12 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
       if (response.status == 200) {
         $scope.success = null;
         $scope.error = null;
+        $scope.etag = response.headers.Etag;
 
         if (!$scope.pagination) {
           $scope.pagination = response.data;
 
         } else {
-          $scope.etag = response.headers.Etag;
           $scope.pagination.page = response.data.page;
           $scope.pagination.numberOfItems = response.data.numberOfItems;
           $scope.pagination.numberOfPages = response.data.numberOfPages;
@@ -664,6 +688,14 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
       $timeout($scope.retrieveDomainsWorker, 5000);
     };
 
+    $scope.findLink = function(pagination, type) {
+      if (pagination == undefined || type == undefined) {
+        return "";
+      }
+
+      return findLink(pagination.links, type);
+    };
+
     $scope.retrieveDomainsWorker();
   })
 
@@ -675,22 +707,8 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
 
   .factory("scanService", function($http) {
     return {
-      retrieveScans: function(uri, etag) {
+      retrieve: function(uri, etag) {
         return $http.get(uri, {
-          headers: {
-            "If-None-Match": etag
-          }
-        })
-          .then(
-            function(response) {
-              return response;
-            },
-            function(response) {
-              return response;
-            });
-      },
-      retrieveCurrentScan: function(etag) {
-        return $http.get("/scan/current", {
           headers: {
             "If-None-Match": etag
           }
@@ -760,12 +778,12 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
       if (response.status == 200) {
         $scope.success = null;
         $scope.error = null;
+        $scope.etag = response.headers.Etag;
 
         if (!$scope.pagination) {
           $scope.pagination = response.data;
 
         } else {
-          $scope.etag = response.headers.Etag;
           $scope.pagination.page = response.data.page;
           $scope.pagination.numberOfItems = response.data.numberOfItems;
           $scope.pagination.numberOfPages = response.data.numberOfPages;
@@ -787,6 +805,8 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
             });
         }
 
+        $scope.currentScanURI = findLink($scope.pagination.links, "current");
+
       } else if (response.status == 304) {
         $scope.success = null;
         $scope.error = null;
@@ -804,7 +824,13 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
     };
 
     $scope.retrieveCurrentScan = function() {
-      scanService.retrieveCurrentScan($scope.currentScanEtag).then(
+      // We dind't got the current scan URI yet, wait until we do
+      if (!$scope.currentScanURI) {
+        $timeout($scope.retrieveCurrentScan, 5000);
+        return;
+      }
+
+      scanService.retrieve($scope.currentScanURI, $scope.currentScanEtag).then(
         function(response) {
           if (response.status == 200) {
             $scope.success = null;
@@ -836,12 +862,20 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
         $scope.retrieveScans();
       }
 
-      scanService.retrieveScans($scope.retrieveScansURI, $scope.etag).then(
+      scanService.retrieve($scope.retrieveScansURI, $scope.etag).then(
         function(response) {
           $scope.processScansResult(response);
         });
 
       $timeout($scope.retrieveScansWorker, 5000);
+    };
+
+    $scope.findLink = function(pagination, type) {
+      if (pagination == undefined || type == undefined) {
+        return "";
+      }
+
+      return findLink(pagination.links, type);
     };
 
     $scope.retrieveCurrentScan();

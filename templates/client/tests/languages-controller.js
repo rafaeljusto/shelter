@@ -12,7 +12,7 @@ describe("Languages controller", function() {
   beforeEach(inject(function($rootScope, $controller, $injector) {
     $httpBackend = $injector.get("$httpBackend");
     $httpBackend.whenGET(/languages\/.+\.json/).respond(200, "{}");
-    $httpBackend.flush()
+    $httpBackend.flush();
 
     scope = $rootScope.$new();
     ctrl = $controller("languagesCtrl", {
@@ -31,7 +31,7 @@ describe("Languages controller", function() {
 
     // Must be an unknown language, because we don't known the default system language
     scope.changeLanguage("xx_ZZ");
-    $httpBackend.flush()
+    $httpBackend.flush();
 
     expect(scope.getLanguage()).toBe("xx_ZZ");
   }));

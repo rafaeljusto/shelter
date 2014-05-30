@@ -13,7 +13,7 @@ describe("Domain form directive", function() {
   beforeEach(inject(function($rootScope, $compile, $injector) {
     $httpBackend = $injector.get("$httpBackend");
     $httpBackend.whenGET(/languages\/.+\.json/).respond(200, "{}");
-    $httpBackend.flush()
+    $httpBackend.flush();
 
     var elm = angular.element("<domainform domain='domain'></domain>");
 
@@ -82,7 +82,7 @@ describe("Domain form directive", function() {
     });
 
     ctrl.queryDomain("br.");
-    $httpBackend.flush()
+    $httpBackend.flush();
 
     expect(ctrl.domain).not.toBeUndefined();
     expect(ctrl.domain.nameservers.length).toBe(1);
@@ -137,7 +137,7 @@ describe("Domain form directive", function() {
       ],
     });
 
-    $httpBackend.flush()
+    $httpBackend.flush();
 
     expect(ctrl.verifyResult).not.toBeUndefined();
     expect(ctrl.verifyResult.nameservers.length).toBe(1);
@@ -174,7 +174,7 @@ describe("Domain form directive", function() {
       ],
     });
 
-    $httpBackend.flush()
+    $httpBackend.flush();
 
     expect(ctrl.success).not.toBeUndefined();
     expect(ctrl.success).toBe("Domain created");

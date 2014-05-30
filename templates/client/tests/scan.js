@@ -13,7 +13,7 @@ describe("Scan directive", function() {
   beforeEach(inject(function($rootScope, $compile, $injector) {
     $httpBackend = $injector.get("$httpBackend");
     $httpBackend.whenGET(/languages\/.+\.json/).respond(200, "{}");
-    $httpBackend.flush()
+    $httpBackend.flush();
 
     var elm = angular.element("<scan scan='scan'></scan>");
 

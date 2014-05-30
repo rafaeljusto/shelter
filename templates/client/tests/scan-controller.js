@@ -12,7 +12,7 @@ describe("Scan controller", function() {
   beforeEach(inject(function($rootScope, $controller, $injector) {
     $httpBackend = $injector.get("$httpBackend");
     $httpBackend.whenGET(/languages\/.+\.json/).respond(200, "{}");
-    $httpBackend.flush()
+    $httpBackend.flush();
 
     scope = $rootScope.$new();
     ctrl = $controller("scanCtrl", {
@@ -61,7 +61,7 @@ describe("Scan controller", function() {
     $httpBackend.whenGET("/scan/current").respond(200, current);
 
     scope.retrieveScans(1, 20);
-    $httpBackend.flush()
+    $httpBackend.flush();
 
     expect(scope.pagination.numberOfItems).toBe(1);
     expect(scope.pagination.numberOfPages).toBe(1);
@@ -105,7 +105,7 @@ describe("Scan controller", function() {
     $httpBackend.whenGET("/scan/current").respond(200, current);
 
     scope.retrieveScansByURI("/scans/?expand&page=1&pagesize=20");
-    $httpBackend.flush()
+    $httpBackend.flush();
 
     expect(scope.pagination.numberOfItems).toBe(1);
     expect(scope.pagination.numberOfPages).toBe(1);
@@ -114,7 +114,7 @@ describe("Scan controller", function() {
     expect(scope.pagination.scans).toEqual(result.scans);
   }));
 
-  it("should return the current scan properly", inject(function($injector) {
+  it("should return the current scan properly", inject(function($injector, $timeout) {
     var result = {
       numberOfItems: 1,
       numberOfPages: 1,
@@ -147,8 +147,11 @@ describe("Scan controller", function() {
     $httpBackend.whenGET("/scans/?expand").respond(200, result);
     $httpBackend.whenGET("/scan/current").respond(200, current);
 
-    $httpBackend.flush()
+    scope.currentScanURI = "/scan/current";
+    $timeout.flush();
+    $httpBackend.flush();
 
-    expect(scope.currentScan).toEqual(current);
+    expect(scope.currentScan).toEqual(current);  
+    
   }));
 });
