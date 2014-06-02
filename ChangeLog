@@ -11,6 +11,7 @@ version 0.2:
   * Checking QPS for nameservers with glue records
   * Web client now generates pagination dynamically
   * Web client domain status verification fixed (for colorful rows)
+  * Domain retrieve service now returns the body properly
 
 version 0.1:
   New Feature:
