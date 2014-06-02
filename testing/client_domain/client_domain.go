@@ -73,6 +73,7 @@ func domainLifeCycle() {
 		uri            string
 		expectedStatus int
 		content        string
+		expectedBody   string
 	}{
 		{
 			method:         "PUT",
@@ -105,13 +106,12 @@ func domainLifeCycle() {
 			method:         "GET",
 			uri:            "/domain/example.com.br.",
 			expectedStatus: http.StatusOK,
-			content:        "",
+			expectedBody:   `{"fqdn":"example.com.br.","nameservers":[{"host":"ns1.example.com.br.","ipv4":"127.0.0.1","lastStatus":"NOTCHECKED","lastCheckAt":"0001-01-01T00:00:00Z","lastOKAt":"0001-01-01T00:00:00Z"}],"owners":[{"email":"admin2@example.com.br.","language":"en-US"}],"links":[{"types":["self"],"href":"/domain/example.com.br."}]}`,
 		},
 		{
 			method:         "DELETE",
 			uri:            "/domain/example.com.br.",
 			expectedStatus: http.StatusNoContent,
-			content:        "",
 		},
 	}
 
@@ -150,18 +150,25 @@ func domainLifeCycle() {
 			utils.Fatalln("Error sending request", err)
 		}
 
-		if response.StatusCode != item.expectedStatus {
-			responseContent, err := ioutil.ReadAll(response.Body)
-
-			if err == nil {
-				utils.Fatalln(fmt.Sprintf("Expected HTTP status %d and got %d for method %s and URI %s",
-					item.expectedStatus, response.StatusCode, item.method, item.uri),
-					errors.New(string(responseContent)),
+		var responseContent []byte
+		if response.ContentLength > 0 {
+			responseContent, err = ioutil.ReadAll(response.Body)
+			if err != nil {
+				utils.Fatalln(fmt.Sprintf("Error reading response for method %s and URI %s",
+					item.method, item.uri),
+					err,
 				)
-			} else {
-				utils.Fatalln(fmt.Sprintf("Expected HTTP status %d and got %d for method %s and URI %s",
-					item.expectedStatus, response.StatusCode, item.method, item.uri), nil)
 			}
+		}
+
+		if response.StatusCode != item.expectedStatus {
+			utils.Fatalln(fmt.Sprintf("Expected HTTP status %d and got %d for method %s and URI %s",
+				item.expectedStatus, response.StatusCode, item.method, item.uri),
+				errors.New(string(responseContent)),
+			)
+		} else if string(responseContent) != item.expectedBody {
+			utils.Fatalln(fmt.Sprintf("Expected HTTP body [%s] and got [%s] for method %s and URI %s",
+				item.expectedBody, string(responseContent), item.method, item.uri), nil)
 		}
 	}
 }

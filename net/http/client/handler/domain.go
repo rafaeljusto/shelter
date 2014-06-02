@@ -79,13 +79,13 @@ func HandleDomain(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if response.StatusCode != http.StatusBadRequest {
-		w.WriteHeader(response.StatusCode)
-
-	} else {
+	if response.ContentLength > 0 {
 		w.Header().Add("Content-Type", "application/json")
-		w.WriteHeader(response.StatusCode)
+	}
 
+	w.WriteHeader(response.StatusCode)
+
+	if response.ContentLength > 0 {
 		if _, err := io.Copy(w, response.Body); err != nil {
 			// Here we already set the response code, so the client will receive a OK result
 			// without body
