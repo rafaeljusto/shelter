@@ -43,4 +43,26 @@ describe("Scan directive", function() {
     expect(ctrl.getLanguage()).not.toBe("");
     expect(ctrl.getLanguage()).not.toBe(undefined);
   }));
+
+  it("should retrieve a scan", inject(function($injector) {
+    expect(ctrl.retrieveScan).not.toBeUndefined();
+
+    $httpBackend = $injector.get("$httpBackend");
+    $httpBackend.whenGET("/scan/2014-06-03T11:25:21.114-03:00").respond(200, {"status": "EXECUTED"});
+
+    var scan = {
+      links: [
+        {
+          types: [ "self" ],
+          href: "/scan/2014-06-03T11:25:21.114-03:00"
+        }
+      ],
+      etag: 1
+    };
+
+    ctrl.retrieveScan(scan);
+    $httpBackend.flush();
+
+    expect(ctrl.freshScan.status).toBe("EXECUTED");
+  }));
 });

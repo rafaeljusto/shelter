@@ -76,6 +76,16 @@ var emptyDomain = {
   ]
 };
 
+var emptyScan = {
+  status: "NOTCHECKED",
+  startedAt: "0000-00-00T00:00:00.000Z",
+  finishedAt: "0000-00-00T00:00:00.000Z",
+  domainsScanned: 0,
+  domainsWithDNSSECScanned: 0,
+  nameserverStatistics: {},
+  dsStatistics: {}
+};
+
 // Apply source list to destination list, adding new elements, removing old ones and
 // keeping the ones that are equal
 function mergeList(source, destination, areEqual, mergeObject) {
@@ -225,6 +235,16 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
               return response;
             });
       },
+      retrieveDomain: function(uri) {
+        return $http.get(uri)
+          .then(
+            function(response) {
+              return response;
+            },
+            function(response) {
+              return response;
+            });
+      },
       retrieveDomains: function(uri, etag) {
         return $http.get(uri, {
             headers: {
@@ -253,8 +273,12 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
               return response;
             });
       },
-      removeDomain: function(fqdn) {
-        return $http.delete("/domain/" + fqdn)
+      removeDomain: function(uri, etag) {
+        return $http.delete(uri, {
+            headers: {
+              "If-Match": etag
+            }
+        })
           .then(
             function(response) {
               return response;
@@ -263,10 +287,11 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
               return response;
             });
       },
-      saveDomain: function(domain) {
+      saveDomain: function(domain, etag) {
         return $http.put("/domain/" + domain.fqdn, domain, {
           headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "If-Match": etag
           }
         })
           .then(
@@ -288,6 +313,8 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
       },
       templateUrl: "/directives/domain.html",
       controller: function($scope, $translate, domainService) {
+        $scope.freshDomain = emptyDomain;
+
         $scope.hasErrors = function(domain) {
           errors = false;
 
@@ -376,6 +403,41 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
           return digest;
         };
 
+        $scope.toggleDetails = function(domain) {
+          if (!$scope.details) {
+            $scope.retrieveDomain(domain);
+          }
+          $scope.details = !$scope.details;
+        };
+
+        $scope.retrieveDomain = function(domain) {
+          var uri = findLink(domain.links, "self");
+
+          domainService.retrieveDomain(uri).then(
+            function(response) {
+              if (response.status == 200) {
+                $scope.success = null;
+                $scope.error = null;
+
+                $scope.freshDomain = response.data;
+                $scope.freshDomain.etag = response.headers.Etag;
+
+              } else if (response.status == 400) {
+                $scope.success = null;
+                $scope.verifyResult = null;
+                $scope.error = response.data.message;
+
+              } else {
+                $scope.success = null;
+                $scope.verifyResult = null;
+                $translate("Server error").then(function(translation) {
+                  $scope.error = translation;
+                });
+              }
+            }
+          );
+        };
+
         $scope.verifyDomain = function(domain) {
           $scope.verifyWorking = true;
 
@@ -418,10 +480,11 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
             });
         };
 
-        $scope.removeDomain = function(fqdn) {
+        $scope.removeDomain = function(domain) {
           $scope.removeWorking = true;
 
-          domainService.removeDomain(fqdn).then(
+          var uri = findLink(domain.links, "self");
+          domainService.removeDomain(uri, domain.etag).then(
             function(response) {
               if (response.status == 204) {
                 $scope.error = null;
@@ -577,7 +640,7 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
             }
           }
 
-          domainService.saveDomain(domain).then(
+          domainService.saveDomain(domain, domain.etag).then(
             function(response) {
               if (response.status == 201 || response.status == 204) {
                 $translate("Domain created").then(function(translation) {
@@ -611,14 +674,24 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
     $scope.pageSizes = [ 20, 40, 60, 80, 100 ];
 
     $scope.retrieveDomains = function(page, pageSize) {
-      var uri = "?expand";
+      var uri = "";
 
       if (page != undefined) {
-        uri += "&page=" + page;
+        if (uri.length == 0) {
+          uri += "?";
+        } else {
+          uri += "&";
+        }
+        uri += "page=" + page;
       }
 
       if (pageSize != undefined) {
-        uri += "&pagesize=" + pageSize;
+        if (uri.length == 0) {
+          uri += "?";
+        } else {
+          uri += "&";
+        }
+        uri += "pagesize=" + pageSize;
       }
 
       uri = "/domains/" + uri;
@@ -731,7 +804,9 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
         scan: '='
       },
       templateUrl: "/directives/scan.html",
-      controller: function($scope, $translate) {
+      controller: function($scope, $translate, scanService) {
+        $scope.freshDomain = emptyScan;
+
         $scope.countStatistics = function(statistics) {
           var counter = 0;
           for (var status in statistics) {
@@ -742,6 +817,41 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
 
         $scope.getLanguage = function() {
           return $translate.use();
+        };
+
+        $scope.toggleDetails = function(scan) {
+          if (!$scope.details) {
+            $scope.retrieveScan(scan);
+          }
+          $scope.details = !$scope.details;
+        };
+
+        $scope.retrieveScan = function(scan) {
+          var uri = findLink(scan.links, "self");
+
+          scanService.retrieve(uri).then(
+            function(response) {
+              if (response.status == 200) {
+                $scope.success = null;
+                $scope.error = null;
+
+                $scope.freshScan = response.data;
+                $scope.freshScan.etag = response.headers.Etag;
+
+              } else if (response.status == 400) {
+                $scope.success = null;
+                $scope.verifyResult = null;
+                $scope.error = response.data.message;
+
+              } else {
+                $scope.success = null;
+                $scope.verifyResult = null;
+                $translate("Server error").then(function(translation) {
+                  $scope.error = translation;
+                });
+              }
+            }
+          );
         };
       }
     };
@@ -755,14 +865,24 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
     };
 
     $scope.retrieveScans = function(page, pageSize) {
-      var uri = "?expand";
+      var uri = "";
 
       if (page != undefined) {
-        uri += "&page=" + page;
+        if (uri.length == 0) {
+          uri += "?";
+        } else {
+          uri += "&";
+        }
+        uri += "page=" + page;
       }
 
       if (pageSize != undefined) {
-        uri += "&pagesize=" + pageSize;
+        if (uri.length == 0) {
+          uri += "?";
+        } else {
+          uri += "&";
+        }
+        uri += "pagesize=" + pageSize;
       }
 
       uri = "/scans/" + uri;

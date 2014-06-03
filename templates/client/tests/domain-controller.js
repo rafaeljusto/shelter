@@ -17,6 +17,6 @@ describe("Domain controller", function() {
   }));
 
   it("should have an empty domain", function() {
-    expect(scope.emptyDomain).toEqual(emptyDomain);
+    expect(angular.toJson(scope.emptyDomain)).toEqual(angular.toJson(emptyDomain));
   });
 });

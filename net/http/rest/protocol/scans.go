@@ -54,7 +54,7 @@ func ScansToScansResponse(scans []model.Scan, pagination dao.ScanDAOPagination) 
 	if pagination.Page > 1 {
 		links = append(links, Link{
 			Types: []LinkType{LinkTypeFirst},
-			HRef: fmt.Sprintf("/scans/?expand&pagesize=%d&page=%d&orderby=%s",
+			HRef: fmt.Sprintf("/scans/?pagesize=%d&page=%d&orderby=%s",
 				pagination.PageSize, 1, orderBy,
 			),
 		})
@@ -64,7 +64,7 @@ func ScansToScansResponse(scans []model.Scan, pagination dao.ScanDAOPagination) 
 	if pagination.Page-1 >= 1 {
 		links = append(links, Link{
 			Types: []LinkType{LinkTypePrev},
-			HRef: fmt.Sprintf("/scans/?expand&pagesize=%d&page=%d&orderby=%s",
+			HRef: fmt.Sprintf("/scans/?pagesize=%d&page=%d&orderby=%s",
 				pagination.PageSize, pagination.Page-1, orderBy,
 			),
 		})
@@ -74,7 +74,7 @@ func ScansToScansResponse(scans []model.Scan, pagination dao.ScanDAOPagination) 
 	if pagination.Page+1 <= pagination.NumberOfPages {
 		links = append(links, Link{
 			Types: []LinkType{LinkTypeNext},
-			HRef: fmt.Sprintf("/scans/?expand&pagesize=%d&page=%d&orderby=%s",
+			HRef: fmt.Sprintf("/scans/?pagesize=%d&page=%d&orderby=%s",
 				pagination.PageSize, pagination.Page+1, orderBy,
 			),
 		})
@@ -84,7 +84,7 @@ func ScansToScansResponse(scans []model.Scan, pagination dao.ScanDAOPagination) 
 	if pagination.Page < pagination.NumberOfPages {
 		links = append(links, Link{
 			Types: []LinkType{LinkTypeLast},
-			HRef: fmt.Sprintf("/scans/?expand&pagesize=%d&page=%d&orderby=%s",
+			HRef: fmt.Sprintf("/scans/?pagesize=%d&page=%d&orderby=%s",
 				pagination.PageSize, pagination.NumberOfPages, orderBy,
 			),
 		})

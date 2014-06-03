@@ -53,8 +53,8 @@ describe("Domains controller", function() {
     };
 
     $httpBackend = $injector.get("$httpBackend");
-    $httpBackend.whenGET("/domains/?expand").respond(200, result);
-    $httpBackend.whenGET("/domains/?expand&page=1&pagesize=20").respond(200, result);
+    $httpBackend.whenGET("/domains/").respond(200, result);
+    $httpBackend.whenGET("/domains/?page=1&pagesize=20").respond(200, result);
 
     scope.retrieveDomains(1, 20);
     $httpBackend.flush();
@@ -99,10 +99,10 @@ describe("Domains controller", function() {
     };
 
     $httpBackend = $injector.get("$httpBackend");
-    $httpBackend.whenGET("/domains/?expand").respond(200, result);
-    $httpBackend.whenGET("/domains/?expand&page=1&pagesize=20").respond(200, result);
+    $httpBackend.whenGET("/domains/").respond(200, result);
+    $httpBackend.whenGET("/domains/?page=1&pagesize=20").respond(200, result);
 
-    scope.retrieveDomainsByURI("/domains/?expand&page=1&pagesize=20");
+    scope.retrieveDomainsByURI("/domains/?page=1&pagesize=20");
     $httpBackend.flush();
 
     expect(scope.pagination.numberOfItems).toBe(1);

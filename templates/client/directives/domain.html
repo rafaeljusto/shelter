@@ -5,15 +5,15 @@
 -->
 
 <article data-ng-init="details = false">
-  <header data-ng-click="details = !details"
+  <header data-ng-click="toggleDetails(domain)"
     data-ng-class="{'domain-error': hasErrors(domain),
       'domain-ok': !hasErrors(domain) && wasChecked(domain)}">
     <h3>{{domain.fqdn}}</h3>
   </header>
 
   <div class="content" data-ng-show="details && !edit">
-    <h4 data-ng-show="domain.nameservers.length > 0" translate>Nameservers</h4>
-    <div data-ng-repeat="nameserver in domain.nameservers" class="fieldgroup">
+    <h4 data-ng-show="freshDomain.nameservers.length > 0" translate>Nameservers</h4>
+    <div data-ng-repeat="nameserver in freshDomain.nameservers" class="fieldgroup">
       <div class="field">
         <label translate>Host</label><span>{{nameserver.host}}</span>
       </div>
@@ -34,8 +34,8 @@
       </div>
     </div>
 
-    <h4 data-ng-show="domain.dsset.length > 0" translate>DS set</h4>
-    <div data-ng-repeat="ds in domain.dsset" class="fieldgroup">
+    <h4 data-ng-show="freshDomain.dsset.length > 0" translate>DS set</h4>
+    <div data-ng-repeat="ds in freshDomain.dsset" class="fieldgroup">
       <div class="field">
         <label translate>Keytag</label><span>{{ds.keytag}}</span>
       </div>
@@ -59,8 +59,8 @@
       </div>
     </div>
 
-    <h4 data-ng-show="domain.owners.length > 0" translate>Owners</h4>
-    <div data-ng-repeat="owner in domain.owners" class="fieldgroup">
+    <h4 data-ng-show="freshDomain.owners.length > 0" translate>Owners</h4>
+    <div data-ng-repeat="owner in freshDomain.owners" class="fieldgroup">
       <div class="field">
         <label translate>E-mail</label><span>{{owner.email}}</span>
       </div>
@@ -77,7 +77,7 @@
       {{ "Edit" | translate }}
     </button>
     <button type="button" class="big-button" data-ng-init="verifyWorking = false"
-      data-ng-click="verifyDomain(domain)" data-ng-disabled="verifyWorking">
+      data-ng-click="verifyDomain(freshDomain)" data-ng-disabled="verifyWorking">
       <i class="fa fa-spinner fa-2x fa-spin" data-ng-if="verifyWorking"></i>
       <div data-ng-if="!verifyWorking">
         <i class="fa fa-search"></i>
@@ -86,7 +86,7 @@
     </button>
     <button type="button" class="big-button remove-button"
       data-ng-init="removeWorking = false"
-      data-ng-click="removeDomain(domain.fqdn)" data-ng-disabled="removeWorking">
+      data-ng-click="removeDomain(freshDomain)" data-ng-disabled="removeWorking">
       <i class="fa fa-spinner fa-2x fa-spin" data-ng-if="removeWorking"></i>
       <div data-ng-if="!removeWorking">
         <i class="fa fa-trash-o"></i>
@@ -121,6 +121,6 @@
   </div>
 
   <div class="content-edit" data-ng-show="details && edit">
-    <domainform domain="domain"></domainform>
+    <domainform domain="freshDomain"></domainform>
   </div>
 </article>

@@ -213,10 +213,42 @@ describe("Domain directive", function() {
     $httpBackend = $injector.get("$httpBackend");
     $httpBackend.whenDELETE("/domain/br.").respond(204, "");
 
-    ctrl.removeDomain("br.");
+    var domain = {
+      links: [
+        {
+          types: [ "self" ],
+          href: "/domain/br."
+        }
+      ],
+      etag: 1
+    };
+
+    ctrl.removeDomain(domain);
     $httpBackend.flush();
 
     expect(ctrl.success).not.toBeUndefined();
     expect(ctrl.success).toBe("Domain removed");
+  }));
+
+  it("should retrieve a domain", inject(function($injector) {
+    expect(ctrl.retrieveDomain).not.toBeUndefined();
+
+    $httpBackend = $injector.get("$httpBackend");
+    $httpBackend.whenGET("/domain/br.").respond(200, {"fqdn": "br."});
+
+    var domain = {
+      links: [
+        {
+          types: [ "self" ],
+          href: "/domain/br."
+        }
+      ],
+      etag: 1
+    };
+
+    ctrl.retrieveDomain(domain);
+    $httpBackend.flush();
+
+    expect(ctrl.freshDomain.fqdn).toBe("br.");
   }));
 });
