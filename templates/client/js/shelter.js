@@ -4,6 +4,9 @@
  * license that can be found in the LICENSE file.
  */
 
+// Screen refresh rate in seconds
+var refreshRate = 5;
+
 var dnskeyFlags = [
   {id: 256, name:"ZSK"},
   {id: 257, name:"KSK"},
@@ -672,6 +675,7 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
 
   .controller("domainsCtrl", function($scope, $translate, $timeout, domainService) {
     $scope.pageSizes = [ 20, 40, 60, 80, 100 ];
+    $scope.lastRetrieveDomains = moment();
 
     $scope.retrieveDomains = function(page, pageSize) {
       var uri = "";
@@ -696,11 +700,17 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
 
       uri = "/domains/" + uri;
 
-      $scope.retrieveDomainsURI = uri;
+      $scope.retrieveDomainsByURI(uri);
     };
 
     $scope.retrieveDomainsByURI = function(uri) {
       $scope.retrieveDomainsURI = uri;
+      $scope.lastRetrieveDomains = moment();
+      
+      domainService.retrieveDomains($scope.retrieveDomainsURI, $scope.etag).then(
+        function(response) {
+          $scope.processDomainsResult(response);
+        });
     };
 
     $scope.processDomainsResult = function(response) {
@@ -753,12 +763,16 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
         $scope.retrieveDomains();
       }
 
-      domainService.retrieveDomains($scope.retrieveDomainsURI, $scope.etag).then(
-        function(response) {
-          $scope.processDomainsResult(response);
-        });
+      var now = moment();
+      if (now.subtract($scope.lastRetrieveDomains).seconds() >= refreshRate) {
+        domainService.retrieveDomains($scope.retrieveDomainsURI, $scope.etag).then(
+          function(response) {
+            $scope.processDomainsResult(response);
+          });
+          $scope.lastRetrieveDomains = moment();
+      }
 
-      $timeout($scope.retrieveDomainsWorker, 5000);
+      $timeout($scope.retrieveDomainsWorker, refreshRate * 1000);
     };
 
     $scope.findLink = function(pagination, type) {
@@ -859,6 +873,7 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
 
   .controller("scanCtrl", function($scope, $translate, $timeout, scanService) {
     $scope.pageSizes = [ 20, 40, 60, 80, 100 ];
+    $scope.lastRetrieveScans = moment();
 
     $scope.getLanguage = function() {
       return $translate.use();
@@ -887,11 +902,17 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
 
       uri = "/scans/" + uri;
 
-      $scope.retrieveScansURI = uri;
+      $scope.retrieveScansByURI(uri);
     };
 
     $scope.retrieveScansByURI = function(uri) {
       $scope.retrieveScansURI = uri;
+      $scope.lastRetrieveScans = moment();
+      
+      scanService.retrieve($scope.retrieveScansURI, $scope.etag).then(
+        function(response) {
+          $scope.processScansResult(response);
+        });
     };
 
     $scope.processScansResult = function(response) {
@@ -946,7 +967,7 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
     $scope.retrieveCurrentScan = function() {
       // We dind't got the current scan URI yet, wait until we do
       if (!$scope.currentScanURI) {
-        $timeout($scope.retrieveCurrentScan, 5000);
+        $timeout($scope.retrieveCurrentScan, refreshRate*1000);
         return;
       }
 
@@ -973,7 +994,7 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
             });
           }
 
-          $timeout($scope.retrieveCurrentScan, 5000);
+          $timeout($scope.retrieveCurrentScan, refreshRate*1000);
         });
     };
 
@@ -982,12 +1003,16 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
         $scope.retrieveScans();
       }
 
-      scanService.retrieve($scope.retrieveScansURI, $scope.etag).then(
-        function(response) {
-          $scope.processScansResult(response);
-        });
+      var now = moment();
+      if (now.subtract($scope.lastRetrieveScans).seconds() >= refreshRate) {
+        scanService.retrieve($scope.retrieveScansURI, $scope.etag).then(
+          function(response) {
+            $scope.processScansResult(response);
+          });
+        $scope.lastRetrieveScans = moment();
+      }
 
-      $timeout($scope.retrieveScansWorker, 5000);
+      $timeout($scope.retrieveScansWorker, refreshRate*1000);
     };
 
     $scope.findLink = function(pagination, type) {
