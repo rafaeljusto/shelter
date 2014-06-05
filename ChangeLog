@@ -15,6 +15,7 @@ version 0.2:
   * Don't import DNSKEYs with bit SEP off on service GET /domain/{domain}/verification
   * Allow multiple IPs in ACL of the deploy program
   * Don't show domains, scans or links as null in protocol response
+  * Don't stop checking nameservers of a domain on error
 
 version 0.1:
   New Feature:
