@@ -13,12 +13,12 @@ import (
 
 // ScansResponse store multiple scans objects with pagination support
 type ScansResponse struct {
-	Page          int            `json:"page"`          // Current page selected
-	PageSize      int            `json:"pageSize"`      // Number of scans in a page
-	NumberOfPages int            `json:"numberOfPages"` // Total number of pages for the result set
-	NumberOfItems int            `json:"numberOfItems"` // Total number of scans in the result set
-	Scans         []ScanResponse `json:"scans"`         // List of scan objects for the current page
-	Links         []Link         `json:"links"`         // Links for pagination managment
+	Page          int            `json:"page"`            // Current page selected
+	PageSize      int            `json:"pageSize"`        // Number of scans in a page
+	NumberOfPages int            `json:"numberOfPages"`   // Total number of pages for the result set
+	NumberOfItems int            `json:"numberOfItems"`   // Total number of scans in the result set
+	Scans         []ScanResponse `json:"scans,omitempty"` // List of scan objects for the current page
+	Links         []Link         `json:"links,omitempty"` // Links for pagination managment
 }
 
 // Convert a list of scan objects into protocol format with pagination support
