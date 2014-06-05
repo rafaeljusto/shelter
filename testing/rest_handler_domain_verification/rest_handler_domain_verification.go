@@ -64,10 +64,7 @@ func scanDomain() {
 	dns.HandleFunc("example.com.br.", func(w dns.ResponseWriter, dnsRequestMessage *dns.Msg) {
 		defer w.Close()
 
-		dnsResponseMessage := new(dns.Msg)
-		defer w.WriteMsg(dnsResponseMessage)
-
-		dnsResponseMessage = &dns.Msg{
+		dnsResponseMessage := &dns.Msg{
 			MsgHdr: dns.MsgHdr{
 				Authoritative: true,
 			},
@@ -90,8 +87,8 @@ func scanDomain() {
 				},
 			},
 		}
-		dnsResponseMessage.SetReply(dnsRequestMessage)
 
+		dnsResponseMessage.SetReply(dnsRequestMessage)
 		w.WriteMsg(dnsResponseMessage)
 	})
 
@@ -140,10 +137,7 @@ func queryDomain() {
 	dns.HandleFunc("example.com.br.", func(w dns.ResponseWriter, dnsRequestMessage *dns.Msg) {
 		defer w.Close()
 
-		dnsResponseMessage := new(dns.Msg)
-		defer w.WriteMsg(dnsResponseMessage)
-
-		dnsResponseMessage = &dns.Msg{
+		dnsResponseMessage := &dns.Msg{
 			MsgHdr:   dns.MsgHdr{},
 			Question: dnsRequestMessage.Question,
 			Answer: []dns.RR{
@@ -167,8 +161,8 @@ func queryDomain() {
 				},
 			},
 		}
-		dnsResponseMessage.SetReply(dnsRequestMessage)
 
+		dnsResponseMessage.SetReply(dnsRequestMessage)
 		w.WriteMsg(dnsResponseMessage)
 	})
 

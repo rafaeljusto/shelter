@@ -153,11 +153,8 @@ func domainWithNoErrors(domainDAO dao.DomainDAO) {
 	dns.HandleFunc("br.", func(w dns.ResponseWriter, dnsRequestMessage *dns.Msg) {
 		defer w.Close()
 
-		dnsResponseMessage := new(dns.Msg)
-		defer w.WriteMsg(dnsResponseMessage)
-
 		if dnsRequestMessage.Question[0].Qtype == dns.TypeSOA {
-			dnsResponseMessage = &dns.Msg{
+			dnsResponseMessage := &dns.Msg{
 				MsgHdr: dns.MsgHdr{
 					Authoritative: true,
 				},
@@ -181,11 +178,10 @@ func domainWithNoErrors(domainDAO dao.DomainDAO) {
 				},
 			}
 			dnsResponseMessage.SetReply(dnsRequestMessage)
-
 			w.WriteMsg(dnsResponseMessage)
 
 		} else if dnsRequestMessage.Question[0].Qtype == dns.TypeDNSKEY {
-			dnsResponseMessage = &dns.Msg{
+			dnsResponseMessage := &dns.Msg{
 				MsgHdr: dns.MsgHdr{
 					Authoritative: true,
 				},
@@ -195,8 +191,8 @@ func domainWithNoErrors(domainDAO dao.DomainDAO) {
 					rrsig,
 				},
 			}
-			dnsResponseMessage.SetReply(dnsRequestMessage)
 
+			dnsResponseMessage.SetReply(dnsRequestMessage)
 			w.WriteMsg(dnsResponseMessage)
 		}
 	})
@@ -254,11 +250,8 @@ func domainWithNoErrorsOnTheFly() {
 	dns.HandleFunc("br.", func(w dns.ResponseWriter, dnsRequestMessage *dns.Msg) {
 		defer w.Close()
 
-		dnsResponseMessage := new(dns.Msg)
-		defer w.WriteMsg(dnsResponseMessage)
-
 		if dnsRequestMessage.Question[0].Qtype == dns.TypeSOA {
-			dnsResponseMessage = &dns.Msg{
+			dnsResponseMessage := &dns.Msg{
 				MsgHdr: dns.MsgHdr{
 					Authoritative: true,
 				},
@@ -281,12 +274,12 @@ func domainWithNoErrorsOnTheFly() {
 					},
 				},
 			}
-			dnsResponseMessage.SetReply(dnsRequestMessage)
 
+			dnsResponseMessage.SetReply(dnsRequestMessage)
 			w.WriteMsg(dnsResponseMessage)
 
 		} else if dnsRequestMessage.Question[0].Qtype == dns.TypeDNSKEY {
-			dnsResponseMessage = &dns.Msg{
+			dnsResponseMessage := &dns.Msg{
 				MsgHdr: dns.MsgHdr{
 					Authoritative: true,
 				},
@@ -296,8 +289,8 @@ func domainWithNoErrorsOnTheFly() {
 					rrsig,
 				},
 			}
-			dnsResponseMessage.SetReply(dnsRequestMessage)
 
+			dnsResponseMessage.SetReply(dnsRequestMessage)
 			w.WriteMsg(dnsResponseMessage)
 		}
 	})
@@ -346,11 +339,8 @@ func domainQuery() {
 	dns.HandleFunc("example.com.br.", func(w dns.ResponseWriter, dnsRequestMessage *dns.Msg) {
 		defer w.Close()
 
-		dnsResponseMessage := new(dns.Msg)
-		defer w.WriteMsg(dnsResponseMessage)
-
 		if dnsRequestMessage.Question[0].Qtype == dns.TypeNS {
-			dnsResponseMessage = &dns.Msg{
+			dnsResponseMessage := &dns.Msg{
 				MsgHdr:   dns.MsgHdr{},
 				Question: dnsRequestMessage.Question,
 				Answer: []dns.RR{
@@ -366,11 +356,10 @@ func domainQuery() {
 				},
 			}
 			dnsResponseMessage.SetReply(dnsRequestMessage)
-
 			w.WriteMsg(dnsResponseMessage)
 
 		} else if dnsRequestMessage.Question[0].Qtype == dns.TypeDNSKEY {
-			dnsResponseMessage = &dns.Msg{
+			dnsResponseMessage := &dns.Msg{
 				MsgHdr: dns.MsgHdr{
 					Authoritative: true,
 				},
@@ -381,20 +370,15 @@ func domainQuery() {
 				},
 			}
 			dnsResponseMessage.SetReply(dnsRequestMessage)
-
 			w.WriteMsg(dnsResponseMessage)
-
 		}
 	})
 
 	dns.HandleFunc("ns1.example.com.br.", func(w dns.ResponseWriter, dnsRequestMessage *dns.Msg) {
 		defer w.Close()
 
-		dnsResponseMessage := new(dns.Msg)
-		defer w.WriteMsg(dnsResponseMessage)
-
 		if dnsRequestMessage.Question[0].Qtype == dns.TypeA {
-			dnsResponseMessage = &dns.Msg{
+			dnsResponseMessage := &dns.Msg{
 				MsgHdr: dns.MsgHdr{
 					Authoritative: true,
 				},
@@ -412,11 +396,10 @@ func domainQuery() {
 				},
 			}
 			dnsResponseMessage.SetReply(dnsRequestMessage)
-
 			w.WriteMsg(dnsResponseMessage)
 
 		} else if dnsRequestMessage.Question[0].Qtype == dns.TypeAAAA {
-			dnsResponseMessage = &dns.Msg{
+			dnsResponseMessage := &dns.Msg{
 				MsgHdr: dns.MsgHdr{
 					Authoritative: true,
 				},
@@ -434,7 +417,6 @@ func domainQuery() {
 				},
 			}
 			dnsResponseMessage.SetReply(dnsRequestMessage)
-
 			w.WriteMsg(dnsResponseMessage)
 		}
 	})
@@ -449,6 +431,7 @@ func domainQuery() {
 	}
 
 	if len(domain.Nameservers) != 1 {
+		println(len(domain.Nameservers))
 		utils.Fatalln("Did not return the desired nameservers in domain query", nil)
 	}
 
@@ -483,13 +466,10 @@ type ReportHandler struct {
 }
 
 func (r ReportHandler) ServeDNS(w dns.ResponseWriter, dnsRequestMessage *dns.Msg) {
-	dnsResponseMessage := new(dns.Msg)
-	defer w.WriteMsg(dnsResponseMessage)
-
 	fqdn := dnsRequestMessage.Question[0].Name
 
 	if dnsRequestMessage.Question[0].Qtype == dns.TypeSOA {
-		dnsResponseMessage = &dns.Msg{
+		dnsResponseMessage := &dns.Msg{
 			MsgHdr: dns.MsgHdr{
 				Authoritative: true,
 			},
@@ -512,8 +492,8 @@ func (r ReportHandler) ServeDNS(w dns.ResponseWriter, dnsRequestMessage *dns.Msg
 				},
 			},
 		}
-		dnsResponseMessage.SetReply(dnsRequestMessage)
 
+		dnsResponseMessage.SetReply(dnsRequestMessage)
 		w.WriteMsg(dnsResponseMessage)
 
 	} else if dnsRequestMessage.Question[0].Qtype == dns.TypeDNSKEY {
@@ -522,7 +502,7 @@ func (r ReportHandler) ServeDNS(w dns.ResponseWriter, dnsRequestMessage *dns.Msg
 			utils.Fatalln(fmt.Sprintf("Error signing zone %s", fqdn), err)
 		}
 
-		dnsResponseMessage = &dns.Msg{
+		dnsResponseMessage := &dns.Msg{
 			MsgHdr: dns.MsgHdr{
 				Authoritative: true,
 			},
@@ -532,8 +512,8 @@ func (r ReportHandler) ServeDNS(w dns.ResponseWriter, dnsRequestMessage *dns.Msg
 				rrsig,
 			},
 		}
-		dnsResponseMessage.SetReply(dnsRequestMessage)
 
+		dnsResponseMessage.SetReply(dnsRequestMessage)
 		w.WriteMsg(dnsResponseMessage)
 	}
 }
@@ -622,9 +602,9 @@ func calculateScanDurations(numberOfDomains int, scanDAO dao.ScanDAO) (
 func generateAndSignDomain(fqdn string) (
 	model.Domain, *dns.DNSKEY, *dns.RRSIG, time.Time, time.Time,
 ) {
-	dnskey, rrsig, err := utils.GenerateKeyAndSignZone(fqdn)
+	dnskey, rrsig, err := utils.GenerateKSKAndSignZone(fqdn)
 	if err != nil {
-		utils.Fatalln("Error creating DNSSEC keys and signatures", err)
+		utils.Fatalln("Error creating KSK DNSSEC keys and signatures", err)
 	}
 	ds := dnskey.ToDS(int(model.DSDigestTypeSHA1))
 

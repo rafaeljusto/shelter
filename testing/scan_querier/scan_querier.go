@@ -176,7 +176,7 @@ func domainWithNoDNSErrors(config ScanQuerierTestConfigFile) {
 }
 
 func domainWithNoDNSSECErrors(config ScanQuerierTestConfigFile) {
-	dnskey, rrsig, err := utils.GenerateKeyAndSignZone("br.")
+	dnskey, rrsig, err := utils.GenerateKSKAndSignZone("br.")
 	if err != nil {
 		utils.Fatalln("Error creating DNSSEC keys and signatures", err)
 	}
@@ -205,11 +205,8 @@ func domainWithNoDNSSECErrors(config ScanQuerierTestConfigFile) {
 	dns.HandleFunc("br.", func(w dns.ResponseWriter, dnsRequestMessage *dns.Msg) {
 		defer w.Close()
 
-		dnsResponseMessage := new(dns.Msg)
-		defer w.WriteMsg(dnsResponseMessage)
-
 		if dnsRequestMessage.Question[0].Qtype == dns.TypeSOA {
-			dnsResponseMessage = &dns.Msg{
+			dnsResponseMessage := &dns.Msg{
 				MsgHdr: dns.MsgHdr{
 					Authoritative: true,
 				},
@@ -232,12 +229,12 @@ func domainWithNoDNSSECErrors(config ScanQuerierTestConfigFile) {
 					},
 				},
 			}
-			dnsResponseMessage.SetReply(dnsRequestMessage)
 
+			dnsResponseMessage.SetReply(dnsRequestMessage)
 			w.WriteMsg(dnsResponseMessage)
 
 		} else if dnsRequestMessage.Question[0].Qtype == dns.TypeDNSKEY {
-			dnsResponseMessage = &dns.Msg{
+			dnsResponseMessage := &dns.Msg{
 				MsgHdr: dns.MsgHdr{
 					Authoritative: true,
 				},
@@ -247,8 +244,8 @@ func domainWithNoDNSSECErrors(config ScanQuerierTestConfigFile) {
 					rrsig,
 				},
 			}
-			dnsResponseMessage.SetReply(dnsRequestMessage)
 
+			dnsResponseMessage.SetReply(dnsRequestMessage)
 			w.WriteMsg(dnsResponseMessage)
 		}
 	})
@@ -316,7 +313,7 @@ func scanQuerierReport(config ScanQuerierTestConfigFile) {
 
 	fqdn := "domain.com.br."
 
-	dnskey, rrsig, err := utils.GenerateKeyAndSignZone(fqdn)
+	dnskey, rrsig, err := utils.GenerateKSKAndSignZone(fqdn)
 	if err != nil {
 		utils.Fatalln("Error creating DNSSEC keys and signatures", err)
 	}
@@ -325,11 +322,8 @@ func scanQuerierReport(config ScanQuerierTestConfigFile) {
 	dns.HandleFunc(fqdn, func(w dns.ResponseWriter, dnsRequestMessage *dns.Msg) {
 		defer w.Close()
 
-		dnsResponseMessage := new(dns.Msg)
-		defer w.WriteMsg(dnsResponseMessage)
-
 		if dnsRequestMessage.Question[0].Qtype == dns.TypeSOA {
-			dnsResponseMessage = &dns.Msg{
+			dnsResponseMessage := &dns.Msg{
 				MsgHdr: dns.MsgHdr{
 					Authoritative: true,
 				},
@@ -352,12 +346,12 @@ func scanQuerierReport(config ScanQuerierTestConfigFile) {
 					},
 				},
 			}
-			dnsResponseMessage.SetReply(dnsRequestMessage)
 
+			dnsResponseMessage.SetReply(dnsRequestMessage)
 			w.WriteMsg(dnsResponseMessage)
 
 		} else if dnsRequestMessage.Question[0].Qtype == dns.TypeDNSKEY {
-			dnsResponseMessage = &dns.Msg{
+			dnsResponseMessage := &dns.Msg{
 				MsgHdr: dns.MsgHdr{
 					Authoritative: true,
 				},
@@ -367,8 +361,8 @@ func scanQuerierReport(config ScanQuerierTestConfigFile) {
 					rrsig,
 				},
 			}
-			dnsResponseMessage.SetReply(dnsRequestMessage)
 
+			dnsResponseMessage.SetReply(dnsRequestMessage)
 			w.WriteMsg(dnsResponseMessage)
 		}
 	})

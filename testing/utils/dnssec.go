@@ -12,7 +12,15 @@ import (
 	"time"
 )
 
-func GenerateKeyAndSignZone(zone string) (*dns.DNSKEY, *dns.RRSIG, error) {
+func GenerateKSKAndSignZone(zone string) (*dns.DNSKEY, *dns.RRSIG, error) {
+	return generateKeyAndSignZone(zone, 257)
+}
+
+func GenerateZSKAndSignZone(zone string) (*dns.DNSKEY, *dns.RRSIG, error) {
+	return generateKeyAndSignZone(zone, 256)
+}
+
+func generateKeyAndSignZone(zone string, flags uint16) (*dns.DNSKEY, *dns.RRSIG, error) {
 	var globalErr error
 
 	// When creating a lot of keys in a small amount of time, sometimes the systems fails to
@@ -24,8 +32,10 @@ func GenerateKeyAndSignZone(zone string) (*dns.DNSKEY, *dns.RRSIG, error) {
 			Hdr: dns.RR_Header{
 				Name:   zone,
 				Rrtype: dns.TypeDNSKEY,
+				Class:  dns.ClassINET,
+				Ttl:    86400,
 			},
-			Flags:     257,
+			Flags:     flags,
 			Protocol:  3,
 			Algorithm: dns.RSASHA1NSEC3SHA1,
 		}
@@ -40,6 +50,8 @@ func GenerateKeyAndSignZone(zone string) (*dns.DNSKEY, *dns.RRSIG, error) {
 			Hdr: dns.RR_Header{
 				Name:   zone,
 				Rrtype: dns.TypeRRSIG,
+				Class:  dns.ClassINET,
+				Ttl:    86400,
 			},
 			TypeCovered: dns.TypeDNSKEY,
 			Algorithm:   dnskey.Algorithm,
@@ -93,78 +105,6 @@ func SignKey(zone string, dnskey *dns.DNSKEY, privateKey dns.PrivateKey) (*dns.R
 
 	err := rrsig.Sign(privateKey, []dns.RR{dnskey})
 	return rrsig, err
-}
-
-func GenerateKeyAndSignZoneWithNoSEPKey(zone string) (*dns.DNSKEY, *dns.RRSIG, error) {
-	dnskey := &dns.DNSKEY{
-		Hdr: dns.RR_Header{
-			Name:   zone,
-			Rrtype: dns.TypeDNSKEY,
-		},
-		Flags:     256,
-		Protocol:  3,
-		Algorithm: dns.RSASHA1NSEC3SHA1,
-	}
-
-	privateKey, err := dnskey.Generate(1024)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	rrsig := &dns.RRSIG{
-		Hdr: dns.RR_Header{
-			Name:   zone,
-			Rrtype: dns.TypeRRSIG,
-		},
-		TypeCovered: dns.TypeDNSKEY,
-		Algorithm:   dnskey.Algorithm,
-		Expiration:  uint32(time.Now().Add(10 * time.Second).Unix()),
-		Inception:   uint32(time.Now().Unix()),
-		KeyTag:      dnskey.KeyTag(),
-		SignerName:  zone,
-	}
-
-	if err := rrsig.Sign(privateKey, []dns.RR{dnskey}); err != nil {
-		return nil, nil, err
-	}
-
-	return dnskey, rrsig, nil
-}
-
-func GenerateKeyAndSignZoneWithExpiredSignature(zone string) (*dns.DNSKEY, *dns.RRSIG, error) {
-	dnskey := &dns.DNSKEY{
-		Hdr: dns.RR_Header{
-			Name:   zone,
-			Rrtype: dns.TypeDNSKEY,
-		},
-		Flags:     257,
-		Protocol:  3,
-		Algorithm: dns.RSASHA1NSEC3SHA1,
-	}
-
-	privateKey, err := dnskey.Generate(1024)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	rrsig := &dns.RRSIG{
-		Hdr: dns.RR_Header{
-			Name:   zone,
-			Rrtype: dns.TypeRRSIG,
-		},
-		TypeCovered: dns.TypeDNSKEY,
-		Algorithm:   dnskey.Algorithm,
-		Expiration:  uint32(time.Now().Add(-2 * time.Second).Unix()),
-		Inception:   uint32(time.Now().Add(-5 * time.Second).Unix()),
-		KeyTag:      dnskey.KeyTag(),
-		SignerName:  zone,
-	}
-
-	if err := rrsig.Sign(privateKey, []dns.RR{dnskey}); err != nil {
-		return nil, nil, err
-	}
-
-	return dnskey, rrsig, nil
 }
 
 func ConvertKeyAlgorithm(algorithm uint8) model.DSAlgorithm {

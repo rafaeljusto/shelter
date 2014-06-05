@@ -241,6 +241,11 @@ func QueryDomain(fqdn string) (model.Domain, error) {
 			continue
 		}
 
+		// Only add DNSKEYs with bit SEP on
+		if (dnskeyRecord.Flags & dns.SEP) == 0 {
+			continue
+		}
+
 		dsRecord := dnskeyRecord.ToDS(int(DefaultDigestType))
 
 		domain.DSSet = append(domain.DSSet, model.DS{
