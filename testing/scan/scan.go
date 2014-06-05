@@ -144,6 +144,11 @@ func main() {
 		scanReport(domainDAO, scanDAO, scanConfig)
 	}
 
+	// This test is after all others because it will ask on real nameservers, so we need to
+	// change to port 53
+	scan.DNSPort = 53
+	brDomainWithoutDNSSEC(domainDAO)
+
 	utils.Println("SUCCESS!")
 }
 
@@ -330,6 +335,78 @@ func domainWithNoErrorsOnTheFly() {
 			utils.Fatalln(fmt.Sprintf("Last OK date was not updated in DS %d",
 				ds.Keytag), nil)
 		}
+	}
+}
+
+func brDomainWithoutDNSSEC(domainDAO dao.DomainDAO) {
+	domain := model.Domain{
+		FQDN: "br.",
+		Nameservers: []model.Nameserver{
+			{
+				Host: "a.dns.br.",
+				IPv4: net.ParseIP("200.160.0.10"),
+				IPv6: net.ParseIP("2001:12ff::10"),
+			},
+			{
+				Host: "b.dns.br.",
+				IPv4: net.ParseIP("200.189.41.10"),
+			},
+			{
+				Host: "c.dns.br.",
+				IPv4: net.ParseIP("200.192.233.10"),
+			},
+			{
+				Host: "d.dns.br.",
+				IPv4: net.ParseIP("200.219.154.10"),
+				IPv6: net.ParseIP("2001:12f8:4::10"),
+			},
+			{
+				Host: "f.dns.br.",
+				IPv4: net.ParseIP("200.219.159.10"),
+			},
+		},
+
+		// We are going to add the current DNSKEYs from .br but we are not going to check it.
+		// This is because there's a strange case that when it found a problem on a DS (such
+		// as bit SEP) it does not check other nameservers
+		DSSet: []model.DS{
+			{
+				Keytag:     41674,
+				Algorithm:  model.DSAlgorithmRSASHA1,
+				DigestType: model.DSDigestTypeSHA256,
+				Digest:     "6ec74914376b4f383ede3840088ae1d7bf13a19bfc51465cc2da57618889416a",
+			},
+			{
+				Keytag:     57207,
+				Algorithm:  model.DSAlgorithmRSASHA1,
+				DigestType: model.DSDigestTypeSHA256,
+				Digest:     "d46f059860d31a0965f925ac6ff97ed0975f33a14e2d01ec5ab5dd543624d307",
+			},
+		},
+	}
+
+	var err error
+
+	if err = domainDAO.Save(&domain); err != nil {
+		utils.Fatalln("Error saving the domain", err)
+	}
+
+	scan.ScanDomains()
+
+	domain, err = domainDAO.FindByFQDN(domain.FQDN)
+	if err != nil {
+		utils.Fatalln("Didn't find scanned domain", err)
+	}
+
+	for _, nameserver := range domain.Nameservers {
+		if nameserver.LastStatus != model.NameserverStatusOK {
+			utils.Fatalln(fmt.Sprintf("Fail to validate a supposedly well configured nameserver '%s'. Found status: %s",
+				nameserver.Host, model.NameserverStatusToString(nameserver.LastStatus)), nil)
+		}
+	}
+
+	if err := domainDAO.RemoveByFQDN(domain.FQDN); err != nil {
+		utils.Fatalln(fmt.Sprintf("Error removing domain %s", domain.FQDN), err)
 	}
 }
 
