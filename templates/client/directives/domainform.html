@@ -41,7 +41,9 @@
     <button type="button" class="normal-button" data-ng-init="importWorking = false"
       data-ng-click="queryDomain(domain.fqdn)"
       data-ng-disabled="domain.fqdn.length == 0 || importWorking">
-      <i class="fa fa-spinner fa-2x fa-spin" data-ng-if="importWorking"></i>
+      <div data-ng-if="importWorking">
+        <i class="fa fa-spinner fa-2x fa-spin"></i>
+      </div>
       <div data-ng-if="!importWorking">
         <i class="fa fa-sign-in"></i>
         {{ "Import" | translate }}
@@ -202,7 +204,9 @@
   <div class="buttons">
     <button type="submit" class="big-button" data-ng-init="saveWorking = false"
       data-ng-disabled="saveWorking">
-      <i class="fa fa-spinner fa-2x fa-spin" data-ng-if="saveWorking"></i>
+      <div data-ng-if="importWorking" data-ng-if="saveWorking">
+        <i class="fa fa-spinner fa-2x fa-spin"></i>
+      </div>
       <div data-ng-if="!saveWorking">
         <i class="fa fa-floppy-o"></i>
         {{ "Save" | translate }}
@@ -210,7 +214,9 @@
     </button>
     <button type="button" class="big-button" data-ng-init="verifyWorking = false"
       data-ng-click="verifyDomain(domain)" data-ng-disabled="verifyWorking">
-      <i class="fa fa-spinner fa-2x fa-spin" data-ng-if="verifyWorking"></i>
+      <div data-ng-if="verifyWorking">
+        <i class="fa fa-spinner fa-2x fa-spin"></i>
+      </div>
       <div data-ng-if="!verifyWorking">
         <i class="fa fa-search"></i>
         {{ "Verify" | translate }}
