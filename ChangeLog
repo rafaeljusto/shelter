@@ -12,6 +12,9 @@ version 0.2:
   * Web client now generates pagination dynamically
   * Web client domain status verification fixed (for colorful rows)
   * Domain retrieve service now returns the body properly
+  * Don't import DNSKEYs with bit SEP off on service GET /domain/{domain}/verification
+  * Allow multiple IPs in ACL of the deploy program
+  * Don't show domains, scans or links as null in protocol response
 
 version 0.1:
   New Feature:
