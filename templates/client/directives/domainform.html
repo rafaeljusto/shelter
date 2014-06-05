@@ -75,6 +75,7 @@
 
     <label for="ipv6{{$index+1}}" translate
       data-ng-show="needsGlue(domain.fqdn, nameserver.host)">IPv6</label>
+    <!-- https://github.com/richb-intermapper/IPv6-Regex -->
     <input type="text" id="ipv6{{$index+1}}"
       data-ng-show="needsGlue(domain.fqdn, nameserver.host)"
       data-ng-model="domain.nameservers[$index].ipv6"
