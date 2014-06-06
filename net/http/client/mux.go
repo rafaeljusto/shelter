@@ -6,12 +6,18 @@
 package client
 
 import (
+	"errors"
 	"github.com/rafaeljusto/shelter/log"
 	"github.com/rafaeljusto/shelter/net/http/client/handler"
-	"github.com/rafaeljusto/shelter/net/http/rest"
 	"net"
 	"net/http"
 	"strings"
+)
+
+// List of possible errors that can occur when calling functions from this file. Other
+// erros can also occurs from low level layers
+var (
+	ErrInvalidRemoteIP = errors.New("Remote IP address could not be parsed")
 )
 
 // Main router used by the Shelter web client system to manage the requests
@@ -67,7 +73,7 @@ func (mux Mux) checkACL(r *http.Request) (bool, error) {
 	remoteAddrParts := strings.Split(r.RemoteAddr, ":")
 	if len(remoteAddrParts) != 2 {
 		// Remote address without port
-		return false, rest.ErrInvalidRemoteIP
+		return false, ErrInvalidRemoteIP
 	}
 
 	ip := net.ParseIP(remoteAddrParts[0])
@@ -75,7 +81,7 @@ func (mux Mux) checkACL(r *http.Request) (bool, error) {
 		// Something wrong, because the client web server could not identify the remote
 		// address properly. This is really awkward, because this is a responsability of the
 		// server, maybe this error will never be throw
-		return false, rest.ErrInvalidRemoteIP
+		return false, ErrInvalidRemoteIP
 	}
 
 	for _, cidr := range mux.ACL {

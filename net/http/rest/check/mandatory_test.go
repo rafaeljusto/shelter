@@ -7,7 +7,6 @@ package check
 
 import (
 	"errors"
-	"github.com/rafaeljusto/shelter/net/http/rest/context"
 	"github.com/rafaeljusto/shelter/net/http/rest/messages"
 	"net/http"
 	"strings"
@@ -56,11 +55,6 @@ func TestHTTPAcceptLanguage(t *testing.T) {
 		t.Fatal("Error creating the request. Details:", err)
 	}
 
-	context, err := context.NewContext(r, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	messages.ShelterRESTLanguagePacks = messages.LanguagePacks{
 		Default: "en-US",
 		Packs: []messages.LanguagePack{
@@ -76,29 +70,29 @@ func TestHTTPAcceptLanguage(t *testing.T) {
 	}
 
 	r.Header.Set("Accept-Language", "")
-	if !HTTPAcceptLanguage(r, &context) {
+	if _, ok := HTTPAcceptLanguage(r); !ok {
 		t.Error("Not accepting when there's no " +
 			"HTTP Accept Language header field")
 	}
 
 	r.Header.Set("Accept-Language", "de")
-	if HTTPAcceptLanguage(r, &context) {
+	if _, ok := HTTPAcceptLanguage(r); ok {
 		t.Error("Accepting an unsupported language")
 	}
 
 	r.Header.Set("Accept-Language", "de,    PT-BR  ")
-	if !HTTPAcceptLanguage(r, &context) {
+	if _, ok := HTTPAcceptLanguage(r); !ok {
 		t.Error("Not accepting a supported language with " +
 			"different case and spaces")
 	}
 
 	r.Header.Set("Accept-Language", "de,pt;q=0.4")
-	if !HTTPAcceptLanguage(r, &context) {
+	if _, ok := HTTPAcceptLanguage(r); !ok {
 		t.Error("Not accepting a supported generic language with options")
 	}
 
 	r.Header.Set("Accept-Language", "*")
-	if !HTTPAcceptLanguage(r, &context) {
+	if _, ok := HTTPAcceptLanguage(r); !ok {
 		t.Error("Not accepting a wildcard language")
 	}
 }
@@ -177,29 +171,26 @@ func TestHTTPContentType(t *testing.T) {
 }
 
 func TestHTTPContentMD5(t *testing.T) {
-	r, err := http.NewRequest("", "", strings.NewReader("Check Integrity!"))
+	r, err := http.NewRequest("", "", nil)
 	if err != nil {
 		t.Fatal("Error creating the request. Details:", err)
 	}
 
-	context, err := context.NewContext(r, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	body := []byte("Check Integrity!")
 
 	r.Header.Set("Content-MD5", "")
-	if !HTTPContentMD5(r, &context) {
+	if !HTTPContentMD5(r, body) {
 		t.Error("Not accepting when there's no " +
 			"HTTP Content MD5 header field")
 	}
 
 	r.Header.Set("Content-MD5", "bGlmZSBvZiBicmlhbg==")
-	if HTTPContentMD5(r, &context) {
+	if HTTPContentMD5(r, body) {
 		t.Error("Accepting an invalid content MD5")
 	}
 
 	r.Header.Set("Content-MD5", "   nwqq6b6ua/tTDk7B5M184w==  ")
-	if !HTTPContentMD5(r, &context) {
+	if !HTTPContentMD5(r, body) {
 		t.Error("Not accepting a valid content MD5 with spaces")
 	}
 }
