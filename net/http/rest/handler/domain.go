@@ -34,7 +34,7 @@ type DomainHandler struct {
 	language        *messages.LanguagePack
 	DomainName      string                    `param:"fqdn"`
 	Request         protocol.DomainRequest    `request:"put"`
-	Response        protocol.DomainResponse   `response:"get"`
+	Response        *protocol.DomainResponse  `response:"get"`
 	Message         *protocol.MessageResponse `error`
 }
 
@@ -52,6 +52,10 @@ func (h *DomainHandler) SetDatabase(database *mgo.Database) {
 
 func (h *DomainHandler) Database() *mgo.Database {
 	return h.database
+}
+
+func (h *DomainHandler) SetFQDN(fqdn string) {
+	h.DomainName = fqdn
 }
 
 func (h *DomainHandler) FQDN() string {
@@ -100,7 +104,8 @@ func (h *DomainHandler) retrieveDomain(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Last-Modified", h.LastModified().Format(time.RFC1123))
 	w.WriteHeader(http.StatusOK)
 
-	h.Response = protocol.ToDomainResponse(h.domain, true)
+	domainResponse := protocol.ToDomainResponse(h.domain, true)
+	h.Response = &domainResponse
 }
 
 func (h *DomainHandler) Put(w http.ResponseWriter, r *http.Request) {
@@ -196,6 +201,7 @@ func (h *DomainHandler) Delete(w http.ResponseWriter, r *http.Request) {
 func (h *DomainHandler) Interceptors() handy.InterceptorChain {
 	return handy.NewInterceptorChain().
 		Chain(new(interceptor.Permission)).
+		Chain(interceptor.NewFQDN(h)).
 		Chain(interceptor.NewValidator(h)).
 		Chain(interceptor.NewDatabase(h)).
 		Chain(interceptor.NewDomain(h)).

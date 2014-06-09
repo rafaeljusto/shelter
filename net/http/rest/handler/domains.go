@@ -5,183 +5,246 @@
 // Package handler store the REST handlers of specific URI
 package handler
 
-// import (
-// 	"crypto/md5"
-// 	"encoding/hex"
-// 	"github.com/rafaeljusto/shelter/dao"
-// 	"github.com/rafaeljusto/shelter/log"
-// 	"github.com/rafaeljusto/shelter/net/http/rest/context"
-// 	"github.com/rafaeljusto/shelter/net/http/rest/protocol"
-// 	"net/http"
-// 	"regexp"
-// 	"strconv"
-// 	"strings"
-// 	"time"
-// )
+import (
+	"crypto/md5"
+	"encoding/hex"
+	"encoding/json"
+	"github.com/rafaeljusto/shelter/dao"
+	"github.com/rafaeljusto/shelter/log"
+	"github.com/rafaeljusto/shelter/net/http/rest/interceptor"
+	"github.com/rafaeljusto/shelter/net/http/rest/messages"
+	"github.com/rafaeljusto/shelter/net/http/rest/protocol"
+	"github.com/trajber/handy"
+	"labix.org/v2/mgo"
+	"net/http"
+	"strconv"
+	"strings"
+	"time"
+)
 
-// func init() {
-// 	HandleFunc(regexp.MustCompile("^/domains(/.*)?$"), HandleDomains)
-// }
+func init() {
+	HandleFunc("/domains", func() handy.Handler {
+		return new(DomainsHandler)
+	})
+}
 
-// func HandleDomains(r *http.Request, context *context.Context) {
-// 	if r.Method == "GET" || r.Method == "HEAD" {
-// 		retrieveDomains(r, context)
+type DomainsHandler struct {
+	handy.DefaultHandler
+	database        *mgo.Database
+	databaseSession *mgo.Session
+	language        *messages.LanguagePack
+	Response        *protocol.DomainsResponse `response:"get"`
+	Message         *protocol.MessageResponse `error`
+	lastModified    time.Time
+}
 
-// 	} else {
-// 		context.Response(http.StatusMethodNotAllowed)
-// 	}
-// }
+func (h *DomainsHandler) SetDatabaseSession(session *mgo.Session) {
+	h.databaseSession = session
+}
 
-// // The HEAD method is identical to GET except that the server MUST NOT return a message-
-// // body in the response. But now the responsability for don't adding the body is from the
-// // mux while writing the response
-// func retrieveDomains(r *http.Request, context *context.Context) {
-// 	var pagination dao.DomainDAOPagination
-// 	expand := false
+func (h *DomainsHandler) DatabaseSession() *mgo.Session {
+	return h.databaseSession
+}
 
-// 	for key, values := range r.URL.Query() {
-// 		key = strings.TrimSpace(key)
-// 		key = strings.ToLower(key)
+func (h *DomainsHandler) SetDatabase(database *mgo.Database) {
+	h.database = database
+}
 
-// 		// A key can have multiple values in a query string, we are going to always consider
-// 		// the last one (overwrite strategy)
-// 		for _, value := range values {
-// 			value = strings.TrimSpace(value)
-// 			value = strings.ToLower(value)
+func (h *DomainsHandler) Database() *mgo.Database {
+	return h.database
+}
 
-// 			switch key {
-// 			case "orderby":
-// 				// OrderBy parameter will store the fields that the user want to be the keys of the sort
-// 				// algorithm in the result set and the direction that each sort field will have. The format
-// 				// that will be used is:
-// 				//
-// 				// <field1>:<direction1>@<field2>:<direction2>@...@<fieldN>:<directionN>
+func (h *DomainsHandler) LastModified() time.Time {
+	return h.lastModified
+}
 
-// 				orderByParts := strings.Split(value, "@")
+// The ETag header will be the hash of the content on list services
+func (h *DomainsHandler) ETag() string {
+	body, err := json.Marshal(h.Response)
+	if err != nil {
+		return ""
+	}
 
-// 				for _, orderByPart := range orderByParts {
-// 					orderByPart = strings.TrimSpace(orderByPart)
-// 					orderByAndDirection := strings.Split(orderByPart, ":")
+	hash := md5.New()
+	if _, err := hash.Write(body); err != nil {
+		return ""
+	}
 
-// 					var field, direction string
+	return hex.EncodeToString(hash.Sum(nil))
+}
 
-// 					if len(orderByAndDirection) == 1 {
-// 						field, direction = orderByAndDirection[0], "asc"
+func (h *DomainsHandler) SetLanguage(language *messages.LanguagePack) {
+	h.language = language
+}
 
-// 					} else if len(orderByAndDirection) == 2 {
-// 						field, direction = orderByAndDirection[0], orderByAndDirection[1]
+func (h *DomainsHandler) Language() *messages.LanguagePack {
+	return h.language
+}
 
-// 					} else {
-// 						if err := context.MessageResponse(http.StatusBadRequest,
-// 							"invalid-query-order-by", ""); err != nil {
+func (h *DomainsHandler) MessageResponse(messageId string, roid string) error {
+	var err error
+	h.Message, err = protocol.NewMessageResponse(messageId, roid, h.language)
+	return err
+}
 
-// 							log.Println("Error while writing response. Details:", err)
-// 							context.Response(http.StatusInternalServerError)
-// 						}
-// 						return
-// 					}
+func (h *DomainsHandler) ClearResponse() {
+	h.Response = nil
+}
 
-// 					orderByField, err := dao.DomainDAOOrderByFieldFromString(field)
-// 					if err != nil {
-// 						if err := context.MessageResponse(http.StatusBadRequest,
-// 							"invalid-query-order-by", ""); err != nil {
+func (h *DomainsHandler) Get(w http.ResponseWriter, r *http.Request) {
+	h.retrieveDomains(w, r)
+}
 
-// 							log.Println("Error while writing response. Details:", err)
-// 							context.Response(http.StatusInternalServerError)
-// 						}
-// 						return
-// 					}
+func (h *DomainsHandler) Head(w http.ResponseWriter, r *http.Request) {
+	h.retrieveDomains(w, r)
+}
 
-// 					orderByDirection, err := dao.DAOOrderByDirectionFromString(direction)
-// 					if err != nil {
-// 						if err := context.MessageResponse(http.StatusBadRequest,
-// 							"invalid-query-order-by", ""); err != nil {
+// The HEAD method is identical to GET except that the server MUST NOT return a message-
+// body in the response. But now the responsability for don't adding the body is from the
+// mux while writing the response
+func (h *DomainsHandler) retrieveDomains(w http.ResponseWriter, r *http.Request) {
+	var pagination dao.DomainDAOPagination
+	expand := false
 
-// 							log.Println("Error while writing response. Details:", err)
-// 							context.Response(http.StatusInternalServerError)
-// 						}
-// 						return
-// 					}
+	for key, values := range r.URL.Query() {
+		key = strings.TrimSpace(key)
+		key = strings.ToLower(key)
 
-// 					pagination.OrderBy = append(pagination.OrderBy, dao.DomainDAOSort{
-// 						Field:     orderByField,
-// 						Direction: orderByDirection,
-// 					})
-// 				}
+		// A key can have multiple values in a query string, we are going to always consider
+		// the last one (overwrite strategy)
+		for _, value := range values {
+			value = strings.TrimSpace(value)
+			value = strings.ToLower(value)
 
-// 			case "pagesize":
-// 				var err error
-// 				pagination.PageSize, err = strconv.Atoi(value)
-// 				if err != nil {
-// 					if err := context.MessageResponse(http.StatusBadRequest,
-// 						"invalid-query-page-size", ""); err != nil {
+			switch key {
+			case "orderby":
+				// OrderBy parameter will store the fields that the user want to be the keys of the sort
+				// algorithm in the result set and the direction that each sort field will have. The format
+				// that will be used is:
+				//
+				// <field1>:<direction1>@<field2>:<direction2>@...@<fieldN>:<directionN>
 
-// 						log.Println("Error while writing response. Details:", err)
-// 						context.Response(http.StatusInternalServerError)
-// 					}
-// 					return
-// 				}
+				orderByParts := strings.Split(value, "@")
 
-// 			case "page":
-// 				var err error
-// 				pagination.Page, err = strconv.Atoi(value)
-// 				if err != nil {
-// 					if err := context.MessageResponse(http.StatusBadRequest,
-// 						"invalid-query-page", ""); err != nil {
+				for _, orderByPart := range orderByParts {
+					orderByPart = strings.TrimSpace(orderByPart)
+					orderByAndDirection := strings.Split(orderByPart, ":")
 
-// 						log.Println("Error while writing response. Details:", err)
-// 						context.Response(http.StatusInternalServerError)
-// 					}
-// 					return
-// 				}
+					var field, direction string
 
-// 			case "expand":
-// 				expand = true
-// 			}
-// 		}
-// 	}
+					if len(orderByAndDirection) == 1 {
+						field, direction = orderByAndDirection[0], "asc"
 
-// 	domainDAO := dao.DomainDAO{
-// 		Database: context.Database,
-// 	}
+					} else if len(orderByAndDirection) == 2 {
+						field, direction = orderByAndDirection[0], orderByAndDirection[1]
 
-// 	domains, err := domainDAO.FindAll(&pagination, expand)
-// 	if err != nil {
-// 		log.Println("Error while searching domains objects. Details:", err)
-// 		context.Response(http.StatusInternalServerError)
-// 		return
-// 	}
+					} else {
+						if err := h.MessageResponse("invalid-query-order-by", ""); err == nil {
+							w.WriteHeader(http.StatusBadRequest)
 
-// 	if err := context.JSONResponse(http.StatusOK,
-// 		protocol.ToDomainsResponse(domains, pagination)); err != nil {
+						} else {
+							log.Println("Error while writing response. Details:", err)
+							w.WriteHeader(http.StatusInternalServerError)
+						}
+						return
+					}
 
-// 		log.Println("Error while writing response. Details:", err)
-// 		context.Response(http.StatusInternalServerError)
-// 		return
-// 	}
+					orderByField, err := dao.DomainDAOOrderByFieldFromString(field)
+					if err != nil {
+						if err := h.MessageResponse("invalid-query-order-by", ""); err == nil {
+							w.WriteHeader(http.StatusBadRequest)
 
-// 	hash := md5.New()
-// 	if _, err := hash.Write(context.ResponseContent); err != nil {
-// 		log.Println("Error calculating response ETag. Details:", err)
-// 		context.Response(http.StatusInternalServerError)
-// 		return
-// 	}
+						} else {
+							log.Println("Error while writing response. Details:", err)
+							w.WriteHeader(http.StatusInternalServerError)
+						}
+						return
+					}
 
-// 	// The ETag header will be the hash of the content on list services
-// 	etag := hex.EncodeToString(hash.Sum(nil))
+					orderByDirection, err := dao.DAOOrderByDirectionFromString(direction)
+					if err != nil {
+						if err := h.MessageResponse("invalid-query-order-by", ""); err == nil {
+							w.WriteHeader(http.StatusBadRequest)
 
-// 	// Last-Modified is going to be the most recent date of the list
-// 	var lastModifiedAt time.Time
-// 	for _, domain := range domains {
-// 		if domain.LastModifiedAt.After(lastModifiedAt) {
-// 			lastModifiedAt = domain.LastModifiedAt
-// 		}
-// 	}
+						} else {
+							log.Println("Error while writing response. Details:", err)
+							w.WriteHeader(http.StatusInternalServerError)
+						}
+						return
+					}
 
-// 	if !CheckHTTPCacheHeaders(r, context, lastModifiedAt, etag) {
-// 		return
-// 	}
+					pagination.OrderBy = append(pagination.OrderBy, dao.DomainDAOSort{
+						Field:     orderByField,
+						Direction: orderByDirection,
+					})
+				}
 
-// 	context.AddHeader("ETag", etag)
-// 	context.AddHeader("Last-Modified", lastModifiedAt.Format(time.RFC1123))
-// }
+			case "pagesize":
+				var err error
+				pagination.PageSize, err = strconv.Atoi(value)
+				if err != nil {
+					if err := h.MessageResponse("invalid-query-page-size", ""); err == nil {
+						w.WriteHeader(http.StatusBadRequest)
+
+					} else {
+						log.Println("Error while writing response. Details:", err)
+						w.WriteHeader(http.StatusInternalServerError)
+					}
+					return
+				}
+
+			case "page":
+				var err error
+				pagination.Page, err = strconv.Atoi(value)
+				if err != nil {
+					if err := h.MessageResponse("invalid-query-page", ""); err == nil {
+						w.WriteHeader(http.StatusBadRequest)
+
+					} else {
+						log.Println("Error while writing response. Details:", err)
+						w.WriteHeader(http.StatusInternalServerError)
+					}
+					return
+				}
+
+			case "expand":
+				expand = true
+			}
+		}
+	}
+
+	domainDAO := dao.DomainDAO{
+		Database: h.Database(),
+	}
+
+	domains, err := domainDAO.FindAll(&pagination, expand)
+	if err != nil {
+		log.Println("Error while searching domains objects. Details:", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	domainsResponse := protocol.ToDomainsResponse(domains, pagination)
+	h.Response = &domainsResponse
+
+	// Last-Modified is going to be the most recent date of the list
+	var lastModifiedAt time.Time
+	for _, domain := range domains {
+		if domain.LastModifiedAt.After(lastModifiedAt) {
+			h.lastModified = domain.LastModifiedAt
+		}
+	}
+
+	w.Header().Add("ETag", h.ETag())
+	w.Header().Add("Last-Modified", h.lastModified.Format(time.RFC1123))
+	w.WriteHeader(http.StatusOK)
+}
+
+func (h *DomainsHandler) Interceptors() handy.InterceptorChain {
+	return handy.NewInterceptorChain().
+		Chain(new(interceptor.Permission)).
+		Chain(interceptor.NewValidator(h)).
+		Chain(interceptor.NewDatabase(h)).
+		Chain(interceptor.NewCacheAfter(h)).
+		Chain(interceptor.NewJSONCodec(h))
+}
