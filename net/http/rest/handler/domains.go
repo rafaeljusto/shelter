@@ -245,6 +245,6 @@ func (h *DomainsHandler) Interceptors() handy.InterceptorChain {
 		Chain(new(interceptor.Permission)).
 		Chain(interceptor.NewValidator(h)).
 		Chain(interceptor.NewDatabase(h)).
-		Chain(interceptor.NewCacheAfter(h)).
+		Chain(interceptor.NewHTTPCacheAfter(h)).
 		Chain(interceptor.NewJSONCodec(h))
 }

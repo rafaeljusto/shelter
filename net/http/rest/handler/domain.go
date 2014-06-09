@@ -26,16 +26,17 @@ func init() {
 	})
 }
 
+// DomainHandler is responsable for keeping the state of a /domain/{fqdn} resource
 type DomainHandler struct {
-	handy.DefaultHandler
-	database        *mgo.Database
-	databaseSession *mgo.Session
-	domain          model.Domain
-	language        *messages.LanguagePack
-	DomainName      string                    `param:"fqdn"`
-	Request         protocol.DomainRequest    `request:"put"`
-	Response        *protocol.DomainResponse  `response:"get"`
-	Message         *protocol.MessageResponse `error`
+	handy.DefaultHandler                           // Inject the HTTP methods that this resource does not implement
+	database             *mgo.Database             // Database connection of the MongoDB session
+	databaseSession      *mgo.Session              // MongoDB session
+	domain               model.Domain              // Domain object related to the resource
+	language             *messages.LanguagePack    // User preferred language based on HTTP header
+	DomainName           string                    `param:"fqdn"`   // FQDN defined in the URI
+	Request              protocol.DomainRequest    `request:"put"`  // Domain request sent by the user
+	Response             *protocol.DomainResponse  `response:"get"` // Domain response sent back to the user
+	Message              *protocol.MessageResponse `error`          // Message on error sent to the user
 }
 
 func (h *DomainHandler) SetDatabaseSession(session *mgo.Session) {
@@ -86,6 +87,10 @@ func (h *DomainHandler) MessageResponse(messageId string, roid string) error {
 	var err error
 	h.Message, err = protocol.NewMessageResponse(messageId, roid, h.language)
 	return err
+}
+
+func (h *DomainHandler) ClearResponse() {
+	h.Response = nil
 }
 
 func (h *DomainHandler) Get(w http.ResponseWriter, r *http.Request) {
@@ -205,6 +210,6 @@ func (h *DomainHandler) Interceptors() handy.InterceptorChain {
 		Chain(interceptor.NewValidator(h)).
 		Chain(interceptor.NewDatabase(h)).
 		Chain(interceptor.NewDomain(h)).
-		Chain(interceptor.NewCache(h)).
+		Chain(interceptor.NewHTTPCacheBefore(h)).
 		Chain(interceptor.NewJSONCodec(h))
 }
