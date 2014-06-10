@@ -82,6 +82,8 @@ func Start(listeners []net.Listener) error {
 		log.Println("REST panic detected. Details:", r)
 	}
 
+	// TODO: Handy logger should use the same logger of the Shelter system
+
 	for pattern, handler := range handler.Routes {
 		mux.Handle(pattern, handler)
 	}

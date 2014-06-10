@@ -29,6 +29,10 @@ func NewMessageResponse(
 
 	if language != nil && language.Messages != nil {
 		messageResponse.Message = language.Messages[id]
+	} else {
+		// When we don't find the message file, at least add the message id to make it easy to
+		// identify the error. Useful on test scenarios
+		messageResponse.Message = id
 	}
 
 	// Add the object related to the message according to RFC 4287

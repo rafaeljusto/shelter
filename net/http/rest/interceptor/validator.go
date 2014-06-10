@@ -94,26 +94,28 @@ func (i *Validator) Before(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		log.Println("Error reading the request. Details:", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	defer func() {
-		r.Body = ioutil.NopCloser(bytes.NewBuffer(body))
-	}()
-
-	if !check.HTTPContentMD5(r, body) {
-		if err := i.validatorHandler.MessageResponse("invalid-content-md5", r.RequestURI); err == nil {
-			w.WriteHeader(http.StatusBadRequest)
-
-		} else {
-			log.Println("Error while writing response. Details:", err)
+	if r.Body != nil {
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			log.Println("Error reading the request. Details:", err)
 			w.WriteHeader(http.StatusInternalServerError)
+			return
 		}
+		defer func() {
+			r.Body = ioutil.NopCloser(bytes.NewBuffer(body))
+		}()
 
-		return
+		if !check.HTTPContentMD5(r, body) {
+			if err := i.validatorHandler.MessageResponse("invalid-content-md5", r.RequestURI); err == nil {
+				w.WriteHeader(http.StatusBadRequest)
+
+			} else {
+				log.Println("Error while writing response. Details:", err)
+				w.WriteHeader(http.StatusInternalServerError)
+			}
+
+			return
+		}
 	}
 
 	timeFrameOK, err := check.HTTPDate(r)
@@ -181,6 +183,7 @@ func (i *Validator) Before(w http.ResponseWriter, r *http.Request) {
 	if len(messageId) == 0 {
 		log.Println("Error checking authorization. Details:", err)
 		w.WriteHeader(http.StatusInternalServerError)
+
 	} else {
 		if err := i.validatorHandler.MessageResponse(messageId, r.RequestURI); err == nil {
 			w.WriteHeader(http.StatusBadRequest)

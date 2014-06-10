@@ -66,22 +66,32 @@ func (c *JSONCodec) After(w http.ResponseWriter, r *http.Request) {
 	// content, because if we don't set the GoLang HTTP server will add "text/plain"
 	w.Header().Set("Content-Type", fmt.Sprintf("application/vnd.shelter+json; charset=%s", check.SupportedCharset))
 
-	errIface := st.Field(c.errPosition).Interface()
-	if c.errPosition >= 0 && errIface != nil {
-		body, err := json.Marshal(errIface)
-		if err != nil {
-			log.Println("Error writing message response. Details:", err)
-			w.WriteHeader(http.StatusInternalServerError)
+	if c.errPosition >= 0 {
+		elem := st.Field(c.errPosition).Interface()
+		elemType := reflect.TypeOf(elem)
+
+		if elemType.Kind() == reflect.Ptr && !st.Field(c.errPosition).IsNil() {
+			body, err := json.Marshal(elem)
+			if err != nil {
+				log.Println("Error writing message response. Details:", err)
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+
+			c.addResponseHeaders(w, body)
+			w.Write(body)
 			return
 		}
-
-		c.addResponseHeaders(w, body)
-		w.Write(body)
-		return
 	}
 
 	if c.resPosition >= 0 {
-		body, err := json.Marshal(st.Field(c.resPosition).Interface())
+		elem := st.Field(c.resPosition).Interface()
+		elemType := reflect.TypeOf(elem)
+		if elemType.Kind() == reflect.Ptr && st.Field(c.resPosition).IsNil() {
+			return
+		}
+
+		body, err := json.Marshal(elem)
 		if err != nil {
 			log.Println("Error writing message response. Details:", err)
 			w.WriteHeader(http.StatusInternalServerError)

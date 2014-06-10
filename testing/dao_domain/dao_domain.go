@@ -110,7 +110,7 @@ func domainLifeCycle(domainDAO dao.DomainDAO) {
 	if domainRetrieved, err := domainDAO.FindByFQDN(domain.FQDN); err != nil {
 		utils.Fatalln("Couldn't find created domain in database", err)
 
-	} else if !compareDomains(domain, domainRetrieved) {
+	} else if !utils.CompareDomain(domain, domainRetrieved) {
 		utils.Fatalln("Domain created is being persisted wrongly", nil)
 	}
 
@@ -124,7 +124,7 @@ func domainLifeCycle(domainDAO dao.DomainDAO) {
 	if domainRetrieved, err := domainDAO.FindByFQDN(domain.FQDN); err != nil {
 		utils.Fatalln("Couldn't find updated domain in database", err)
 
-	} else if !compareDomains(domain, domainRetrieved) {
+	} else if !utils.CompareDomain(domain, domainRetrieved) {
 		utils.Fatalln("Domain updated is being persisted wrongly", nil)
 	}
 
@@ -158,7 +158,7 @@ func domainsLifeCycle(domainDAO dao.DomainDAO) {
 		if domainRetrieved, err := domainDAO.FindByFQDN(domain.FQDN); err != nil {
 			utils.Fatalln(fmt.Sprintf("Couldn't find created domain %s in database", domain.FQDN), err)
 
-		} else if !compareDomains(*domain, domainRetrieved) {
+		} else if !utils.CompareDomain(*domain, domainRetrieved) {
 			utils.Fatalln(fmt.Sprintf("Domain %s created is being persisted wrongly", domain.FQDN), nil)
 		}
 	}
@@ -182,7 +182,7 @@ func domainsLifeCycle(domainDAO dao.DomainDAO) {
 		if domainRetrieved, err := domainDAO.FindByFQDN(domain.FQDN); err != nil {
 			utils.Fatalln(fmt.Sprintf("Couldn't find updated domain %s in database", domain.FQDN), err)
 
-		} else if !compareDomains(*domain, domainRetrieved) {
+		} else if !utils.CompareDomain(*domain, domainRetrieved) {
 			utils.Fatalln(fmt.Sprintf("Domain %s updated in being persisted wrongly", domain.FQDN), nil)
 		}
 	}
@@ -902,60 +902,4 @@ func newDomains() []*model.Domain {
 			},
 		},
 	}
-}
-
-// Function to compare if two domains are equal, cannot use operator == because of the
-// slices inside the domain object
-func compareDomains(d1, d2 model.Domain) bool {
-	if d1.Id != d2.Id || d1.FQDN != d2.FQDN {
-		return false
-	}
-
-	if len(d1.Nameservers) != len(d2.Nameservers) {
-		return false
-	}
-
-	for i := 0; i < len(d1.Nameservers); i++ {
-		// Cannot compare the nameservers directly with operator == because of the
-		// pointers for IP addresses and dates
-		if d1.Nameservers[i].Host != d2.Nameservers[i].Host ||
-			d1.Nameservers[i].IPv4.String() != d2.Nameservers[i].IPv4.String() ||
-			d1.Nameservers[i].IPv6.String() != d2.Nameservers[i].IPv6.String() ||
-			d1.Nameservers[i].LastStatus != d2.Nameservers[i].LastStatus ||
-			d1.Nameservers[i].LastCheckAt.Unix() != d2.Nameservers[i].LastCheckAt.Unix() ||
-			d1.Nameservers[i].LastOKAt.Unix() != d2.Nameservers[i].LastOKAt.Unix() {
-			return false
-		}
-	}
-
-	if len(d1.DSSet) != len(d2.DSSet) {
-		return false
-	}
-
-	for i := 0; i < len(d1.DSSet); i++ {
-		// Cannot compare the nameservers directly with operator == because of the dates
-		if d1.DSSet[i].Algorithm != d2.DSSet[i].Algorithm ||
-			d1.DSSet[i].Digest != d2.DSSet[i].Digest ||
-			d1.DSSet[i].DigestType != d2.DSSet[i].DigestType ||
-			d1.DSSet[i].ExpiresAt.Unix() != d2.DSSet[i].ExpiresAt.Unix() ||
-			d1.DSSet[i].Keytag != d2.DSSet[i].Keytag ||
-			d1.DSSet[i].LastCheckAt.Unix() != d2.DSSet[i].LastCheckAt.Unix() ||
-			d1.DSSet[i].LastOKAt.Unix() != d2.DSSet[i].LastOKAt.Unix() ||
-			d1.DSSet[i].LastStatus != d2.DSSet[i].LastStatus {
-			return false
-		}
-	}
-
-	if len(d1.Owners) != len(d2.Owners) {
-		return false
-	}
-
-	for i := 0; i < len(d1.Owners); i++ {
-		if d1.Owners[i].Email.String() != d2.Owners[i].Email.String() ||
-			d1.Owners[i].Language != d2.Owners[i].Language {
-			return false
-		}
-	}
-
-	return true
 }
