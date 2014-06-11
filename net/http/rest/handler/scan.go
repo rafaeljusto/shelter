@@ -5,100 +5,109 @@
 // Package handler store the REST handlers of specific URI
 package handler
 
-// import (
-// 	"crypto/md5"
-// 	"encoding/hex"
-// 	"github.com/rafaeljusto/shelter/dao"
-// 	"github.com/rafaeljusto/shelter/log"
-// 	"github.com/rafaeljusto/shelter/model"
-// 	"github.com/rafaeljusto/shelter/net/http/rest/context"
-// 	"github.com/rafaeljusto/shelter/net/http/rest/protocol"
-// 	"net/http"
-// 	"regexp"
-// 	"strconv"
-// 	"time"
-// )
+import (
+	"github.com/rafaeljusto/shelter/model"
+	"github.com/rafaeljusto/shelter/net/http/rest/interceptor"
+	"github.com/rafaeljusto/shelter/net/http/rest/messages"
+	"github.com/rafaeljusto/shelter/net/http/rest/protocol"
+	"github.com/trajber/handy"
+	"labix.org/v2/mgo"
+	"net/http"
+	"strconv"
+	"time"
+)
 
-// func init() {
-// 	HandleFunc(regexp.MustCompile(`^/scan/([[:alnum:]]|\-|\.|\:)+$`), HandleScan)
-// }
+func init() {
+	HandleFunc("/scan/{started-at}", func() handy.Handler {
+		return new(ScanHandler)
+	})
+}
 
-// func HandleScan(r *http.Request, context *context.Context) {
-// 	date, current, err := getScanIdFromURI(r.URL.Path)
-// 	if err != nil {
-// 		if err := context.MessageResponse(http.StatusBadRequest,
-// 			"invalid-uri", r.URL.RequestURI()); err != nil {
+// ScanHandler is responsable for keeping the state of a /scan/{started-at} resource
+type ScanHandler struct {
+	handy.DefaultHandler                           // Inject the HTTP methods that this resource does not implement
+	database             *mgo.Database             // Database connection of the MongoDB session
+	databaseSession      *mgo.Session              // MongoDB session
+	scan                 model.Scan                // Scan object related to the resource
+	language             *messages.LanguagePack    // User preferred language based on HTTP header
+	StartedAt            string                    `param:"started-at"` // Scan start date in the URI
+	Response             *protocol.ScanResponse    `response:"get"`     // Scan response sent back to the user
+	Message              *protocol.MessageResponse `error`              // Message on error sent to the user
+}
 
-// 			log.Println("Error while writing response. Details:", err)
-// 			context.Response(http.StatusInternalServerError)
-// 		}
-// 		return
-// 	}
+func (h *ScanHandler) SetDatabaseSession(session *mgo.Session) {
+	h.databaseSession = session
+}
 
-// 	if r.Method == "GET" || r.Method == "HEAD" {
-// 		if current {
-// 			retrieveCurrentScan(r, context)
-// 		} else {
-// 			retrieveScan(r, context, date)
-// 		}
+func (h *ScanHandler) GetDatabaseSession() *mgo.Session {
+	return h.databaseSession
+}
 
-// 	} else {
-// 		context.Response(http.StatusMethodNotAllowed)
-// 	}
-// }
+func (h *ScanHandler) SetDatabase(database *mgo.Database) {
+	h.database = database
+}
 
-// func retrieveCurrentScan(r *http.Request, context *context.Context) {
-// 	currentScan := model.GetCurrentScan()
+func (h *ScanHandler) GetDatabase() *mgo.Database {
+	return h.database
+}
 
-// 	if err := context.JSONResponse(http.StatusOK,
-// 		protocol.CurrentScanToScanResponse(currentScan)); err != nil {
+func (h *ScanHandler) SetScan(scan model.Scan) {
+	h.scan = scan
+}
 
-// 		log.Println("Error while writing response. Details:", err)
-// 		context.Response(http.StatusInternalServerError)
-// 		return
-// 	}
+func (h *ScanHandler) GetLastModifiedAt() time.Time {
+	return h.scan.LastModifiedAt
+}
 
-// 	hash := md5.New()
-// 	if _, err := hash.Write(context.ResponseContent); err != nil {
-// 		log.Println("Error calculating response ETag. Details:", err)
-// 		context.Response(http.StatusInternalServerError)
-// 		return
-// 	}
+func (h *ScanHandler) GetETag() string {
+	return strconv.Itoa(h.scan.Revision)
+}
 
-// 	// The ETag header will be the hash of the content on list services
-// 	etag := hex.EncodeToString(hash.Sum(nil))
+func (h *ScanHandler) SetLanguage(language *messages.LanguagePack) {
+	h.language = language
+}
 
-// 	// TODO: We don't support Last-Modified related cache conditions, what are we going to
-// 	// do? Just remove the headers or give a bad request?
-// 	if !CheckHTTPCacheHeaders(r, context, time.Time{}, etag) {
-// 		return
-// 	}
+func (h *ScanHandler) GetLanguage() *messages.LanguagePack {
+	return h.language
+}
 
-// 	context.AddHeader("ETag", etag)
-// }
+func (h *ScanHandler) GetStartedAt() string {
+	return h.StartedAt
+}
 
-// func retrieveScan(r *http.Request, context *context.Context, date time.Time) {
-// 	scanDAO := dao.ScanDAO{
-// 		Database: context.Database,
-// 	}
+func (h *ScanHandler) MessageResponse(messageId string, roid string) error {
+	var err error
+	h.Message, err = protocol.NewMessageResponse(messageId, roid, h.language)
+	return err
+}
 
-// 	scan, err := scanDAO.FindByStartedAt(date)
-// 	if err != nil {
-// 		context.Response(http.StatusNotFound)
-// 		return
-// 	}
+func (h *ScanHandler) ClearResponse() {
+	h.Response = nil
+}
 
-// 	if !CheckHTTPCacheHeaders(r, context, scan.LastModifiedAt, strconv.Itoa(scan.Revision)) {
-// 		return
-// 	}
+func (h *ScanHandler) Get(w http.ResponseWriter, r *http.Request) {
+	h.retrieveScan(w, r)
+}
 
-// 	context.AddHeader("ETag", strconv.Itoa(scan.Revision))
-// 	context.AddHeader("Last-Modified", scan.LastModifiedAt.Format(time.RFC1123))
+func (h *ScanHandler) Head(w http.ResponseWriter, r *http.Request) {
+	h.retrieveScan(w, r)
+}
 
-// 	if err := context.JSONResponse(http.StatusOK,
-// 		protocol.ScanToScanResponse(scan)); err != nil {
+func (h *ScanHandler) retrieveScan(w http.ResponseWriter, r *http.Request) {
+	w.Header().Add("ETag", strconv.Itoa(h.scan.Revision))
+	w.Header().Add("Last-Modified", h.scan.LastModifiedAt.Format(time.RFC1123))
+	w.WriteHeader(http.StatusOK)
 
-// 		log.Println("Error while writing response. Details:", err)
-// 		context.Response(http.StatusInternalServerError)
-// 	}
-// }
+	scanResponse := protocol.ScanToScanResponse(h.scan)
+	h.Response = &scanResponse
+}
+
+func (h *ScanHandler) Interceptors() handy.InterceptorChain {
+	return handy.NewInterceptorChain().
+		Chain(new(interceptor.Permission)).
+		Chain(interceptor.NewValidator(h)).
+		Chain(interceptor.NewDatabase(h)).
+		Chain(interceptor.NewScan(h)).
+		Chain(interceptor.NewHTTPCacheBefore(h)).
+		Chain(interceptor.NewJSONCodec(h))
+}

@@ -28,7 +28,7 @@ type DomainVerificationHandler struct {
 	database        *mgo.Database
 	databaseSession *mgo.Session
 	language        *messages.LanguagePack
-	DomainName      string                    `param:"fqdn"`
+	FQDN            string                    `param:"fqdn"`
 	Request         protocol.DomainRequest    `request:"put"`
 	Response        *protocol.DomainResponse  `response:"put,get"`
 	Message         *protocol.MessageResponse `error`
@@ -38,7 +38,7 @@ func (h *DomainVerificationHandler) SetDatabaseSession(session *mgo.Session) {
 	h.databaseSession = session
 }
 
-func (h *DomainVerificationHandler) DatabaseSession() *mgo.Session {
+func (h *DomainVerificationHandler) GetDatabaseSession() *mgo.Session {
 	return h.databaseSession
 }
 
@@ -46,23 +46,23 @@ func (h *DomainVerificationHandler) SetDatabase(database *mgo.Database) {
 	h.database = database
 }
 
-func (h *DomainVerificationHandler) Database() *mgo.Database {
+func (h *DomainVerificationHandler) GetDatabase() *mgo.Database {
 	return h.database
 }
 
 func (h *DomainVerificationHandler) SetFQDN(fqdn string) {
-	h.DomainName = fqdn
+	h.FQDN = fqdn
 }
 
-func (h *DomainVerificationHandler) FQDN() string {
-	return h.DomainName
+func (h *DomainVerificationHandler) GetFQDN() string {
+	return h.FQDN
 }
 
 func (h *DomainVerificationHandler) SetLanguage(language *messages.LanguagePack) {
 	h.language = language
 }
 
-func (h *DomainVerificationHandler) Language() *messages.LanguagePack {
+func (h *DomainVerificationHandler) GetLanguage() *messages.LanguagePack {
 	return h.language
 }
 
@@ -83,7 +83,7 @@ func (h *DomainVerificationHandler) Head(w http.ResponseWriter, r *http.Request)
 // Build the domain object doing a DNS query. To this function works the domain must be
 // registered correctly and delegated in the DNS tree
 func (h *DomainVerificationHandler) queryDomain(w http.ResponseWriter, r *http.Request) {
-	domain, err := scan.QueryDomain(h.DomainName)
+	domain, err := scan.QueryDomain(h.FQDN)
 	if err != nil {
 		log.Println("Error while resolving FQDN. Details:", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -100,7 +100,7 @@ func (h *DomainVerificationHandler) queryDomain(w http.ResponseWriter, r *http.R
 func (h *DomainVerificationHandler) Put(w http.ResponseWriter, r *http.Request) {
 	// We need to set the FQDN in the domain request object because it is sent only in the
 	// URI and not in the domain request body to avoid information redudancy
-	h.Request.FQDN = h.FQDN()
+	h.Request.FQDN = h.GetFQDN()
 
 	var domain model.Domain
 	var err error

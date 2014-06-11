@@ -33,7 +33,7 @@ type DomainHandler struct {
 	databaseSession      *mgo.Session              // MongoDB session
 	domain               model.Domain              // Domain object related to the resource
 	language             *messages.LanguagePack    // User preferred language based on HTTP header
-	DomainName           string                    `param:"fqdn"`   // FQDN defined in the URI
+	FQDN                 string                    `param:"fqdn"`   // FQDN defined in the URI
 	Request              protocol.DomainRequest    `request:"put"`  // Domain request sent by the user
 	Response             *protocol.DomainResponse  `response:"get"` // Domain response sent back to the user
 	Message              *protocol.MessageResponse `error`          // Message on error sent to the user
@@ -43,7 +43,7 @@ func (h *DomainHandler) SetDatabaseSession(session *mgo.Session) {
 	h.databaseSession = session
 }
 
-func (h *DomainHandler) DatabaseSession() *mgo.Session {
+func (h *DomainHandler) GetDatabaseSession() *mgo.Session {
 	return h.databaseSession
 }
 
@@ -51,27 +51,27 @@ func (h *DomainHandler) SetDatabase(database *mgo.Database) {
 	h.database = database
 }
 
-func (h *DomainHandler) Database() *mgo.Database {
+func (h *DomainHandler) GetDatabase() *mgo.Database {
 	return h.database
 }
 
 func (h *DomainHandler) SetFQDN(fqdn string) {
-	h.DomainName = fqdn
+	h.FQDN = fqdn
 }
 
-func (h *DomainHandler) FQDN() string {
-	return h.DomainName
+func (h *DomainHandler) GetFQDN() string {
+	return h.FQDN
 }
 
 func (h *DomainHandler) SetDomain(domain model.Domain) {
 	h.domain = domain
 }
 
-func (h *DomainHandler) LastModified() time.Time {
+func (h *DomainHandler) GetLastModifiedAt() time.Time {
 	return h.domain.LastModifiedAt
 }
 
-func (h *DomainHandler) ETag() string {
+func (h *DomainHandler) GetETag() string {
 	return strconv.Itoa(h.domain.Revision)
 }
 
@@ -79,7 +79,7 @@ func (h *DomainHandler) SetLanguage(language *messages.LanguagePack) {
 	h.language = language
 }
 
-func (h *DomainHandler) Language() *messages.LanguagePack {
+func (h *DomainHandler) GetLanguage() *messages.LanguagePack {
 	return h.language
 }
 
@@ -105,8 +105,8 @@ func (h *DomainHandler) Head(w http.ResponseWriter, r *http.Request) {
 // body in the response. But now the responsability for don't adding the body is from the
 // mux while writing the response
 func (h *DomainHandler) retrieveDomain(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("ETag", h.ETag())
-	w.Header().Add("Last-Modified", h.LastModified().Format(time.RFC1123))
+	w.Header().Add("ETag", h.GetETag())
+	w.Header().Add("Last-Modified", h.GetLastModifiedAt().Format(time.RFC1123))
 	w.WriteHeader(http.StatusOK)
 
 	domainResponse := protocol.ToDomainResponse(h.domain, true)
@@ -116,7 +116,7 @@ func (h *DomainHandler) retrieveDomain(w http.ResponseWriter, r *http.Request) {
 func (h *DomainHandler) Put(w http.ResponseWriter, r *http.Request) {
 	// We need to set the FQDN in the domain request object because it is sent only in the
 	// URI and not in the domain request body to avoid information redudancy
-	h.Request.FQDN = h.FQDN()
+	h.Request.FQDN = h.GetFQDN()
 
 	var err error
 	if h.domain, err = protocol.Merge(h.domain, h.Request); err != nil {
@@ -155,7 +155,7 @@ func (h *DomainHandler) Put(w http.ResponseWriter, r *http.Request) {
 	}
 
 	domainDAO := dao.DomainDAO{
-		Database: h.Database(),
+		Database: h.GetDatabase(),
 	}
 
 	if err := domainDAO.Save(&h.domain); err != nil {
@@ -177,8 +177,8 @@ func (h *DomainHandler) Put(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Add("ETag", h.ETag())
-	w.Header().Add("Last-Modified", h.LastModified().Format(time.RFC1123))
+	w.Header().Add("ETag", h.GetETag())
+	w.Header().Add("Last-Modified", h.GetLastModifiedAt().Format(time.RFC1123))
 
 	if h.domain.Revision == 1 {
 		w.Header().Add("Location", "/domain/"+h.domain.FQDN)
@@ -191,7 +191,7 @@ func (h *DomainHandler) Put(w http.ResponseWriter, r *http.Request) {
 
 func (h *DomainHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	domainDAO := dao.DomainDAO{
-		Database: h.Database(),
+		Database: h.GetDatabase(),
 	}
 
 	if err := domainDAO.Remove(&h.domain); err != nil {

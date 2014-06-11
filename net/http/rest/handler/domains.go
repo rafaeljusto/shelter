@@ -35,14 +35,14 @@ type DomainsHandler struct {
 	language        *messages.LanguagePack
 	Response        *protocol.DomainsResponse `response:"get"`
 	Message         *protocol.MessageResponse `error`
-	lastModified    time.Time
+	lastModifiedAt  time.Time
 }
 
 func (h *DomainsHandler) SetDatabaseSession(session *mgo.Session) {
 	h.databaseSession = session
 }
 
-func (h *DomainsHandler) DatabaseSession() *mgo.Session {
+func (h *DomainsHandler) GetDatabaseSession() *mgo.Session {
 	return h.databaseSession
 }
 
@@ -50,16 +50,16 @@ func (h *DomainsHandler) SetDatabase(database *mgo.Database) {
 	h.database = database
 }
 
-func (h *DomainsHandler) Database() *mgo.Database {
+func (h *DomainsHandler) GetDatabase() *mgo.Database {
 	return h.database
 }
 
-func (h *DomainsHandler) LastModified() time.Time {
-	return h.lastModified
+func (h *DomainsHandler) GetLastModifiedAt() time.Time {
+	return h.lastModifiedAt
 }
 
 // The ETag header will be the hash of the content on list services
-func (h *DomainsHandler) ETag() string {
+func (h *DomainsHandler) GetETag() string {
 	body, err := json.Marshal(h.Response)
 	if err != nil {
 		return ""
@@ -77,7 +77,7 @@ func (h *DomainsHandler) SetLanguage(language *messages.LanguagePack) {
 	h.language = language
 }
 
-func (h *DomainsHandler) Language() *messages.LanguagePack {
+func (h *DomainsHandler) GetLanguage() *messages.LanguagePack {
 	return h.language
 }
 
@@ -214,7 +214,7 @@ func (h *DomainsHandler) retrieveDomains(w http.ResponseWriter, r *http.Request)
 	}
 
 	domainDAO := dao.DomainDAO{
-		Database: h.Database(),
+		Database: h.GetDatabase(),
 	}
 
 	domains, err := domainDAO.FindAll(&pagination, expand)
@@ -231,12 +231,12 @@ func (h *DomainsHandler) retrieveDomains(w http.ResponseWriter, r *http.Request)
 	var lastModifiedAt time.Time
 	for _, domain := range domains {
 		if domain.LastModifiedAt.After(lastModifiedAt) {
-			h.lastModified = domain.LastModifiedAt
+			h.lastModifiedAt = domain.LastModifiedAt
 		}
 	}
 
-	w.Header().Add("ETag", h.ETag())
-	w.Header().Add("Last-Modified", h.lastModified.Format(time.RFC1123))
+	w.Header().Add("ETag", h.GetETag())
+	w.Header().Add("Last-Modified", h.lastModifiedAt.Format(time.RFC1123))
 	w.WriteHeader(http.StatusOK)
 }
 

@@ -5,183 +5,267 @@
 // Package handler store the REST handlers of specific URI
 package handler
 
-// import (
-// 	"crypto/md5"
-// 	"encoding/hex"
-// 	"github.com/rafaeljusto/shelter/dao"
-// 	"github.com/rafaeljusto/shelter/log"
-// 	"github.com/rafaeljusto/shelter/net/http/rest/context"
-// 	"github.com/rafaeljusto/shelter/net/http/rest/protocol"
-// 	"net/http"
-// 	"regexp"
-// 	"strconv"
-// 	"strings"
-// 	"time"
-// )
+import (
+	"crypto/md5"
+	"encoding/hex"
+	"encoding/json"
+	"github.com/rafaeljusto/shelter/dao"
+	"github.com/rafaeljusto/shelter/log"
+	"github.com/rafaeljusto/shelter/model"
+	"github.com/rafaeljusto/shelter/net/http/rest/interceptor"
+	"github.com/rafaeljusto/shelter/net/http/rest/messages"
+	"github.com/rafaeljusto/shelter/net/http/rest/protocol"
+	"github.com/trajber/handy"
+	"labix.org/v2/mgo"
+	"net/http"
+	"strconv"
+	"strings"
+	"time"
+)
 
-// func init() {
-// 	HandleFunc(regexp.MustCompile("^/scans(/)?.*$"), HandleScans)
-// }
+func init() {
+	HandleFunc("/scans", func() handy.Handler {
+		return new(ScansHandler)
+	})
+}
 
-// func HandleScans(r *http.Request, context *context.Context) {
-// 	if r.Method == "GET" || r.Method == "HEAD" {
-// 		retrieveScans(r, context)
+type ScansHandler struct {
+	handy.DefaultHandler
+	database        *mgo.Database
+	databaseSession *mgo.Session
+	language        *messages.LanguagePack
+	Response        *protocol.ScansResponse   `response:"get"`
+	Message         *protocol.MessageResponse `error`
+	lastModifiedAt  time.Time
+}
 
-// 	} else {
-// 		context.Response(http.StatusMethodNotAllowed)
-// 	}
-// }
+func (h *ScansHandler) SetDatabaseSession(session *mgo.Session) {
+	h.databaseSession = session
+}
 
-// // The HEAD method is identical to GET except that the server MUST NOT return a message-
-// // body in the response. But now the responsability for don't adding the body is from the
-// // mux while writing the response
-// func retrieveScans(r *http.Request, context *context.Context) {
-// 	var pagination dao.ScanDAOPagination
-// 	expand := false
+func (h *ScansHandler) GetDatabaseSession() *mgo.Session {
+	return h.databaseSession
+}
 
-// 	for key, values := range r.URL.Query() {
-// 		key = strings.TrimSpace(key)
-// 		key = strings.ToLower(key)
+func (h *ScansHandler) SetDatabase(database *mgo.Database) {
+	h.database = database
+}
 
-// 		// A key can have multiple values in a query string, we are going to always consider
-// 		// the last one (overwrite strategy)
-// 		for _, value := range values {
-// 			value = strings.TrimSpace(value)
-// 			value = strings.ToLower(value)
+func (h *ScansHandler) GetDatabase() *mgo.Database {
+	return h.database
+}
 
-// 			switch key {
-// 			case "orderby":
-// 				// OrderBy parameter will store the fields that the user want to be the keys of the sort
-// 				// algorithm in the result set and the direction that each sort field will have. The format
-// 				// that will be used is:
-// 				//
-// 				// <field1>:<direction1>@<field2>:<direction2>@...@<fieldN>:<directionN>
+func (h *ScansHandler) GetLastModifiedAt() time.Time {
+	return h.lastModifiedAt
+}
 
-// 				orderByParts := strings.Split(value, "@")
+// The ETag header will be the hash of the content on list services
+func (h *ScansHandler) GetETag() string {
+	body, err := json.Marshal(h.Response)
+	if err != nil {
+		return ""
+	}
 
-// 				for _, orderByPart := range orderByParts {
-// 					orderByPart = strings.TrimSpace(orderByPart)
-// 					orderByAndDirection := strings.Split(orderByPart, ":")
+	hash := md5.New()
+	if _, err := hash.Write(body); err != nil {
+		return ""
+	}
 
-// 					var field, direction string
+	return hex.EncodeToString(hash.Sum(nil))
+}
 
-// 					if len(orderByAndDirection) == 1 {
-// 						field, direction = orderByAndDirection[0], "asc"
+func (h *ScansHandler) SetLanguage(language *messages.LanguagePack) {
+	h.language = language
+}
 
-// 					} else if len(orderByAndDirection) == 2 {
-// 						field, direction = orderByAndDirection[0], orderByAndDirection[1]
+func (h *ScansHandler) GetLanguage() *messages.LanguagePack {
+	return h.language
+}
 
-// 					} else {
-// 						if err := context.MessageResponse(http.StatusBadRequest,
-// 							"invalid-query-order-by", ""); err != nil {
+func (h *ScansHandler) MessageResponse(messageId string, roid string) error {
+	var err error
+	h.Message, err = protocol.NewMessageResponse(messageId, roid, h.language)
+	return err
+}
 
-// 							log.Println("Error while writing response. Details:", err)
-// 							context.Response(http.StatusInternalServerError)
-// 						}
-// 						return
-// 					}
+func (h *ScansHandler) ClearResponse() {
+	h.Response = nil
+}
 
-// 					orderByField, err := dao.ScanDAOOrderByFieldFromString(field)
-// 					if err != nil {
-// 						if err := context.MessageResponse(http.StatusBadRequest,
-// 							"invalid-query-order-by", ""); err != nil {
+func (h *ScansHandler) Get(w http.ResponseWriter, r *http.Request) {
+	h.retrieveScans(w, r)
+}
 
-// 							log.Println("Error while writing response. Details:", err)
-// 							context.Response(http.StatusInternalServerError)
-// 						}
-// 						return
-// 					}
+func (h *ScansHandler) Head(w http.ResponseWriter, r *http.Request) {
+	h.retrieveScans(w, r)
+}
 
-// 					orderByDirection, err := dao.DAOOrderByDirectionFromString(direction)
-// 					if err != nil {
-// 						if err := context.MessageResponse(http.StatusBadRequest,
-// 							"invalid-query-order-by", ""); err != nil {
+// The HEAD method is identical to GET except that the server MUST NOT return a message-
+// body in the response. But now the responsability for don't adding the body is from the
+// mux while writing the response
+func (h *ScansHandler) retrieveScans(w http.ResponseWriter, r *http.Request) {
+	var pagination dao.ScanDAOPagination
 
-// 							log.Println("Error while writing response. Details:", err)
-// 							context.Response(http.StatusInternalServerError)
-// 						}
-// 						return
-// 					}
+	expand := false
+	current := false
 
-// 					pagination.OrderBy = append(pagination.OrderBy, dao.ScanDAOSort{
-// 						Field:     orderByField,
-// 						Direction: orderByDirection,
-// 					})
-// 				}
+	for key, values := range r.URL.Query() {
+		key = strings.TrimSpace(key)
+		key = strings.ToLower(key)
 
-// 			case "pagesize":
-// 				var err error
-// 				pagination.PageSize, err = strconv.Atoi(value)
-// 				if err != nil {
-// 					if err := context.MessageResponse(http.StatusBadRequest,
-// 						"invalid-query-page-size", ""); err != nil {
+		// A key can have multiple values in a query string, we are going to always consider
+		// the last one (overwrite strategy)
+		for _, value := range values {
+			value = strings.TrimSpace(value)
+			value = strings.ToLower(value)
 
-// 						log.Println("Error while writing response. Details:", err)
-// 						context.Response(http.StatusInternalServerError)
-// 					}
-// 					return
-// 				}
+			switch key {
+			case "orderby":
+				// OrderBy parameter will store the fields that the user want to be the keys of the sort
+				// algorithm in the result set and the direction that each sort field will have. The format
+				// that will be used is:
+				//
+				// <field1>:<direction1>@<field2>:<direction2>@...@<fieldN>:<directionN>
 
-// 			case "page":
-// 				var err error
-// 				pagination.Page, err = strconv.Atoi(value)
-// 				if err != nil {
-// 					if err := context.MessageResponse(http.StatusBadRequest,
-// 						"invalid-query-page", ""); err != nil {
+				orderByParts := strings.Split(value, "@")
 
-// 						log.Println("Error while writing response. Details:", err)
-// 						context.Response(http.StatusInternalServerError)
-// 					}
-// 					return
-// 				}
+				for _, orderByPart := range orderByParts {
+					orderByPart = strings.TrimSpace(orderByPart)
+					orderByAndDirection := strings.Split(orderByPart, ":")
 
-// 			case "expand":
-// 				expand = true
-// 			}
-// 		}
-// 	}
+					var field, direction string
 
-// 	scanDAO := dao.ScanDAO{
-// 		Database: context.Database,
-// 	}
+					if len(orderByAndDirection) == 1 {
+						field, direction = orderByAndDirection[0], "asc"
 
-// 	scans, err := scanDAO.FindAll(&pagination, expand)
-// 	if err != nil {
-// 		log.Println("Error while searching scans objects. Details:", err)
-// 		context.Response(http.StatusInternalServerError)
-// 		return
-// 	}
+					} else if len(orderByAndDirection) == 2 {
+						field, direction = orderByAndDirection[0], orderByAndDirection[1]
 
-// 	if err := context.JSONResponse(http.StatusOK,
-// 		protocol.ScansToScansResponse(scans, pagination)); err != nil {
+					} else {
+						if err := h.MessageResponse("invalid-query-order-by", ""); err == nil {
+							w.WriteHeader(http.StatusBadRequest)
 
-// 		log.Println("Error while writing response. Details:", err)
-// 		context.Response(http.StatusInternalServerError)
-// 		return
-// 	}
+						} else {
+							log.Println("Error while writing response. Details:", err)
+							w.WriteHeader(http.StatusInternalServerError)
+						}
 
-// 	hash := md5.New()
-// 	if _, err := hash.Write(context.ResponseContent); err != nil {
-// 		log.Println("Error calculating response ETag. Details:", err)
-// 		context.Response(http.StatusInternalServerError)
-// 		return
-// 	}
+						return
+					}
 
-// 	// The ETag header will be the hash of the content on list services
-// 	etag := hex.EncodeToString(hash.Sum(nil))
+					orderByField, err := dao.ScanDAOOrderByFieldFromString(field)
+					if err != nil {
+						if err := h.MessageResponse("invalid-query-order-by", ""); err == nil {
+							w.WriteHeader(http.StatusBadRequest)
 
-// 	// Last-Modified is going to be the most recent date of the list
-// 	var lastModifiedAt time.Time
-// 	for _, scan := range scans {
-// 		if scan.LastModifiedAt.After(lastModifiedAt) {
-// 			lastModifiedAt = scan.LastModifiedAt
-// 		}
-// 	}
+						} else {
+							log.Println("Error while writing response. Details:", err)
+							w.WriteHeader(http.StatusInternalServerError)
+						}
 
-// 	if !CheckHTTPCacheHeaders(r, context, lastModifiedAt, etag) {
-// 		return
-// 	}
+						return
+					}
 
-// 	context.AddHeader("ETag", etag)
-// 	context.AddHeader("Last-Modified", lastModifiedAt.Format(time.RFC1123))
-// }
+					orderByDirection, err := dao.DAOOrderByDirectionFromString(direction)
+					if err != nil {
+						if err := h.MessageResponse("invalid-query-order-by", ""); err == nil {
+							w.WriteHeader(http.StatusBadRequest)
+
+						} else {
+							log.Println("Error while writing response. Details:", err)
+							w.WriteHeader(http.StatusInternalServerError)
+						}
+
+						return
+					}
+
+					pagination.OrderBy = append(pagination.OrderBy, dao.ScanDAOSort{
+						Field:     orderByField,
+						Direction: orderByDirection,
+					})
+				}
+
+			case "pagesize":
+				var err error
+				pagination.PageSize, err = strconv.Atoi(value)
+				if err != nil {
+					if err := h.MessageResponse("invalid-query-page-size", ""); err == nil {
+						w.WriteHeader(http.StatusBadRequest)
+
+					} else {
+						log.Println("Error while writing response. Details:", err)
+						w.WriteHeader(http.StatusInternalServerError)
+					}
+
+					return
+				}
+
+			case "page":
+				var err error
+				pagination.Page, err = strconv.Atoi(value)
+				if err != nil {
+					if err := h.MessageResponse("invalid-query-page", ""); err == nil {
+						w.WriteHeader(http.StatusBadRequest)
+
+					} else {
+						log.Println("Error while writing response. Details:", err)
+						w.WriteHeader(http.StatusInternalServerError)
+					}
+
+					return
+				}
+
+			case "expand":
+				expand = true
+
+			case "current":
+				current = true
+			}
+		}
+	}
+
+	scanDAO := dao.ScanDAO{
+		Database: h.GetDatabase(),
+	}
+
+	scans, err := scanDAO.FindAll(&pagination, expand)
+	if err != nil {
+		log.Println("Error while searching scans objects. Details:", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	var scansResponse protocol.ScansResponse
+	if current {
+		scansResponse = protocol.CurrentScanToScansResponse(model.GetCurrentScan(), pagination)
+
+	} else {
+
+		scansResponse = protocol.ScansToScansResponse(scans, pagination)
+	}
+
+	h.Response = &scansResponse
+
+	// Last-Modified is going to be the most recent date of the list
+	var lastModifiedAt time.Time
+	if !current {
+		for _, scan := range scans {
+			if scan.LastModifiedAt.After(lastModifiedAt) {
+				h.lastModifiedAt = scan.LastModifiedAt
+			}
+		}
+	}
+
+	w.Header().Add("ETag", h.GetETag())
+	w.Header().Add("Last-Modified", h.lastModifiedAt.Format(time.RFC1123))
+	w.WriteHeader(http.StatusOK)
+}
+
+func (h *ScansHandler) Interceptors() handy.InterceptorChain {
+	return handy.NewInterceptorChain().
+		Chain(new(interceptor.Permission)).
+		Chain(interceptor.NewValidator(h)).
+		Chain(interceptor.NewDatabase(h)).
+		Chain(interceptor.NewJSONCodec(h)).
+		Chain(interceptor.NewHTTPCacheAfter(h))
+}

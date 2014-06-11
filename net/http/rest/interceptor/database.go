@@ -15,9 +15,9 @@ import (
 
 type DatabaseHandler interface {
 	SetDatabaseSession(*mgo.Session)
-	DatabaseSession() *mgo.Session
+	GetDatabaseSession() *mgo.Session
 	SetDatabase(*mgo.Database)
-	Database() *mgo.Database
+	GetDatabase() *mgo.Database
 }
 
 type Database struct {
@@ -48,5 +48,5 @@ func (i *Database) Before(w http.ResponseWriter, r *http.Request) {
 }
 
 func (i *Database) After(w http.ResponseWriter, r *http.Request) {
-	i.databaseHandler.DatabaseSession().Close()
+	i.databaseHandler.GetDatabaseSession().Close()
 }

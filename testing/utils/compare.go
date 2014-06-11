@@ -163,3 +163,54 @@ func CompareProtocolLinks(l1 []protocol.Link, l2 []protocol.Link) bool {
 
 	return true
 }
+
+func CompareScan(s1, s2 model.Scan) bool {
+	if s1.Id != s2.Id ||
+		s1.Revision != s2.Revision ||
+		s1.Status != s2.Status ||
+		s1.StartedAt.Unix() != s2.StartedAt.Unix() ||
+		s1.FinishedAt.Unix() != s2.FinishedAt.Unix() ||
+		s1.DomainsScanned != s2.DomainsScanned ||
+		s1.DomainsWithDNSSECScanned != s2.DomainsWithDNSSECScanned {
+		return false
+	}
+
+	for key, value := range s1.NameserverStatistics {
+		if otherValue, ok := s2.NameserverStatistics[key]; !ok || value != otherValue {
+			return false
+		}
+	}
+
+	for key, value := range s1.DSStatistics {
+		if otherValue, ok := s2.DSStatistics[key]; !ok || value != otherValue {
+			return false
+		}
+	}
+
+	return true
+}
+
+func CompareProtocolScan(s1, s2 protocol.ScanResponse) bool {
+	if s1.Status != s2.Status ||
+		s1.StartedAt.Unix() != s2.StartedAt.Unix() ||
+		s1.FinishedAt.Unix() != s2.FinishedAt.Unix() ||
+		s1.DomainsScanned != s2.DomainsScanned ||
+		s1.DomainsWithDNSSECScanned != s2.DomainsWithDNSSECScanned {
+
+		return false
+	}
+
+	for key, value := range s1.NameserverStatistics {
+		if otherValue, ok := s2.NameserverStatistics[key]; !ok || value != otherValue {
+			return false
+		}
+	}
+
+	for key, value := range s1.DSStatistics {
+		if otherValue, ok := s2.DSStatistics[key]; !ok || value != otherValue {
+			return false
+		}
+	}
+
+	return true
+}

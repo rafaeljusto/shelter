@@ -21,7 +21,7 @@ import (
 )
 
 type CodecHandler interface {
-	Language() *messages.LanguagePack
+	GetLanguage() *messages.LanguagePack
 	MessageResponse(string, string) error
 }
 
@@ -67,20 +67,21 @@ func (c *JSONCodec) After(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", fmt.Sprintf("application/vnd.shelter+json; charset=%s", check.SupportedCharset))
 
 	if c.errPosition >= 0 {
-		elem := st.Field(c.errPosition).Interface()
-		elemType := reflect.TypeOf(elem)
+		if elem := st.Field(c.errPosition).Interface(); elem != nil {
+			elemType := reflect.TypeOf(elem)
 
-		if elemType.Kind() == reflect.Ptr && !st.Field(c.errPosition).IsNil() {
-			body, err := json.Marshal(elem)
-			if err != nil {
-				log.Println("Error writing message response. Details:", err)
-				w.WriteHeader(http.StatusInternalServerError)
+			if elemType.Kind() == reflect.Ptr && !st.Field(c.errPosition).IsNil() {
+				body, err := json.Marshal(elem)
+				if err != nil {
+					log.Println("Error writing message response. Details:", err)
+					w.WriteHeader(http.StatusInternalServerError)
+					return
+				}
+
+				c.addResponseHeaders(w, body)
+				w.Write(body)
 				return
 			}
-
-			c.addResponseHeaders(w, body)
-			w.Write(body)
-			return
 		}
 	}
 
@@ -135,8 +136,8 @@ func (c *JSONCodec) parse(m string) {
 func (c *JSONCodec) addResponseHeaders(w http.ResponseWriter, body []byte) {
 	w.Header().Set("Content-Length", strconv.Itoa(len(body)))
 
-	if c.codecHandler.Language() != nil {
-		w.Header().Set("Content-Language", c.codecHandler.Language().Name())
+	if l := c.codecHandler.GetLanguage(); l != nil {
+		w.Header().Set("Content-Language", l.Name())
 	}
 
 	if len(body) > 0 {

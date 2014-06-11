@@ -14,7 +14,7 @@ import (
 
 type DomainHandler interface {
 	DatabaseHandler
-	FQDN() string
+	GetFQDN() string
 	SetDomain(domain model.Domain)
 }
 
@@ -29,10 +29,10 @@ func NewDomain(h DomainHandler) *Domain {
 
 func (i *Domain) Before(w http.ResponseWriter, r *http.Request) {
 	domainDAO := dao.DomainDAO{
-		Database: i.domainHandler.Database(),
+		Database: i.domainHandler.GetDatabase(),
 	}
 
-	domain, err := domainDAO.FindByFQDN(i.domainHandler.FQDN())
+	domain, err := domainDAO.FindByFQDN(i.domainHandler.GetFQDN())
 
 	// For PUT method if the domain does not exist yet thats alright because we will create
 	// it

@@ -13,8 +13,8 @@ import (
 )
 
 type HTTPCacheHandler interface {
-	LastModified() time.Time
-	ETag() string
+	GetLastModifiedAt() time.Time
+	GetETag() string
 	MessageResponse(string, string) error
 	ClearResponse()
 }
@@ -36,7 +36,7 @@ func CheckHTTPCache(w http.ResponseWriter, r *http.Request, handler HTTPCacheHan
 }
 
 func checkIfModifiedSince(w http.ResponseWriter, r *http.Request, handler HTTPCacheHandler) bool {
-	modifiedSince, err := check.HTTPIfModifiedSince(r, handler.LastModified())
+	modifiedSince, err := check.HTTPIfModifiedSince(r, handler.GetLastModifiedAt())
 	if err != nil {
 		handler.ClearResponse()
 
@@ -63,7 +63,7 @@ func checkIfModifiedSince(w http.ResponseWriter, r *http.Request, handler HTTPCa
 }
 
 func checkIfUnmodifiedSince(w http.ResponseWriter, r *http.Request, handler HTTPCacheHandler) bool {
-	unmodifiedSince, err := check.HTTPIfUnmodifiedSince(r, handler.LastModified())
+	unmodifiedSince, err := check.HTTPIfUnmodifiedSince(r, handler.GetLastModifiedAt())
 	if err != nil {
 		handler.ClearResponse()
 
@@ -90,7 +90,7 @@ func checkIfUnmodifiedSince(w http.ResponseWriter, r *http.Request, handler HTTP
 }
 
 func checkIfMatch(w http.ResponseWriter, r *http.Request, handler HTTPCacheHandler) bool {
-	match, err := check.HTTPIfMatch(r, handler.ETag())
+	match, err := check.HTTPIfMatch(r, handler.GetETag())
 	if err != nil {
 		handler.ClearResponse()
 
@@ -125,7 +125,7 @@ func checkIfMatch(w http.ResponseWriter, r *http.Request, handler HTTPCacheHandl
 }
 
 func checkIfNoneMatch(w http.ResponseWriter, r *http.Request, handler HTTPCacheHandler) bool {
-	noneMatch, err := check.HTTPIfNoneMatch(r, handler.ETag())
+	noneMatch, err := check.HTTPIfNoneMatch(r, handler.GetETag())
 	if err != nil {
 		handler.ClearResponse()
 
@@ -149,7 +149,7 @@ func checkIfNoneMatch(w http.ResponseWriter, r *http.Request, handler HTTPCacheH
 		if r.Method == "GET" || r.Method == "HEAD" {
 			// The 304 response MUST NOT contain a message-body, and thus is always terminated
 			// by the first empty line after the header fields.
-			w.Header().Add("ETag", handler.ETag())
+			w.Header().Add("ETag", handler.GetETag())
 			w.WriteHeader(http.StatusNotModified)
 
 		} else {
