@@ -144,26 +144,6 @@ func CompareProtocolDomains(d1, d2 protocol.DomainsResponse) bool {
 	return true
 }
 
-func CompareProtocolLinks(l1 []protocol.Link, l2 []protocol.Link) bool {
-	if len(l1) != len(l2) {
-		return false
-	}
-
-	for i := range l1 {
-		if l1[i].HRef != l2[i].HRef || len(l1[i].Types) != len(l2[i].Types) {
-			return false
-		}
-
-		for j := range l1[i].Types {
-			if l1[i].Types[j] != l2[i].Types[j] {
-				return false
-			}
-		}
-	}
-
-	return true
-}
-
 func CompareScan(s1, s2 model.Scan) bool {
 	if s1.Id != s2.Id ||
 		s1.Revision != s2.Revision ||
@@ -209,6 +189,50 @@ func CompareProtocolScan(s1, s2 protocol.ScanResponse) bool {
 	for key, value := range s1.DSStatistics {
 		if otherValue, ok := s2.DSStatistics[key]; !ok || value != otherValue {
 			return false
+		}
+	}
+
+	return true
+}
+
+func CompareProtocolScans(s1, s2 protocol.ScansResponse) bool {
+	if s1.NumberOfItems != s2.NumberOfItems ||
+		s1.NumberOfPages != s2.NumberOfPages ||
+		s1.Page != s2.Page ||
+		s1.PageSize != s2.PageSize ||
+		len(s1.Scans) != len(s2.Scans) ||
+		len(s1.Links) != len(s2.Links) {
+
+		return false
+	}
+
+	for index := range s1.Scans {
+		if !CompareProtocolScan(s1.Scans[index], s2.Scans[index]) {
+			return false
+		}
+	}
+
+	if !CompareProtocolLinks(s1.Links, s2.Links) {
+		return false
+	}
+
+	return true
+}
+
+func CompareProtocolLinks(l1 []protocol.Link, l2 []protocol.Link) bool {
+	if len(l1) != len(l2) {
+		return false
+	}
+
+	for i := range l1 {
+		if l1[i].HRef != l2[i].HRef || len(l1[i].Types) != len(l2[i].Types) {
+			return false
+		}
+
+		for j := range l1[i].Types {
+			if l1[i].Types[j] != l2[i].Types[j] {
+				return false
+			}
 		}
 	}
 

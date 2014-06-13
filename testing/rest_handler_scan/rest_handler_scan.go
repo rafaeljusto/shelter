@@ -67,8 +67,6 @@ func main() {
 	retrieveScan(database, startedAt)
 	retrieveScanMetadata(database, startedAt)
 	retrieveUnknownScan(database, startedAt)
-	//createCurrentScan()
-	//retrieveCurrentScan(database)
 	deleteScan(database, startedAt)
 
 	utils.Println("SUCCESS!")
@@ -236,55 +234,6 @@ func retrieveUnknownScan(database *mgo.Database, startedAt time.Time) {
 		utils.Fatalln("Error retrieving unknown scan", errors.New(string(responseContent)))
 	}
 }
-
-// func createCurrentScan() {
-// 	// We are not going to call the function FinishAnalyzingDomainForScan because it will reset the
-// 	// current scan information
-// 	model.StartNewScan()
-// 	model.LoadedDomainForScan()
-// 	model.LoadedDomainForScan()
-// 	model.LoadedDomainForScan()
-// 	model.FinishAnalyzingDomainForScan(false)
-// 	model.LoadedDomainForScan()
-// 	model.LoadedDomainForScan()
-// 	model.FinishLoadingDomainsForScan()
-// 	model.FinishAnalyzingDomainForScan(false)
-// 	model.FinishAnalyzingDomainForScan(false)
-// 	model.FinishAnalyzingDomainForScan(true)
-// }
-
-// func retrieveCurrentScan(database *mgo.Database) {
-// 	r, err := http.NewRequest("GET", "/scan/current", nil)
-// 	if err != nil {
-// 		utils.Fatalln("Error creating the HTTP request", err)
-// 	}
-
-// 	context, err := context.NewContext(r, database)
-// 	if err != nil {
-// 		utils.Fatalln("Error creating context", err)
-// 	}
-
-// 	handler.HandleScan(r, &context)
-
-// 	if context.ResponseHTTPStatus != http.StatusOK {
-// 		utils.Fatalln("Error retrieving scan",
-// 			errors.New(string(context.ResponseContent)))
-// 	}
-
-// 	if len(context.HTTPHeader["Last-Modified"]) > 0 {
-// 		utils.Fatalln("Current scan is not persisted to return Last-Modified header", nil)
-// 	}
-
-// 	var scanResponse protocol.ScanResponse
-// 	json.Unmarshal(context.ResponseContent, &scanResponse)
-
-// 	if scanResponse.Status != "RUNNING" ||
-// 		scanResponse.DomainsToBeScanned != 5 ||
-// 		scanResponse.DomainsScanned != 4 ||
-// 		scanResponse.DomainsWithDNSSECScanned != 1 {
-// 		utils.Fatalln("Not retrieving current scan information correctly", nil)
-// 	}
-// }
 
 func deleteScan(database *mgo.Database, startedAt time.Time) {
 	scanDAO := dao.ScanDAO{

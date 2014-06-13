@@ -228,9 +228,8 @@ func (h *DomainsHandler) retrieveDomains(w http.ResponseWriter, r *http.Request)
 	h.Response = &domainsResponse
 
 	// Last-Modified is going to be the most recent date of the list
-	var lastModifiedAt time.Time
 	for _, domain := range domains {
-		if domain.LastModifiedAt.After(lastModifiedAt) {
+		if domain.LastModifiedAt.After(h.lastModifiedAt) {
 			h.lastModifiedAt = domain.LastModifiedAt
 		}
 	}

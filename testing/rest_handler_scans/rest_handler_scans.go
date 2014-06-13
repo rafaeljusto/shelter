@@ -5,33 +5,27 @@
 package main
 
 import (
-	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
+	"github.com/rafaeljusto/shelter/config"
 	"github.com/rafaeljusto/shelter/dao"
 	"github.com/rafaeljusto/shelter/database/mongodb"
 	"github.com/rafaeljusto/shelter/model"
-	"github.com/rafaeljusto/shelter/net/http/rest/context"
 	"github.com/rafaeljusto/shelter/net/http/rest/handler"
 	"github.com/rafaeljusto/shelter/net/http/rest/protocol"
 	"github.com/rafaeljusto/shelter/testing/utils"
+	"github.com/trajber/handy"
+	"io/ioutil"
 	"labix.org/v2/mgo"
 	"net/http"
+	"net/http/httptest"
 	"time"
 )
 
 var (
 	configFilePath string // Path for the config file with the connection information
 )
-
-// RESTHandlerScansTestConfigFile is a structure to store the test configuration file data
-type RESTHandlerScansTestConfigFile struct {
-	Database struct {
-		URI  string
-		Name string
-	}
-}
 
 type ScansCacheTestData struct {
 	HeaderValue        string
@@ -46,8 +40,7 @@ func init() {
 func main() {
 	flag.Parse()
 
-	var config RESTHandlerScansTestConfigFile
-	err := utils.ReadConfigFile(configFilePath, &config)
+	err := utils.ReadConfigFile(configFilePath, &config.ShelterConfig)
 
 	if err == utils.ErrConfigFileUndefined {
 		fmt.Println(err.Error())
@@ -60,8 +53,8 @@ func main() {
 	}
 
 	database, databaseSession, err := mongodb.Open(
-		[]string{config.Database.URI},
-		config.Database.Name,
+		config.ShelterConfig.Database.URIs,
+		config.ShelterConfig.Database.Name,
 		false, "", "",
 	)
 
@@ -84,6 +77,8 @@ func main() {
 	retrieveScansIfMatch(database)
 	retrieveScansIfNoneMatch(database)
 	deleteScans(database)
+	createCurrentScan()
+	retrieveCurrentScan(database)
 
 	utils.Println("SUCCESS!")
 }
@@ -120,7 +115,7 @@ func retrieveScans(database *mgo.Database) {
 	data := []struct {
 		URI                string
 		ExpectedHTTPStatus int
-		ContentCheck       func([]byte)
+		ContentCheck       func(*protocol.ScansResponse)
 	}{
 		{
 			URI:                "/scans/?orderby=xxx:desc&pagesize=10&page=1",
@@ -141,10 +136,7 @@ func retrieveScans(database *mgo.Database) {
 		{
 			URI:                "/scans/?orderby=startedat:desc&pagesize=10&page=1",
 			ExpectedHTTPStatus: http.StatusOK,
-			ContentCheck: func(content []byte) {
-				var scansResponse protocol.ScansResponse
-				json.Unmarshal(content, &scansResponse)
-
+			ContentCheck: func(scansResponse *protocol.ScansResponse) {
 				if len(scansResponse.Scans) != 10 {
 					utils.Fatalln("Error retrieving the wrong number of scans", nil)
 				}
@@ -153,10 +145,7 @@ func retrieveScans(database *mgo.Database) {
 		{
 			URI:                "/scans",
 			ExpectedHTTPStatus: http.StatusOK,
-			ContentCheck: func(content []byte) {
-				var scansResponse protocol.ScansResponse
-				json.Unmarshal(content, &scansResponse)
-
+			ContentCheck: func(scansResponse *protocol.ScansResponse) {
 				if len(scansResponse.Scans) == 0 {
 					utils.Fatalln("Error retrieving scans", nil)
 				}
@@ -169,10 +158,7 @@ func retrieveScans(database *mgo.Database) {
 		{
 			URI:                "/scans?expand",
 			ExpectedHTTPStatus: http.StatusOK,
-			ContentCheck: func(content []byte) {
-				var scansResponse protocol.ScansResponse
-				json.Unmarshal(content, &scansResponse)
-
+			ContentCheck: func(scansResponse *protocol.ScansResponse) {
 				if len(scansResponse.Scans) == 0 {
 					utils.Fatalln("Error retrieving scans", nil)
 				}
@@ -182,69 +168,101 @@ func retrieveScans(database *mgo.Database) {
 				}
 			},
 		},
+		{
+			URI:                "/scans?current",
+			ExpectedHTTPStatus: http.StatusOK,
+			ContentCheck: func(scansResponse *protocol.ScansResponse) {
+				if len(scansResponse.Scans) == 0 {
+					utils.Fatalln("Error retrieving current scan", nil)
+				}
+
+				if scansResponse.Scans[0].Status != "WAITINGEXECUTION" {
+					utils.Fatalln("Current scan with wrong status", nil)
+				}
+			},
+		},
 	}
+
+	mux := handy.NewHandy()
+
+	h := new(handler.ScansHandler)
+	mux.Handle("/scans", func() handy.Handler {
+		return h
+	})
 
 	for _, item := range data {
 		r, err := http.NewRequest("GET", item.URI, nil)
 		if err != nil {
 			utils.Fatalln("Error creating the HTTP request", err)
 		}
+		utils.BuildHTTPHeader(r, nil)
 
-		context, err := context.NewContext(r, database)
+		w := httptest.NewRecorder()
+		mux.ServeHTTP(w, r)
+
+		responseContent, err := ioutil.ReadAll(w.Body)
 		if err != nil {
-			utils.Fatalln("Error creating context", err)
+			utils.Fatalln("Error reading response body", err)
 		}
 
-		handler.HandleScans(r, &context)
-
-		if context.ResponseHTTPStatus != item.ExpectedHTTPStatus {
+		if w.Code != item.ExpectedHTTPStatus {
 			utils.Fatalln(fmt.Sprintf("Error when requesting scans using the URI [%s]. "+
-				"Expected HTTP status code %d but got %d", item.URI,
-				item.ExpectedHTTPStatus, context.ResponseHTTPStatus), nil)
+				"Expected HTTP status code %d but got %d",
+				item.URI, item.ExpectedHTTPStatus, w.Code), errors.New(string(responseContent)))
 		}
 
 		if item.ContentCheck != nil {
-			item.ContentCheck(context.ResponseContent)
+			item.ContentCheck(h.Response)
 		}
 	}
 }
 
 func retrieveScansMetadata(database *mgo.Database) {
+	mux := handy.NewHandy()
+
+	h := new(handler.ScansHandler)
+	mux.Handle("/scans", func() handy.Handler {
+		return h
+	})
+
 	r, err := http.NewRequest("GET", "/scans/?orderby=startedat:desc&pagesize=10&page=1", nil)
 	if err != nil {
 		utils.Fatalln("Error creating the HTTP request", err)
 	}
+	utils.BuildHTTPHeader(r, nil)
 
-	context1, err := context.NewContext(r, database)
+	w := httptest.NewRecorder()
+	mux.ServeHTTP(w, r)
+
+	response1 := *h.Response
+	responseContent, err := ioutil.ReadAll(w.Body)
 	if err != nil {
-		utils.Fatalln("Error creating context", err)
+		utils.Fatalln("Error reading response body", err)
 	}
 
-	handler.HandleScans(r, &context1)
-
-	if context1.ResponseHTTPStatus != http.StatusOK {
-		utils.Fatalln("Error retrieving scans",
-			errors.New(string(context1.ResponseContent)))
+	if w.Code != http.StatusOK {
+		utils.Fatalln("Error retrieving scans", errors.New(string(responseContent)))
 	}
 
 	r, err = http.NewRequest("HEAD", "/scans/?orderby=startedat:desc&pagesize=10&page=1", nil)
 	if err != nil {
 		utils.Fatalln("Error creating the HTTP request", err)
 	}
+	utils.BuildHTTPHeader(r, nil)
 
-	context2, err := context.NewContext(r, database)
+	mux.ServeHTTP(w, r)
+
+	response2 := *h.Response
+	responseContent, err = ioutil.ReadAll(w.Body)
 	if err != nil {
-		utils.Fatalln("Error creating context", err)
+		utils.Fatalln("Error reading response body", err)
 	}
 
-	handler.HandleScans(r, &context2)
-
-	if context2.ResponseHTTPStatus != http.StatusOK {
-		utils.Fatalln("Error retrieving scans",
-			errors.New(string(context2.ResponseContent)))
+	if w.Code != http.StatusOK {
+		utils.Fatalln("Error retrieving scans", errors.New(string(responseContent)))
 	}
 
-	if string(context1.ResponseContent) != string(context2.ResponseContent) {
+	if !utils.CompareProtocolScans(response1, response2) {
 		utils.Fatalln("At this point the GET and HEAD method should "+
 			"return the same body content", nil)
 	}
@@ -287,50 +305,58 @@ func retrieveScansIfUnmodifiedSince(database *mgo.Database) {
 }
 
 func retrieveScansIfMatch(database *mgo.Database) {
+	mux := handy.NewHandy()
+
+	h := new(handler.ScansHandler)
+	mux.Handle("/scans", func() handy.Handler {
+		return h
+	})
+
 	r, err := http.NewRequest("GET", "/scans", nil)
 	if err != nil {
 		utils.Fatalln("Error creating the HTTP request", err)
 	}
+	utils.BuildHTTPHeader(r, nil)
 
-	context, err := context.NewContext(r, database)
-	if err != nil {
-		utils.Fatalln("Error creating context", err)
-	}
-
-	handler.HandleScans(r, &context)
+	w := httptest.NewRecorder()
+	mux.ServeHTTP(w, r)
 
 	scansCacheTest(database, r, "If-Match", []ScansCacheTestData{
 		{
-			HeaderValue:        context.HTTPHeader["ETag"] + "x",
+			HeaderValue:        w.Header().Get("ETag") + "x",
 			ExpectedHTTPStatus: http.StatusPreconditionFailed,
 		},
 		{
-			HeaderValue:        context.HTTPHeader["ETag"],
+			HeaderValue:        w.Header().Get("ETag"),
 			ExpectedHTTPStatus: http.StatusOK,
 		},
 	})
 }
 
 func retrieveScansIfNoneMatch(database *mgo.Database) {
+	mux := handy.NewHandy()
+
+	h := new(handler.ScansHandler)
+	mux.Handle("/scans", func() handy.Handler {
+		return h
+	})
+
 	r, err := http.NewRequest("GET", "/scans", nil)
 	if err != nil {
 		utils.Fatalln("Error creating the HTTP request", err)
 	}
+	utils.BuildHTTPHeader(r, nil)
 
-	context, err := context.NewContext(r, database)
-	if err != nil {
-		utils.Fatalln("Error creating context", err)
-	}
-
-	handler.HandleScans(r, &context)
+	w := httptest.NewRecorder()
+	mux.ServeHTTP(w, r)
 
 	scansCacheTest(database, r, "If-None-Match", []ScansCacheTestData{
 		{
-			HeaderValue:        context.HTTPHeader["ETag"],
+			HeaderValue:        w.Header().Get("ETag"),
 			ExpectedHTTPStatus: http.StatusNotModified,
 		},
 		{
-			HeaderValue:        context.HTTPHeader["ETag"] + "x",
+			HeaderValue:        w.Header().Get("ETag") + "x",
 			ExpectedHTTPStatus: http.StatusOK,
 		},
 	})
@@ -349,21 +375,89 @@ func deleteScans(database *mgo.Database) {
 func scansCacheTest(database *mgo.Database, r *http.Request,
 	header string, scansCacheTestData []ScansCacheTestData) {
 
-	context, err := context.NewContext(r, database)
-	if err != nil {
-		utils.Fatalln("Error creating context", err)
-	}
+	mux := handy.NewHandy()
+
+	h := new(handler.ScansHandler)
+	mux.Handle("/scans", func() handy.Handler {
+		return h
+	})
 
 	for _, item := range scansCacheTestData {
 		r.Header.Set(header, item.HeaderValue)
+		utils.BuildHTTPHeader(r, nil)
 
-		handler.HandleScans(r, &context)
+		w := httptest.NewRecorder()
+		mux.ServeHTTP(w, r)
 
-		if context.ResponseHTTPStatus != item.ExpectedHTTPStatus {
+		responseContent, err := ioutil.ReadAll(w.Body)
+		if err != nil {
+			utils.Fatalln("Error reading response body", err)
+		}
+
+		if w.Code != item.ExpectedHTTPStatus {
 			utils.Fatalln(fmt.Sprintf("Error in %s test using %s [%s] "+
 				"HTTP header. Expected HTTP status code %d and got %d",
 				r.Method, header, item.HeaderValue, item.ExpectedHTTPStatus,
-				context.ResponseHTTPStatus), errors.New(string(context.ResponseContent)))
+				w.Code), errors.New(string(responseContent)))
 		}
+	}
+}
+
+func createCurrentScan() {
+	// We are not going to call the function FinishAnalyzingDomainForScan because it will reset the
+	// current scan information
+	model.StartNewScan()
+	model.LoadedDomainForScan()
+	model.LoadedDomainForScan()
+	model.LoadedDomainForScan()
+	model.FinishAnalyzingDomainForScan(false)
+	model.LoadedDomainForScan()
+	model.LoadedDomainForScan()
+	model.FinishLoadingDomainsForScan()
+	model.FinishAnalyzingDomainForScan(false)
+	model.FinishAnalyzingDomainForScan(false)
+	model.FinishAnalyzingDomainForScan(true)
+}
+
+func retrieveCurrentScan(database *mgo.Database) {
+	mux := handy.NewHandy()
+
+	h := new(handler.ScansHandler)
+	mux.Handle("/scans", func() handy.Handler {
+		return h
+	})
+
+	r, err := http.NewRequest("GET", "/scans?current", nil)
+	if err != nil {
+		utils.Fatalln("Error creating the HTTP request", err)
+	}
+	utils.BuildHTTPHeader(r, nil)
+
+	w := httptest.NewRecorder()
+	mux.ServeHTTP(w, r)
+
+	responseContent, err := ioutil.ReadAll(w.Body)
+	if err != nil {
+		utils.Fatalln("Error reading response body", err)
+	}
+
+	if w.Code != http.StatusOK {
+		utils.Fatalln("Error retrieving scan", errors.New(string(responseContent)))
+	}
+
+	if len(w.Header().Get("Last-Modified")) == 0 {
+		utils.Fatalln("Current scan should return the Last-Modified header", nil)
+	}
+
+	if len(h.Response.Scans) != 1 {
+		utils.Fatalln("Current scan not returned when it should", nil)
+	}
+
+	if h.Response.Scans[0].Status != "RUNNING" ||
+		h.Response.Scans[0].DomainsToBeScanned != 5 ||
+		h.Response.Scans[0].DomainsScanned != 4 ||
+		h.Response.Scans[0].DomainsWithDNSSECScanned != 1 {
+
+		utils.Fatalln("Not retrieving current scan information correctly", nil)
 	}
 }

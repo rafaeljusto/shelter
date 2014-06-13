@@ -107,7 +107,7 @@ func (h *ScansHandler) retrieveScans(w http.ResponseWriter, r *http.Request) {
 	var pagination dao.ScanDAOPagination
 
 	expand := false
-	current := false
+	returnCurrent := false
 
 	for key, values := range r.URL.Query() {
 		key = strings.TrimSpace(key)
@@ -219,7 +219,7 @@ func (h *ScansHandler) retrieveScans(w http.ResponseWriter, r *http.Request) {
 				expand = true
 
 			case "current":
-				current = true
+				returnCurrent = true
 			}
 		}
 	}
@@ -228,6 +228,8 @@ func (h *ScansHandler) retrieveScans(w http.ResponseWriter, r *http.Request) {
 		Database: h.GetDatabase(),
 	}
 
+	// As we need to inform the user about the number of items, we always try to retrieve the scan
+	// objects even if is requested only the current object
 	scans, err := scanDAO.FindAll(&pagination, expand)
 	if err != nil {
 		log.Println("Error while searching scans objects. Details:", err)
@@ -236,21 +238,27 @@ func (h *ScansHandler) retrieveScans(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var scansResponse protocol.ScansResponse
-	if current {
-		scansResponse = protocol.CurrentScanToScansResponse(model.GetCurrentScan(), pagination)
+	var current model.CurrentScan
+
+	if returnCurrent {
+		// The current page will be page zero to avoid misunderstandment
+		pagination.Page = 0
+		current = model.GetCurrentScan()
+		scansResponse = protocol.CurrentScanToScansResponse(current, pagination)
 
 	} else {
-
 		scansResponse = protocol.ScansToScansResponse(scans, pagination)
 	}
 
 	h.Response = &scansResponse
 
 	// Last-Modified is going to be the most recent date of the list
-	var lastModifiedAt time.Time
-	if !current {
+	if returnCurrent {
+		h.lastModifiedAt = current.LastModifiedAt
+
+	} else {
 		for _, scan := range scans {
-			if scan.LastModifiedAt.After(lastModifiedAt) {
+			if scan.LastModifiedAt.After(h.lastModifiedAt) {
 				h.lastModifiedAt = scan.LastModifiedAt
 			}
 		}
