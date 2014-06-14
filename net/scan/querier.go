@@ -20,14 +20,6 @@ const (
 	querierDomainsQueueSize = 10 // Number of domains that can wait in the querier channel
 )
 
-const (
-	QuerierResultContinue = iota
-	QuerierResultStop
-	QuerierResultDontSave
-)
-
-type QuerierResult int
-
 var (
 	// DNS query port. It's not a constant because in test scenarios we change the DNS port
 	// to one that don't need root privilleges
@@ -99,9 +91,7 @@ func (q *querier) start(queriers *sync.WaitGroup,
 
 					// We also send the list to the method so it can postpone the domain again and
 					// again and again...
-					querierResult := q.checkPostponedDomains(postponedDomains, postponed)
-
-					if querierResult != QuerierResultDontSave {
+					if q.checkPostponedDomains(postponedDomains, postponed) {
 						domainsToSaveChannel <- postponed.domain
 					}
 				}
@@ -111,10 +101,8 @@ func (q *querier) start(queriers *sync.WaitGroup,
 				return
 			}
 
-			querierResult := q.checkDomain(domain, postponedDomains)
-
-			// Send to collector the domain with the new state
-			if querierResult != QuerierResultDontSave {
+			if q.checkDomain(domain, postponedDomains) {
+				// Send to collector the domain with the new state
 				domainsToSaveChannel <- domain
 			}
 		}
@@ -123,31 +111,30 @@ func (q *querier) start(queriers *sync.WaitGroup,
 	return querierChannel
 }
 
-// Main function to check a domain DNS/DNSSEC configuration
+// Main function to check a domain DNS/DNSSEC configuration. Returns true if domain is
+// done checking and can be saved or false otherwise, that indicates that the domain was
+// postponed
 func (q *querier) checkDomain(domain *model.Domain,
-	postponedDomains []postponedDomain) QuerierResult {
-
-	var querierResult QuerierResult
+	postponedDomains []postponedDomain) bool {
 
 	for index, _ := range domain.Nameservers {
-		querierResult = q.checkNameserver(domain, index, postponedDomains)
-		if querierResult != QuerierResultContinue {
-			break
+		if !q.checkNameserver(domain, index, postponedDomains) {
+			return false
 		}
 
-		querierResult = q.checkDS(domain, index, q.UDPMaxSize, postponedDomains)
-		if querierResult != QuerierResultContinue {
-			break
+		if !q.checkDS(domain, index, q.UDPMaxSize, postponedDomains) {
+			return false
 		}
 	}
 
-	return querierResult
+	return true
 }
 
 // Verify the DNS configuration on the nameservers. This method will send a SOA request
-// for each nameserver and verify the results
+// for each nameserver and verify the results. Returns true if nameserver is done checking
+// and can be saved or false otherwise, that indicates that the domain was postponed
 func (q *querier) checkNameserver(domain *model.Domain,
-	index int, postponedDomains []postponedDomain) QuerierResult {
+	index int, postponedDomains []postponedDomain) bool {
 
 	nameserver := domain.Nameservers[index]
 	domainNSPolicy := nspolicy.NewDomainNSPolicy(domain)
@@ -160,14 +147,14 @@ func (q *querier) checkNameserver(domain *model.Domain,
 	host, err := getHost(domain.FQDN, nameserver)
 	if err == ErrHostTimeout {
 		domain.Nameservers[index].ChangeStatus(model.NameserverStatusTimeout)
-		return QuerierResultContinue
+		return true
 
 	} else if err == ErrHostQPSExceeded {
 		postponedDomains = append(postponedDomains, postponedDomain{
 			domain: domain,
 			index:  index,
 		})
-		return QuerierResultDontSave
+		return false
 	}
 
 	dnsResponseMessage, err := q.sendDNSRequest(host, &dnsRequestMessage)
@@ -184,20 +171,22 @@ func (q *querier) checkNameserver(domain *model.Domain,
 		domain.Nameservers[index].ChangeStatus(domainNSPolicy.Run(dnsResponseMessage))
 	}
 
-	return QuerierResultContinue
+	return true
 }
 
 // Check the DS with the domain DNSSEC keys and signatures. You need also to inform the
 // UDP max package size supported to pass into firewalls. Many firewalls don't allow
-// fragmented UDP packages or UDP packages bigger than 512 bytes
+// fragmented UDP packages or UDP packages bigger than 512 bytes. Returns true if DS set
+// is done checking and can be saved or false otherwise, that indicates that the domain
+// was postponed
 func (q *querier) checkDS(domain *model.Domain, index int, udpMaxSize uint16,
-	postponedDomains []postponedDomain) QuerierResult {
+	postponedDomains []postponedDomain) bool {
 
 	// Check if the domain has DNSSEC, this system will work with both kinds of domain. So
 	// when the domain don't have any DS record we assume that it does not have DNSSEC
 	// configured and check only the DNS configuration
 	if len(domain.DSSet) == 0 {
-		return QuerierResultContinue
+		return true
 	}
 
 	nameserver := domain.Nameservers[index]
@@ -215,52 +204,46 @@ func (q *querier) checkDS(domain *model.Domain, index int, udpMaxSize uint16,
 		for index, _ := range domain.DSSet {
 			domain.DSSet[index].ChangeStatus(model.DSStatusTimeout)
 		}
-		return QuerierResultStop
+		return true
 
 	} else if err == ErrHostQPSExceeded {
 		postponedDomains = append(postponedDomains, postponedDomain{
 			domain: domain,
 			index:  index,
 		})
-		return QuerierResultDontSave
+		return false
 	}
 
 	dnsResponseMessage, err := q.sendDNSRequest(host, &dnsRequestMessage)
 	querierCache.Query(nameserver.Host)
 
-	if !domainDSPolicy.CheckNetworkError(err) || !domainDSPolicy.Run(dnsResponseMessage) {
-		return QuerierResultStop
+	if domainDSPolicy.CheckNetworkError(err) {
+		domainDSPolicy.Run(dnsResponseMessage)
 	}
 
-	return QuerierResultContinue
+	return true
 }
 
-// Try to check the postponed domains. Maybe we should have some protection here
-// to avoid an almost forever loop when we have a lot of domains with the same
-// nameserver
+// Try to check the postponed domains. Maybe we should have some protection here to avoid
+// an almost forever loop when we have a lot of domains with the same nameserver. Returns
+// true if domain is done checking and can be saved or false otherwise, that indicates
+// that the domain was postponed again
 func (q *querier) checkPostponedDomains(postponedDomains []postponedDomain,
-	postponed postponedDomain) QuerierResult {
+	postponed postponedDomain) bool {
 
-	// We only need to check one nameserver that exceeded the QPS, so we are
-	// directly calling the checkNameserver method instead of the checkDomain method
-	querierResult := q.checkNameserver(
-		postponed.domain,
-		postponed.index,
-		postponedDomains,
-	)
+	// We only need to check from the nameserver that had a problem (exceeded the QPS), so
+	// we are directly calling the checkNameserver method instead of the checkDomain method
+	for i := postponed.index; i < len(postponed.domain.Nameservers); i++ {
+		if !q.checkNameserver(postponed.domain, i, postponedDomains) {
+			return false
+		}
 
-	// If there's any error occurs in nameserver check we don't need to check the DS
-	// set for the same nameserver
-	if querierResult == QuerierResultContinue {
-		querierResult = q.checkDS(
-			postponed.domain,
-			postponed.index,
-			q.UDPMaxSize,
-			postponedDomains,
-		)
+		if !q.checkDS(postponed.domain, i, q.UDPMaxSize, postponedDomains) {
+			return false
+		}
 	}
 
-	return querierResult
+	return true
 }
 
 func (q *querier) sendDNSRequest(host string, dnsRequestMessage *dns.Msg) (dnsResponseMessage *dns.Msg, err error) {

@@ -17,7 +17,7 @@ var (
 	HostnameInput     = regexp.MustCompile("[0-9A-Za-z\\-\\.]")
 	AlphaNumericInput = regexp.MustCompile("[0-9A-Za-z]")
 	NumericInput      = regexp.MustCompile("[0-9]")
-	IPRangeInput      = regexp.MustCompile("[0-9a-fA-F\\:\\./]")
+	IPRangeInput      = regexp.MustCompile("[0-9a-fA-F\\:\\.,/]")
 )
 
 type Option struct {

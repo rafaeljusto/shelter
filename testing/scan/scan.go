@@ -144,6 +144,11 @@ func main() {
 		scanReport(domainDAO, scanDAO, scanConfig)
 	}
 
+	// This test is after all others because it will ask on real nameservers, so we need to
+	// change to port 53
+	scan.DNSPort = 53
+	brDomainWithoutDNSSEC(domainDAO)
+
 	utils.Println("SUCCESS!")
 }
 
@@ -153,11 +158,8 @@ func domainWithNoErrors(domainDAO dao.DomainDAO) {
 	dns.HandleFunc("br.", func(w dns.ResponseWriter, dnsRequestMessage *dns.Msg) {
 		defer w.Close()
 
-		dnsResponseMessage := new(dns.Msg)
-		defer w.WriteMsg(dnsResponseMessage)
-
 		if dnsRequestMessage.Question[0].Qtype == dns.TypeSOA {
-			dnsResponseMessage = &dns.Msg{
+			dnsResponseMessage := &dns.Msg{
 				MsgHdr: dns.MsgHdr{
 					Authoritative: true,
 				},
@@ -181,11 +183,10 @@ func domainWithNoErrors(domainDAO dao.DomainDAO) {
 				},
 			}
 			dnsResponseMessage.SetReply(dnsRequestMessage)
-
 			w.WriteMsg(dnsResponseMessage)
 
 		} else if dnsRequestMessage.Question[0].Qtype == dns.TypeDNSKEY {
-			dnsResponseMessage = &dns.Msg{
+			dnsResponseMessage := &dns.Msg{
 				MsgHdr: dns.MsgHdr{
 					Authoritative: true,
 				},
@@ -195,8 +196,8 @@ func domainWithNoErrors(domainDAO dao.DomainDAO) {
 					rrsig,
 				},
 			}
-			dnsResponseMessage.SetReply(dnsRequestMessage)
 
+			dnsResponseMessage.SetReply(dnsRequestMessage)
 			w.WriteMsg(dnsResponseMessage)
 		}
 	})
@@ -254,11 +255,8 @@ func domainWithNoErrorsOnTheFly() {
 	dns.HandleFunc("br.", func(w dns.ResponseWriter, dnsRequestMessage *dns.Msg) {
 		defer w.Close()
 
-		dnsResponseMessage := new(dns.Msg)
-		defer w.WriteMsg(dnsResponseMessage)
-
 		if dnsRequestMessage.Question[0].Qtype == dns.TypeSOA {
-			dnsResponseMessage = &dns.Msg{
+			dnsResponseMessage := &dns.Msg{
 				MsgHdr: dns.MsgHdr{
 					Authoritative: true,
 				},
@@ -281,12 +279,12 @@ func domainWithNoErrorsOnTheFly() {
 					},
 				},
 			}
-			dnsResponseMessage.SetReply(dnsRequestMessage)
 
+			dnsResponseMessage.SetReply(dnsRequestMessage)
 			w.WriteMsg(dnsResponseMessage)
 
 		} else if dnsRequestMessage.Question[0].Qtype == dns.TypeDNSKEY {
-			dnsResponseMessage = &dns.Msg{
+			dnsResponseMessage := &dns.Msg{
 				MsgHdr: dns.MsgHdr{
 					Authoritative: true,
 				},
@@ -296,8 +294,8 @@ func domainWithNoErrorsOnTheFly() {
 					rrsig,
 				},
 			}
-			dnsResponseMessage.SetReply(dnsRequestMessage)
 
+			dnsResponseMessage.SetReply(dnsRequestMessage)
 			w.WriteMsg(dnsResponseMessage)
 		}
 	})
@@ -340,17 +338,86 @@ func domainWithNoErrorsOnTheFly() {
 	}
 }
 
+func brDomainWithoutDNSSEC(domainDAO dao.DomainDAO) {
+	domain := model.Domain{
+		FQDN: "br.",
+		Nameservers: []model.Nameserver{
+			{
+				Host: "a.dns.br.",
+				IPv4: net.ParseIP("200.160.0.10"),
+				IPv6: net.ParseIP("2001:12ff::10"),
+			},
+			{
+				Host: "b.dns.br.",
+				IPv4: net.ParseIP("200.189.41.10"),
+			},
+			{
+				Host: "c.dns.br.",
+				IPv4: net.ParseIP("200.192.233.10"),
+			},
+			{
+				Host: "d.dns.br.",
+				IPv4: net.ParseIP("200.219.154.10"),
+				IPv6: net.ParseIP("2001:12f8:4::10"),
+			},
+			{
+				Host: "f.dns.br.",
+				IPv4: net.ParseIP("200.219.159.10"),
+			},
+		},
+
+		// We are going to add the current DNSKEYs from .br but we are not going to check it.
+		// This is because there's a strange case that when it found a problem on a DS (such
+		// as bit SEP) it does not check other nameservers
+		DSSet: []model.DS{
+			{
+				Keytag:     41674,
+				Algorithm:  model.DSAlgorithmRSASHA1,
+				DigestType: model.DSDigestTypeSHA256,
+				Digest:     "6ec74914376b4f383ede3840088ae1d7bf13a19bfc51465cc2da57618889416a",
+			},
+			{
+				Keytag:     57207,
+				Algorithm:  model.DSAlgorithmRSASHA1,
+				DigestType: model.DSDigestTypeSHA256,
+				Digest:     "d46f059860d31a0965f925ac6ff97ed0975f33a14e2d01ec5ab5dd543624d307",
+			},
+		},
+	}
+
+	var err error
+
+	if err = domainDAO.Save(&domain); err != nil {
+		utils.Fatalln("Error saving the domain", err)
+	}
+
+	scan.ScanDomains()
+
+	domain, err = domainDAO.FindByFQDN(domain.FQDN)
+	if err != nil {
+		utils.Fatalln("Didn't find scanned domain", err)
+	}
+
+	for _, nameserver := range domain.Nameservers {
+		if nameserver.LastStatus != model.NameserverStatusOK {
+			utils.Fatalln(fmt.Sprintf("Fail to validate a supposedly well configured nameserver '%s'. Found status: %s",
+				nameserver.Host, model.NameserverStatusToString(nameserver.LastStatus)), nil)
+		}
+	}
+
+	if err := domainDAO.RemoveByFQDN(domain.FQDN); err != nil {
+		utils.Fatalln(fmt.Sprintf("Error removing domain %s", domain.FQDN), err)
+	}
+}
+
 func domainQuery() {
 	_, dnskey, rrsig, _, _ := generateAndSignDomain("example.com.br.")
 
 	dns.HandleFunc("example.com.br.", func(w dns.ResponseWriter, dnsRequestMessage *dns.Msg) {
 		defer w.Close()
 
-		dnsResponseMessage := new(dns.Msg)
-		defer w.WriteMsg(dnsResponseMessage)
-
 		if dnsRequestMessage.Question[0].Qtype == dns.TypeNS {
-			dnsResponseMessage = &dns.Msg{
+			dnsResponseMessage := &dns.Msg{
 				MsgHdr:   dns.MsgHdr{},
 				Question: dnsRequestMessage.Question,
 				Answer: []dns.RR{
@@ -366,11 +433,10 @@ func domainQuery() {
 				},
 			}
 			dnsResponseMessage.SetReply(dnsRequestMessage)
-
 			w.WriteMsg(dnsResponseMessage)
 
 		} else if dnsRequestMessage.Question[0].Qtype == dns.TypeDNSKEY {
-			dnsResponseMessage = &dns.Msg{
+			dnsResponseMessage := &dns.Msg{
 				MsgHdr: dns.MsgHdr{
 					Authoritative: true,
 				},
@@ -381,20 +447,15 @@ func domainQuery() {
 				},
 			}
 			dnsResponseMessage.SetReply(dnsRequestMessage)
-
 			w.WriteMsg(dnsResponseMessage)
-
 		}
 	})
 
 	dns.HandleFunc("ns1.example.com.br.", func(w dns.ResponseWriter, dnsRequestMessage *dns.Msg) {
 		defer w.Close()
 
-		dnsResponseMessage := new(dns.Msg)
-		defer w.WriteMsg(dnsResponseMessage)
-
 		if dnsRequestMessage.Question[0].Qtype == dns.TypeA {
-			dnsResponseMessage = &dns.Msg{
+			dnsResponseMessage := &dns.Msg{
 				MsgHdr: dns.MsgHdr{
 					Authoritative: true,
 				},
@@ -412,11 +473,10 @@ func domainQuery() {
 				},
 			}
 			dnsResponseMessage.SetReply(dnsRequestMessage)
-
 			w.WriteMsg(dnsResponseMessage)
 
 		} else if dnsRequestMessage.Question[0].Qtype == dns.TypeAAAA {
-			dnsResponseMessage = &dns.Msg{
+			dnsResponseMessage := &dns.Msg{
 				MsgHdr: dns.MsgHdr{
 					Authoritative: true,
 				},
@@ -434,7 +494,6 @@ func domainQuery() {
 				},
 			}
 			dnsResponseMessage.SetReply(dnsRequestMessage)
-
 			w.WriteMsg(dnsResponseMessage)
 		}
 	})
@@ -449,6 +508,7 @@ func domainQuery() {
 	}
 
 	if len(domain.Nameservers) != 1 {
+		println(len(domain.Nameservers))
 		utils.Fatalln("Did not return the desired nameservers in domain query", nil)
 	}
 
@@ -483,13 +543,10 @@ type ReportHandler struct {
 }
 
 func (r ReportHandler) ServeDNS(w dns.ResponseWriter, dnsRequestMessage *dns.Msg) {
-	dnsResponseMessage := new(dns.Msg)
-	defer w.WriteMsg(dnsResponseMessage)
-
 	fqdn := dnsRequestMessage.Question[0].Name
 
 	if dnsRequestMessage.Question[0].Qtype == dns.TypeSOA {
-		dnsResponseMessage = &dns.Msg{
+		dnsResponseMessage := &dns.Msg{
 			MsgHdr: dns.MsgHdr{
 				Authoritative: true,
 			},
@@ -512,8 +569,8 @@ func (r ReportHandler) ServeDNS(w dns.ResponseWriter, dnsRequestMessage *dns.Msg
 				},
 			},
 		}
-		dnsResponseMessage.SetReply(dnsRequestMessage)
 
+		dnsResponseMessage.SetReply(dnsRequestMessage)
 		w.WriteMsg(dnsResponseMessage)
 
 	} else if dnsRequestMessage.Question[0].Qtype == dns.TypeDNSKEY {
@@ -522,7 +579,7 @@ func (r ReportHandler) ServeDNS(w dns.ResponseWriter, dnsRequestMessage *dns.Msg
 			utils.Fatalln(fmt.Sprintf("Error signing zone %s", fqdn), err)
 		}
 
-		dnsResponseMessage = &dns.Msg{
+		dnsResponseMessage := &dns.Msg{
 			MsgHdr: dns.MsgHdr{
 				Authoritative: true,
 			},
@@ -532,8 +589,8 @@ func (r ReportHandler) ServeDNS(w dns.ResponseWriter, dnsRequestMessage *dns.Msg
 				rrsig,
 			},
 		}
-		dnsResponseMessage.SetReply(dnsRequestMessage)
 
+		dnsResponseMessage.SetReply(dnsRequestMessage)
 		w.WriteMsg(dnsResponseMessage)
 	}
 }
@@ -622,9 +679,9 @@ func calculateScanDurations(numberOfDomains int, scanDAO dao.ScanDAO) (
 func generateAndSignDomain(fqdn string) (
 	model.Domain, *dns.DNSKEY, *dns.RRSIG, time.Time, time.Time,
 ) {
-	dnskey, rrsig, err := utils.GenerateKeyAndSignZone(fqdn)
+	dnskey, rrsig, err := utils.GenerateKSKAndSignZone(fqdn)
 	if err != nil {
-		utils.Fatalln("Error creating DNSSEC keys and signatures", err)
+		utils.Fatalln("Error creating KSK DNSSEC keys and signatures", err)
 	}
 	ds := dnskey.ToDS(int(model.DSDigestTypeSHA1))
 
