@@ -118,6 +118,7 @@ func main() {
 	domainWithNoErrors(domainDAO)
 	domainWithNoErrorsOnTheFly()
 	domainQuery()
+	domainQueryWithDNSSECErrors()
 
 	// Scan performance report is optional and only generated when the report file
 	// path parameter is given
@@ -534,6 +535,28 @@ func domainQuery() {
 
 	if domain.DSSet[0].Algorithm != model.DSAlgorithm(dnskey.Algorithm) {
 		utils.Fatalln("Did not set a valid algorithm in domain query", nil)
+	}
+}
+
+// We are now using a real open resolver (from OARC) to retrieve a domain with DNSSEC problems in
+// the chain-of-trust
+func domainQueryWithDNSSECErrors() {
+	config.ShelterConfig.Scan.Resolver.Address = "149.20.64.21"
+	config.ShelterConfig.Scan.Resolver.Port = 53
+
+	domain, err := scan.QueryDomain("dnssec-failed.org.")
+	if err != nil {
+		utils.Fatalln("Error retrieving domain", err)
+	}
+
+	if len(domain.Nameservers) != 5 {
+		utils.Fatalln(fmt.Sprintf("Not returning the correct number of nameservers. "+
+			"Expected %d and got %d", 5, len(domain.Nameservers)), nil)
+	}
+
+	if len(domain.DSSet) != 2 {
+		utils.Fatalln(fmt.Sprintf("Not returning the correct number of DS records. "+
+			"Expected %d and got %d", 2, len(domain.DSSet)), nil)
 	}
 }
 

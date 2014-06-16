@@ -16,6 +16,7 @@ version 0.2:
   * Allow multiple IPs in ACL of the deploy program
   * Don't show domains, scans or links as null in protocol response
   * Don't stop checking nameservers of a domain on error
+  * Query domain even if it has DNSSEC problems (CD flag)
 
 version 0.1:
   New Feature:
