@@ -11,7 +11,7 @@ echo -n "SSH server: "
 sudo docker port $container 22
 
 echo -n "REST server: "
-sudo docker port $container 4344
+sudo docker port $container 4443
 
 echo -n "Web Client: "
 sudo docker port $container 4444

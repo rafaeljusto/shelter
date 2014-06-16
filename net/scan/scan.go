@@ -172,6 +172,9 @@ func QueryDomain(fqdn string) (model.Domain, error) {
 	dnsRequestMessage.SetQuestion(fqdn, dns.TypeNS)
 	dnsRequestMessage.RecursionDesired = true
 
+	// Allow retrieving domain information when there's a DNSSEC problem in the chain-of-trust
+	dnsRequestMessage.CheckingDisabled = true
+
 	dnsResponseMsg, err := querier.sendDNSRequest(resolver, &dnsRequestMessage)
 	if err != nil {
 		return domain, err
