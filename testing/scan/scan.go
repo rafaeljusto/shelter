@@ -554,9 +554,10 @@ func domainQueryWithDNSSECErrors() {
 			"Expected %d and got %d", 5, len(domain.Nameservers)), nil)
 	}
 
-	if len(domain.DSSet) != 2 {
+	// We have 2 DNSKEYS but only one has the bit SEP on for the domain dnssec-failed.org.
+	if len(domain.DSSet) != 1 {
 		utils.Fatalln(fmt.Sprintf("Not returning the correct number of DS records. "+
-			"Expected %d and got %d", 2, len(domain.DSSet)), nil)
+			"Expected %d and got %d", 1, len(domain.DSSet)), nil)
 	}
 }
 
