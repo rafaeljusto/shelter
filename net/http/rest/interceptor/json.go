@@ -106,6 +106,9 @@ func (c *JSONCodec) After(w http.ResponseWriter, r *http.Request) {
 		if len(body) > 0 && r.Method != "HEAD" {
 			w.Write(body)
 		}
+
+	} else {
+		c.addResponseHeaders(w, nil)
 	}
 }
 
