@@ -11,35 +11,6 @@ usage() {
   exit 0
 }
 
-generate_certs() {
-  echo ""
-  echo "######################################"
-  echo "#### Generating HTTPS private key ####"
-  echo "######################################"
-  echo ""
-
-  # Generate a Private Key
-  openssl genrsa -des3 -out key.pem 1024
-
-  # Remove Passphrase from Key
-  cp key.pem key.pem.org
-  openssl rsa -in key.pem.org -out key.pem
-  rm -f key.pem.org
-
-  echo ""
-  echo "######################################"
-  echo "#### Generating HTTPS certificate ####"
-  echo "######################################"
-  echo ""
-
-  # Generate a CSR (Certificate Signing Request)
-  openssl req -new -key key.pem -out server.csr
-
-  # Generating a Self-Signed Certificate
-  openssl x509 -req -days 365 -in server.csr -signkey key.pem -out cert.pem
-  rm -f server.csr
-}
-
 username=$1
 if [ -z "$username" ]; then
   usage $0
@@ -70,12 +41,6 @@ cp entrypoint.sh container/bin/
 cp ../../etc/shelter.conf.unix.sample container/etc/shelter.conf
 cp ../../etc/messages.conf container/etc/
 cp -r ../../templates container/
-
-
-# Generate certificates for container
-cd container/etc/keys
-generate_certs
-cd ../../../
 
 # Create container
 sudo docker build --rm -t $username/shelter .

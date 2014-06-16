@@ -35,7 +35,7 @@ ADD container /usr/shelter
 RUN mkdir -p /usr/shelter/var/log
 
 # Expose REST port and web client port to the outside world
-EXPOSE 22 4344 4444
+EXPOSE 22 4443 4444
 
 # Run services when the container starts
 ENTRYPOINT ["usr/shelter/bin/entrypoint.sh"]

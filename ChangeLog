@@ -18,6 +18,7 @@ version 0.2:
   * Don't stop checking nameservers of a domain on error
   * Web client strange button label effect when clicked
   * Query domain even if it has DNSSEC problems (CD flag)
+  * Dockerfile ports updated and not creating certificates anymore
 
 version 0.1:
   New Feature:
