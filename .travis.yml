@@ -8,6 +8,7 @@ install:
   - go get labix.org/v2/mgo
   - go get github.com/miekg/dns
   - go get code.google.com/p/go.net/idna
+  - go get github.com/trajber/handy
 
 before_script:
   - npm install karma
