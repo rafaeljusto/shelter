@@ -268,6 +268,10 @@ button[type=button]:active {
   text-align: center;
 }
 
+.statistics th {
+  width: 20%;
+}
+
 /**********************************/
 /* List related styles            */
 /**********************************/

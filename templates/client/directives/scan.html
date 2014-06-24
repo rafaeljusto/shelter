@@ -27,24 +27,24 @@
     </div>
 
     <div class="field" data-ng-show="freshScan.nameserverStatistics">
-      <table>
+      <table class="statistics">
         <caption translate>Nameservers statistics</caption>
         <tbody>
           <tr data-ng-repeat="(status, quantity) in freshScan.nameserverStatistics">
-            <th>{{status}}</th>
-            <td>{{quantity*100/countStatistics(freshScan.nameserverStatistics)}}%</td>
+            <th width="20%">{{status}}</th>
+            <td>{{(quantity*100/countStatistics(freshScan.nameserverStatistics)).toFixed(2)}}%</td>
           </tr>
         </tbody>
       </table>
     </div>
 
     <div class="field" data-ng-show="freshScan.dsStatistics">
-      <table>
+      <table class="statistics">
         <caption translate>DS statistics</caption>
         <tbody>
           <tr data-ng-repeat="(status, quantity) in freshScan.dsStatistics">
             <th>{{status}}</th>
-            <td>{{quantity*100/countStatistics(freshScan.dsStatistics)}}%</td>
+            <td>{{(quantity*100/countStatistics(freshScan.dsStatistics)).toFixed(2)}}%</td>
           </tr>
         </tbody>
       </table>
