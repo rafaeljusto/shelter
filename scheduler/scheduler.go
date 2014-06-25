@@ -52,7 +52,7 @@ func Register(job Job) {
 	if job.NextExecution.IsZero() {
 		// If the job does not have a next execution defined we assume that it does
 		// not have an exactly time to run, so we just assume now as a reference
-		job.NextExecution = time.Now().Add(job.Interval)
+		job.NextExecution = time.Now().UTC().Add(job.Interval)
 	}
 
 	jobsMutex.Lock()
@@ -79,7 +79,7 @@ func Start() {
 				jobsMutex.Lock()
 				for index, job := range jobs {
 					// The execution time is not going to be so exactly
-					if time.Now().After(job.NextExecution) {
+					if time.Now().UTC().After(job.NextExecution) {
 						// Next execution time is defined, let's use it as reference so that the job
 						// is always executed near the desired time
 						jobs[index].NextExecution = job.NextExecution.Add(job.Interval)
