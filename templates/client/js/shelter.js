@@ -92,8 +92,13 @@ var emptyScan = {
 // Apply source list to destination list, adding new elements, removing old ones and
 // keeping the ones that are equal
 function mergeList(source, destination, areEqual, mergeObject) {
-  if (!source || !destination) {
-    return;
+  if (source && !destination) {
+    destination = source;
+    return destination;
+
+  } else if (!source) {
+    destination = [];
+    return destination;
   }
 
   // Check new items
@@ -129,6 +134,8 @@ function mergeList(source, destination, areEqual, mergeObject) {
       destination.splice(j, 1);
     }
   }
+
+  return destination;
 }
 
 // Look for a specific link href given a type. According to W3C link can have many types
@@ -729,7 +736,7 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
           $scope.pagination.pageSize = response.data.pageSize;
           $scope.pagination.links = response.data.links;
 
-          mergeList(response.data.domains,
+          $scope.pagination.domains = mergeList(response.data.domains,
             $scope.pagination.domains,
             function(networkDomain, domain) {
               return networkDomain.fqdn == domain.fqdn;
@@ -931,7 +938,7 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
           $scope.pagination.pageSize = response.data.pageSize;
           $scope.pagination.links = response.data.links;
 
-          mergeList(response.data.scans,
+          $scope.pagination.scans = mergeList(response.data.scans,
             $scope.pagination.scans,
             function(networkScan, scan) {
               return networkScan.startedAt == scan.startedAt;

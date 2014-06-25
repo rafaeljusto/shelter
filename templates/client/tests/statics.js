@@ -115,6 +115,86 @@ describe("mergeList", function() {
 
     expect(a).toBe(undefined);
   });
+
+  it("Should add the first item", function() {
+    a = [];
+
+    b = [
+      {
+        key1: "value1",
+        key2: "value2"
+      }
+    ];
+
+    mergeList(b, a,
+      function(newItem, oldItem) {
+        return newItem.key1 == oldItem.key1;
+      },
+      function(newItem, oldItem) {
+        oldItem.key2 = newItem.key2;
+      });
+
+    expect(a.length).toBe(1);
+    expect(a[0].key2).toBe("value2");
+
+    b = [];
+
+    a = [
+      {
+        key1: "value1",
+        key2: "value2"
+      }
+    ];
+
+    mergeList(b, a,
+      function(newItem, oldItem) {
+        return newItem.key1 == oldItem.key1;
+      },
+      function(newItem, oldItem) {
+        oldItem.key2 = newItem.key2;
+      });
+
+    expect(a.length).toBe(0);
+  });
+
+  it("Should deal with null structures", function() {
+    a = [];
+
+    b = [
+      {
+        key1: "value1",
+        key2: "value2"
+      }
+    ];
+
+    a = mergeList(b, undefined,
+      function(newItem, oldItem) {
+        return newItem.key1 == oldItem.key1;
+      },
+      function(newItem, oldItem) {
+        oldItem.key2 = newItem.key2;
+      });
+
+    expect(a.length).toBe(1);
+    expect(a[0].key2).toBe("value2");
+
+    a = [
+      {
+        key1: "value1",
+        key2: "value2"
+      }
+    ];
+
+    a = mergeList(undefined, a,
+      function(newItem, oldItem) {
+        return newItem.key1 == oldItem.key1;
+      },
+      function(newItem, oldItem) {
+        oldItem.key2 = newItem.key2;
+      });
+
+    expect(a.length).toBe(0);
+  });
 });
 
 describe("findLink", function() {
