@@ -73,7 +73,7 @@ h1 {
 
 h2 {
   color: #fff;
-  font-family: "Londrina Shadow", cursive;
+  text-shadow: 0 0 5px rgba(0,0,0,0.9);
 }
 
 h3 {
