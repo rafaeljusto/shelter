@@ -19,6 +19,7 @@ version 0.2:
   * Web client strange button label effect when clicked
   * Query domain even if it has DNSSEC problems (CD flag)
   * Dockerfile ports updated and not creating certificates anymore
+  * Scheduler wasn't checking job execution using UTC timers
 
 version 0.1:
   New Feature:
