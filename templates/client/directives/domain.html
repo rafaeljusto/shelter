@@ -4,7 +4,7 @@
  license that can be found in the LICENSE file.
 -->
 
-<article data-ng-init="details = false">
+<article data-ng-init="details = false; form = {}">
   <header data-ng-click="toggleDetails(domain)"
     data-ng-class="{'domain-error': hasErrors(domain),
       'domain-ok': !hasErrors(domain) && wasChecked(domain)}">
@@ -125,6 +125,6 @@
   </div>
 
   <div class="content-edit" data-ng-show="details && edit">
-    <domainform domain="freshDomain"></domainform>
+    <domainform domain="freshDomain" form-ctrl="form"></domainform>
   </div>
 </article>
