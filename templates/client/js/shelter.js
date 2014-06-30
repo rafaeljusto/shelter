@@ -527,7 +527,8 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
     return {
       restrict: 'E',
       scope: {
-        domain: '='
+        domain: '=',
+        ctrl: '='
       },
       templateUrl: "/directives/domainform.html",
       controller: function($scope, $translate, domainService) {
@@ -545,6 +546,12 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
         $scope.algorithms = algorithms;
         $scope.dsDigestTypes = dsDigestTypes;
         $scope.ownerLanguages = ownerLanguages;
+
+        // Easy way to allow extenal scopes to call a function in the directive
+        $scope.ctrl = $scope.ctrl || {};
+        $scope.ctrl.clear = function() {
+         $scope.domain = angular.copy(emptyDomain);
+        };
 
         $scope.needsGlue = function(fqdn, host) {
           if (fqdn == undefined || host == undefined ||

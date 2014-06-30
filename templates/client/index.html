@@ -31,9 +31,9 @@
         data-ng-click="changeLanguage('es_ES')">Espa&ntilde;ol</a>
     </section>
 
-    <nav data-ng-cloak data-ng-init="menu = 'domains'">
+    <nav data-ng-cloak data-ng-init="menu = 'domains'; ctrl = {}">
       <ul>
-        <li data-ng-click="menu = 'new_domain'">{{ "New Domain" | translate }}</li>
+        <li data-ng-click="menu = 'new_domain'; ctrl.clear()">{{ "New Domain" | translate }}</li>
         <li data-ng-click="menu = 'domains'">{{ "Domains" | translate }}</li>
         <li data-ng-click="menu = 'scans'">{{ "Scans" | translate }}</li>
       </ul>
@@ -46,7 +46,7 @@
         <h2 translate>New Domain</h2>
       </header>
 
-      <domainform domain="emptyDomain"></domainform>
+      <domainform domain="emptyDomain" ctrl="ctrl"></domainform>
     </section>
 
     <section data-ng-cloak data-ng-controller="domainsCtrl"
