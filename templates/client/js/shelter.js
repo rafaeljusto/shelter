@@ -163,17 +163,28 @@ function findLink(links, expectedType) {
 }
 
 function verificationResponseToHTML(data) {
-  var result = "<h3>" + data.fqdn + "</h3><hr/>" +
-    "<h3>NS</h3>" +
-    "<table style='margin:auto'>";
+  var result = "";
 
-  data.nameservers.forEach(function(ns) {
-    result += "<tr>" +
-      "<th style='text-align:left'>" + ns.host + "</th>" + 
-      "<td>" + ns.lastStatus + "</td></tr>";
-  });
+  if (!data) {
+    return result;
+  }
 
-  result += "</table>";
+  if (data.fqdn) {
+    result += "<h3>" + data.fqdn + "</h3><hr/>";
+  }
+
+  if (data.nameservers) {
+    result += "<h3>NS</h3>" +
+      "<table style='margin:auto'>";
+
+    data.nameservers.forEach(function(ns) {
+      result += "<tr>" +
+        "<th style='text-align:left'>" + ns.host + "</th>" + 
+        "<td>" + ns.lastStatus + "</td></tr>";
+    });
+
+    result += "</table>";
+  }
 
   if (data.dsset) {
     result += "<h3>DS</h3>" +

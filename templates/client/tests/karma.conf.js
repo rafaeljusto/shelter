@@ -17,6 +17,7 @@ module.exports = function(config) {
       'js/angular-translate-storage-cookie.min.js',
       'js/angular-translate-storage-local.min.js',
       'js/moment-with-langs.min.js',
+      'js/alertify.min.js',
       'js/shelter.js',
       'tests/statics.js',
       'tests/domain.js',

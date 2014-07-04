@@ -247,3 +247,36 @@ describe("findLink", function() {
     expect(findLink(links, undefined)).toBe("");
   });
 });
+
+describe("verificationResponseToHTML", function() {
+  it("should convert structure correctly", function() {
+    var data = {
+      fqdn: "test.com.br.",
+      nameservers: [
+        { host: "ns1.test.com.br.", lastStatus: "OK" },
+        { host: "ns2.test.com.br.", lastStatus: "TIMEOUT" }
+      ],
+      dsset: [
+        { keytag: 1234, lastStatus: "OK" },
+        { keytag: 4321, lastStatus: "SIGERR" }
+      ]
+    }
+
+    expect(verificationResponseToHTML(data)).toBe("<h3>test.com.br.</h3><hr/>" +
+      "<h3>NS</h3><table style='margin:auto'>" +
+      "<tr><th style='text-align:left'>ns1.test.com.br.</th><td>OK</td></tr>" +
+      "<tr><th style='text-align:left'>ns2.test.com.br.</th><td>TIMEOUT</td></tr>" +
+      "</table><h3>DS</h3><table style='margin:auto'>" +
+      "<tr><th style='text-align:left'>1234</th><td>OK</td></tr>" +
+      "<tr><th style='text-align:left'>4321</th><td>SIGERR</td></tr>" +
+      "</table>");
+  });
+
+  it ("should not convert an invalid structure", function() {
+    expect(verificationResponseToHTML({})).toBe("");
+  });
+
+  it ("should not convert an undefined structure", function() {
+    expect(verificationResponseToHTML(undefined)).toBe("");
+  });
+});
