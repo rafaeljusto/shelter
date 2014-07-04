@@ -99,31 +99,6 @@
     </button>
   </div>
 
-  <div class="message error" data-ng-if="error">{{error}}</div>
-  <div class="message success" data-ng-if="success">
-    {{success}}
-
-    <h4 data-ng-show="verifyResult.nameservers.length > 0" translate>Nameservers</h4>
-    <div data-ng-repeat="nameserver in verifyResult.nameservers" class="fieldgroup">
-      <div class="field">
-        <label translate>Host</label><span>{{nameserver.host}}</span>
-      </div>
-      <div class="field">
-        <label translate>Status</label><span>{{nameserver.lastStatus}}</span>
-      </div>
-    </div>
-
-    <h4 data-ng-show="verifyResult.dsset.length > 0" translate>DS set</h4>
-    <div data-ng-repeat="ds in verifyResult.dsset" class="fieldgroup">
-      <div class="field">
-        <label translate>Keytag</label><span>{{ds.keytag}}</span>
-      </div>
-      <div class="field">
-        <label translate>Status</label><span>{{ds.lastStatus}}</span>
-      </div>
-    </div>
-  </div>
-
   <div class="content-edit" data-ng-show="details && edit">
     <domainform domain="freshDomain" form-ctrl="form"></domainform>
   </div>
