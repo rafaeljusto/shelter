@@ -554,7 +554,7 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
         formCtrl: '='
       },
       templateUrl: "/directives/domainform.html",
-      controller: function($scope, $translate, $compile, domainService) {
+      controller: function($scope, $rootScope, $translate, $compile, domainService) {
         if ($scope.domain == emptyDomain) {
           $scope.domain = angular.copy($scope.domain);
         }
@@ -681,6 +681,7 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
                 $translate("Domain created").then(function(translation) {
                   alertify.success(translation);
                 });
+                $rootScope.menu = "domains";
 
               } else if (response.status == 400) {
                 alertify.error(response.data.message);
