@@ -140,16 +140,15 @@ describe("Domain form directive", function() {
 
     $httpBackend.flush();
 
-    // TODO: How do we check the result?
-    // expect(ctrl.verifyResult).not.toBeUndefined();
-    // expect(ctrl.verifyResult.nameservers.length).toBe(1);
-    // expect(ctrl.verifyResult.nameservers[0].lastStatus).toBe("OK");
-    // expect(ctrl.verifyResult.nameservers[0].lastOKAt).toBe("2014-03-25T11:00:00-03:00");
-    // expect(ctrl.verifyResult.nameservers[0].lastCheckAt).toBe("2014-03-25T11:00:00-03:00");
-    // expect(ctrl.verifyResult.dsset.length).toBe(1);
-    // expect(ctrl.verifyResult.dsset[0].lastStatus).toBe("OK");
-    // expect(ctrl.verifyResult.dsset[0].lastOKAt).toBe("2014-03-25T11:00:00-03:00");
-    // expect(ctrl.verifyResult.dsset[0].lastCheckAt).toBe("2014-03-25T11:00:00-03:00");
+    expect(ctrl.verifyResult).not.toBeUndefined();
+    expect(ctrl.verifyResult.nameservers.length).toBe(1);
+    expect(ctrl.verifyResult.nameservers[0].lastStatus).toBe("OK");
+    expect(ctrl.verifyResult.nameservers[0].lastOKAt).toBe("2014-03-25T11:00:00-03:00");
+    expect(ctrl.verifyResult.nameservers[0].lastCheckAt).toBe("2014-03-25T11:00:00-03:00");
+    expect(ctrl.verifyResult.dsset.length).toBe(1);
+    expect(ctrl.verifyResult.dsset[0].lastStatus).toBe("OK");
+    expect(ctrl.verifyResult.dsset[0].lastOKAt).toBe("2014-03-25T11:00:00-03:00");
+    expect(ctrl.verifyResult.dsset[0].lastCheckAt).toBe("2014-03-25T11:00:00-03:00");
   }));
 
   it("should save a domain properly", inject(function($injector) {
@@ -178,8 +177,7 @@ describe("Domain form directive", function() {
 
     $httpBackend.flush();
 
-    // TODO: How do we check the success?
-    // expect(ctrl.success).not.toBeUndefined();
-    // expect(ctrl.success).toBe("Domain created");
+    expect(ctrl.success).not.toBeUndefined();
+    expect(ctrl.success).toBe(true);
   }));
 });

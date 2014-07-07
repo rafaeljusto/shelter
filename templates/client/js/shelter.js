@@ -505,6 +505,7 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
                 });
 
                 alertify.alert(verificationResponseToHTML(response.data));
+                $scope.verifyResult = response.data; // For unit tests only
 
               } else if (response.status == 400) {
                 alertify.error(response.data.message);
@@ -529,6 +530,7 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
                 $translate("Domain removed").then(function(translation) {
                   alertify.success(translation);
                 });
+                $scope.success = true; // For unit tests only
 
               } else if (response.status == 400) {
                 alertify.error(response.data.message);
@@ -645,6 +647,7 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
                 });
 
                 alertify.alert(verificationResponseToHTML(response.data));
+                $scope.verifyResult = response.data; // For unit tests only
 
               } else if (response.status == 400) {
                 alertify.error(response.data.message);
@@ -682,6 +685,7 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
                   alertify.success(translation);
                 });
                 $rootScope.menu = "domains";
+                $scope.success = true; // For unit tests only
 
               } else if (response.status == 400) {
                 alertify.error(response.data.message);
