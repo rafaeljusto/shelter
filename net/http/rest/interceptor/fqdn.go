@@ -30,7 +30,7 @@ func NewFQDN(h FQDNHandler) *FQDN {
 func (i *FQDN) Before(w http.ResponseWriter, r *http.Request) {
 	fqdn, err := model.NormalizeDomainName(i.fqdnHandler.GetFQDN())
 	if err != nil {
-		if err := i.fqdnHandler.MessageResponse("invalid-header-date", r.URL.RequestURI()); err == nil {
+		if err := i.fqdnHandler.MessageResponse("invalid-uri", r.URL.RequestURI()); err == nil {
 			w.WriteHeader(http.StatusBadRequest)
 
 		} else {
