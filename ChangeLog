@@ -20,6 +20,11 @@ version 0.2:
   * Query domain even if it has DNSSEC problems (CD flag)
   * Dockerfile ports updated and not creating certificates anymore
   * Scheduler wasn't checking job execution using UTC timers
+  * Web client statistics alignment and number of decimals were fixed
+  * Web client merge algorithm now works for first insertion and last removal
+  * Web client better title fonts
+  * Web client now has a new centralized message system (alertify.js)
+  * Web client redirects to domains screen after new domain is saved
 
 version 0.1:
   New Feature:

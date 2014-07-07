@@ -15,10 +15,11 @@ describe("Domain form directive", function() {
     $httpBackend.whenGET(/languages\/.+\.json/).respond(200, "{}");
     $httpBackend.flush();
 
-    var elm = angular.element("<domainform domain='domain'></domain>");
+    var elm = angular.element("<domainform domain='domain' form-ctrl='ctrl'></domain>");
 
     scope = $rootScope;
     scope.domain = {};
+    scope.ctrl = {};
 
     $compile(elm)(scope);
     scope.$digest();
@@ -177,6 +178,6 @@ describe("Domain form directive", function() {
     $httpBackend.flush();
 
     expect(ctrl.success).not.toBeUndefined();
-    expect(ctrl.success).toBe("Domain created");
+    expect(ctrl.success).toBe(true);
   }));
 });

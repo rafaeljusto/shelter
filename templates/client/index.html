@@ -17,6 +17,8 @@
 
     <link rel="stylesheet" type="text/css" href="/css/shelter.css">
     <link rel="stylesheet" type="text/css" href="/css/font-awesome.min.css">
+    <link rel="stylesheet" type="text/css" href="/css/alertify.core.css">
+    <link rel="stylesheet" type="text/css" href="/css/alertify.default.css">
   </header>
 
   <body data-ng-app="shelter">
@@ -31,9 +33,9 @@
         data-ng-click="changeLanguage('es_ES')">Espa&ntilde;ol</a>
     </section>
 
-    <nav data-ng-cloak data-ng-init="menu = 'domains'">
+    <nav data-ng-cloak data-ng-init="menu = 'domains'; form = {}">
       <ul>
-        <li data-ng-click="menu = 'new_domain'">{{ "New Domain" | translate }}</li>
+        <li data-ng-click="menu = 'new_domain'; form.clear()">{{ "New Domain" | translate }}</li>
         <li data-ng-click="menu = 'domains'">{{ "Domains" | translate }}</li>
         <li data-ng-click="menu = 'scans'">{{ "Scans" | translate }}</li>
       </ul>
@@ -46,7 +48,7 @@
         <h2 translate>New Domain</h2>
       </header>
 
-      <domainform domain="emptyDomain"></domainform>
+      <domainform domain="emptyDomain" form-ctrl="form"></domainform>
     </section>
 
     <section data-ng-cloak data-ng-controller="domainsCtrl"
@@ -206,6 +208,7 @@
     <script src="/js/angular-translate-storage-cookie.min.js"></script>
     <script src="/js/angular-translate-storage-local.min.js"></script>
     <script src="/js/moment-with-langs.min.js"></script>
+    <script src="/js/alertify.min.js"></script>
     <script src="/js/shelter.js"></script>
   </body>
 </html>

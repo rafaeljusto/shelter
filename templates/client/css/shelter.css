@@ -73,7 +73,7 @@ h1 {
 
 h2 {
   color: #fff;
-  font-family: "Londrina Shadow", cursive;
+  text-shadow: 0 0 5px rgba(0,0,0,0.9);
 }
 
 h3 {
@@ -266,6 +266,10 @@ button[type=button]:active {
   padding: 0px 0px 20px 0px;
   width: 100%;
   text-align: center;
+}
+
+.statistics th {
+  width: 20%;
 }
 
 /**********************************/

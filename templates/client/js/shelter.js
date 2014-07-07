@@ -92,8 +92,13 @@ var emptyScan = {
 // Apply source list to destination list, adding new elements, removing old ones and
 // keeping the ones that are equal
 function mergeList(source, destination, areEqual, mergeObject) {
-  if (!source || !destination) {
-    return;
+  if (source && !destination) {
+    destination = source;
+    return destination;
+
+  } else if (!source) {
+    destination = [];
+    return destination;
   }
 
   // Check new items
@@ -129,6 +134,8 @@ function mergeList(source, destination, areEqual, mergeObject) {
       destination.splice(j, 1);
     }
   }
+
+  return destination;
 }
 
 // Look for a specific link href given a type. According to W3C link can have many types
@@ -153,6 +160,46 @@ function findLink(links, expectedType) {
   });
 
   return href;
+}
+
+function verificationResponseToHTML(data) {
+  var result = "";
+
+  if (!data) {
+    return result;
+  }
+
+  if (data.fqdn) {
+    result += "<h3>" + data.fqdn + "</h3><hr/>";
+  }
+
+  if (data.nameservers) {
+    result += "<h3>NS</h3>" +
+      "<table style='margin:auto'>";
+
+    data.nameservers.forEach(function(ns) {
+      result += "<tr>" +
+        "<th style='text-align:left'>" + ns.host + "</th>" + 
+        "<td>" + ns.lastStatus + "</td></tr>";
+    });
+
+    result += "</table>";
+  }
+
+  if (data.dsset) {
+    result += "<h3>DS</h3>" +
+      "<table style='margin:auto'>";
+
+    data.dsset.forEach(function(ds) {
+      result += "<tr>" +
+        "<th style='text-align:left'>" + ds.keytag + "</th>" + 
+        "<td>" + ds.lastStatus + "</td></tr>";
+    });
+
+    result += "</table>";
+  }
+
+  return result;
 }
 
 angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
@@ -419,22 +466,15 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
           domainService.retrieveDomain(uri).then(
             function(response) {
               if (response.status == 200) {
-                $scope.success = null;
-                $scope.error = null;
-
                 $scope.freshDomain = response.data;
                 $scope.freshDomain.etag = response.headers.Etag;
 
               } else if (response.status == 400) {
-                $scope.success = null;
-                $scope.verifyResult = null;
-                $scope.error = response.data.message;
+                alertify.error(response.data.message);
 
               } else {
-                $scope.success = null;
-                $scope.verifyResult = null;
                 $translate("Server error").then(function(translation) {
-                  $scope.error = translation;
+                  alertify.error(response.data.message);
                 });
               }
             }
@@ -460,22 +500,19 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
           domainService.verifyDomain(domain).then(
             function(response) {
               if (response.status == 200) {
-                $scope.error = null;
                 $translate("Verify result").then(function(translation) {
-                  $scope.success = translation;
-                  $scope.verifyResult = response.data;
+                  alertify.success(translation);
                 });
 
+                alertify.alert(verificationResponseToHTML(response.data));
+                $scope.verifyResult = response.data; // For unit tests only
+
               } else if (response.status == 400) {
-                $scope.success = null;
-                $scope.verifyResult = null;
-                $scope.error = response.data.message;
+                alertify.error(response.data.message);
 
               } else {
-                $scope.success = null;
-                $scope.verifyResult = null;
                 $translate("Server error").then(function(translation) {
-                  $scope.error = translation;
+                  alertify.error(translation);
                 });
               }
 
@@ -490,22 +527,17 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
           domainService.removeDomain(uri, domain.etag).then(
             function(response) {
               if (response.status == 204) {
-                $scope.error = null;
                 $translate("Domain removed").then(function(translation) {
-                  $scope.success = translation;
-                  $scope.verifyResult = null;
+                  alertify.success(translation);
                 });
+                $scope.success = true; // For unit tests only
 
               } else if (response.status == 400) {
-                $scope.success = null;
-                $scope.verifyResult = null;
-                $scope.error = response.data.message;
+                alertify.error(response.data.message);
 
               } else {
-                $scope.success = null;
-                $scope.verifyResult = null;
                 $translate("Server error").then(function(translation) {
-                  $scope.error = translation;
+                  alertify.error(translation);
                 });
               }
 
@@ -520,10 +552,11 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
     return {
       restrict: 'E',
       scope: {
-        domain: '='
+        domain: '=',
+        formCtrl: '='
       },
       templateUrl: "/directives/domainform.html",
-      controller: function($scope, $translate, domainService) {
+      controller: function($scope, $rootScope, $translate, $compile, domainService) {
         if ($scope.domain == emptyDomain) {
           $scope.domain = angular.copy($scope.domain);
         }
@@ -538,6 +571,12 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
         $scope.algorithms = algorithms;
         $scope.dsDigestTypes = dsDigestTypes;
         $scope.ownerLanguages = ownerLanguages;
+
+        // Easy way to allow extenal scopes to call a function in the directive
+        $scope.formCtrl = $scope.formCtrl || {};
+        $scope.formCtrl.clear = function() {
+         $scope.domain = angular.copy(emptyDomain);
+        };
 
         $scope.needsGlue = function(fqdn, host) {
           if (fqdn == undefined || host == undefined ||
@@ -569,17 +608,14 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
           domainService.queryDomain(fqdn).then(
             function(response) {
               if (response.status == 200) {
-                $scope.error = null;
                 $scope.domain = response.data;
 
               } else if (response.status == 400) {
-                $scope.error = null;
-                $scope.error = response.data.message;
+                alertify.error(response.data.message);
 
               } else {
-                $scope.success = null;
                 $translate("Server error").then(function(translation) {
-                  $scope.error = translation;
+                  alertify.error(translation);
                 });
               }
 
@@ -606,20 +642,19 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
           domainService.verifyDomain(domain).then(
             function(response) {
               if (response.status == 200) {
-                $scope.error = null;
                 $translate("Verify result").then(function(translation) {
-                  $scope.success = translation;
-                  $scope.verifyResult = response.data;
+                  alertify.success(translation);
                 });
 
+                alertify.alert(verificationResponseToHTML(response.data));
+                $scope.verifyResult = response.data; // For unit tests only
+
               } else if (response.status == 400) {
-                $scope.error = null;
-                $scope.error = response.data.message;
+                alertify.error(response.data.message);
 
               } else {
-                $scope.success = null;
                 $translate("Server error").then(function(translation) {
-                  $scope.error = translation;
+                  alertify.error(translation);
                 });
               }
 
@@ -647,18 +682,17 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
             function(response) {
               if (response.status == 201 || response.status == 204) {
                 $translate("Domain created").then(function(translation) {
-                  $scope.error = null;
-                  $scope.success = translation;
+                  alertify.success(translation);
                 });
+                $rootScope.menu = "domains";
+                $scope.success = true; // For unit tests only
 
               } else if (response.status == 400) {
-                $scope.error = null;
-                $scope.error = response.data.message;
+                alertify.error(response.data.message);
 
               } else {
-                $scope.success = null;
                 $translate("Server error").then(function(translation) {
-                  $scope.error = translation;
+                  alertify.error(translation);
                 });
               }
 
@@ -715,8 +749,6 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
 
     $scope.processDomainsResult = function(response) {
       if (response.status == 200) {
-        $scope.success = null;
-        $scope.error = null;
         $scope.etag = response.headers.Etag;
 
         if (!$scope.pagination) {
@@ -729,7 +761,7 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
           $scope.pagination.pageSize = response.data.pageSize;
           $scope.pagination.links = response.data.links;
 
-          mergeList(response.data.domains,
+          $scope.pagination.domains = mergeList(response.data.domains,
             $scope.pagination.domains,
             function(networkDomain, domain) {
               return networkDomain.fqdn == domain.fqdn;
@@ -743,17 +775,13 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
 
       } else if (response.status == 304) {
         // Not modified
-        $scope.success = null;
-        $scope.error = null;
 
       } else if (response.status == 400) {
-        $scope.success = null;
-        $scope.error = response.data.message;
+        alertify.error(response.data.message);
 
       } else {
-        $scope.success = null;
         $translate("Server error").then(function(translation) {
-          $scope.error = translation;
+          alertify.error(translation);
         });
       }
     };
@@ -785,7 +813,6 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
 
     $scope.retrieveDomainsWorker();
   })
-
 
 
   ///////////////////////////////////////////////////////
@@ -846,22 +873,15 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
           scanService.retrieve(uri).then(
             function(response) {
               if (response.status == 200) {
-                $scope.success = null;
-                $scope.error = null;
-
                 $scope.freshScan = response.data;
                 $scope.freshScan.etag = response.headers.Etag;
 
               } else if (response.status == 400) {
-                $scope.success = null;
-                $scope.verifyResult = null;
-                $scope.error = response.data.message;
+                alertify.error(response.data.message);
 
               } else {
-                $scope.success = null;
-                $scope.verifyResult = null;
                 $translate("Server error").then(function(translation) {
-                  $scope.error = translation;
+                  alertify.error(translation);
                 });
               }
             }
@@ -917,8 +937,6 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
 
     $scope.processScansResult = function(response) {
       if (response.status == 200) {
-        $scope.success = null;
-        $scope.error = null;
         $scope.etag = response.headers.Etag;
 
         if (!$scope.pagination) {
@@ -931,7 +949,7 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
           $scope.pagination.pageSize = response.data.pageSize;
           $scope.pagination.links = response.data.links;
 
-          mergeList(response.data.scans,
+          $scope.pagination.scans = mergeList(response.data.scans,
             $scope.pagination.scans,
             function(networkScan, scan) {
               return networkScan.startedAt == scan.startedAt;
@@ -949,17 +967,14 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
         $scope.currentScanURI = findLink($scope.pagination.links, "current");
 
       } else if (response.status == 304) {
-        $scope.success = null;
-        $scope.error = null;
+        // Not modified
 
       } else if (response.status == 400) {
-        $scope.success = null;
-        $scope.error = response.data.message;
+        alertify.error(response.data.message);
 
       } else {
-        $scope.success = null;
         $translate("Server error").then(function(translation) {
-          $scope.error = translation;
+          alertify.error(translation);
         });
       }
     };
@@ -974,23 +989,18 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
       scanService.retrieve($scope.currentScanURI, $scope.currentScanEtag).then(
         function(response) {
           if (response.status == 200) {
-            $scope.success = null;
-            $scope.error = null;
             $scope.currentScanEtag = response.headers.Etag;
             $scope.currentScan = response.data;
 
           } else if (response.status == 304) {
-            $scope.success = null;
-            $scope.error = null;
+            // Not modified
 
           } else if (response.status == 400) {
-            $scope.success = null;
-            $scope.error = response.data.message;
+            alertify.error(response.data.message);
 
           } else {
-            $scope.success = null;
             $translate("Server error").then(function(translation) {
-              $scope.error = translation;
+              alertify.error(translation);
             });
           }
 

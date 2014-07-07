@@ -115,6 +115,86 @@ describe("mergeList", function() {
 
     expect(a).toBe(undefined);
   });
+
+  it("Should add the first item", function() {
+    a = [];
+
+    b = [
+      {
+        key1: "value1",
+        key2: "value2"
+      }
+    ];
+
+    mergeList(b, a,
+      function(newItem, oldItem) {
+        return newItem.key1 == oldItem.key1;
+      },
+      function(newItem, oldItem) {
+        oldItem.key2 = newItem.key2;
+      });
+
+    expect(a.length).toBe(1);
+    expect(a[0].key2).toBe("value2");
+
+    b = [];
+
+    a = [
+      {
+        key1: "value1",
+        key2: "value2"
+      }
+    ];
+
+    mergeList(b, a,
+      function(newItem, oldItem) {
+        return newItem.key1 == oldItem.key1;
+      },
+      function(newItem, oldItem) {
+        oldItem.key2 = newItem.key2;
+      });
+
+    expect(a.length).toBe(0);
+  });
+
+  it("Should deal with null structures", function() {
+    a = [];
+
+    b = [
+      {
+        key1: "value1",
+        key2: "value2"
+      }
+    ];
+
+    a = mergeList(b, undefined,
+      function(newItem, oldItem) {
+        return newItem.key1 == oldItem.key1;
+      },
+      function(newItem, oldItem) {
+        oldItem.key2 = newItem.key2;
+      });
+
+    expect(a.length).toBe(1);
+    expect(a[0].key2).toBe("value2");
+
+    a = [
+      {
+        key1: "value1",
+        key2: "value2"
+      }
+    ];
+
+    a = mergeList(undefined, a,
+      function(newItem, oldItem) {
+        return newItem.key1 == oldItem.key1;
+      },
+      function(newItem, oldItem) {
+        oldItem.key2 = newItem.key2;
+      });
+
+    expect(a.length).toBe(0);
+  });
 });
 
 describe("findLink", function() {
@@ -165,5 +245,38 @@ describe("findLink", function() {
 
     expect(findLink(undefined, "first")).toBe("");
     expect(findLink(links, undefined)).toBe("");
+  });
+});
+
+describe("verificationResponseToHTML", function() {
+  it("should convert structure correctly", function() {
+    var data = {
+      fqdn: "test.com.br.",
+      nameservers: [
+        { host: "ns1.test.com.br.", lastStatus: "OK" },
+        { host: "ns2.test.com.br.", lastStatus: "TIMEOUT" }
+      ],
+      dsset: [
+        { keytag: 1234, lastStatus: "OK" },
+        { keytag: 4321, lastStatus: "SIGERR" }
+      ]
+    }
+
+    expect(verificationResponseToHTML(data)).toBe("<h3>test.com.br.</h3><hr/>" +
+      "<h3>NS</h3><table style='margin:auto'>" +
+      "<tr><th style='text-align:left'>ns1.test.com.br.</th><td>OK</td></tr>" +
+      "<tr><th style='text-align:left'>ns2.test.com.br.</th><td>TIMEOUT</td></tr>" +
+      "</table><h3>DS</h3><table style='margin:auto'>" +
+      "<tr><th style='text-align:left'>1234</th><td>OK</td></tr>" +
+      "<tr><th style='text-align:left'>4321</th><td>SIGERR</td></tr>" +
+      "</table>");
+  });
+
+  it ("should not convert an invalid structure", function() {
+    expect(verificationResponseToHTML({})).toBe("");
+  });
+
+  it ("should not convert an undefined structure", function() {
+    expect(verificationResponseToHTML(undefined)).toBe("");
   });
 });

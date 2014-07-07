@@ -227,7 +227,7 @@ describe("Domain directive", function() {
     $httpBackend.flush();
 
     expect(ctrl.success).not.toBeUndefined();
-    expect(ctrl.success).toBe("Domain removed");
+    expect(ctrl.success).toBe(true);
   }));
 
   it("should retrieve a domain", inject(function($injector) {
