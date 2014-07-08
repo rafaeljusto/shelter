@@ -15,10 +15,11 @@ import (
 )
 
 type MockCodecHandler struct {
-	MessageId   string
-	ReturnError error
-	Request     map[string]string `request:"put"`
-	Response    map[string]string `response:"get"`
+	MessageId     string
+	ReturnError   error
+	Request       map[string]string `request:"put"`
+	Response      map[string]string `response:"get"`
+	ErrorResponse *string           `error`
 }
 
 func (c *MockCodecHandler) GetLanguage() *messages.LanguagePack {
@@ -98,6 +99,7 @@ func TestJSONAfter(t *testing.T) {
 
 	data := []struct {
 		Response          map[string]string
+		ErrorResponse     string
 		ReturnError       error
 		ExpectedCode      int
 		ExpectedMessageId string
@@ -111,12 +113,23 @@ func TestJSONAfter(t *testing.T) {
 			ExpectedCode: http.StatusOK,
 			ExpectedBody: `{"key1":"value1","key2":"value2"}`,
 		},
+		{
+			ErrorResponse: "Error",
+			ExpectedCode:  http.StatusOK,
+			ExpectedBody:  `"Error"`,
+		},
 	}
 
 	for _, item := range data {
 		r, err := http.NewRequest("GET", "/keys", nil)
 		if err != nil {
 			t.Fatal(err)
+		}
+
+		if len(item.ErrorResponse) > 0 {
+			codecHandler.ErrorResponse = &item.ErrorResponse
+		} else {
+			codecHandler.ErrorResponse = nil
 		}
 
 		codecHandler.Response = item.Response
