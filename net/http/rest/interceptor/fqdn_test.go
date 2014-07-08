@@ -15,8 +15,7 @@ import (
 
 type MockFQDNHandler struct {
 	FQDN        string
-	Message     string
-	URI         string
+	MessageId   string
 	ReturnError error
 }
 
@@ -28,27 +27,26 @@ func (m *MockFQDNHandler) GetFQDN() string {
 	return m.FQDN
 }
 
-func (m *MockFQDNHandler) MessageResponse(message, uri string) error {
-	m.Message = message
-	m.URI = uri
+func (m *MockFQDNHandler) MessageResponse(messageId, roid string) error {
+	m.MessageId = messageId
 	return m.ReturnError
 }
 
-func TestFQDNBefore(t *testing.T) {
+func TestFQDN(t *testing.T) {
 	data := []struct {
-		FQDN            string
-		ReturnError     error
-		ExpectedMessage string
-		ExpectedFQDN    string
+		FQDN              string
+		ReturnError       error
+		ExpectedMessageId string
+		ExpectedFQDN      string
 	}{
-		{FQDN: "   EXAMPLE.com.br   ", ExpectedMessage: "", ExpectedFQDN: "example.com.br."},
-		{FQDN: "1234", ExpectedMessage: "", ExpectedFQDN: "1234."},
-		{FQDN: "xn-------------", ExpectedMessage: "invalid-uri", ExpectedFQDN: "xn-------------"},
+		{FQDN: "   EXAMPLE.com.br   ", ExpectedMessageId: "", ExpectedFQDN: "example.com.br."},
+		{FQDN: "1234", ExpectedMessageId: "", ExpectedFQDN: "1234."},
+		{FQDN: "xn-------------", ExpectedMessageId: "invalid-uri", ExpectedFQDN: "xn-------------"},
 		{
-			FQDN:            "xn-------------",
-			ExpectedMessage: "invalid-uri",
-			ExpectedFQDN:    "xn-------------",
-			ReturnError:     errors.New("Low level error"),
+			FQDN:              "xn-------------",
+			ExpectedMessageId: "invalid-uri",
+			ExpectedFQDN:      "xn-------------",
+			ReturnError:       errors.New("Low level error"),
 		},
 	}
 
@@ -68,9 +66,9 @@ func TestFQDNBefore(t *testing.T) {
 		interceptor.Before(w, r)
 		interceptor.After(w, r)
 
-		if fqdnHandler.Message != item.ExpectedMessage {
-			t.Errorf("Not setting the correct message. Expected '%s' and got '%s'",
-				item.ExpectedMessage, fqdnHandler.Message)
+		if fqdnHandler.MessageId != item.ExpectedMessageId {
+			t.Errorf("Not setting the correct message id. Expected '%s' and got '%s'",
+				item.ExpectedMessageId, fqdnHandler.MessageId)
 		}
 
 		if fqdnHandler.GetFQDN() != item.ExpectedFQDN {
