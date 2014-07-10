@@ -51,12 +51,12 @@ func HTTPIfUnmodifiedSince(r *http.Request, lastModifiedAt time.Time) (bool, err
 	return true, nil
 }
 
-func HTTPIfMatch(r *http.Request, etag string) (bool, error) {
+func HTTPIfMatch(r *http.Request, etag string) bool {
 	ifMatch := r.Header.Get("If-Match")
 	ifMatch = strings.TrimSpace(ifMatch)
 
 	if len(ifMatch) == 0 {
-		return true, nil
+		return true
 	}
 
 	ifMatchParts := strings.Split(ifMatch, ",")
@@ -67,25 +67,25 @@ func HTTPIfMatch(r *http.Request, etag string) (bool, error) {
 		// If "*" is given and no current entity exists, the server MUST NOT perform the
 		// requested method, and MUST return a 412 (Precondition Failed) response
 		if ifMatchPart == "*" {
-			return len(etag) > 0 && etag != "0", nil
+			return len(etag) > 0 && etag != "0"
 		}
 
 		if ifMatchPart == etag {
-			return true, nil
+			return true
 		}
 	}
 
 	// If none of the entity tags match the server MUST NOT perform the requested method,
 	// and MUST return a 412 (Precondition Failed) response
-	return false, nil
+	return false
 }
 
-func HTTPIfNoneMatch(r *http.Request, etag string) (bool, error) {
+func HTTPIfNoneMatch(r *http.Request, etag string) bool {
 	ifNoneMatch := r.Header.Get("If-None-Match")
 	ifNoneMatch = strings.TrimSpace(ifNoneMatch)
 
 	if len(ifNoneMatch) == 0 {
-		return true, nil
+		return true
 	}
 
 	ifNoneMatchParts := strings.Split(ifNoneMatch, ",")
@@ -98,7 +98,7 @@ func HTTPIfNoneMatch(r *http.Request, etag string) (bool, error) {
 		// resource's modification date fails to match that supplied in an If-Modified-Since
 		// header field in the request
 		if ifNoneMatchPart == "*" {
-			return len(etag) == 0 || etag == "0", nil
+			return len(etag) == 0 || etag == "0"
 		}
 
 		if ifNoneMatchPart == etag {
@@ -106,9 +106,9 @@ func HTTPIfNoneMatch(r *http.Request, etag string) (bool, error) {
 			// 304 (Not Modified) response, including the cache-related header fields
 			// (particularly ETag) of one of the entities that matched. For all other request
 			// methods, the server MUST respond with a status of 412 (Precondition Failed)
-			return false, nil
+			return false
 		}
 	}
 
-	return true, nil
+	return true
 }

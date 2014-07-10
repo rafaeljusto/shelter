@@ -22,13 +22,13 @@ type MockCodecHandler struct {
 	ErrorResponse *string           `error`
 }
 
-func (c *MockCodecHandler) GetLanguage() *messages.LanguagePack {
+func (h *MockCodecHandler) GetLanguage() *messages.LanguagePack {
 	return &messages.LanguagePack{}
 }
 
-func (c *MockCodecHandler) MessageResponse(messageId, roid string) error {
-	c.MessageId = messageId
-	return c.ReturnError
+func (h *MockCodecHandler) MessageResponse(messageId, roid string) error {
+	h.MessageId = messageId
+	return h.ReturnError
 }
 
 func TestJSONBefore(t *testing.T) {

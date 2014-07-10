@@ -90,21 +90,8 @@ func checkIfUnmodifiedSince(w http.ResponseWriter, r *http.Request, handler HTTP
 }
 
 func checkIfMatch(w http.ResponseWriter, r *http.Request, handler HTTPCacheHandler) bool {
-	match, err := check.HTTPIfMatch(r, handler.GetETag())
-	if err != nil {
-		handler.ClearResponse()
-
-		if err := handler.MessageResponse("invalid-if-match", r.URL.RequestURI()); err == nil {
-			w.WriteHeader(http.StatusBadRequest)
-
-		} else {
-			log.Println("Error while writing response. Details:", err)
-			w.WriteHeader(http.StatusInternalServerError)
-		}
-
-		return false
-
-	} else if !match {
+	match := check.HTTPIfMatch(r, handler.GetETag())
+	if !match {
 		handler.ClearResponse()
 
 		// If "*" is given and no current entity exists or if none of the entity tags match
@@ -125,21 +112,8 @@ func checkIfMatch(w http.ResponseWriter, r *http.Request, handler HTTPCacheHandl
 }
 
 func checkIfNoneMatch(w http.ResponseWriter, r *http.Request, handler HTTPCacheHandler) bool {
-	noneMatch, err := check.HTTPIfNoneMatch(r, handler.GetETag())
-	if err != nil {
-		handler.ClearResponse()
-
-		if err := handler.MessageResponse("invalid-if-none-match", r.URL.RequestURI()); err == nil {
-			w.WriteHeader(http.StatusBadRequest)
-
-		} else {
-			log.Println("Error while writing response. Details:", err)
-			w.WriteHeader(http.StatusInternalServerError)
-		}
-
-		return false
-
-	} else if !noneMatch {
+	noneMatch := check.HTTPIfNoneMatch(r, handler.GetETag())
+	if !noneMatch {
 		handler.ClearResponse()
 
 		// Instead, if the request method was GET or HEAD, the server SHOULD respond with a

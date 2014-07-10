@@ -19,17 +19,17 @@ type MockFQDNHandler struct {
 	ReturnError error
 }
 
-func (m *MockFQDNHandler) SetFQDN(fqdn string) {
-	m.FQDN = fqdn
+func (h *MockFQDNHandler) SetFQDN(fqdn string) {
+	h.FQDN = fqdn
 }
 
-func (m *MockFQDNHandler) GetFQDN() string {
-	return m.FQDN
+func (h *MockFQDNHandler) GetFQDN() string {
+	return h.FQDN
 }
 
-func (m *MockFQDNHandler) MessageResponse(messageId, roid string) error {
-	m.MessageId = messageId
-	return m.ReturnError
+func (h *MockFQDNHandler) MessageResponse(messageId, roid string) error {
+	h.MessageId = messageId
+	return h.ReturnError
 }
 
 func TestFQDN(t *testing.T) {
