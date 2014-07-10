@@ -98,6 +98,7 @@ func TestJSONAfter(t *testing.T) {
 	jsonCodec := NewJSONCodec(&codecHandler)
 
 	data := []struct {
+		Method            string
 		Response          map[string]string
 		ErrorResponse     string
 		ReturnError       error
@@ -106,6 +107,7 @@ func TestJSONAfter(t *testing.T) {
 		ExpectedBody      string
 	}{
 		{
+			Method: "GET",
 			Response: map[string]string{
 				"key1": "value1",
 				"key2": "value2",
@@ -114,14 +116,23 @@ func TestJSONAfter(t *testing.T) {
 			ExpectedBody: `{"key1":"value1","key2":"value2"}`,
 		},
 		{
+			Method:        "GET",
 			ErrorResponse: "Error",
 			ExpectedCode:  http.StatusOK,
 			ExpectedBody:  `"Error"`,
 		},
+		{
+			Method:       "GET",
+			ExpectedCode: http.StatusOK,
+		},
+		{
+			Method:       "DELETE",
+			ExpectedCode: http.StatusOK,
+		},
 	}
 
 	for _, item := range data {
-		r, err := http.NewRequest("GET", "/keys", nil)
+		r, err := http.NewRequest(item.Method, "/keys", nil)
 		if err != nil {
 			t.Fatal(err)
 		}

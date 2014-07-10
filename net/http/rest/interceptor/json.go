@@ -88,7 +88,13 @@ func (c *JSONCodec) After(w http.ResponseWriter, r *http.Request) {
 	if c.resPosition >= 0 {
 		elem := st.Field(c.resPosition).Interface()
 		elemType := reflect.TypeOf(elem)
-		if elemType.Kind() == reflect.Ptr && st.Field(c.resPosition).IsNil() {
+
+		// We are also checking for map types because the work like pointers
+		if (elemType.Kind() == reflect.Ptr ||
+			elemType.Kind() == reflect.Map ||
+			elemType.Kind() == reflect.Slice) &&
+			st.Field(c.resPosition).IsNil() {
+
 			return
 		}
 
