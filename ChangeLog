@@ -1,6 +1,10 @@
 Shelter
 =======
 
+version 0.3:
+  New Feature:
+  * Using new web framework Handy
+
 version 0.2:
   New Feature:
   * Allow MongoDB authentication

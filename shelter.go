@@ -39,7 +39,7 @@ import (
 )
 
 const (
-	copyright string = `Shelter version 0.2, Copyright (C) 2014 Rafael Dantas Justo
+	copyright string = `Shelter version 0.3, Copyright (C) 2014 Rafael Dantas Justo
 Shelter comes with ABSOLUTELY NO WARRANTY.
 This is free software, and you are welcome
 to redistribute it under certain conditions.
