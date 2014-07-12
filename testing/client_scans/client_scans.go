@@ -72,6 +72,7 @@ func main() {
 	retrieveScans()
 	retrieveScansWithPagination()
 	retrieveScansWithCache()
+	retrieveCurrentScan()
 
 	utils.Println("SUCCESS!")
 }
@@ -273,5 +274,59 @@ func retrieveScansWithCache() {
 	if response.StatusCode != http.StatusNotModified {
 		utils.Fatalln(fmt.Sprintf("Expected HTTP status %d and got %d for method GET and URI /scans",
 			http.StatusNotModified, response.StatusCode), nil)
+	}
+}
+
+func retrieveCurrentScan() {
+	var client http.Client
+
+	url := ""
+	if len(config.ShelterConfig.WebClient.Listeners) > 0 {
+		url = fmt.Sprintf("http://%s:%d", config.ShelterConfig.WebClient.Listeners[0].IP,
+			config.ShelterConfig.WebClient.Listeners[0].Port)
+	}
+
+	if len(url) == 0 {
+		utils.Fatalln("There's no interface to connect to", nil)
+	}
+
+	r, err := http.NewRequest("GET", fmt.Sprintf("%s%s", url, "/scans/?current"), nil)
+	if err != nil {
+		utils.Fatalln("Error creating the HTTP request", err)
+	}
+
+	utils.BuildHTTPHeader(r, nil)
+
+	response, err := client.Do(r)
+	if err != nil {
+		utils.Fatalln("Error sending request", err)
+	}
+
+	responseContent, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		utils.Fatalln("Error reading response content", err)
+	}
+
+	if response.StatusCode != http.StatusOK {
+		utils.Fatalln(fmt.Sprintf("Expected HTTP status %d and got %d for method GET "+
+			"and URI /scan/currentscan",
+			http.StatusOK, response.StatusCode),
+			errors.New(string(responseContent)),
+		)
+	}
+
+	var scansResponse protocol.ScansResponse
+	if err := json.Unmarshal(responseContent, &scansResponse); err != nil {
+		utils.Fatalln("Error decoding scan response", err)
+	}
+
+	if len(scansResponse.Scans) != 1 {
+		utils.Fatalln("Not returning the current scan in the result set or "+
+			"more items than expected were found", nil)
+	}
+
+	if scansResponse.Scans[0].Status != model.ScanStatusToString(model.ScanStatusWaitingExecution) {
+		utils.Fatalln(fmt.Sprintf("Invalid status returned by current scan. Expected %s and got %s",
+			model.ScanStatusToString(model.ScanStatusWaitingExecution), scansResponse.Scans[0].Status), nil)
 	}
 }

@@ -183,3 +183,79 @@ func TestScansToScansResponseLinks(t *testing.T) {
 		t.Error("Response not adding the necessary links when we are in the last page")
 	}
 }
+
+func TestCurrentScanToScansResponse(t *testing.T) {
+	currentScan := model.CurrentScan{
+		DomainsToBeScanned: 4,
+		Scan: model.Scan{
+			Status:                   model.ScanStatusRunning,
+			StartedAt:                time.Now().Add(-1 * time.Hour),
+			DomainsScanned:           2,
+			DomainsWithDNSSECScanned: 0,
+		},
+	}
+
+	pagination := dao.ScanDAOPagination{
+		PageSize: 2,
+		Page:     2,
+		OrderBy: []dao.ScanDAOSort{
+			{
+				Field:     dao.ScanDAOOrderByFieldStartedAt,
+				Direction: dao.DAOOrderByDirectionAscending,
+			},
+			{
+				Field:     dao.ScanDAOOrderByFieldDomainsScanned,
+				Direction: dao.DAOOrderByDirectionDescending,
+			},
+			{
+				Field:     dao.ScanDAOOrderByFieldDomainsWithDNSSECScanned,
+				Direction: dao.DAOOrderByDirectionDescending,
+			},
+		},
+		NumberOfItems: 6,
+		NumberOfPages: 3,
+	}
+
+	scansResponse := CurrentScanToScansResponse(currentScan, pagination)
+
+	if len(scansResponse.Scans) != 1 {
+		t.Error("When retrieving the current scan, no other scan can appear")
+	}
+
+	if scansResponse.Scans[0].Status != "RUNNING" {
+		t.Error("Status is not being translated correctly for a current scan")
+	}
+
+	if scansResponse.Scans[0].DomainsToBeScanned != 4 {
+		t.Error("Domains to be scanned field was not converted correctly")
+	}
+
+	if scansResponse.Scans[0].DomainsScanned != 2 {
+		t.Error("Domains scanned field was not converted correctly")
+	}
+
+	if scansResponse.Scans[0].DomainsWithDNSSECScanned != 0 {
+		t.Error("Domains with DNSSEC scanned field was not converted correctly")
+	}
+
+	if !scansResponse.Scans[0].StartedAt.Equal(currentScan.StartedAt) {
+		t.Error("Started time was not converted correctly")
+	}
+
+	if !scansResponse.Scans[0].FinishedAt.IsZero() {
+		t.Error("Finished time was not converted correctly")
+	}
+
+	if len(scansResponse.Scans[0].NameserverStatistics) > 0 {
+		t.Error("Nameserver statistics weren't converted correctly")
+	}
+
+	if len(scansResponse.Scans[0].DSStatistics) > 0 {
+		t.Error("DS statistics weren't converted correctly")
+	}
+
+	if len(scansResponse.Scans[0].Links) != 2 ||
+		scansResponse.Scans[0].Links[0].HRef != "/scan/current" {
+		t.Error("Links weren't added correctly")
+	}
+}

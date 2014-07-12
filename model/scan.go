@@ -75,6 +75,7 @@ type CurrentScan struct {
 	Scan                         // CurrentScan is a Scan
 	ScheduledAt        time.Time // Initial date and time that the scan was schedule to execute
 	DomainsToBeScanned uint64    // Domains selected to be scanned
+	LastModifiedAt     time.Time // Last time that the object changed
 }
 
 // Function to fill current scan variable for the first time. Should run after the
@@ -92,7 +93,8 @@ func InitializeCurrentScan() error {
 			NameserverStatistics: make(map[string]uint64),
 			DSStatistics:         make(map[string]uint64),
 		},
-		ScheduledAt: nextExecution,
+		ScheduledAt:    nextExecution,
+		LastModifiedAt: time.Now(),
 	}
 
 	// If err from different from nil we didn't find a scan job in the scheduler! Propably
@@ -113,6 +115,7 @@ func StartNewScan() {
 			NameserverStatistics: make(map[string]uint64),
 			DSStatistics:         make(map[string]uint64),
 		},
+		LastModifiedAt: time.Now(),
 	}
 }
 
@@ -143,6 +146,7 @@ func FinishAndSaveScan(hadErrors bool, f func(*Scan) error) error {
 			NameserverStatistics: make(map[string]uint64),
 			DSStatistics:         make(map[string]uint64),
 		},
+		LastModifiedAt: time.Now(),
 	}
 
 	// We only check the err after reseting the shelterCurrentScan variable because we want
@@ -180,6 +184,7 @@ func FinishLoadingDomainsForScan() {
 	defer shelterCurrentScanLock.Unlock()
 
 	shelterCurrentScan.Status = ScanStatusRunning
+	shelterCurrentScan.LastModifiedAt = time.Now()
 }
 
 // When the collector receives a domain it tells the scan information structure to help
@@ -202,6 +207,7 @@ func StoreStatisticsOfTheScan(nameserverStatistics map[string]uint64,
 
 	shelterCurrentScan.NameserverStatistics = nameserverStatistics
 	shelterCurrentScan.DSStatistics = dsStatistics
+	shelterCurrentScan.LastModifiedAt = time.Now()
 }
 
 // Function to copy the global variable and return it to allow other parts of the system

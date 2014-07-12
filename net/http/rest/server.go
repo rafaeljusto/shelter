@@ -8,7 +8,11 @@ package rest
 import (
 	"crypto/tls"
 	"github.com/rafaeljusto/shelter/config"
+	"github.com/rafaeljusto/shelter/log"
+	"github.com/rafaeljusto/shelter/net/http/rest/handler"
+	"github.com/rafaeljusto/shelter/net/http/rest/interceptor"
 	"github.com/rafaeljusto/shelter/net/http/rest/messages"
+	"github.com/trajber/handy"
 	"net"
 	"net/http"
 	"path/filepath"
@@ -73,6 +77,17 @@ func Start(listeners []net.Listener) error {
 		return err
 	}
 
+	mux := handy.NewHandy()
+	mux.Recover = func(r interface{}) {
+		log.Println("REST panic detected. Details:", r)
+	}
+
+	// TODO: Handy logger should use the same logger of the Shelter system
+
+	for pattern, handler := range handler.Routes {
+		mux.Handle(pattern, handler)
+	}
+
 	server := http.Server{
 		Handler:      mux,
 		ReadTimeout:  time.Duration(config.ShelterConfig.RESTServer.Timeouts.ReadSeconds) * time.Second,
@@ -104,7 +119,7 @@ func loadMessages() error {
 func loadACL() error {
 	for _, cidrStr := range config.ShelterConfig.RESTServer.ACL {
 		if _, cidr, err := net.ParseCIDR(cidrStr); err == nil {
-			mux.ACL = append(mux.ACL, cidr)
+			interceptor.ACL = append(interceptor.ACL, cidr)
 		} else {
 			return err
 		}

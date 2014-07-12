@@ -8,96 +8,104 @@ package handler
 import (
 	"github.com/rafaeljusto/shelter/log"
 	"github.com/rafaeljusto/shelter/model"
-	"github.com/rafaeljusto/shelter/net/http/rest/context"
+	"github.com/rafaeljusto/shelter/net/http/rest/interceptor"
+	"github.com/rafaeljusto/shelter/net/http/rest/messages"
 	"github.com/rafaeljusto/shelter/net/http/rest/protocol"
 	"github.com/rafaeljusto/shelter/net/scan"
+	"github.com/trajber/handy"
+	"labix.org/v2/mgo"
 	"net/http"
-	"regexp"
 )
 
 func init() {
-	HandleFunc(regexp.MustCompile(`^/domain/([[:alnum:]]|\-|\.)+/verification$`), HandleDomainVerification)
+	HandleFunc("/domain/{fqdn}/verification", func() handy.Handler {
+		return new(DomainVerificationHandler)
+	})
 }
 
-func HandleDomainVerification(r *http.Request, context *context.Context) {
-	fqdn := getFQDNFromURI(r.URL.Path)
-	if len(fqdn) == 0 {
-		if err := context.MessageResponse(http.StatusBadRequest,
-			"invalid-uri", r.URL.RequestURI()); err != nil {
+type DomainVerificationHandler struct {
+	handy.DefaultHandler
+	database        *mgo.Database
+	databaseSession *mgo.Session
+	language        *messages.LanguagePack
+	FQDN            string                    `param:"fqdn"`
+	Request         protocol.DomainRequest    `request:"put"`
+	Response        *protocol.DomainResponse  `response:"put,get"`
+	Message         *protocol.MessageResponse `error`
+}
 
-			log.Println("Error while writing response. Details:", err)
-			context.Response(http.StatusInternalServerError)
-		}
-		return
-	}
+func (h *DomainVerificationHandler) SetDatabaseSession(session *mgo.Session) {
+	h.databaseSession = session
+}
 
+func (h *DomainVerificationHandler) GetDatabaseSession() *mgo.Session {
+	return h.databaseSession
+}
+
+func (h *DomainVerificationHandler) SetDatabase(database *mgo.Database) {
+	h.database = database
+}
+
+func (h *DomainVerificationHandler) GetDatabase() *mgo.Database {
+	return h.database
+}
+
+func (h *DomainVerificationHandler) SetFQDN(fqdn string) {
+	h.FQDN = fqdn
+}
+
+func (h *DomainVerificationHandler) GetFQDN() string {
+	return h.FQDN
+}
+
+func (h *DomainVerificationHandler) SetLanguage(language *messages.LanguagePack) {
+	h.language = language
+}
+
+func (h *DomainVerificationHandler) GetLanguage() *messages.LanguagePack {
+	return h.language
+}
+
+func (h *DomainVerificationHandler) MessageResponse(messageId string, roid string) error {
 	var err error
-	fqdn, err = model.NormalizeDomainName(fqdn)
-
-	if err != nil {
-		if err := context.MessageResponse(http.StatusBadRequest,
-			"invalid-uri", r.URL.RequestURI()); err != nil {
-
-			log.Println("Error while writing response. Details:", err)
-			context.Response(http.StatusInternalServerError)
-		}
-
-		return
-	}
-
-	if r.Method == "GET" || r.Method == "HEAD" {
-		queryDomain(r, context, fqdn)
-
-	} else if r.Method == "PUT" {
-		scanDomain(r, context, fqdn)
-
-	} else {
-		context.Response(http.StatusMethodNotAllowed)
-	}
+	h.Message, err = protocol.NewMessageResponse(messageId, roid, h.language)
+	return err
 }
 
-// Build the domain object doing a DNS query. To this function works the domain must be registered
-// correctly and delegated in the DNS tree
-func queryDomain(r *http.Request, context *context.Context, fqdn string) {
-	domain, err := scan.QueryDomain(fqdn)
+func (h *DomainVerificationHandler) Get(w http.ResponseWriter, r *http.Request) {
+	h.queryDomain(w, r)
+}
+
+func (h *DomainVerificationHandler) Head(w http.ResponseWriter, r *http.Request) {
+	h.queryDomain(w, r)
+}
+
+// Build the domain object doing a DNS query. To this function works the domain must be
+// registered correctly and delegated in the DNS tree
+func (h *DomainVerificationHandler) queryDomain(w http.ResponseWriter, r *http.Request) {
+	domain, err := scan.QueryDomain(h.FQDN)
 	if err != nil {
 		log.Println("Error while resolving FQDN. Details:", err)
-		context.Response(http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	if err := context.JSONResponse(http.StatusOK,
-		protocol.ToDomainResponse(domain, false)); err != nil {
-
-		log.Println("Error while writing response. Details:", err)
-		context.Response(http.StatusInternalServerError)
-	}
+	w.WriteHeader(http.StatusOK)
+	domainResponse := protocol.ToDomainResponse(domain, false)
+	h.Response = &domainResponse
 }
 
-// scanDomain is responsable for checking a domain object on-the-fly without persisting in database,
-// useful for pre-registration validations in the registry
-func scanDomain(r *http.Request, context *context.Context, fqdn string) {
-	var domainRequest protocol.DomainRequest
-	if err := context.JSONRequest(&domainRequest); err != nil {
-		log.Println("Received an invalid JSON. Details:", err)
-
-		if err := context.MessageResponse(http.StatusBadRequest,
-			"invalid-json-content", r.URL.RequestURI()); err != nil {
-
-			log.Println("Error while writing response. Details:", err)
-			context.Response(http.StatusInternalServerError)
-		}
-		return
-	}
-
+// Put is responsable for checking a domain object on-the-fly without persisting in
+// database, useful for pre-registration validations in the registry
+func (h *DomainVerificationHandler) Put(w http.ResponseWriter, r *http.Request) {
 	// We need to set the FQDN in the domain request object because it is sent only in the
 	// URI and not in the domain request body to avoid information redudancy
-	domainRequest.FQDN = fqdn
+	h.Request.FQDN = h.GetFQDN()
 
 	var domain model.Domain
 	var err error
 
-	if domain, err = protocol.Merge(domain, domainRequest); err != nil {
+	if domain, err = protocol.Merge(domain, h.Request); err != nil {
 		messageId := ""
 
 		switch err {
@@ -116,14 +124,15 @@ func scanDomain(r *http.Request, context *context.Context, fqdn string) {
 		if len(messageId) == 0 {
 			log.Println("Error while merging domain objects for domain verification "+
 				"operation. Details:", err)
-			context.Response(http.StatusInternalServerError)
+			w.WriteHeader(http.StatusInternalServerError)
 
 		} else {
-			if err := context.MessageResponse(http.StatusBadRequest,
-				messageId, r.URL.RequestURI()); err != nil {
+			if err := h.MessageResponse(messageId, r.URL.RequestURI()); err == nil {
+				w.WriteHeader(http.StatusBadRequest)
 
+			} else {
 				log.Println("Error while writing response. Details:", err)
-				context.Response(http.StatusInternalServerError)
+				w.WriteHeader(http.StatusInternalServerError)
 			}
 		}
 		return
@@ -131,10 +140,17 @@ func scanDomain(r *http.Request, context *context.Context, fqdn string) {
 
 	scan.ScanDomain(&domain)
 
-	if err := context.JSONResponse(http.StatusOK,
-		protocol.ToDomainResponse(domain, false)); err != nil {
+	w.WriteHeader(http.StatusOK)
 
-		log.Println("Error while writing response. Details:", err)
-		context.Response(http.StatusInternalServerError)
-	}
+	domainResponse := protocol.ToDomainResponse(domain, false)
+	h.Response = &domainResponse
+}
+
+func (h *DomainVerificationHandler) Interceptors() handy.InterceptorChain {
+	return handy.NewInterceptorChain().
+		Chain(new(interceptor.Permission)).
+		Chain(interceptor.NewFQDN(h)).
+		Chain(interceptor.NewValidator(h)).
+		Chain(interceptor.NewDatabase(h)).
+		Chain(interceptor.NewJSONCodec(h))
 }

@@ -10,13 +10,13 @@ import (
 	"fmt"
 	"github.com/rafaeljusto/shelter/config"
 	"github.com/rafaeljusto/shelter/database/mongodb"
-	"github.com/rafaeljusto/shelter/net/http/rest"
 	"github.com/rafaeljusto/shelter/net/http/rest/check"
+	"github.com/rafaeljusto/shelter/net/http/rest/interceptor"
 	"github.com/rafaeljusto/shelter/net/http/rest/messages"
 	"github.com/rafaeljusto/shelter/testing/utils"
+	"io/ioutil"
 	"net"
 	"net/http"
-	"net/http/httptest"
 )
 
 var (
@@ -62,27 +62,43 @@ func main() {
 	// insert
 	utils.ClearDatabase(database)
 
-	var mux rest.Mux
-	checkHeaders(&mux)
-	createDomain(&mux)
-	checkWrongACL(mux)
-	retrieveDomainMetadata(mux)
-	retrieveDomainsMetadata(mux)
-	deleteDomain(&mux)
+	finishRESTServer := utils.StartRESTServer()
+	defer finishRESTServer()
+
+	checkHeaders()
+	createDomain()
+	checkWrongACL()
+	retrieveDomainMetadata()
+	retrieveDomainsMetadata()
+	deleteDomain()
 
 	utils.Println("SUCCESS!")
 }
 
-func checkHeaders(mux *rest.Mux) {
-	r, err := http.NewRequest("GET", "/xxx/example.com.br.", nil)
+func checkHeaders() {
+	var client http.Client
+
+	url := ""
+	if len(config.ShelterConfig.RESTServer.Listeners) > 0 {
+		url = fmt.Sprintf("http://%s:%d", config.ShelterConfig.RESTServer.Listeners[0].IP,
+			config.ShelterConfig.RESTServer.Listeners[0].Port)
+	}
+
+	if len(url) == 0 {
+		utils.Fatalln("There's no interface to connect to", nil)
+	}
+
+	r, err := http.NewRequest("GET", fmt.Sprintf("%s/xxx/example.com.br.", url), nil)
 	if err != nil {
 		utils.Fatalln("Error creating the HTTP request", err)
 	}
 
-	w := httptest.NewRecorder()
-	mux.ServeHTTP(w, r)
+	response, err := client.Do(r)
+	if err != nil {
+		utils.Fatalln("Error sending request", err)
+	}
 
-	if w.Code != http.StatusServiceUnavailable {
+	if response.StatusCode != http.StatusServiceUnavailable {
 		utils.Fatalln("Not returning HTTP Service Unavailable when the URI is not registered", nil)
 	}
 
@@ -164,7 +180,7 @@ func checkHeaders(mux *rest.Mux) {
     }`)
 
 	for _, item := range data {
-		r, err = http.NewRequest("PUT", "/domain/example.com.br.",
+		r, err = http.NewRequest("PUT", fmt.Sprintf("%s/domain/example.com.br.", url),
 			bytes.NewReader(content))
 		if err != nil {
 			utils.Fatalln("Error creating the HTTP request", err)
@@ -173,18 +189,32 @@ func checkHeaders(mux *rest.Mux) {
 		utils.BuildHTTPHeader(r, content)
 		r.Header.Set(item.Header, item.HeaderValue)
 
-		w = httptest.NewRecorder()
-		mux.ServeHTTP(w, r)
+		response, err := client.Do(r)
+		if err != nil {
+			utils.Fatalln("Error sending request", err)
+		}
 
-		if w.Code != item.ExpectedHTTPStatus {
+		if response.StatusCode != item.ExpectedHTTPStatus {
 			utils.Fatalln(fmt.Sprintf("For HTTP header %s with the value '%s' we were "+
 				"expecting the HTTP status %d but got %d",
-				item.Header, item.HeaderValue, item.ExpectedHTTPStatus, w.Code), nil)
+				item.Header, item.HeaderValue, item.ExpectedHTTPStatus, response.StatusCode), nil)
 		}
 	}
 }
 
-func createDomain(mux *rest.Mux) {
+func createDomain() {
+	var client http.Client
+
+	url := ""
+	if len(config.ShelterConfig.RESTServer.Listeners) > 0 {
+		url = fmt.Sprintf("http://%s:%d", config.ShelterConfig.RESTServer.Listeners[0].IP,
+			config.ShelterConfig.RESTServer.Listeners[0].Port)
+	}
+
+	if len(url) == 0 {
+		utils.Fatalln("There's no interface to connect to", nil)
+	}
+
 	content := []byte(`{
       "Nameservers": [
         { "host": "ns1.example.com.br.", "ipv4": "127.0.0.1" },
@@ -195,7 +225,7 @@ func createDomain(mux *rest.Mux) {
       ]
     }`)
 
-	r, err := http.NewRequest("PUT", "/domain/example.com.br.",
+	r, err := http.NewRequest("PUT", fmt.Sprintf("%s/domain/example.com.br.", url),
 		bytes.NewReader(content))
 	if err != nil {
 		utils.Fatalln("Error creating the HTTP request", err)
@@ -217,33 +247,47 @@ func createDomain(mux *rest.Mux) {
 		},
 	}
 
-	w := httptest.NewRecorder()
-	mux.ServeHTTP(w, r)
-
-	if w.Code != http.StatusCreated {
-		utils.Fatalln(fmt.Sprintf("Error creting a domain object. Expected HTTP status %d and got %d",
-			http.StatusCreated, w.Code), nil)
+	response, err := client.Do(r)
+	if err != nil {
+		utils.Fatalln("Error sending request", err)
 	}
 
-	if len(w.Header().Get("Accept")) == 0 {
+	if response.StatusCode != http.StatusCreated {
+		utils.Fatalln(fmt.Sprintf("Error creting a domain object. Expected HTTP status %d and got %d",
+			http.StatusCreated, response.StatusCode), nil)
+	}
+
+	if len(response.Header.Get("Accept")) == 0 {
 		utils.Fatalln("Not setting Accept HTTP header in response", nil)
 	}
 
-	if len(w.Header().Get("Accept-Language")) == 0 {
+	if len(response.Header.Get("Accept-Language")) == 0 {
 		utils.Fatalln("Not setting Accept-Language HTTP header in response", nil)
 	}
 
-	if len(w.Header().Get("Accept-Charset")) == 0 {
+	if len(response.Header.Get("Accept-Charset")) == 0 {
 		utils.Fatalln("Not setting Accept-Charset HTTP header in response", nil)
 	}
 
-	if len(w.Header().Get("Date")) == 0 {
+	if len(response.Header.Get("Date")) == 0 {
 		utils.Fatalln("Not setting Date HTTP header in response", nil)
 	}
 }
 
-func checkWrongACL(mux rest.Mux) {
-	r, err := http.NewRequest("GET", "/domain/example.com.br.", nil)
+func checkWrongACL() {
+	var client http.Client
+
+	url := ""
+	if len(config.ShelterConfig.RESTServer.Listeners) > 0 {
+		url = fmt.Sprintf("http://%s:%d", config.ShelterConfig.RESTServer.Listeners[0].IP,
+			config.ShelterConfig.RESTServer.Listeners[0].Port)
+	}
+
+	if len(url) == 0 {
+		utils.Fatalln("There's no interface to connect to", nil)
+	}
+
+	r, err := http.NewRequest("GET", fmt.Sprintf("%s/domain/example.com.br.", url), nil)
 	if err != nil {
 		utils.Fatalln("Error creating the HTTP request", err)
 	}
@@ -255,12 +299,14 @@ func checkWrongACL(mux rest.Mux) {
 	if err != nil {
 		utils.Fatalln("Error parsing CIDR", err)
 	}
-	mux.ACL = append(mux.ACL, cidr)
+	interceptor.ACL = []*net.IPNet{cidr}
 
-	w := httptest.NewRecorder()
-	mux.ServeHTTP(w, r)
+	response, err := client.Do(r)
+	if err != nil {
+		utils.Fatalln("Error sending request", err)
+	}
 
-	if w.Code != http.StatusForbidden {
+	if response.StatusCode != http.StatusForbidden {
 		utils.Fatalln("Not checking ACL", nil)
 	}
 
@@ -268,18 +314,32 @@ func checkWrongACL(mux rest.Mux) {
 	if err != nil {
 		utils.Fatalln("Error parsing CIDR", err)
 	}
-	mux.ACL = append(mux.ACL, cidr)
+	interceptor.ACL = []*net.IPNet{cidr}
 
-	w = httptest.NewRecorder()
-	mux.ServeHTTP(w, r)
+	response, err = client.Do(r)
+	if err != nil {
+		utils.Fatalln("Error sending request", err)
+	}
 
-	if w.Code != http.StatusOK {
+	if response.StatusCode != http.StatusOK {
 		utils.Fatalln("Not allowing a valid ACL", nil)
 	}
 }
 
-func retrieveDomainMetadata(mux rest.Mux) {
-	r, err := http.NewRequest("HEAD", "/domain/example.com.br.", nil)
+func retrieveDomainMetadata() {
+	var client http.Client
+
+	url := ""
+	if len(config.ShelterConfig.RESTServer.Listeners) > 0 {
+		url = fmt.Sprintf("http://%s:%d", config.ShelterConfig.RESTServer.Listeners[0].IP,
+			config.ShelterConfig.RESTServer.Listeners[0].Port)
+	}
+
+	if len(url) == 0 {
+		utils.Fatalln("There's no interface to connect to", nil)
+	}
+
+	r, err := http.NewRequest("HEAD", fmt.Sprintf("%s/domain/example.com.br.", url), nil)
 	if err != nil {
 		utils.Fatalln("Error creting the HTTP request", err)
 	}
@@ -291,22 +351,41 @@ func retrieveDomainMetadata(mux rest.Mux) {
 	if err != nil {
 		utils.Fatalln("Error parsing CIDR", err)
 	}
-	mux.ACL = append(mux.ACL, cidr)
+	interceptor.ACL = []*net.IPNet{cidr}
 
-	w := httptest.NewRecorder()
-	mux.ServeHTTP(w, r)
+	response, err := client.Do(r)
+	if err != nil {
+		utils.Fatalln("Error sending request", err)
+	}
 
-	if w.Code != http.StatusOK {
+	if response.StatusCode != http.StatusOK {
 		utils.Fatalln("Not retrieving a valid domain", nil)
 	}
 
-	if len(w.Body.Bytes()) > 0 {
+	responseContent, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		utils.Fatalln("Error reading response body", err)
+	}
+
+	if len(responseContent) > 0 {
 		utils.Fatalln("HEAD method should not return body", nil)
 	}
 }
 
-func retrieveDomainsMetadata(mux rest.Mux) {
-	r, err := http.NewRequest("HEAD", "/domains", nil)
+func retrieveDomainsMetadata() {
+	var client http.Client
+
+	url := ""
+	if len(config.ShelterConfig.RESTServer.Listeners) > 0 {
+		url = fmt.Sprintf("http://%s:%d", config.ShelterConfig.RESTServer.Listeners[0].IP,
+			config.ShelterConfig.RESTServer.Listeners[0].Port)
+	}
+
+	if len(url) == 0 {
+		utils.Fatalln("There's no interface to connect to", nil)
+	}
+
+	r, err := http.NewRequest("HEAD", fmt.Sprintf("%s/domains", url), nil)
 	if err != nil {
 		utils.Fatalln("Error creting the HTTP request", err)
 	}
@@ -318,32 +397,53 @@ func retrieveDomainsMetadata(mux rest.Mux) {
 	if err != nil {
 		utils.Fatalln("Error parsing CIDR", err)
 	}
-	mux.ACL = append(mux.ACL, cidr)
+	interceptor.ACL = []*net.IPNet{cidr}
 
-	w := httptest.NewRecorder()
-	mux.ServeHTTP(w, r)
+	response, err := client.Do(r)
+	if err != nil {
+		utils.Fatalln("Error sending request", err)
+	}
 
-	if w.Code != http.StatusOK {
+	if response.StatusCode != http.StatusOK {
 		utils.Fatalln("Not retrieving valid domains", nil)
 	}
 
-	if len(w.Body.Bytes()) > 0 {
+	responseContent, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		utils.Fatalln("Error reading response body", err)
+	}
+
+	if len(responseContent) > 0 {
 		utils.Fatalln("HEAD method should not return body", nil)
 	}
 }
 
-func deleteDomain(mux *rest.Mux) {
-	r, err := http.NewRequest("DELETE", "/domain/example.com.br.", nil)
+func deleteDomain() {
+	var client http.Client
+
+	url := ""
+	if len(config.ShelterConfig.RESTServer.Listeners) > 0 {
+		url = fmt.Sprintf("http://%s:%d", config.ShelterConfig.RESTServer.Listeners[0].IP,
+			config.ShelterConfig.RESTServer.Listeners[0].Port)
+	}
+
+	if len(url) == 0 {
+		utils.Fatalln("There's no interface to connect to", nil)
+	}
+
+	r, err := http.NewRequest("DELETE", fmt.Sprintf("%s/domain/example.com.br.", url), nil)
 	if err != nil {
 		utils.Fatalln("Error creating the HTTP request", err)
 	}
 
 	utils.BuildHTTPHeader(r, nil)
 
-	w := httptest.NewRecorder()
-	mux.ServeHTTP(w, r)
+	response, err := client.Do(r)
+	if err != nil {
+		utils.Fatalln("Error sending request", err)
+	}
 
-	if w.Code != http.StatusNoContent {
+	if response.StatusCode != http.StatusNoContent {
 		utils.Fatalln("Error removing a domain object", nil)
 	}
 }

@@ -1,8 +1,8 @@
 [Setup]
 AppId={{9CFAEC95-9F6A-4281-B815-4DC9AB3DB328}
 AppName=Shelter
-AppVersion=0.2
-AppVerName=Shelter 0.2
+AppVersion=0.3
+AppVerName=Shelter 0.3
 AppPublisher=Rafael Dantas Justo
 AppPublisherURL=http://github.com/rafaeljusto/shelter
 AppSupportURL=http://github.com/rafaeljusto/shelter

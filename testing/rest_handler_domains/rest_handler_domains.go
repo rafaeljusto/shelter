@@ -5,17 +5,19 @@
 package main
 
 import (
-	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
+	"github.com/rafaeljusto/shelter/config"
 	"github.com/rafaeljusto/shelter/database/mongodb"
-	"github.com/rafaeljusto/shelter/net/http/rest/context"
 	"github.com/rafaeljusto/shelter/net/http/rest/handler"
 	"github.com/rafaeljusto/shelter/net/http/rest/protocol"
 	"github.com/rafaeljusto/shelter/testing/utils"
+	"github.com/trajber/handy"
+	"io/ioutil"
 	"labix.org/v2/mgo"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"time"
 )
@@ -23,14 +25,6 @@ import (
 var (
 	configFilePath string // Path for the config file with the connection information
 )
-
-// RESTHandlerDomainsTestConfigFile is a structure to store the test configuration file data
-type RESTHandlerDomainsTestConfigFile struct {
-	Database struct {
-		URI  string
-		Name string
-	}
-}
 
 type DomainsCacheTestData struct {
 	HeaderValue        string
@@ -45,8 +39,7 @@ func init() {
 func main() {
 	flag.Parse()
 
-	var config RESTHandlerDomainsTestConfigFile
-	err := utils.ReadConfigFile(configFilePath, &config)
+	err := utils.ReadConfigFile(configFilePath, &config.ShelterConfig)
 
 	if err == utils.ErrConfigFileUndefined {
 		fmt.Println(err.Error())
@@ -59,8 +52,8 @@ func main() {
 	}
 
 	database, databaseSession, err := mongodb.Open(
-		[]string{config.Database.URI},
-		config.Database.Name,
+		config.ShelterConfig.Database.URIs,
+		config.ShelterConfig.Database.Name,
 		false, "", "",
 	)
 
@@ -88,9 +81,15 @@ func main() {
 }
 
 func createDomains(database *mgo.Database) {
+	mux := handy.NewHandy()
+
+	h := new(handler.DomainHandler)
+	mux.Handle("/domain/{fqdn}", func() handy.Handler {
+		return h
+	})
+
 	for i := 0; i < 100; i++ {
-		r, err := http.NewRequest("PUT", fmt.Sprintf("/domain/example%d.com.br.", i),
-			strings.NewReader(`{
+		requestContent := `{
       "Nameservers": [
         { "host": "ns1.example.com.br." },
         { "host": "ns2.example.com.br." }
@@ -98,21 +97,25 @@ func createDomains(database *mgo.Database) {
       "Owners": [
         { "email": "admin@example.com.br.", "language": "pt-br" }
       ]
-    }`))
+    }`
+
+		r, err := http.NewRequest("PUT", fmt.Sprintf("/domain/example%d.com.br.", i),
+			strings.NewReader(requestContent))
 		if err != nil {
 			utils.Fatalln("Error creating the HTTP request", err)
 		}
+		utils.BuildHTTPHeader(r, []byte(requestContent))
 
-		context, err := context.NewContext(r, database)
+		w := httptest.NewRecorder()
+		mux.ServeHTTP(w, r)
+
+		responseContent, err := ioutil.ReadAll(w.Body)
 		if err != nil {
-			utils.Fatalln("Error creating context", err)
+			utils.Fatalln("Error reading response body", err)
 		}
 
-		handler.HandleDomain(r, &context)
-
-		if context.ResponseHTTPStatus != http.StatusCreated {
-			utils.Fatalln("Error creating domain",
-				errors.New(string(context.ResponseContent)))
+		if w.Code != http.StatusCreated {
+			utils.Fatalln("Error creating domain", errors.New(string(responseContent)))
 		}
 	}
 }
@@ -121,7 +124,7 @@ func retrieveDomains(database *mgo.Database) {
 	data := []struct {
 		URI                string
 		ExpectedHTTPStatus int
-		ContentCheck       func([]byte)
+		ContentCheck       func(*protocol.DomainsResponse)
 	}{
 		{
 			URI:                "/domains/?orderby=xxx:desc&pagesize=10&page=1",
@@ -142,10 +145,7 @@ func retrieveDomains(database *mgo.Database) {
 		{
 			URI:                "/domains/?orderby=fqdn:desc&pagesize=10&page=1",
 			ExpectedHTTPStatus: http.StatusOK,
-			ContentCheck: func(content []byte) {
-				var domainsResponse protocol.DomainsResponse
-				json.Unmarshal(content, &domainsResponse)
-
+			ContentCheck: func(domainsResponse *protocol.DomainsResponse) {
 				if len(domainsResponse.Domains) != 10 {
 					utils.Fatalln("Error retrieving the wrong number of domains", nil)
 				}
@@ -154,10 +154,7 @@ func retrieveDomains(database *mgo.Database) {
 		{
 			URI:                "/domains",
 			ExpectedHTTPStatus: http.StatusOK,
-			ContentCheck: func(content []byte) {
-				var domainsResponse protocol.DomainsResponse
-				json.Unmarshal(content, &domainsResponse)
-
+			ContentCheck: func(domainsResponse *protocol.DomainsResponse) {
 				if len(domainsResponse.Domains) == 0 {
 					utils.Fatalln("Error retrieving domains", nil)
 				}
@@ -174,10 +171,7 @@ func retrieveDomains(database *mgo.Database) {
 		{
 			URI:                "/domains?expand",
 			ExpectedHTTPStatus: http.StatusOK,
-			ContentCheck: func(content []byte) {
-				var domainsResponse protocol.DomainsResponse
-				json.Unmarshal(content, &domainsResponse)
-
+			ContentCheck: func(domainsResponse *protocol.DomainsResponse) {
 				if len(domainsResponse.Domains) == 0 {
 					utils.Fatalln("Error retrieving domains", nil)
 				}
@@ -193,67 +187,86 @@ func retrieveDomains(database *mgo.Database) {
 		},
 	}
 
+	mux := handy.NewHandy()
+
+	h := new(handler.DomainsHandler)
+	mux.Handle("/domains", func() handy.Handler {
+		return h
+	})
+
 	for _, item := range data {
 		r, err := http.NewRequest("GET", item.URI, nil)
 		if err != nil {
 			utils.Fatalln("Error creating the HTTP request", err)
 		}
+		utils.BuildHTTPHeader(r, nil)
 
-		context, err := context.NewContext(r, database)
+		w := httptest.NewRecorder()
+		mux.ServeHTTP(w, r)
+
+		responseContent, err := ioutil.ReadAll(w.Body)
 		if err != nil {
-			utils.Fatalln("Error creating context", err)
+			utils.Fatalln("Error reading response body", err)
 		}
 
-		handler.HandleDomains(r, &context)
-
-		if context.ResponseHTTPStatus != item.ExpectedHTTPStatus {
+		if w.Code != item.ExpectedHTTPStatus {
 			utils.Fatalln(fmt.Sprintf("Error when requesting domains using the URI [%s]. "+
 				"Expected HTTP status code %d but got %d", item.URI,
-				item.ExpectedHTTPStatus, context.ResponseHTTPStatus), nil)
+				item.ExpectedHTTPStatus, w.Code), errors.New(string(responseContent)))
 		}
 
 		if item.ContentCheck != nil {
-			item.ContentCheck(context.ResponseContent)
+			item.ContentCheck(h.Response)
 		}
 	}
 }
 
 func retrieveDomainsMetadata(database *mgo.Database) {
+	mux := handy.NewHandy()
+
+	h := new(handler.DomainsHandler)
+	mux.Handle("/domains", func() handy.Handler {
+		return h
+	})
+
 	r, err := http.NewRequest("GET", "/domains/?orderby=fqdn:desc&pagesize=10&page=1", nil)
 	if err != nil {
 		utils.Fatalln("Error creating the HTTP request", err)
 	}
+	utils.BuildHTTPHeader(r, nil)
 
-	context1, err := context.NewContext(r, database)
+	w := httptest.NewRecorder()
+	mux.ServeHTTP(w, r)
+
+	response1 := *h.Response
+	responseContent, err := ioutil.ReadAll(w.Body)
 	if err != nil {
-		utils.Fatalln("Error creating context", err)
+		utils.Fatalln("Error reading response body", err)
 	}
 
-	handler.HandleDomains(r, &context1)
-
-	if context1.ResponseHTTPStatus != http.StatusOK {
-		utils.Fatalln("Error retrieving domains",
-			errors.New(string(context1.ResponseContent)))
+	if w.Code != http.StatusOK {
+		utils.Fatalln("Error retrieving domains", errors.New(string(responseContent)))
 	}
 
 	r, err = http.NewRequest("HEAD", "/domains/?orderby=fqdn:desc&pagesize=10&page=1", nil)
 	if err != nil {
 		utils.Fatalln("Error creating the HTTP request", err)
 	}
+	utils.BuildHTTPHeader(r, nil)
 
-	context2, err := context.NewContext(r, database)
+	mux.ServeHTTP(w, r)
+
+	response2 := *h.Response
+	responseContent, err = ioutil.ReadAll(w.Body)
 	if err != nil {
-		utils.Fatalln("Error creating context", err)
+		utils.Fatalln("Error reading response body", err)
 	}
 
-	handler.HandleDomains(r, &context2)
-
-	if context2.ResponseHTTPStatus != http.StatusOK {
-		utils.Fatalln("Error retrieving domains",
-			errors.New(string(context2.ResponseContent)))
+	if w.Code != http.StatusOK {
+		utils.Fatalln("Error retrieving domains", errors.New(string(responseContent)))
 	}
 
-	if string(context1.ResponseContent) != string(context2.ResponseContent) {
+	if !utils.CompareProtocolDomains(response1, response2) {
 		utils.Fatalln("At this point the GET and HEAD method should "+
 			"return the same body content", nil)
 	}
@@ -296,72 +309,88 @@ func retrieveDomainsIfUnmodifiedSince(database *mgo.Database) {
 }
 
 func retrieveDomainsIfMatch(database *mgo.Database) {
+	mux := handy.NewHandy()
+
+	h := new(handler.DomainsHandler)
+	mux.Handle("/domains", func() handy.Handler {
+		return h
+	})
+
 	r, err := http.NewRequest("GET", "/domains", nil)
 	if err != nil {
 		utils.Fatalln("Error creating the HTTP request", err)
 	}
+	utils.BuildHTTPHeader(r, nil)
 
-	context, err := context.NewContext(r, database)
-	if err != nil {
-		utils.Fatalln("Error creating context", err)
-	}
-
-	handler.HandleDomains(r, &context)
+	w := httptest.NewRecorder()
+	mux.ServeHTTP(w, r)
 
 	domainsCacheTest(database, r, "If-Match", []DomainsCacheTestData{
 		{
-			HeaderValue:        context.HTTPHeader["ETag"] + "x",
+			HeaderValue:        w.Header().Get("ETag") + "x",
 			ExpectedHTTPStatus: http.StatusPreconditionFailed,
 		},
 		{
-			HeaderValue:        context.HTTPHeader["ETag"],
+			HeaderValue:        w.Header().Get("ETag"),
 			ExpectedHTTPStatus: http.StatusOK,
 		},
 	})
 }
 
 func retrieveDomainsIfNoneMatch(database *mgo.Database) {
+	mux := handy.NewHandy()
+
+	h := new(handler.DomainsHandler)
+	mux.Handle("/domains", func() handy.Handler {
+		return h
+	})
+
 	r, err := http.NewRequest("GET", "/domains", nil)
 	if err != nil {
 		utils.Fatalln("Error creating the HTTP request", err)
 	}
+	utils.BuildHTTPHeader(r, nil)
 
-	context, err := context.NewContext(r, database)
-	if err != nil {
-		utils.Fatalln("Error creating context", err)
-	}
-
-	handler.HandleDomains(r, &context)
+	w := httptest.NewRecorder()
+	mux.ServeHTTP(w, r)
 
 	domainsCacheTest(database, r, "If-None-Match", []DomainsCacheTestData{
 		{
-			HeaderValue:        context.HTTPHeader["ETag"],
+			HeaderValue:        w.Header().Get("ETag"),
 			ExpectedHTTPStatus: http.StatusNotModified,
 		},
 		{
-			HeaderValue:        context.HTTPHeader["ETag"] + "x",
+			HeaderValue:        w.Header().Get("ETag") + "x",
 			ExpectedHTTPStatus: http.StatusOK,
 		},
 	})
 }
 
 func deleteDomains(database *mgo.Database) {
+	mux := handy.NewHandy()
+
+	h := new(handler.DomainHandler)
+	mux.Handle("/domain/{fqdn}", func() handy.Handler {
+		return h
+	})
+
 	for i := 0; i < 100; i++ {
 		r, err := http.NewRequest("DELETE", fmt.Sprintf("/domain/example%d.com.br.", i), nil)
 		if err != nil {
 			utils.Fatalln("Error creating the HTTP request", err)
 		}
+		utils.BuildHTTPHeader(r, nil)
 
-		context, err := context.NewContext(r, database)
+		w := httptest.NewRecorder()
+		mux.ServeHTTP(w, r)
+
+		responseContent, err := ioutil.ReadAll(w.Body)
 		if err != nil {
-			utils.Fatalln("Error creating context", err)
+			utils.Fatalln("Error reading response body", err)
 		}
 
-		handler.HandleDomain(r, &context)
-
-		if context.ResponseHTTPStatus != http.StatusNoContent {
-			utils.Fatalln("Error removing domain",
-				errors.New(string(context.ResponseContent)))
+		if w.Code != http.StatusNoContent {
+			utils.Fatalln("Error removing domain", errors.New(string(responseContent)))
 		}
 	}
 }
@@ -369,21 +398,30 @@ func deleteDomains(database *mgo.Database) {
 func domainsCacheTest(database *mgo.Database, r *http.Request,
 	header string, domainsCacheTestData []DomainsCacheTestData) {
 
-	context, err := context.NewContext(r, database)
-	if err != nil {
-		utils.Fatalln("Error creating context", err)
-	}
+	mux := handy.NewHandy()
+
+	h := new(handler.DomainsHandler)
+	mux.Handle("/domains", func() handy.Handler {
+		return h
+	})
 
 	for _, item := range domainsCacheTestData {
 		r.Header.Set(header, item.HeaderValue)
+		utils.BuildHTTPHeader(r, nil)
 
-		handler.HandleDomains(r, &context)
+		w := httptest.NewRecorder()
+		mux.ServeHTTP(w, r)
 
-		if context.ResponseHTTPStatus != item.ExpectedHTTPStatus {
+		responseContent, err := ioutil.ReadAll(w.Body)
+		if err != nil {
+			utils.Fatalln("Error reading response body", err)
+		}
+
+		if w.Code != item.ExpectedHTTPStatus {
 			utils.Fatalln(fmt.Sprintf("Error in %s test using %s [%s] "+
 				"HTTP header. Expected HTTP status code %d and got %d",
 				r.Method, header, item.HeaderValue, item.ExpectedHTTPStatus,
-				context.ResponseHTTPStatus), errors.New(string(context.ResponseContent)))
+				w.Code), errors.New(string(responseContent)))
 		}
 	}
 }

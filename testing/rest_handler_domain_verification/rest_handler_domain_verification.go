@@ -5,18 +5,18 @@
 package main
 
 import (
-	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
 	"github.com/miekg/dns"
 	"github.com/rafaeljusto/shelter/config"
 	"github.com/rafaeljusto/shelter/model"
-	"github.com/rafaeljusto/shelter/net/http/rest/context"
 	"github.com/rafaeljusto/shelter/net/http/rest/handler"
-	"github.com/rafaeljusto/shelter/net/http/rest/protocol"
 	"github.com/rafaeljusto/shelter/testing/utils"
+	"github.com/trajber/handy"
+	"io/ioutil"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 )
 
@@ -92,43 +92,54 @@ func scanDomain() {
 		w.WriteMsg(dnsResponseMessage)
 	})
 
-	r, err := http.NewRequest("PUT", "/domain/example.com.br./verification",
-		strings.NewReader(`{
+	mux := handy.NewHandy()
+
+	h := new(handler.DomainVerificationHandler)
+	mux.Handle("/domain/{fqdn}/verification", func() handy.Handler {
+		return h
+	})
+
+	requestContent := `{
       "Nameservers": [
         { "Host": "ns1.example.com.br.", "ipv4": "127.0.0.1" },
         { "Host": "ns2.example.com.br.", "ipv4": "127.0.0.1" }
       ]
-    }`))
+    }`
+
+	r, err := http.NewRequest("PUT", "/domain/example.com.br./verification",
+		strings.NewReader(requestContent))
 	if err != nil {
 		utils.Fatalln("Error creating the HTTP request", err)
 	}
+	utils.BuildHTTPHeader(r, []byte(requestContent))
 
-	context, err := context.NewContext(r, nil)
+	w := httptest.NewRecorder()
+	mux.ServeHTTP(w, r)
+
+	responseContent, err := ioutil.ReadAll(w.Body)
 	if err != nil {
-		utils.Fatalln("Error creating context", err)
+		utils.Fatalln("Error reading response body", err)
 	}
 
-	handler.HandleDomainVerification(r, &context)
-
-	if context.ResponseHTTPStatus != http.StatusOK {
-		utils.Fatalln("Error scanning domain",
-			errors.New(string(context.ResponseContent)))
+	if w.Code != http.StatusOK {
+		utils.Fatalln(fmt.Sprintf("Error scanning domain. "+
+			"Expected %d and got %d", http.StatusOK, w.Code),
+			errors.New(string(responseContent)))
 	}
 
-	var domainResponse protocol.DomainResponse
-	if err := json.Unmarshal(context.ResponseContent, &domainResponse); err != nil {
-		utils.Fatalln("Error decoding domain response", err)
-	}
-
-	if len(domainResponse.Nameservers) != 2 {
+	if len(h.Response.Nameservers) != 2 {
 		utils.Fatalln("Wrong number of nameservers", nil)
 	}
 
-	if domainResponse.Nameservers[0].LastStatus != model.NameserverStatusToString(model.NameserverStatusOK) {
+	if h.Response.Nameservers[0].LastStatus !=
+		model.NameserverStatusToString(model.NameserverStatusOK) {
+
 		utils.Fatalln("Scan did not work for ns1", nil)
 	}
 
-	if domainResponse.Nameservers[1].LastStatus != model.NameserverStatusToString(model.NameserverStatusOK) {
+	if h.Response.Nameservers[1].LastStatus !=
+		model.NameserverStatusToString(model.NameserverStatusOK) {
+
 		utils.Fatalln("Scan did not work for ns2", nil)
 	}
 }
@@ -166,29 +177,34 @@ func queryDomain() {
 		w.WriteMsg(dnsResponseMessage)
 	})
 
+	mux := handy.NewHandy()
+
+	h := new(handler.DomainVerificationHandler)
+	mux.Handle("/domain/{fqdn}/verification", func() handy.Handler {
+		return h
+	})
+
 	r, err := http.NewRequest("GET", "/domain/example.com.br./verification", nil)
 	if err != nil {
 		utils.Fatalln("Error creating the HTTP request", err)
 	}
+	utils.BuildHTTPHeader(r, nil)
 
-	context, err := context.NewContext(r, nil)
+	w := httptest.NewRecorder()
+	mux.ServeHTTP(w, r)
+
+	responseContent, err := ioutil.ReadAll(w.Body)
 	if err != nil {
-		utils.Fatalln("Error creating context", err)
+		utils.Fatalln("Error reading response body", err)
 	}
 
-	handler.HandleDomainVerification(r, &context)
-
-	if context.ResponseHTTPStatus != http.StatusOK {
-		utils.Fatalln("Error scanning domain",
-			errors.New(string(context.ResponseContent)))
+	if w.Code != http.StatusOK {
+		utils.Fatalln(fmt.Sprintf("Error scanning domain. "+
+			"Expected %d and got %d", http.StatusOK, w.Code),
+			errors.New(string(responseContent)))
 	}
 
-	var domainResponse protocol.DomainResponse
-	if err := json.Unmarshal(context.ResponseContent, &domainResponse); err != nil {
-		utils.Fatalln("Error decoding domain response", err)
-	}
-
-	if len(domainResponse.Nameservers) != 2 {
+	if len(h.Response.Nameservers) != 2 {
 		utils.Fatalln("Wrong number of nameservers", nil)
 	}
 }

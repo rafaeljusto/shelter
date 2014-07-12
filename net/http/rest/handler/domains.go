@@ -8,34 +8,101 @@ package handler
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"encoding/json"
 	"github.com/rafaeljusto/shelter/dao"
 	"github.com/rafaeljusto/shelter/log"
-	"github.com/rafaeljusto/shelter/net/http/rest/context"
+	"github.com/rafaeljusto/shelter/net/http/rest/interceptor"
+	"github.com/rafaeljusto/shelter/net/http/rest/messages"
 	"github.com/rafaeljusto/shelter/net/http/rest/protocol"
+	"github.com/trajber/handy"
+	"labix.org/v2/mgo"
 	"net/http"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
 )
 
 func init() {
-	HandleFunc(regexp.MustCompile("^/domains(/.*)?$"), HandleDomains)
+	HandleFunc("/domains", func() handy.Handler {
+		return new(DomainsHandler)
+	})
 }
 
-func HandleDomains(r *http.Request, context *context.Context) {
-	if r.Method == "GET" || r.Method == "HEAD" {
-		retrieveDomains(r, context)
+type DomainsHandler struct {
+	handy.DefaultHandler
+	database        *mgo.Database
+	databaseSession *mgo.Session
+	language        *messages.LanguagePack
+	Response        *protocol.DomainsResponse `response:"get"`
+	Message         *protocol.MessageResponse `error`
+	lastModifiedAt  time.Time
+}
 
-	} else {
-		context.Response(http.StatusMethodNotAllowed)
+func (h *DomainsHandler) SetDatabaseSession(session *mgo.Session) {
+	h.databaseSession = session
+}
+
+func (h *DomainsHandler) GetDatabaseSession() *mgo.Session {
+	return h.databaseSession
+}
+
+func (h *DomainsHandler) SetDatabase(database *mgo.Database) {
+	h.database = database
+}
+
+func (h *DomainsHandler) GetDatabase() *mgo.Database {
+	return h.database
+}
+
+func (h *DomainsHandler) GetLastModifiedAt() time.Time {
+	return h.lastModifiedAt
+}
+
+// The ETag header will be the hash of the content on list services
+func (h *DomainsHandler) GetETag() string {
+	body, err := json.Marshal(h.Response)
+	if err != nil {
+		return ""
 	}
+
+	hash := md5.New()
+	if _, err := hash.Write(body); err != nil {
+		return ""
+	}
+
+	return hex.EncodeToString(hash.Sum(nil))
+}
+
+func (h *DomainsHandler) SetLanguage(language *messages.LanguagePack) {
+	h.language = language
+}
+
+func (h *DomainsHandler) GetLanguage() *messages.LanguagePack {
+	return h.language
+}
+
+func (h *DomainsHandler) MessageResponse(messageId string, roid string) error {
+	var err error
+	h.Message, err = protocol.NewMessageResponse(messageId, roid, h.language)
+	return err
+}
+
+func (h *DomainsHandler) ClearResponse() {
+	h.Response = nil
+}
+
+func (h *DomainsHandler) Get(w http.ResponseWriter, r *http.Request) {
+	h.retrieveDomains(w, r)
+}
+
+func (h *DomainsHandler) Head(w http.ResponseWriter, r *http.Request) {
+	h.retrieveDomains(w, r)
 }
 
 // The HEAD method is identical to GET except that the server MUST NOT return a message-
 // body in the response. But now the responsability for don't adding the body is from the
 // mux while writing the response
-func retrieveDomains(r *http.Request, context *context.Context) {
+func (h *DomainsHandler) retrieveDomains(w http.ResponseWriter, r *http.Request) {
 	var pagination dao.DomainDAOPagination
 	expand := false
 
@@ -72,33 +139,36 @@ func retrieveDomains(r *http.Request, context *context.Context) {
 						field, direction = orderByAndDirection[0], orderByAndDirection[1]
 
 					} else {
-						if err := context.MessageResponse(http.StatusBadRequest,
-							"invalid-query-order-by", ""); err != nil {
+						if err := h.MessageResponse("invalid-query-order-by", ""); err == nil {
+							w.WriteHeader(http.StatusBadRequest)
 
+						} else {
 							log.Println("Error while writing response. Details:", err)
-							context.Response(http.StatusInternalServerError)
+							w.WriteHeader(http.StatusInternalServerError)
 						}
 						return
 					}
 
 					orderByField, err := dao.DomainDAOOrderByFieldFromString(field)
 					if err != nil {
-						if err := context.MessageResponse(http.StatusBadRequest,
-							"invalid-query-order-by", ""); err != nil {
+						if err := h.MessageResponse("invalid-query-order-by", ""); err == nil {
+							w.WriteHeader(http.StatusBadRequest)
 
+						} else {
 							log.Println("Error while writing response. Details:", err)
-							context.Response(http.StatusInternalServerError)
+							w.WriteHeader(http.StatusInternalServerError)
 						}
 						return
 					}
 
 					orderByDirection, err := dao.DAOOrderByDirectionFromString(direction)
 					if err != nil {
-						if err := context.MessageResponse(http.StatusBadRequest,
-							"invalid-query-order-by", ""); err != nil {
+						if err := h.MessageResponse("invalid-query-order-by", ""); err == nil {
+							w.WriteHeader(http.StatusBadRequest)
 
+						} else {
 							log.Println("Error while writing response. Details:", err)
-							context.Response(http.StatusInternalServerError)
+							w.WriteHeader(http.StatusInternalServerError)
 						}
 						return
 					}
@@ -113,11 +183,12 @@ func retrieveDomains(r *http.Request, context *context.Context) {
 				var err error
 				pagination.PageSize, err = strconv.Atoi(value)
 				if err != nil {
-					if err := context.MessageResponse(http.StatusBadRequest,
-						"invalid-query-page-size", ""); err != nil {
+					if err := h.MessageResponse("invalid-query-page-size", ""); err == nil {
+						w.WriteHeader(http.StatusBadRequest)
 
+					} else {
 						log.Println("Error while writing response. Details:", err)
-						context.Response(http.StatusInternalServerError)
+						w.WriteHeader(http.StatusInternalServerError)
 					}
 					return
 				}
@@ -126,11 +197,12 @@ func retrieveDomains(r *http.Request, context *context.Context) {
 				var err error
 				pagination.Page, err = strconv.Atoi(value)
 				if err != nil {
-					if err := context.MessageResponse(http.StatusBadRequest,
-						"invalid-query-page", ""); err != nil {
+					if err := h.MessageResponse("invalid-query-page", ""); err == nil {
+						w.WriteHeader(http.StatusBadRequest)
 
+					} else {
 						log.Println("Error while writing response. Details:", err)
-						context.Response(http.StatusInternalServerError)
+						w.WriteHeader(http.StatusInternalServerError)
 					}
 					return
 				}
@@ -142,46 +214,36 @@ func retrieveDomains(r *http.Request, context *context.Context) {
 	}
 
 	domainDAO := dao.DomainDAO{
-		Database: context.Database,
+		Database: h.GetDatabase(),
 	}
 
 	domains, err := domainDAO.FindAll(&pagination, expand)
 	if err != nil {
 		log.Println("Error while searching domains objects. Details:", err)
-		context.Response(http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	if err := context.JSONResponse(http.StatusOK,
-		protocol.ToDomainsResponse(domains, pagination)); err != nil {
-
-		log.Println("Error while writing response. Details:", err)
-		context.Response(http.StatusInternalServerError)
-		return
-	}
-
-	hash := md5.New()
-	if _, err := hash.Write(context.ResponseContent); err != nil {
-		log.Println("Error calculating response ETag. Details:", err)
-		context.Response(http.StatusInternalServerError)
-		return
-	}
-
-	// The ETag header will be the hash of the content on list services
-	etag := hex.EncodeToString(hash.Sum(nil))
+	domainsResponse := protocol.ToDomainsResponse(domains, pagination)
+	h.Response = &domainsResponse
 
 	// Last-Modified is going to be the most recent date of the list
-	var lastModifiedAt time.Time
 	for _, domain := range domains {
-		if domain.LastModifiedAt.After(lastModifiedAt) {
-			lastModifiedAt = domain.LastModifiedAt
+		if domain.LastModifiedAt.After(h.lastModifiedAt) {
+			h.lastModifiedAt = domain.LastModifiedAt
 		}
 	}
 
-	if !CheckHTTPCacheHeaders(r, context, lastModifiedAt, etag) {
-		return
-	}
+	w.Header().Add("ETag", h.GetETag())
+	w.Header().Add("Last-Modified", h.lastModifiedAt.Format(time.RFC1123))
+	w.WriteHeader(http.StatusOK)
+}
 
-	context.AddHeader("ETag", etag)
-	context.AddHeader("Last-Modified", lastModifiedAt.Format(time.RFC1123))
+func (h *DomainsHandler) Interceptors() handy.InterceptorChain {
+	return handy.NewInterceptorChain().
+		Chain(new(interceptor.Permission)).
+		Chain(interceptor.NewValidator(h)).
+		Chain(interceptor.NewDatabase(h)).
+		Chain(interceptor.NewJSONCodec(h)).
+		Chain(interceptor.NewHTTPCacheAfter(h))
 }

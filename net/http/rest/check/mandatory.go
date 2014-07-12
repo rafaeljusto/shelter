@@ -9,7 +9,6 @@ import (
 	"crypto/md5"
 	"encoding/base64"
 	"errors"
-	"github.com/rafaeljusto/shelter/net/http/rest/context"
 	"github.com/rafaeljusto/shelter/net/http/rest/messages"
 	"net/http"
 	"strings"
@@ -70,13 +69,13 @@ func HTTPAccept(r *http.Request) bool {
 
 // The accept language check beyond verifying if the language exists in out system, set
 // the first language found in the context
-func HTTPAcceptLanguage(r *http.Request, context *context.Context) bool {
+func HTTPAcceptLanguage(r *http.Request) (*messages.LanguagePack, bool) {
 	acceptLanguage := r.Header.Get("Accept-Language")
 	acceptLanguage = strings.TrimSpace(acceptLanguage)
 	acceptLanguage = strings.ToLower(acceptLanguage)
 
 	if len(acceptLanguage) == 0 {
-		return true
+		return messages.ShelterRESTLanguagePack, true
 	}
 
 	for _, acceptLanguagePart := range strings.Split(acceptLanguage, ",") {
@@ -88,17 +87,16 @@ func HTTPAcceptLanguage(r *http.Request, context *context.Context) bool {
 		}
 
 		if acceptLanguagePart == "*" {
-			return true
+			return messages.ShelterRESTLanguagePack, true
 		}
 
 		languagePack := messages.ShelterRESTLanguagePacks.Select(acceptLanguagePart)
 		if languagePack != nil {
-			context.Language = languagePack
-			return true
+			return languagePack, true
 		}
 	}
 
-	return false
+	return nil, false
 }
 
 // Accept Charset HTTP header field is verified in this method. For now we only support UTF-8
@@ -172,14 +170,14 @@ func HTTPContentType(r *http.Request) bool {
 
 // To garantee that the content was not modified during the network phase or is incomplete, we check
 // the hash of the content and compare with the HTTP header field
-func HTTPContentMD5(r *http.Request, context *context.Context) bool {
+func HTTPContentMD5(r *http.Request, body []byte) bool {
 	contentMD5 := getHTTPContentMD5(r)
 	if len(contentMD5) == 0 {
 		return true
 	}
 
 	hash := md5.New()
-	hash.Write(context.RequestContent)
+	hash.Write(body)
 	hashBytes := hash.Sum(nil)
 	hashBase64 := base64.StdEncoding.EncodeToString(hashBytes)
 

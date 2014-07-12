@@ -70,7 +70,6 @@ func main() {
 
 	startedAt := createScan(database)
 	retrieveScan(startedAt)
-	retrieveCurrentScan()
 
 	utils.Println("SUCCESS!")
 }
@@ -171,53 +170,5 @@ func retrieveScan(startedAt time.Time) {
 
 	if len(scanResponse.DSStatistics) != 2 {
 		utils.Fatalln("Invalid dsset statistics returned by scan", nil)
-	}
-}
-
-func retrieveCurrentScan() {
-	var client http.Client
-
-	url := ""
-	if len(config.ShelterConfig.WebClient.Listeners) > 0 {
-		url = fmt.Sprintf("http://%s:%d", config.ShelterConfig.WebClient.Listeners[0].IP,
-			config.ShelterConfig.WebClient.Listeners[0].Port)
-	}
-
-	if len(url) == 0 {
-		utils.Fatalln("There's no interface to connect to", nil)
-	}
-
-	r, err := http.NewRequest("GET", fmt.Sprintf("%s%s", url, "/scan/current"), nil)
-	if err != nil {
-		utils.Fatalln("Error creating the HTTP request", err)
-	}
-
-	utils.BuildHTTPHeader(r, nil)
-
-	response, err := client.Do(r)
-	if err != nil {
-		utils.Fatalln("Error sending request", err)
-	}
-
-	responseContent, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		utils.Fatalln("Error reading response content", err)
-	}
-
-	if response.StatusCode != http.StatusOK {
-		utils.Fatalln(fmt.Sprintf("Expected HTTP status %d and got %d for method GET "+
-			"and URI /scan/currentscan",
-			http.StatusOK, response.StatusCode),
-			errors.New(string(responseContent)),
-		)
-	}
-
-	var scanResponse protocol.ScanResponse
-	if err := json.Unmarshal(responseContent, &scanResponse); err != nil {
-		utils.Fatalln("Error decoding scan response", err)
-	}
-
-	if scanResponse.Status != model.ScanStatusToString(model.ScanStatusWaitingExecution) {
-		utils.Fatalln("Invalid status returned by current scan", nil)
 	}
 }

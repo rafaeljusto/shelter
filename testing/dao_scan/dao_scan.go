@@ -95,7 +95,7 @@ func scanLifeCycle(scanDAO dao.ScanDAO) {
 	if scanRetrieved, err := scanDAO.FindByStartedAt(scan.StartedAt); err != nil {
 		utils.Fatalln("Couldn't find created scan in database", err)
 
-	} else if !compareScans(scan, scanRetrieved) {
+	} else if !utils.CompareScan(scan, scanRetrieved) {
 		utils.Fatalln("Scan created in being persisted wrongly", nil)
 	}
 
@@ -109,7 +109,7 @@ func scanLifeCycle(scanDAO dao.ScanDAO) {
 	if scanRetrieved, err := scanDAO.FindByStartedAt(scan.StartedAt); err != nil {
 		utils.Fatalln("Couldn't find updated scan in database", err)
 
-	} else if !compareScans(scan, scanRetrieved) {
+	} else if !utils.CompareScan(scan, scanRetrieved) {
 		utils.Fatalln("Scan updated in being persisted wrongly", nil)
 	}
 
@@ -369,32 +369,4 @@ func newScans() []model.Scan {
 			},
 		},
 	}
-}
-
-// Function to compare if two scans are equal, cannot use operator == because of the
-// slices inside the scan object
-func compareScans(s1, s2 model.Scan) bool {
-	if s1.Id != s2.Id ||
-		s1.Revision != s2.Revision ||
-		s1.Status != s2.Status ||
-		s1.StartedAt.Unix() != s2.StartedAt.Unix() ||
-		s1.FinishedAt.Unix() != s2.FinishedAt.Unix() ||
-		s1.DomainsScanned != s2.DomainsScanned ||
-		s1.DomainsWithDNSSECScanned != s2.DomainsWithDNSSECScanned {
-		return false
-	}
-
-	for key, value := range s1.NameserverStatistics {
-		if otherValue, ok := s2.NameserverStatistics[key]; !ok || value != otherValue {
-			return false
-		}
-	}
-
-	for key, value := range s1.DSStatistics {
-		if otherValue, ok := s2.DSStatistics[key]; !ok || value != otherValue {
-			return false
-		}
-	}
-
-	return true
 }

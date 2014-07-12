@@ -5,17 +5,18 @@
 package main
 
 import (
-	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
+	"github.com/rafaeljusto/shelter/config"
 	"github.com/rafaeljusto/shelter/database/mongodb"
-	"github.com/rafaeljusto/shelter/net/http/rest/context"
 	"github.com/rafaeljusto/shelter/net/http/rest/handler"
-	"github.com/rafaeljusto/shelter/net/http/rest/protocol"
 	"github.com/rafaeljusto/shelter/testing/utils"
+	"github.com/trajber/handy"
+	"io/ioutil"
 	"labix.org/v2/mgo"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"time"
 )
@@ -23,14 +24,6 @@ import (
 var (
 	configFilePath string // Path for the config file with the connection information
 )
-
-// RESTHandlerDomainTestConfigFile is a structure to store the test configuration file data
-type RESTHandlerDomainTestConfigFile struct {
-	Database struct {
-		URI  string
-		Name string
-	}
-}
 
 type DomainCacheTestData struct {
 	HeaderValue        string
@@ -45,8 +38,7 @@ func init() {
 func main() {
 	flag.Parse()
 
-	var config RESTHandlerDomainTestConfigFile
-	err := utils.ReadConfigFile(configFilePath, &config)
+	err := utils.ReadConfigFile(configFilePath, &config.ShelterConfig)
 
 	if err == utils.ErrConfigFileUndefined {
 		fmt.Println(err.Error())
@@ -59,8 +51,8 @@ func main() {
 	}
 
 	database, databaseSession, err := mongodb.Open(
-		[]string{config.Database.URI},
-		config.Database.Name,
+		config.ShelterConfig.Database.URIs,
+		config.ShelterConfig.Database.Name,
 		false, "", "",
 	)
 
@@ -99,26 +91,37 @@ func main() {
 }
 
 func invalidFQDN(database *mgo.Database) {
-	r, err := http.NewRequest("GET", "/domain/", nil)
+	mux := handy.NewHandy()
+
+	h := new(handler.DomainHandler)
+	mux.Handle("/domain/{fqdn}", func() handy.Handler {
+		return h
+	})
+
+	r, err := http.NewRequest("GET", "/domain/!!!", nil)
 	if err != nil {
 		utils.Fatalln("Error creating the HTTP request", err)
 	}
+	utils.BuildHTTPHeader(r, nil)
 
-	context, err := context.NewContext(r, database)
-	if err != nil {
-		utils.Fatalln("Error creating context", err)
-	}
+	w := httptest.NewRecorder()
+	mux.ServeHTTP(w, r)
 
-	handler.HandleDomain(r, &context)
-
-	if context.ResponseHTTPStatus != http.StatusBadRequest {
-		utils.Fatalln("Not verifying if FQDN exists in the URI", nil)
+	if w.Code != http.StatusBadRequest {
+		utils.Fatalln(fmt.Sprintf("Not verifying if FQDN exists in the URI. "+
+			"Expected status %d and got %d", http.StatusBadRequest, w.Code), nil)
 	}
 }
 
 func createDomain(database *mgo.Database) {
-	r, err := http.NewRequest("PUT", "/domain/example.com.br.",
-		strings.NewReader(`{
+	mux := handy.NewHandy()
+
+	h := new(handler.DomainHandler)
+	mux.Handle("/domain/{fqdn}", func() handy.Handler {
+		return h
+	})
+
+	requestContent := `{
       "Nameservers": [
         { "host": "ns1.example.com.br.", "ipv4": "127.0.0.1" },
         { "host": "ns2.example.com.br.", "ipv6": "::1" }
@@ -126,39 +129,48 @@ func createDomain(database *mgo.Database) {
       "Owners": [
         { "email": "admin@example.com.br.", "language": "en-us" }
       ]
-    }`))
+    }`
+
+	r, err := http.NewRequest("PUT", "/domain/example.com.br.", strings.NewReader(requestContent))
 	if err != nil {
 		utils.Fatalln("Error creating the HTTP request", err)
 	}
+	utils.BuildHTTPHeader(r, []byte(requestContent))
 
-	context, err := context.NewContext(r, database)
+	w := httptest.NewRecorder()
+	mux.ServeHTTP(w, r)
+
+	responseContent, err := ioutil.ReadAll(w.Body)
 	if err != nil {
-		utils.Fatalln("Error creating context", err)
+		utils.Fatalln("Error reading response body", err)
 	}
 
-	handler.HandleDomain(r, &context)
-
-	if context.ResponseHTTPStatus != http.StatusCreated {
-		utils.Fatalln("Error creating domain",
-			errors.New(string(context.ResponseContent)))
+	if w.Code != http.StatusCreated {
+		utils.Fatalln("Error creating domain", errors.New(string(responseContent)))
 	}
 
-	if context.HTTPHeader["ETag"] != "1" {
+	if w.Header().Get("ETag") != "1" {
 		utils.Fatalln("Not setting ETag in domain creation response", nil)
 	}
 
-	if len(context.HTTPHeader["Last-Modified"]) == 0 {
+	if len(w.Header().Get("Last-Modified")) == 0 {
 		utils.Fatalln("Not setting Last-Modified in domain creation response", nil)
 	}
 
-	if len(context.HTTPHeader["Location"]) == 0 {
+	if len(w.Header().Get("Location")) == 0 {
 		utils.Fatalln("Not setting Location in domain creation response", nil)
 	}
 }
 
 func updateDomain(database *mgo.Database) {
-	r, err := http.NewRequest("PUT", "/domain/example.com.br.",
-		strings.NewReader(`{
+	mux := handy.NewHandy()
+
+	h := new(handler.DomainHandler)
+	mux.Handle("/domain/{fqdn}", func() handy.Handler {
+		return h
+	})
+
+	requestContent := `{
       "Nameservers": [
         { "host": "ns1.example.com.br.", "ipv4": "127.0.0.1" },
         { "host": "ns3.example.com.br.", "ipv6": "::1" }
@@ -166,120 +178,140 @@ func updateDomain(database *mgo.Database) {
       "Owners": [
         { "email": "administrator@example.com.br.", "language": "pt-br" }
       ]
-    }`))
+    }`
+
+	r, err := http.NewRequest("PUT", "/domain/example.com.br.", strings.NewReader(requestContent))
 	if err != nil {
 		utils.Fatalln("Error creating the HTTP request", err)
 	}
+	utils.BuildHTTPHeader(r, []byte(requestContent))
 
-	context, err := context.NewContext(r, database)
+	w := httptest.NewRecorder()
+	mux.ServeHTTP(w, r)
+
+	responseContent, err := ioutil.ReadAll(w.Body)
 	if err != nil {
-		utils.Fatalln("Error creating context", err)
+		utils.Fatalln("Error reading response body", err)
 	}
 
-	handler.HandleDomain(r, &context)
-
-	if context.ResponseHTTPStatus != http.StatusNoContent {
-		utils.Fatalln("Error updating domain",
-			errors.New(string(context.ResponseContent)))
+	if w.Code != http.StatusNoContent {
+		utils.Fatalln(fmt.Sprintf("Error updating domain. "+
+			"Expecting %d and got %d", http.StatusNoContent, w.Code),
+			errors.New(string(responseContent)))
 	}
 
-	if context.HTTPHeader["ETag"] != "2" {
+	if w.Header().Get("ETag") != "2" {
 		utils.Fatalln("Not setting ETag in domain update response", nil)
 	}
 
-	if len(context.HTTPHeader["Last-Modified"]) == 0 {
+	if len(w.Header().Get("Last-Modified")) == 0 {
 		utils.Fatalln("Not setting Last-Modified in domain update response", nil)
 	}
 
-	if len(context.HTTPHeader["Location"]) > 0 {
+	if len(w.Header().Get("Location")) > 0 {
 		utils.Fatalln("Setting Location in domain update response", nil)
 	}
 }
 
 func retrieveDomain(database *mgo.Database) {
+	mux := handy.NewHandy()
+
+	h := new(handler.DomainHandler)
+	mux.Handle("/domain/{fqdn}", func() handy.Handler {
+		return h
+	})
+
 	r, err := http.NewRequest("GET", "/domain/example.com.br.", nil)
 	if err != nil {
 		utils.Fatalln("Error creating the HTTP request", err)
 	}
+	utils.BuildHTTPHeader(r, nil)
 
-	context, err := context.NewContext(r, database)
+	w := httptest.NewRecorder()
+	mux.ServeHTTP(w, r)
+
+	responseContent, err := ioutil.ReadAll(w.Body)
 	if err != nil {
-		utils.Fatalln("Error creating context", err)
+		utils.Fatalln("Error reading response body", err)
 	}
 
-	handler.HandleDomain(r, &context)
-
-	if context.ResponseHTTPStatus != http.StatusOK {
-		utils.Fatalln("Error retrieving domain",
-			errors.New(string(context.ResponseContent)))
+	if w.Code != http.StatusOK {
+		utils.Fatalln("Error retrieving domain", errors.New(string(responseContent)))
 	}
 
-	if context.HTTPHeader["ETag"] != "2" {
+	if w.Header().Get("ETag") != "2" {
 		utils.Fatalln("Not setting ETag in domain retrieve response", nil)
 	}
 
-	if len(context.HTTPHeader["Last-Modified"]) == 0 {
+	if len(w.Header().Get("Last-Modified")) == 0 {
 		utils.Fatalln("Not setting Last-Modified in domain retrieve response", nil)
 	}
 
-	var domainResponse protocol.DomainResponse
-	json.Unmarshal(context.ResponseContent, &domainResponse)
-
-	if domainResponse.FQDN != "example.com.br." {
+	if h.Response.FQDN != "example.com.br." {
 		utils.Fatalln("Domain's FQDN was not persisted correctly", nil)
 	}
 
-	if len(domainResponse.Nameservers) != 2 ||
-		domainResponse.Nameservers[0].Host != "ns1.example.com.br." ||
-		domainResponse.Nameservers[0].IPv4 != "127.0.0.1" ||
-		domainResponse.Nameservers[1].Host != "ns3.example.com.br." ||
-		domainResponse.Nameservers[1].IPv6 != "::1" {
+	if len(h.Response.Nameservers) != 2 ||
+		h.Response.Nameservers[0].Host != "ns1.example.com.br." ||
+		h.Response.Nameservers[0].IPv4 != "127.0.0.1" ||
+		h.Response.Nameservers[1].Host != "ns3.example.com.br." ||
+		h.Response.Nameservers[1].IPv6 != "::1" {
 		utils.Fatalln("Domain's nameservers were not persisted correctly", nil)
 	}
 
-	if len(domainResponse.Owners) != 1 ||
-		domainResponse.Owners[0].Email != "administrator@example.com.br." {
+	if len(h.Response.Owners) != 1 ||
+		h.Response.Owners[0].Email != "administrator@example.com.br." {
 
 		utils.Fatalln("Domain's owners were not persisted correctly", nil)
 	}
 }
 
 func retrieveDomainMetadata(database *mgo.Database) {
+	mux := handy.NewHandy()
+
+	h := new(handler.DomainHandler)
+	mux.Handle("/domain/{fqdn}", func() handy.Handler {
+		return h
+	})
+
 	r, err := http.NewRequest("GET", "/domain/example.com.br.", nil)
 	if err != nil {
 		utils.Fatalln("Error creating the HTTP request", err)
 	}
+	utils.BuildHTTPHeader(r, nil)
 
-	context1, err := context.NewContext(r, database)
+	w := httptest.NewRecorder()
+	mux.ServeHTTP(w, r)
+
+	response1 := *h.Response
+	responseContent, err := ioutil.ReadAll(w.Body)
 	if err != nil {
-		utils.Fatalln("Error creating context", err)
+		utils.Fatalln("Error reading response body from GET", err)
 	}
 
-	handler.HandleDomain(r, &context1)
-
-	if context1.ResponseHTTPStatus != http.StatusOK {
-		utils.Fatalln("Error retrieving domain",
-			errors.New(string(context1.ResponseContent)))
+	if w.Code != http.StatusOK {
+		utils.Fatalln("Error retrieving domain", errors.New(string(responseContent)))
 	}
 
 	r, err = http.NewRequest("HEAD", "/domain/example.com.br.", nil)
 	if err != nil {
 		utils.Fatalln("Error creating the HTTP request", err)
 	}
+	utils.BuildHTTPHeader(r, nil)
 
-	context2, err := context.NewContext(r, database)
+	mux.ServeHTTP(w, r)
+
+	response2 := *h.Response
+	responseContent, err = ioutil.ReadAll(w.Body)
 	if err != nil {
-		utils.Fatalln("Error creating context", err)
+		utils.Fatalln("Error reading response body from HEAD", err)
 	}
 
-	handler.HandleDomain(r, &context2)
-
-	if context2.ResponseHTTPStatus != http.StatusOK {
-		utils.Fatalln("Error retrieving domain",
-			errors.New(string(context2.ResponseContent)))
+	if w.Code != http.StatusOK {
+		utils.Fatalln("Error retrieving domain", errors.New(string(responseContent)))
 	}
 
-	if string(context1.ResponseContent) != string(context2.ResponseContent) {
+	if !utils.CompareProtocolDomain(response1, response2) {
 		utils.Fatalln("At this point the GET and HEAD method should "+
 			"return the same body content", nil)
 	}
@@ -291,7 +323,7 @@ func retrieveDomainIfModifiedSince(database *mgo.Database) {
 		utils.Fatalln("Error creating the HTTP request", err)
 	}
 
-	domainCacheTest(database, r, "If-Modified-Since", []DomainCacheTestData{
+	domainCacheTest(database, r, "", "If-Modified-Since", []DomainCacheTestData{
 		{
 			HeaderValue:        "abcdef",
 			ExpectedHTTPStatus: http.StatusBadRequest,
@@ -309,7 +341,7 @@ func retrieveDomainIfUnmodifiedSince(database *mgo.Database) {
 		utils.Fatalln("Error creating the HTTP request", err)
 	}
 
-	domainCacheTest(database, r, "If-Unmodified-Since", []DomainCacheTestData{
+	domainCacheTest(database, r, "", "If-Unmodified-Since", []DomainCacheTestData{
 		{
 			HeaderValue:        "abcdef",
 			ExpectedHTTPStatus: http.StatusBadRequest,
@@ -327,7 +359,7 @@ func retrieveDomainIfMatch(database *mgo.Database) {
 		utils.Fatalln("Error creating the HTTP request", err)
 	}
 
-	domainCacheTest(database, r, "If-Match", []DomainCacheTestData{
+	domainCacheTest(database, r, "", "If-Match", []DomainCacheTestData{
 		{
 			HeaderValue:        "abcdef",
 			ExpectedHTTPStatus: http.StatusPreconditionFailed,
@@ -349,7 +381,7 @@ func retrieveDomainIfNoneMatch(database *mgo.Database) {
 		utils.Fatalln("Error creating the HTTP request", err)
 	}
 
-	domainCacheTest(database, r, "If-None-Match", []DomainCacheTestData{
+	domainCacheTest(database, r, "", "If-None-Match", []DomainCacheTestData{
 		{
 			HeaderValue:        "abcdef",
 			ExpectedHTTPStatus: http.StatusOK,
@@ -362,8 +394,7 @@ func retrieveDomainIfNoneMatch(database *mgo.Database) {
 }
 
 func updateDomainIfModifiedSince(database *mgo.Database) {
-	r, err := http.NewRequest("PUT", "/domain/example.com.br.",
-		strings.NewReader(`{
+	requestContent := `{
       "Nameservers": [
         { "host": "ns1.example.com.br.", "ipv4": "127.0.0.1" },
         { "host": "ns3.example.com.br.", "ipv6": "::1" }
@@ -371,12 +402,14 @@ func updateDomainIfModifiedSince(database *mgo.Database) {
       "Owners": [
         { "email": "administrator@example.com.br.", "language": "pt-br" }
       ]
-    }`))
+    }`
+
+	r, err := http.NewRequest("PUT", "/domain/example.com.br.", strings.NewReader(requestContent))
 	if err != nil {
 		utils.Fatalln("Error creating the HTTP request", err)
 	}
 
-	domainCacheTest(database, r, "If-Modified-Since", []DomainCacheTestData{
+	domainCacheTest(database, r, requestContent, "If-Modified-Since", []DomainCacheTestData{
 		{
 			HeaderValue:        "abcdef",
 			ExpectedHTTPStatus: http.StatusBadRequest,
@@ -389,8 +422,7 @@ func updateDomainIfModifiedSince(database *mgo.Database) {
 }
 
 func updateDomainIfUnmodifiedSince(database *mgo.Database) {
-	r, err := http.NewRequest("PUT", "/domain/example.com.br.",
-		strings.NewReader(`{
+	requestContent := `{
       "Nameservers": [
         { "host": "ns1.example.com.br.", "ipv4": "127.0.0.1" },
         { "host": "ns3.example.com.br.", "ipv6": "::1" }
@@ -398,12 +430,14 @@ func updateDomainIfUnmodifiedSince(database *mgo.Database) {
       "Owners": [
         { "email": "administrator@example.com.br.", "language": "pt-br" }
       ]
-    }`))
+    }`
+
+	r, err := http.NewRequest("PUT", "/domain/example.com.br.", strings.NewReader(requestContent))
 	if err != nil {
 		utils.Fatalln("Error creating the HTTP request", err)
 	}
 
-	domainCacheTest(database, r, "If-Unmodified-Since", []DomainCacheTestData{
+	domainCacheTest(database, r, requestContent, "If-Unmodified-Since", []DomainCacheTestData{
 		{
 			HeaderValue:        "abcdef",
 			ExpectedHTTPStatus: http.StatusBadRequest,
@@ -416,8 +450,7 @@ func updateDomainIfUnmodifiedSince(database *mgo.Database) {
 }
 
 func updateDomainIfMatch(database *mgo.Database) {
-	r, err := http.NewRequest("PUT", "/domain/example.com.br.",
-		strings.NewReader(`{
+	requestContent := `{
       "Nameservers": [
         { "host": "ns1.example.com.br.", "ipv4": "127.0.0.1" },
         { "host": "ns3.example.com.br.", "ipv6": "::1" }
@@ -425,12 +458,14 @@ func updateDomainIfMatch(database *mgo.Database) {
       "Owners": [
         { "email": "administrator@example.com.br.", "language": "en-us" }
       ]
-    }`))
+    }`
+
+	r, err := http.NewRequest("PUT", "/domain/example.com.br.", strings.NewReader(requestContent))
 	if err != nil {
 		utils.Fatalln("Error creating the HTTP request", err)
 	}
 
-	domainCacheTest(database, r, "If-Match", []DomainCacheTestData{
+	domainCacheTest(database, r, requestContent, "If-Match", []DomainCacheTestData{
 		{
 			HeaderValue:        "abcdef",
 			ExpectedHTTPStatus: http.StatusPreconditionFailed,
@@ -447,8 +482,7 @@ func updateDomainIfMatch(database *mgo.Database) {
 }
 
 func updateDomainIfNoneMatch(database *mgo.Database) {
-	r, err := http.NewRequest("PUT", "/domain/example.com.br.",
-		strings.NewReader(`{
+	requestContent := `{
       "Nameservers": [
         { "host": "ns1.example.com.br.", "ipv4": "127.0.0.1" },
         { "host": "ns3.example.com.br.", "ipv6": "::1" }
@@ -456,12 +490,14 @@ func updateDomainIfNoneMatch(database *mgo.Database) {
       "Owners": [
         { "email": "administrator@example.com.br.", "language": "en-us" }
       ]
-    }`))
+    }`
+
+	r, err := http.NewRequest("PUT", "/domain/example.com.br.", strings.NewReader(requestContent))
 	if err != nil {
 		utils.Fatalln("Error creating the HTTP request", err)
 	}
 
-	domainCacheTest(database, r, "If-None-Match", []DomainCacheTestData{
+	domainCacheTest(database, r, requestContent, "If-None-Match", []DomainCacheTestData{
 		{
 			HeaderValue:        "3",
 			ExpectedHTTPStatus: http.StatusPreconditionFailed,
@@ -479,7 +515,7 @@ func deleteDomainIfModifiedSince(database *mgo.Database) {
 		utils.Fatalln("Error creating the HTTP request", err)
 	}
 
-	domainCacheTest(database, r, "If-Modified-Since", []DomainCacheTestData{
+	domainCacheTest(database, r, "", "If-Modified-Since", []DomainCacheTestData{
 		{
 			HeaderValue:        "abcdef",
 			ExpectedHTTPStatus: http.StatusBadRequest,
@@ -497,7 +533,7 @@ func deleteDomainIfUnmodifiedSince(database *mgo.Database) {
 		utils.Fatalln("Error creating the HTTP request", err)
 	}
 
-	domainCacheTest(database, r, "If-Unmodified-Since", []DomainCacheTestData{
+	domainCacheTest(database, r, "", "If-Unmodified-Since", []DomainCacheTestData{
 		{
 			HeaderValue:        "abcdef",
 			ExpectedHTTPStatus: http.StatusBadRequest,
@@ -515,7 +551,7 @@ func deleteDomainIfMatch(database *mgo.Database) {
 		utils.Fatalln("Error creating the HTTP request", err)
 	}
 
-	domainCacheTest(database, r, "If-Match", []DomainCacheTestData{
+	domainCacheTest(database, r, "", "If-Match", []DomainCacheTestData{
 		{
 			HeaderValue:        "abcdef",
 			ExpectedHTTPStatus: http.StatusPreconditionFailed,
@@ -533,7 +569,7 @@ func deleteDomainIfNoneMatch(database *mgo.Database) {
 		utils.Fatalln("Error creating the HTTP request", err)
 	}
 
-	domainCacheTest(database, r, "If-None-Match", []DomainCacheTestData{
+	domainCacheTest(database, r, "", "If-None-Match", []DomainCacheTestData{
 		{
 			HeaderValue:        "4",
 			ExpectedHTTPStatus: http.StatusPreconditionFailed,
@@ -542,61 +578,91 @@ func deleteDomainIfNoneMatch(database *mgo.Database) {
 }
 
 func deleteDomain(database *mgo.Database) {
+	mux := handy.NewHandy()
+
+	h := new(handler.DomainHandler)
+	mux.Handle("/domain/{fqdn}", func() handy.Handler {
+		return h
+	})
+
 	r, err := http.NewRequest("DELETE", "/domain/example.com.br.", nil)
 	if err != nil {
 		utils.Fatalln("Error creating the HTTP request", err)
 	}
+	utils.BuildHTTPHeader(r, nil)
 
-	context, err := context.NewContext(r, database)
+	w := httptest.NewRecorder()
+	mux.ServeHTTP(w, r)
+
+	responseContent, err := ioutil.ReadAll(w.Body)
 	if err != nil {
-		utils.Fatalln("Error creating context", err)
+		utils.Fatalln("Error reading response body", err)
 	}
 
-	handler.HandleDomain(r, &context)
-
-	if context.ResponseHTTPStatus != http.StatusNoContent {
-		utils.Fatalln("Error deleting domain",
-			errors.New(string(context.ResponseContent)))
+	if w.Code != http.StatusNoContent {
+		utils.Fatalln("Error deleting domain", errors.New(string(responseContent)))
 	}
 }
 
 func retrieveUnknownDomain(database *mgo.Database) {
+	mux := handy.NewHandy()
+
+	h := new(handler.DomainHandler)
+	mux.Handle("/domain/{fqdn}", func() handy.Handler {
+		return h
+	})
+
 	r, err := http.NewRequest("GET", "/domain/example.com.br.", nil)
 	if err != nil {
 		utils.Fatalln("Error creating the HTTP request", err)
 	}
+	utils.BuildHTTPHeader(r, nil)
 
-	context, err := context.NewContext(r, database)
+	w := httptest.NewRecorder()
+	mux.ServeHTTP(w, r)
+
+	responseContent, err := ioutil.ReadAll(w.Body)
 	if err != nil {
-		utils.Fatalln("Error creating context", err)
+		utils.Fatalln("Error reading response body", err)
 	}
 
-	handler.HandleDomain(r, &context)
-
-	if context.ResponseHTTPStatus != http.StatusNotFound {
-		utils.Fatalln("Error retrieving unknown domain",
-			errors.New(string(context.ResponseContent)))
+	if w.Code != http.StatusNotFound {
+		utils.Fatalln("Error retrieving unknown domain", errors.New(string(responseContent)))
 	}
 }
 
 func domainCacheTest(database *mgo.Database, r *http.Request,
-	header string, domainCacheTestData []DomainCacheTestData) {
+	requestContent, header string, domainCacheTestData []DomainCacheTestData) {
 
-	context, err := context.NewContext(r, database)
-	if err != nil {
-		utils.Fatalln("Error creating context", err)
-	}
+	mux := handy.NewHandy()
+
+	h := new(handler.DomainHandler)
+	mux.Handle("/domain/{fqdn}", func() handy.Handler {
+		return h
+	})
 
 	for _, item := range domainCacheTestData {
 		r.Header.Set(header, item.HeaderValue)
 
-		handler.HandleDomain(r, &context)
+		if len(requestContent) > 0 {
+			utils.BuildHTTPHeader(r, []byte(requestContent))
+		} else {
+			utils.BuildHTTPHeader(r, nil)
+		}
 
-		if context.ResponseHTTPStatus != item.ExpectedHTTPStatus {
+		w := httptest.NewRecorder()
+		mux.ServeHTTP(w, r)
+
+		responseContent, err := ioutil.ReadAll(w.Body)
+		if err != nil {
+			utils.Fatalln("Error reading response body", err)
+		}
+
+		if w.Code != item.ExpectedHTTPStatus {
 			utils.Fatalln(fmt.Sprintf("Error in %s test using %s [%s] "+
 				"HTTP header. Expected HTTP status code %d and got %d",
 				r.Method, header, item.HeaderValue, item.ExpectedHTTPStatus,
-				context.ResponseHTTPStatus), errors.New(string(context.ResponseContent)))
+				w.Code), errors.New(string(responseContent)))
 		}
 	}
 }
