@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	logger  *log.Logger // Main object used to control log messages
+	Logger  *log.Logger // Main object used to control log messages
 	logFile *os.File    // File used to log the messages
 )
 
@@ -27,27 +27,27 @@ func SetOutput(filename string) error {
 		return err
 	}
 
-	logger = log.New(logFile, "", log.Lshortfile|log.LstdFlags)
+	Logger = log.New(logFile, "", log.Lshortfile|log.LstdFlags)
 	return nil
 }
 
 // Basic log packages methods now writing to our local logger. If logger is not
 // initialized we fallback to the standard log system
 func Println(v ...interface{}) {
-	if logger == nil {
+	if Logger == nil {
 		log.Println(v...)
 	} else {
-		logger.Println(v...)
+		Logger.Println(v...)
 	}
 }
 
 // Basic log packages methods now writing to our local logger. If logger is not
 // initialized we fallback to the standard log system
 func Printf(format string, v ...interface{}) {
-	if logger == nil {
+	if Logger == nil {
 		log.Printf(format, v...)
 	} else {
-		logger.Printf(format, v...)
+		Logger.Printf(format, v...)
 	}
 }
 
