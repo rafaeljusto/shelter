@@ -4,6 +4,8 @@ Shelter
 version 0.3:
   New Feature:
   * Using new web framework Handy
+  Fixes:
+  * Handy framework now use the same log of the shelter system
 
 version 0.2:
   New Feature:
