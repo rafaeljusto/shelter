@@ -585,6 +585,16 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
             return false;
           }
 
+          // Add final dot to FQDN and host to make a valid comparission
+
+          if (fqdn.slice(-1) != ".") {
+            fqdn += ".";
+          }
+
+          if (host.length > 0 && host.slice(-1) != ".") {
+            host += ".";
+          }
+
           return host.indexOf(fqdn, host.length - fqdn.length) !== -1;
         };
 

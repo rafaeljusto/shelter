@@ -31,6 +31,9 @@ describe("Domain form directive", function() {
     expect(ctrl.needsGlue).not.toBeUndefined();
 
     expect(ctrl.needsGlue("test1.com.br.", "ns1.test1.com.br.")).toBe(true);
+    expect(ctrl.needsGlue("test1.com.br.", "ns1.test1.com.br")).toBe(true);
+    expect(ctrl.needsGlue("test1.com.br", "ns1.test1.com.br.")).toBe(true);
+    expect(ctrl.needsGlue("test1.com.br", "ns1.test1.com.br")).toBe(true);
     expect(ctrl.needsGlue("test2.com.br.", "ns1.test1.com.br.")).toBe(false);
     expect(ctrl.needsGlue(undefined, "ns1.test1.com.br.")).toBe(false);
     expect(ctrl.needsGlue("test1.com.br.", undefined)).toBe(false);

@@ -8,6 +8,7 @@ version 0.3:
   Fixes:
   * Handy framework now use the same log of the shelter system
   * Fix current execution scan visualization
+  * Web client is more intelligent to detect glue record necessity
 
 version 0.2:
   New Feature:
