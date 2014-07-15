@@ -51,14 +51,21 @@ describe("Scan controller", function() {
     };
 
     var current = {
-      status: "WAITINGEXECUTION",
-      scheduledAt: "2014-03-27T06:00:00-03:00"
+      numberOfItems: 1,
+      numberOfPages: 1,
+      pageSize: 20,
+      scans: [
+        {
+          status: "WAITINGEXECUTION",
+          scheduledAt: "2014-03-27T06:00:00-03:00"
+        }
+      ]
     };
 
     $httpBackend = $injector.get("$httpBackend");
     $httpBackend.whenGET("/scans/").respond(200, result);
     $httpBackend.whenGET("/scans/?page=1&pagesize=20").respond(200, result);
-    $httpBackend.whenGET("/scan/current").respond(200, current);
+    $httpBackend.whenGET("/scans/?current").respond(200, current);
 
     scope.retrieveScans(1, 20);
     $httpBackend.flush();
@@ -95,14 +102,21 @@ describe("Scan controller", function() {
     };
 
     var current = {
-      status: "WAITINGEXECUTION",
-      scheduledAt: "2014-03-27T06:00:00-03:00"
+      numberOfItems: 1,
+      numberOfPages: 1,
+      pageSize: 20,
+      scans: [
+        {
+          status: "WAITINGEXECUTION",
+          scheduledAt: "2014-03-27T06:00:00-03:00"
+        }
+      ]
     };
 
     $httpBackend = $injector.get("$httpBackend");
     $httpBackend.whenGET("/scans/").respond(200, result);
     $httpBackend.whenGET("/scans/?page=1&pagesize=20").respond(200, result);
-    $httpBackend.whenGET("/scan/current").respond(200, current);
+    $httpBackend.whenGET("/scans/?current").respond(200, current);
 
     scope.retrieveScansByURI("/scans/?page=1&pagesize=20");
     $httpBackend.flush();
@@ -139,19 +153,26 @@ describe("Scan controller", function() {
     };
 
     var current = {
-      status: "WAITINGEXECUTION",
-      scheduledAt: "2014-03-27T06:00:00-03:00"
+      numberOfItems: 1,
+      numberOfPages: 1,
+      pageSize: 20,
+      scans: [
+        {
+          status: "WAITINGEXECUTION",
+          scheduledAt: "2014-03-27T06:00:00-03:00"
+        }
+      ]
     };
 
     $httpBackend = $injector.get("$httpBackend");
     $httpBackend.whenGET("/scans/").respond(200, result);
-    $httpBackend.whenGET("/scan/current").respond(200, current);
+    $httpBackend.whenGET("/scans/?current").respond(200, current);
 
-    scope.currentScanURI = "/scan/current";
+    scope.currentScanURI = "/scans/?current";
     $timeout.flush();
     $httpBackend.flush();
 
-    expect(scope.currentScan).toEqual(current);  
+    expect(scope.currentScan).toEqual(current.scans[0]);  
     
   }));
 });
