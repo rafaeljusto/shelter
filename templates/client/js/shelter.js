@@ -990,7 +990,7 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
         function(response) {
           if (response.status == 200) {
             $scope.currentScanEtag = response.headers.Etag;
-            $scope.currentScan = response.data;
+            $scope.currentScan = response.data.scans[0];
 
           } else if (response.status == 304) {
             // Not modified

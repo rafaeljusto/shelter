@@ -3,9 +3,11 @@ Shelter
 
 version 0.3:
   New Feature:
+  * API changed from /scan/current to /scans/?current
   * Using new web framework Handy
   Fixes:
   * Handy framework now use the same log of the shelter system
+  * Fix current execution scan visualization
 
 version 0.2:
   New Feature:
