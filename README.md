@@ -17,7 +17,7 @@ contributed with ideas for the project.
 For more information check the [Wiki](https://github.com/rafaeljusto/shelter/wiki).
 
 features
-========
+--------
 
 * Automatically detect DNS/DNSSEC configuration problems of the registered domains
 * Automatically sends e-mails notifying domain's owners of the configuration problems
@@ -35,7 +35,7 @@ client
 * Allow a cluster of MongoDB servers for data persistency
 
 building
-========
+--------
 
 The Shelter project was developed using the [Go language](http://golang.org/)
 and it depends on the following Go packages:
@@ -90,7 +90,7 @@ python3 test-all.py
 ```
 
 deploying
-=========
+---------
 
 To deploy the project you will need one or more programs bellow, depending on the operational system
 that you choose, and if you want a CI enviroment.
