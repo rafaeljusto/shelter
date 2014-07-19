@@ -469,6 +469,22 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
                 $scope.freshDomain = response.data;
                 $scope.freshDomain.etag = response.headers.Etag;
 
+                if ($scope.freshDomain.nameservers == undefined) {
+                  $scope.freshDomain.nameservers = [];
+                }
+
+                if ($scope.freshDomain.dnskeys == undefined) {
+                  $scope.freshDomain.dnskeys = [];
+                }
+
+                if ($scope.freshDomain.dsset == undefined) {
+                  $scope.freshDomain.dsset = [];
+                }
+
+                if ($scope.freshDomain.owners == undefined) {
+                  $scope.freshDomain.owners = [];
+                }
+
               } else if (response.status == 400) {
                 alertify.error(response.data.message);
 
@@ -575,7 +591,7 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
         // Easy way to allow extenal scopes to call a function in the directive
         $scope.formCtrl = $scope.formCtrl || {};
         $scope.formCtrl.clear = function() {
-         $scope.domain = angular.copy(emptyDomain);
+          $scope.domain = angular.copy(emptyDomain);
         };
 
         $scope.needsGlue = function(fqdn, host) {
