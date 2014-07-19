@@ -250,5 +250,9 @@ describe("Domain directive", function() {
     $httpBackend.flush();
 
     expect(ctrl.freshDomain.fqdn).toBe("br.");
+    expect(ctrl.freshDomain.nameservers).not.toBeUndefined();
+    expect(ctrl.freshDomain.dsset).not.toBeUndefined();
+    expect(ctrl.freshDomain.dnskeys).not.toBeUndefined();
+    expect(ctrl.freshDomain.owners).not.toBeUndefined();
   }));
 });
