@@ -11,6 +11,7 @@ version 0.3:
   * Web client is more intelligent to detect glue record necessity
   * Web client fix when adding information to a registered domain
   * Loading languages before reading the configuration file
+  * Web client support for spanish domain owner
 
 version 0.2:
   New Feature:

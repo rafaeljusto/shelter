@@ -37,7 +37,8 @@ var dsDigestTypes = [
 
 var ownerLanguages = [
   "en-US",
-  "pt-BR"
+  "pt-BR",
+  "es-ES"
 ];
 
 var emptyNameserver = {
