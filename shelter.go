@@ -268,6 +268,13 @@ func manageSystemSignals() {
 // file. It will be used when the system starts for the first time and when it receives a
 // SIGHUP signal
 func loadSettings() error {
+	// TODO: Possible concurrent access problem while reloading the configuration file. And
+	// we also should reload many structures that could change with the new configuration
+	// files, like the network interfaces
+	if err := config.LoadConfig(configFilePath); err != nil {
+		return err
+	}
+
 	// Load languages to model. We don't do this in the configuration package, because we
 	// don't want to create a dependency between the model and the config taht could become
 	// a cross reference
@@ -277,8 +284,5 @@ func loadSettings() error {
 		}
 	}
 
-	// TODO: Possible concurrent access problem while reloading the configuration file. And
-	// we also should reload many structures that could change with the new configuration
-	// files, like the network interfaces
-	return config.LoadConfig(configFilePath)
+	return nil
 }

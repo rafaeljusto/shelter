@@ -10,6 +10,7 @@ version 0.3:
   * Fix current execution scan visualization
   * Web client is more intelligent to detect glue record necessity
   * Web client fix when adding information to a registered domain
+  * Loading languages before reading the configuration file
 
 version 0.2:
   New Feature:
