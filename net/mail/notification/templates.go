@@ -14,6 +14,7 @@ import (
 	"strings"
 	"sync"
 	"text/template"
+	"time"
 )
 
 var (
@@ -140,8 +141,13 @@ func dsStatusEquals(dsStatus model.DSStatus, expectedDSTextStatus string) bool {
 
 // Auxiliary function for template that checks if a DS is near expiration or not
 func isNearExpirationDS(ds model.DS) bool {
-	// If the status of the DS record is OK, it was selected because the expiration is
-	// near. If in the future we add some other notification over the well configured
-	// DS we must change this logic
-	return ds.LastStatus == model.DSStatusOK
+	// TODO: Should we move this configuration parameter to a place were both modules can
+	// access it. This sounds better for configuration deployment
+	maxExpirationAlertDays := config.ShelterConfig.Scan.VerificationIntervals.MaxExpirationAlertDays
+
+	// We aren't checking only the OK status anymore for detecting near expiration problems because a
+	// well configured DS far away from the expiration date can be selected when the nameserves have
+	// some configuration problems
+	expirationAlert := time.Now().Add(time.Duration(maxExpirationAlertDays*24) * time.Hour)
+	return ds.ExpiresAt.Before(expirationAlert)
 }

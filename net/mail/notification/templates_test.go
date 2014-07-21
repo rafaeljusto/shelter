@@ -125,15 +125,18 @@ func TestDSStatusEquals(t *testing.T) {
 }
 
 func TestIsNearExpirationDS(t *testing.T) {
+	config.ShelterConfig.Scan.VerificationIntervals.MaxExpirationAlertDays = 2
+
 	if !isNearExpirationDS(model.DS{
-		LastStatus: model.DSStatusOK,
-		ExpiresAt:  time.Now().Add(24 * time.Hour),
+		ExpiresAt: time.Now().Add(48 * time.Hour),
 	}) {
 		t.Error("Not detecting when DS is near expiration")
 	}
 
+	config.ShelterConfig.Scan.VerificationIntervals.MaxExpirationAlertDays = 1
+
 	if isNearExpirationDS(model.DS{
-		LastStatus: model.DSStatusTimeout,
+		ExpiresAt: time.Now().Add(48 * time.Hour),
 	}) {
 		t.Error("Returning near expiration is wrong scenarios")
 	}

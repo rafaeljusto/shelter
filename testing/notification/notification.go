@@ -227,7 +227,7 @@ func simpleNotification(domainDAO dao.DomainDAO, templateName string,
 				"shelter@example.com.br. but found %s", message.Header.Get("From")), nil)
 		}
 
-		if message.Header.Get("To") != "[<test@rafael.net.br>]" {
+		if message.Header.Get("To") != "test@rafael.net.br" {
 			utils.Fatalln("E-mail to header is different", nil)
 		}
 

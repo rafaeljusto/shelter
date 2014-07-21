@@ -17,6 +17,7 @@ import (
 	"github.com/rafaeljusto/shelter/net/mail/notification/protocol"
 	"net/smtp"
 	"regexp"
+	"strings"
 )
 
 // List of possible errors that can occur when calling functions from this file. Other
@@ -111,7 +112,7 @@ func notifyDomain(domain *model.Domain) error {
 	emailsPerLanguage := make(map[string][]string)
 	for _, owner := range domain.Owners {
 		emailsPerLanguage[owner.Language] =
-			append(emailsPerLanguage[owner.Language], owner.Email.String())
+			append(emailsPerLanguage[owner.Language], owner.Email.Address)
 	}
 
 	server := fmt.Sprintf("%s:%d",
@@ -128,7 +129,7 @@ func notifyDomain(domain *model.Domain) error {
 		domainMail := protocol.Domain{
 			Domain: *domain,
 			From:   config.ShelterConfig.Notification.From,
-			To:     emails,
+			To:     strings.Join(emails, ","),
 		}
 
 		var msg bytes.Buffer
