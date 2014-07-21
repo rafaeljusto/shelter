@@ -538,10 +538,11 @@ func domainQuery() {
 	}
 }
 
-// We are now using a real open resolver (from OARC) to retrieve a domain with DNSSEC problems in
-// the chain-of-trust
+// We are now using a real open resolver (from DNS watch - http://dns.watch) to retrieve a domain
+// with DNSSEC problems in the chain-of-trust. We replaced DNS OARC because it was giving to much
+// timeout (maybe was under attack)
 func domainQueryWithDNSSECErrors() {
-	config.ShelterConfig.Scan.Resolver.Address = "149.20.64.21"
+	config.ShelterConfig.Scan.Resolver.Address = "84.200.69.80"
 	config.ShelterConfig.Scan.Resolver.Port = 53
 
 	domain, err := scan.QueryDomain("dnssec-failed.org.")
