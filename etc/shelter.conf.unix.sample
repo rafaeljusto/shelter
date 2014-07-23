@@ -1,7 +1,7 @@
 {
   "basePath": "/usr/shelter",
   "logFilename": "var/log/shelter.log",
-  "languages": [ "en-US", "pt-BR" ],
+  "languages": [ "en-US", "pt-BR", "es-ES" ],
 
   "database": {
     "name": "shelter",
