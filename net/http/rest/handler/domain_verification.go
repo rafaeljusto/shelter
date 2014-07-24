@@ -13,7 +13,7 @@ import (
 	"github.com/rafaeljusto/shelter/net/http/rest/protocol"
 	"github.com/rafaeljusto/shelter/net/scan"
 	"github.com/trajber/handy"
-	"labix.org/v2/mgo"
+	"gopkg.in/mgo.v2"
 	"net/http"
 )
 

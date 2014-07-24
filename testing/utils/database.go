@@ -7,7 +7,7 @@ package utils
 
 import (
 	"github.com/rafaeljusto/shelter/dao"
-	"labix.org/v2/mgo"
+	"gopkg.in/mgo.v2"
 )
 
 // Function created to remove all entries from the database to ensure that the tests

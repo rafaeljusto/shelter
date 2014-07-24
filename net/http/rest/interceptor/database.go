@@ -9,7 +9,7 @@ import (
 	"github.com/rafaeljusto/shelter/config"
 	"github.com/rafaeljusto/shelter/database/mongodb"
 	"github.com/rafaeljusto/shelter/log"
-	"labix.org/v2/mgo"
+	"gopkg.in/mgo.v2"
 	"net/http"
 )
 

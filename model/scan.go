@@ -7,7 +7,7 @@ package model
 
 import (
 	"github.com/rafaeljusto/shelter/scheduler"
-	"labix.org/v2/mgo/bson"
+	"gopkg.in/mgo.v2/bson"
 	"sync"
 	"sync/atomic"
 	"time"

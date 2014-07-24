@@ -16,7 +16,7 @@ import (
 	"github.com/rafaeljusto/shelter/testing/utils"
 	"github.com/trajber/handy"
 	"io/ioutil"
-	"labix.org/v2/mgo"
+	"gopkg.in/mgo.v2"
 	"net/http"
 	"net/http/httptest"
 	"time"

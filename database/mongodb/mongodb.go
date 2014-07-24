@@ -6,7 +6,7 @@
 package mongodb
 
 import (
-	"labix.org/v2/mgo"
+	"gopkg.in/mgo.v2"
 	"sync"
 	"time"
 )

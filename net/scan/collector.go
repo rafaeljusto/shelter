@@ -8,7 +8,7 @@ package scan
 import (
 	"github.com/rafaeljusto/shelter/dao"
 	"github.com/rafaeljusto/shelter/model"
-	"labix.org/v2/mgo"
+	"gopkg.in/mgo.v2"
 	"sync"
 )
 

@@ -12,7 +12,7 @@ import (
 	"github.com/rafaeljusto/shelter/model"
 	"github.com/rafaeljusto/shelter/net/scan"
 	"github.com/rafaeljusto/shelter/testing/utils"
-	"labix.org/v2/mgo"
+	"gopkg.in/mgo.v2"
 	"net"
 	"net/mail"
 	"sync"
