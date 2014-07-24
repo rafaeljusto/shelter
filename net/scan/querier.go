@@ -297,9 +297,13 @@ func (q *querier) sendDNSRequest(host string, dnsRequestMessage *dns.Msg) (dnsRe
 func getHost(fqdn string, nameserver model.Nameserver) (string, error) {
 	// Using cache to store host addresses when there's no glue
 	if addresses, err := querierCache.Get(nameserver, fqdn); err == nil || len(addresses) > 0 {
-		// Found information in cache, lets use it to speed up the scan. We are using the
-		// first returned address, that can be IPv4 or IPv6. Usually IPv4 is the first index,
-		// and for now we are giving preference for IPv4
+		// Found information in cache, lets use it to speed up the scan. We will try to use an IPv4 from
+		// the returned addresses. if we don't find any we will use the first IPv6 address
+		for _, address := range addresses {
+			if address.To4() != nil {
+				return "[" + address.String() + "]:" + strconv.Itoa(DNSPort), nil
+			}
+		}
 		return "[" + addresses[0].String() + "]:" + strconv.Itoa(DNSPort), nil
 
 	} else if err == ErrHostTimeout || err == ErrHostQPSExceeded {
