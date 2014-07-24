@@ -6,6 +6,7 @@
 package handler
 
 import (
+	"github.com/rafaeljusto/shelter/dao"
 	"github.com/rafaeljusto/shelter/log"
 	"github.com/rafaeljusto/shelter/model"
 	"github.com/rafaeljusto/shelter/net/http/rest/interceptor"
@@ -140,8 +141,69 @@ func (h *DomainVerificationHandler) Put(w http.ResponseWriter, r *http.Request) 
 
 	scan.ScanDomain(&domain)
 
-	w.WriteHeader(http.StatusOK)
+	// As we alredy did the scan, if the domain is registered in the system, we update it for this
+	// results. This also gives a more intuitive design for when the user wants to force a check a
+	// specific domain in the Shelter system
+	domainDAO := dao.DomainDAO{
+		Database: h.GetDatabase(),
+	}
 
+	if dbDomain, err := domainDAO.FindByFQDN(domain.FQDN); err == nil {
+		update := true
+
+		// Check if we have the same nameservers, and if so update the last status
+		if len(dbDomain.Nameservers) == len(domain.Nameservers) {
+			for i := range dbDomain.Nameservers {
+				dbNameserver := dbDomain.Nameservers[i]
+				nameserver := domain.Nameservers[i]
+
+				if dbNameserver.Host == nameserver.Host &&
+					dbNameserver.IPv4.Equal(nameserver.IPv4) &&
+					dbNameserver.IPv6.Equal(nameserver.IPv6) {
+
+					dbDomain.Nameservers[i].ChangeStatus(nameserver.LastStatus)
+
+				} else {
+					update = false
+					break
+				}
+			}
+
+		} else {
+			update = false
+		}
+
+		// Check if we have the same DS set, and if so update the last status
+		if len(dbDomain.DSSet) == len(domain.DSSet) {
+			for i := range dbDomain.DSSet {
+				dbDS := dbDomain.DSSet[i]
+				ds := domain.DSSet[i]
+
+				if dbDS.Keytag == ds.Keytag &&
+					dbDS.Algorithm == ds.Algorithm &&
+					dbDS.DigestType == ds.DigestType &&
+					dbDS.Digest == ds.Digest {
+
+					dbDomain.DSSet[i].ChangeStatus(ds.LastStatus)
+
+				} else {
+					update = false
+					break
+				}
+			}
+
+		} else {
+			update = false
+		}
+
+		if update {
+			// We don't care about errors resulted here, because the main idea of this service is to scan
+			// a domaion, not persist the results
+			domainDAO.Save(&dbDomain)
+		}
+	}
+
+	w.WriteHeader(http.StatusOK)
 	domainResponse := protocol.ToDomainResponse(domain, false)
 	h.Response = &domainResponse
 }
