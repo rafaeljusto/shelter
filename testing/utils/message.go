@@ -8,6 +8,7 @@ package utils
 import (
 	"fmt"
 	"log"
+	"runtime"
 )
 
 var (
@@ -18,7 +19,13 @@ var (
 // many tests running and logging in the same file, like in a continuous deployment
 // scenario. Prints a simple message without ending the test
 func Println(message string) {
-	message = fmt.Sprintf("%s integration test: %s", TestName, message)
+	_, file, line, ok := runtime.Caller(1)
+	if !ok {
+		file = "???"
+		line = 0
+	}
+
+	message = fmt.Sprintf("%s integration test: [%s:%d] %s", TestName, file, line, message)
 	log.Println(message)
 }
 
@@ -37,7 +44,13 @@ func PrintProgress(label string, percentage int) {
 // many tests running and logging in the same file, like in a continuous deployment
 // scenario. Prints an error message without ending the test
 func Errorln(message string, err error) {
-	message = fmt.Sprintf("%s integration test: %s", TestName, message)
+	_, file, line, ok := runtime.Caller(1)
+	if !ok {
+		file = "???"
+		line = 0
+	}
+
+	message = fmt.Sprintf("%s integration test: [%s:%d] %s", TestName, file, line, message)
 	if err != nil {
 		message = fmt.Sprintf("%s. Details: %s", message, err.Error())
 	}
@@ -49,7 +62,13 @@ func Errorln(message string, err error) {
 // many tests running and logging in the same file, like in a continuous deployment
 // scenario. Prints an error message and ends the test
 func Fatalln(message string, err error) {
-	message = fmt.Sprintf("%s integration test: %s", TestName, message)
+	_, file, line, ok := runtime.Caller(1)
+	if !ok {
+		file = "???"
+		line = 0
+	}
+
+	message = fmt.Sprintf("%s integration test: [%s:%d] %s", TestName, file, line, message)
 	if err != nil {
 		message = fmt.Sprintf("%s. Details: %s", message, err.Error())
 	}

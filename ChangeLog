@@ -5,6 +5,7 @@ version 0.3:
   New Feature:
   * API changed from /scan/current to /scans/?current
   * Using new web framework Handy
+  * Update domain in database when verifying it in service /domain/{fqdn}/verification
   Fixes:
   * Handy framework now use the same log of the shelter system
   * Fix current execution scan visualization
@@ -13,6 +14,8 @@ version 0.3:
   * Loading languages before reading the configuration file
   * Web client support for spanish domain owner
   * Notification is now working for Gmail
+  * Using new MongoDB client API (gopkg.in/mgo.v2)
+  * Integration test error message now gives the file and line of the error
 
 version 0.2:
   New Feature:
