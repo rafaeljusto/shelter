@@ -19,13 +19,7 @@ var (
 // many tests running and logging in the same file, like in a continuous deployment
 // scenario. Prints a simple message without ending the test
 func Println(message string) {
-	_, file, line, ok := runtime.Caller(1)
-	if !ok {
-		file = "???"
-		line = 0
-	}
-
-	message = fmt.Sprintf("%s integration test: [%s:%d] %s", TestName, file, line, message)
+	message = fmt.Sprintf("%s integration test: %s", TestName, message)
 	log.Println(message)
 }
 
