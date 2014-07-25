@@ -87,6 +87,7 @@ func main() {
 	domainsPagination(domainDAO)
 	domainsNotification(domainDAO)
 	domainsExpand(domainDAO)
+	domainFilter(domainDAO)
 
 	// Domain DAO performance report is optional and only generated when the report file
 	// path parameter is given
@@ -362,7 +363,7 @@ func domainsPagination(domainDAO dao.DomainDAO) {
 		},
 	}
 
-	domains, err := domainDAO.FindAll(&pagination, true)
+	domains, err := domainDAO.FindAll(&pagination, true, "")
 	if err != nil {
 		utils.Fatalln("Error retrieving domains", err)
 	}
@@ -390,7 +391,7 @@ func domainsPagination(domainDAO dao.DomainDAO) {
 		},
 	}
 
-	domains, err = domainDAO.FindAll(&pagination, true)
+	domains, err = domainDAO.FindAll(&pagination, true, "")
 	if err != nil {
 		utils.Fatalln("Error retrieving domains", err)
 	}
@@ -583,7 +584,7 @@ func domainsExpand(domainDAO dao.DomainDAO) {
 	}
 
 	pagination := dao.DomainDAOPagination{}
-	domains, err := domainDAO.FindAll(&pagination, false)
+	domains, err := domainDAO.FindAll(&pagination, false, "")
 
 	if err != nil {
 		utils.Fatalln("Error retrieving domains", err)
@@ -617,7 +618,7 @@ func domainsExpand(domainDAO dao.DomainDAO) {
 		}
 	}
 
-	domains, err = domainDAO.FindAll(&pagination, true)
+	domains, err = domainDAO.FindAll(&pagination, true, "")
 
 	if err != nil {
 		utils.Fatalln("Error retrieving domains", err)
@@ -657,6 +658,52 @@ func domainsExpand(domainDAO dao.DomainDAO) {
 	for _, domainResult := range domainsResult {
 		if domainResult.Error != nil {
 			utils.Fatalln("Error removing domains", domainResult.Error)
+		}
+	}
+}
+
+func domainFilter(domainDAO dao.DomainDAO) {
+	numberOfItems := 20
+
+	for i := 0; i < numberOfItems; i++ {
+		domain := model.Domain{
+			FQDN: fmt.Sprintf("example%d.com.br", i),
+		}
+
+		if err := domainDAO.Save(&domain); err != nil {
+			utils.Fatalln("Error saving domain in database", err)
+		}
+	}
+
+	pagination := dao.DomainDAOPagination{
+		PageSize: 10,
+		Page:     5,
+		OrderBy: []dao.DomainDAOSort{
+			{
+				Field:     dao.DomainDAOOrderByFieldFQDN,
+				Direction: dao.DAOOrderByDirectionAscending,
+			},
+		},
+	}
+
+	domains, err := domainDAO.FindAll(&pagination, true, "example1\\.com.*")
+	if err != nil {
+		utils.Fatalln("Error retrieving domains", err)
+	}
+
+	if len(domains) != 1 {
+		utils.Fatalln(fmt.Sprintf("Wrong number of domains when there's filter. "+
+			"Expected '1' and got '%d'", len(domains)), nil)
+	}
+
+	if domains[0].FQDN != "example1.com.br" {
+		utils.Fatalln("Wrong domain returned", nil)
+	}
+
+	for i := 0; i < numberOfItems; i++ {
+		fqdn := fmt.Sprintf("example%d.com.br", i)
+		if err := domainDAO.RemoveByFQDN(fqdn); err != nil {
+			utils.Fatalln("Error removing domain from database", err)
 		}
 	}
 }

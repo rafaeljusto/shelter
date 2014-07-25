@@ -185,7 +185,7 @@ func (dao DomainDAO) SaveMany(domains []*model.Domain) []DomainResult {
 // default values are adopted. There's also an expand flag that can control if each domain
 // object from the list will have only the FQDN, last modification, nameserver and DS
 // status or the full information
-func (dao DomainDAO) FindAll(pagination *DomainDAOPagination, expand bool) ([]model.Domain, error) {
+func (dao DomainDAO) FindAll(pagination *DomainDAOPagination, expand bool, filter string) ([]model.Domain, error) {
 	// Check if the programmer forgot to set the database in DomainDAO object
 	if dao.Database == nil {
 		return nil, ErrDomainDAOUndefinedDatabase
@@ -227,13 +227,32 @@ func (dao DomainDAO) FindAll(pagination *DomainDAOPagination, expand bool) ([]mo
 		sortList = append(sortList, sortTmp)
 	}
 
-	query = dao.Database.C(domainDAOCollection).Find(bson.M{})
+	if len(filter) == 0 {
+		query = dao.Database.C(domainDAOCollection).Find(bson.M{})
+
+	} else {
+		query = dao.Database.C(domainDAOCollection).Find(bson.M{"fqdn": bson.RegEx{filter, "i"}})
+	}
 
 	// We store the number of items before applying pagination, if we do this after we get only the
 	// number of items of a page size
 	var err error
 	if pagination.NumberOfItems, err = query.Count(); err != nil {
 		return nil, err
+	}
+
+	// Safety check to don't allow to set a page higher than the number of pages
+	maxNumberOfPages := pagination.NumberOfItems / pagination.PageSize
+	if pagination.NumberOfItems%pagination.PageSize > 0 {
+		maxNumberOfPages++
+	}
+
+	if maxNumberOfPages == 0 {
+		// When there's no item, we should stay on the first page (don't skip)
+		pagination.Page = 1
+
+	} else if pagination.Page > maxNumberOfPages {
+		pagination.Page = maxNumberOfPages
 	}
 
 	query.

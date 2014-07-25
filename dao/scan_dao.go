@@ -230,6 +230,20 @@ func (dao ScanDAO) FindAll(pagination *ScanDAOPagination, expand bool) ([]model.
 		return nil, err
 	}
 
+	// Safety check to don't allow to set a page higher than the number of pages
+	maxNumberOfPages := pagination.NumberOfItems / pagination.PageSize
+	if pagination.NumberOfItems%pagination.PageSize > 0 {
+		maxNumberOfPages++
+	}
+
+	if maxNumberOfPages == 0 {
+		// When there's no item, we should stay on the first page (don't skip)
+		pagination.Page = 1
+
+	} else if pagination.Page > maxNumberOfPages {
+		pagination.Page = maxNumberOfPages
+	}
+
 	query.
 		Sort(sortList...).
 		Skip(pagination.PageSize * (pagination.Page - 1)).

@@ -105,6 +105,7 @@ func (h *DomainsHandler) Head(w http.ResponseWriter, r *http.Request) {
 func (h *DomainsHandler) retrieveDomains(w http.ResponseWriter, r *http.Request) {
 	var pagination dao.DomainDAOPagination
 	expand := false
+	filter := ""
 
 	for key, values := range r.URL.Query() {
 		key = strings.TrimSpace(key)
@@ -209,6 +210,9 @@ func (h *DomainsHandler) retrieveDomains(w http.ResponseWriter, r *http.Request)
 
 			case "expand":
 				expand = true
+
+			case "filter":
+				filter = value
 			}
 		}
 	}
@@ -217,9 +221,9 @@ func (h *DomainsHandler) retrieveDomains(w http.ResponseWriter, r *http.Request)
 		Database: h.GetDatabase(),
 	}
 
-	domains, err := domainDAO.FindAll(&pagination, expand)
+	domains, err := domainDAO.FindAll(&pagination, expand, filter)
 	if err != nil {
-		log.Println("Error while searching domains objects. Details:", err)
+		log.Println("Error while filtering domains objects. Details:", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
