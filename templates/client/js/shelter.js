@@ -738,7 +738,7 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
     $scope.pageSizes = [ 20, 40, 60, 80, 100 ];
     $scope.lastRetrieveDomains = moment();
 
-    $scope.retrieveDomains = function(page, pageSize) {
+    $scope.retrieveDomains = function(page, pageSize, filter) {
       var uri = "";
 
       if (page != undefined) {
@@ -757,6 +757,15 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
           uri += "&";
         }
         uri += "pagesize=" + pageSize;
+      }
+
+      if (filter != undefined) {
+        if (uri.length == 0) {
+          uri += "?";
+        } else {
+          uri += "&";
+        }
+        uri += "filter=" + filter;
       }
 
       uri = "/domains/" + uri;

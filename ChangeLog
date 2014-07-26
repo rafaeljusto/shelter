@@ -6,6 +6,7 @@ version 0.3:
   * API changed from /scan/current to /scans/?current
   * Using new web framework Handy
   * Update domain in database when verifying it in service /domain/{fqdn}/verification
+  * New parameter for /domains service to filter domains results
   Fixes:
   * Handy framework now use the same log of the shelter system
   * Fix current execution scan visualization

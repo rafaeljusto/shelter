@@ -66,8 +66,11 @@
         </h2>
       </header>
 
-      <div class="message error" data-ng-if="error">{{error}}</div>
-      <div class="message success" data-ng-if="success">{{success}}</div>
+      <div class="filter">
+        <label for="filter" translate>Filter</label>
+        <input type="text" id="filter" data-ng-model="filter" 
+          data-ng-change="retrieveDomains(pagination.page, pagination.pageSize, filter)" />
+      </div>
 
       <domain class="animate"
         data-ng-repeat="domain in pagination.domains" domain="domain"></domain>
@@ -75,12 +78,12 @@
       <div class="pagination">
         <label translate>Page</label>
         <div data-ng-if="findLink(pagination, 'first') != ''">
-          <button data-ng-click="retrieveScansByURI(findLink(pagination, 'first'))">
+          <button data-ng-click="retrieveDomainsByURI(findLink(pagination, 'first'))">
             <i class="fa fa-fast-backward"></i>
           </button>
         </div>
         <div data-ng-if="findLink(pagination, 'prev') != ''">
-          <button data-ng-click="retrieveScansByURI(findLink(pagination, 'prev'))">
+          <button data-ng-click="retrieveDomainsByURI(findLink(pagination, 'prev'))">
             <i class="fa fa-backward"></i>
           </button>
         </div>
@@ -88,12 +91,12 @@
           <span>{{pagination.page}}</span>
         </div>
         <div data-ng-if="findLink(pagination, 'next') != ''">
-          <button data-ng-click="retrieveScansByURI(findLink(pagination, 'next'))">
+          <button data-ng-click="retrieveDomainsByURI(findLink(pagination, 'next'))">
             <i class="fa fa-forward"></i>
           </button>
         </div>
         <div data-ng-if="findLink(pagination, 'last') != ''">
-          <button data-ng-click="retrieveScansByURI(findLink(pagination, 'last'))">
+          <button data-ng-click="retrieveDomainsByURI(findLink(pagination, 'last'))">
             <i class="fa fa-fast-forward"></i>
           </button>
         </div>
@@ -104,15 +107,12 @@
         <div data-ng-repeat="pageSize in pageSizes" class="pagination-item">
           <span data-ng-if="pageSize == pagination.pageSize">{{pageSize}}</span>
           <button data-ng-if="pageSize != pagination.pageSize"
-            data-ng-click="retrieveDomains(pagination.page, pageSize)">
+            data-ng-click="retrieveDomains(pagination.page, pageSize, filter)">
 
             {{pageSize}}
           </button>
         </div>
       </div>
-
-      <div class="message error" data-ng-if="error">{{error}}</div>
-      <div class="message success" data-ng-if="success">{{success}}</div>
     </section>
 
     <section data-ng-cloak data-ng-controller="scanCtrl"
@@ -129,9 +129,6 @@
           </span>
         </h2>
       </header>
-
-      <div class="message error" data-ng-if="error">{{error}}</div>
-      <div class="message success" data-ng-if="success">{{success}}</div>
 
       <article class="current-scan">
         <header>
@@ -191,9 +188,6 @@
           </button>
         </div>
       </div>
-
-      <div class="message error" data-ng-if="error">{{error}}</div>
-      <div class="message success" data-ng-if="success">{{success}}</div>
     </section>
 
     <footer>
