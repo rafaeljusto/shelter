@@ -18,6 +18,7 @@ version 0.3:
   * Using new MongoDB client API (gopkg.in/mgo.v2)
   * Integration test error message now gives the file and line of the error
   * Priority to IPv4 addresses when resolving a nameserver
+  * Strange behaviour in web client page change
 
 version 0.2:
   New Feature:

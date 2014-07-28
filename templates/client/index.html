@@ -73,7 +73,7 @@
       </div>
 
       <domain class="animate"
-        data-ng-repeat="domain in pagination.domains" domain="domain"></domain>
+        data-ng-repeat="domain in pagination.domains track by domain.fqdn" domain="domain"></domain>
 
       <div class="pagination">
         <label translate>Page</label>
@@ -148,7 +148,7 @@
         </div>
       </article>
 
-      <scan class="animate" data-ng-repeat="scan in pagination.scans" scan="scan"></scan>
+      <scan class="animate" data-ng-repeat="scan in pagination.scans track by scan.startedAt" scan="scan"></scan>
 
       <div class="pagination">
         <label translate>Page</label>

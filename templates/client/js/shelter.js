@@ -90,55 +90,6 @@ var emptyScan = {
   dsStatistics: {}
 };
 
-// Apply source list to destination list, adding new elements, removing old ones and
-// keeping the ones that are equal
-function mergeList(source, destination, areEqual, mergeObject) {
-  if (source && !destination) {
-    destination = source;
-    return destination;
-
-  } else if (!source) {
-    destination = [];
-    return destination;
-  }
-
-  // Check new items
-  for (var i = 0; i < source.length; i++) {
-    var found = false;
-    for (var j = 0; j < destination.length; j++) {
-      if (areEqual(source[i], destination[j])) {
-        if (mergeObject) {
-          mergeObject(source[i], destination[j]);
-        }
-
-        found = true;
-        break;
-      }
-    }
-
-    if (!found) {
-      destination.push(source[i]);
-    }
-  }
-
-  // Check removed items
-  for (var j = 0; j < destination.length; j++) {
-    var found = false;
-    for (var i = 0; i < source.length; i++) {
-      if (areEqual(source[i], destination[j])) {
-        found = true;
-        break;
-      }
-    }
-
-    if (!found) {
-      destination.splice(j, 1);
-    }
-  }
-
-  return destination;
-}
-
 // Look for a specific link href given a type. According to W3C link can have many types
 // for a given URL (http://www.w3.org/TR/html401/types.html#type-links), so we use this
 // function to make our life easier
@@ -796,17 +747,7 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
           $scope.pagination.numberOfPages = response.data.numberOfPages;
           $scope.pagination.pageSize = response.data.pageSize;
           $scope.pagination.links = response.data.links;
-
-          $scope.pagination.domains = mergeList(response.data.domains,
-            $scope.pagination.domains,
-            function(networkDomain, domain) {
-              return networkDomain.fqdn == domain.fqdn;
-            },
-            function(networkDomain, domain) {
-              domain.nameservers = networkDomain.nameservers;
-              domain.dsset = networkDomain.dsset;
-              domain.owners = networkDomain.owners;
-            });
+          $scope.pagination.domains = response.data.domains;
         }
 
       } else if (response.status == 304) {
@@ -984,20 +925,7 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
           $scope.pagination.numberOfPages = response.data.numberOfPages;
           $scope.pagination.pageSize = response.data.pageSize;
           $scope.pagination.links = response.data.links;
-
-          $scope.pagination.scans = mergeList(response.data.scans,
-            $scope.pagination.scans,
-            function(networkScan, scan) {
-              return networkScan.startedAt == scan.startedAt;
-            },
-            function(networkScan, scan) {
-              scan.status = networkScan.status;
-              scan.finishedAt = networkScan.finishedAt;
-              scan.domainsScanned = networkScan.domainsScanned;
-              scan.domainsWithDNSSECScanned = networkScan.domainsWithDNSSECScanned;
-              scan.nameserverStatistics = networkScan.nameserverStatistics;
-              scan.dsStatistics = networkScan.dsStatistics;
-            });
+          $scope.pagination.scans = response.data.scans;
         }
 
         $scope.currentScanURI = findLink($scope.pagination.links, "current");
