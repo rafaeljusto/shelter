@@ -19,6 +19,7 @@ version 0.3:
   * Integration test error message now gives the file and line of the error
   * Priority to IPv4 addresses when resolving a nameserver
   * Strange behaviour in web client page change
+  * Keep current expand and filter information in domain response links
 
 version 0.2:
   New Feature:

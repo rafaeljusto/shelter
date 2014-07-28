@@ -228,7 +228,7 @@ func (h *DomainsHandler) retrieveDomains(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	domainsResponse := protocol.ToDomainsResponse(domains, pagination)
+	domainsResponse := protocol.ToDomainsResponse(domains, pagination, expand, filter)
 	h.Response = &domainsResponse
 
 	// Last-Modified is going to be the most recent date of the list

@@ -22,7 +22,13 @@ type DomainsResponse struct {
 }
 
 // Convert a list of domain objects into protocol format with pagination support
-func ToDomainsResponse(domains []model.Domain, pagination dao.DomainDAOPagination) DomainsResponse {
+func ToDomainsResponse(
+	domains []model.Domain,
+	pagination dao.DomainDAOPagination,
+	expand bool,
+	filter string,
+) DomainsResponse {
+
 	var domainsResponses []DomainResponse
 	for _, domain := range domains {
 		domainsResponses = append(domainsResponses, ToDomainResponse(domain, true))
@@ -40,6 +46,11 @@ func ToDomainsResponse(domains []model.Domain, pagination dao.DomainDAOPaginatio
 		)
 	}
 
+	expandParameter := ""
+	if expand {
+		expandParameter = "&expand"
+	}
+
 	// Add pagination managment links to the response. The URI is hard coded, I didn't have
 	// any idea on how can we do this dynamically yet. We cannot get the URI from the
 	// handler because we are going to have a cross-reference problem
@@ -49,8 +60,8 @@ func ToDomainsResponse(domains []model.Domain, pagination dao.DomainDAOPaginatio
 	if pagination.Page > 1 {
 		links = append(links, Link{
 			Types: []LinkType{LinkTypeFirst},
-			HRef: fmt.Sprintf("/domains/?pagesize=%d&page=%d&orderby=%s",
-				pagination.PageSize, 1, orderBy),
+			HRef: fmt.Sprintf("/domains/?pagesize=%d&page=%d&orderby=%s&filter=%s%s",
+				pagination.PageSize, 1, orderBy, filter, expandParameter),
 		})
 	}
 
@@ -58,8 +69,8 @@ func ToDomainsResponse(domains []model.Domain, pagination dao.DomainDAOPaginatio
 	if pagination.Page-1 >= 1 {
 		links = append(links, Link{
 			Types: []LinkType{LinkTypePrev},
-			HRef: fmt.Sprintf("/domains/?pagesize=%d&page=%d&orderby=%s",
-				pagination.PageSize, pagination.Page-1, orderBy),
+			HRef: fmt.Sprintf("/domains/?pagesize=%d&page=%d&orderby=%s&filter=%s%s",
+				pagination.PageSize, pagination.Page-1, orderBy, filter, expandParameter),
 		})
 	}
 
@@ -67,8 +78,8 @@ func ToDomainsResponse(domains []model.Domain, pagination dao.DomainDAOPaginatio
 	if pagination.Page+1 <= pagination.NumberOfPages {
 		links = append(links, Link{
 			Types: []LinkType{LinkTypeNext},
-			HRef: fmt.Sprintf("/domains/?pagesize=%d&page=%d&orderby=%s",
-				pagination.PageSize, pagination.Page+1, orderBy),
+			HRef: fmt.Sprintf("/domains/?pagesize=%d&page=%d&orderby=%s&filter=%s%s",
+				pagination.PageSize, pagination.Page+1, orderBy, filter, expandParameter),
 		})
 	}
 
@@ -76,8 +87,8 @@ func ToDomainsResponse(domains []model.Domain, pagination dao.DomainDAOPaginatio
 	if pagination.Page < pagination.NumberOfPages {
 		links = append(links, Link{
 			Types: []LinkType{LinkTypeLast},
-			HRef: fmt.Sprintf("/domains/?pagesize=%d&page=%d&orderby=%s",
-				pagination.PageSize, pagination.NumberOfPages, orderBy),
+			HRef: fmt.Sprintf("/domains/?pagesize=%d&page=%d&orderby=%s&filter=%s%s",
+				pagination.PageSize, pagination.NumberOfPages, orderBy, filter, expandParameter),
 		})
 	}
 

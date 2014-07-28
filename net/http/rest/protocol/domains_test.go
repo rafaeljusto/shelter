@@ -47,7 +47,7 @@ func TestToDomainsResponse(t *testing.T) {
 		NumberOfPages: len(domains) / 10,
 	}
 
-	domainsResponse := ToDomainsResponse(domains, pagination)
+	domainsResponse := ToDomainsResponse(domains, pagination, true, "example")
 
 	if len(domainsResponse.Domains) != len(domains) {
 		t.Error("Not converting domain model objects properly")
@@ -111,7 +111,7 @@ func TestToDomainsResponseLinks(t *testing.T) {
 		NumberOfPages: 3,
 	}
 
-	domainsResponse := ToDomainsResponse(domains, pagination)
+	domainsResponse := ToDomainsResponse(domains, pagination, true, "example")
 
 	// Show all actions when navigating in the middle of the pagination
 	if len(domainsResponse.Links) != 4 {
@@ -135,7 +135,7 @@ func TestToDomainsResponseLinks(t *testing.T) {
 		NumberOfPages: 3,
 	}
 
-	domainsResponse = ToDomainsResponse(domains, pagination)
+	domainsResponse = ToDomainsResponse(domains, pagination, true, "example")
 
 	// Don't show previous or fast backward when we are in the first page
 	if len(domainsResponse.Links) != 2 {
@@ -159,7 +159,7 @@ func TestToDomainsResponseLinks(t *testing.T) {
 		NumberOfPages: 3,
 	}
 
-	domainsResponse = ToDomainsResponse(domains, pagination)
+	domainsResponse = ToDomainsResponse(domains, pagination, true, "example")
 
 	// Don't show next or fast foward when we are in the last page
 	if len(domainsResponse.Links) != 2 {
