@@ -75,15 +75,15 @@
       <domain class="animate"
         data-ng-repeat="domain in pagination.domains track by domain.fqdn" domain="domain"></domain>
 
-      <div class="pagination">
+      <div class="pagination" id="domainPagination">
         <label translate>Page</label>
         <div data-ng-if="findLink(pagination, 'first') != ''">
-          <button data-ng-click="retrieveDomainsByURI(findLink(pagination, 'first'))">
+          <button data-ng-click="retrieveDomainsByURI(findLink(pagination, 'first'), scrollToPagination)">
             <i class="fa fa-fast-backward"></i>
           </button>
         </div>
         <div data-ng-if="findLink(pagination, 'prev') != ''">
-          <button data-ng-click="retrieveDomainsByURI(findLink(pagination, 'prev'))">
+          <button data-ng-click="retrieveDomainsByURI(findLink(pagination, 'prev'), scrollToPagination)">
             <i class="fa fa-backward"></i>
           </button>
         </div>
@@ -91,12 +91,12 @@
           <span>{{pagination.page}}</span>
         </div>
         <div data-ng-if="findLink(pagination, 'next') != ''">
-          <button data-ng-click="retrieveDomainsByURI(findLink(pagination, 'next'))">
+          <button data-ng-click="retrieveDomainsByURI(findLink(pagination, 'next'), scrollToPagination)">
             <i class="fa fa-forward"></i>
           </button>
         </div>
         <div data-ng-if="findLink(pagination, 'last') != ''">
-          <button data-ng-click="retrieveDomainsByURI(findLink(pagination, 'last'))">
+          <button data-ng-click="retrieveDomainsByURI(findLink(pagination, 'last'), scrollToPagination)">
             <i class="fa fa-fast-forward"></i>
           </button>
         </div>
@@ -107,7 +107,7 @@
         <div data-ng-repeat="pageSize in pageSizes" class="pagination-item">
           <span data-ng-if="pageSize == pagination.pageSize">{{pageSize}}</span>
           <button data-ng-if="pageSize != pagination.pageSize"
-            data-ng-click="retrieveDomains(pagination.page, pageSize, filter)">
+            data-ng-click="retrieveDomains(pagination.page, pageSize, filter, scrollToPagination)">
 
             {{pageSize}}
           </button>
@@ -150,15 +150,15 @@
 
       <scan class="animate" data-ng-repeat="scan in pagination.scans track by scan.startedAt" scan="scan"></scan>
 
-      <div class="pagination">
+      <div class="pagination" id="scanPagination">
         <label translate>Page</label>
         <div data-ng-if="findLink(pagination, 'first') != ''">
-          <button data-ng-click="retrieveScansByURI(findLink(pagination, 'first'))">
+          <button data-ng-click="retrieveScansByURI(findLink(pagination, 'first'), scrollToPagination)">
             <i class="fa fa-fast-backward"></i>
           </button>
         </div>
         <div data-ng-if="findLink(pagination, 'prev') != ''">
-          <button data-ng-click="retrieveScansByURI(findLink(pagination, 'prev'))">
+          <button data-ng-click="retrieveScansByURI(findLink(pagination, 'prev'), scrollToPagination)">
             <i class="fa fa-backward"></i>
           </button>
         </div>
@@ -166,12 +166,12 @@
           <span>{{pagination.page}}</span>
         </div>
         <div data-ng-if="findLink(pagination, 'next') != ''">
-          <button data-ng-click="retrieveScansByURI(findLink(pagination, 'next'))">
+          <button data-ng-click="retrieveScansByURI(findLink(pagination, 'next'), scrollToPagination)">
             <i class="fa fa-forward"></i>
           </button>
         </div>
         <div data-ng-if="findLink(pagination, 'last') != ''">
-          <button data-ng-click="retrieveScansByURI(findLink(pagination, 'last'))">
+          <button data-ng-click="retrieveScansByURI(findLink(pagination, 'last'), scrollToPagination)">
             <i class="fa fa-fast-forward"></i>
           </button>
         </div>
@@ -182,7 +182,7 @@
         <div data-ng-repeat="pageSize in pageSizes">
           <span data-ng-if="pageSize == pagination.pageSize">{{pageSize}}</span>
           <button data-ng-if="pageSize != pagination.pageSize"
-            data-ng-click="retrieveScans(pagination.page, pageSize)">
+            data-ng-click="retrieveScans(pagination.page, pageSize, scrollToPagination)">
 
             {{pageSize}}
           </button>

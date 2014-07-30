@@ -20,6 +20,8 @@ version 0.3:
   * Priority to IPv4 addresses when resolving a nameserver
   * Strange behaviour in web client page change
   * Keep current expand and filter information in domain response links
+  * Web client now has a close button when editing a registered domain
+  * Web client keeps the scroll position into the pagination when moving between pages
 
 version 0.2:
   New Feature:

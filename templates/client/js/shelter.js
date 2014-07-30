@@ -156,7 +156,7 @@ function verificationResponseToHTML(data) {
 
 angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
 
-  .config(function($translateProvider, $httpProvider) {
+  .config(function($translateProvider, $httpProvider, $anchorScrollProvider) {
     $translateProvider.useStaticFilesLoader({
       prefix: "/languages/",
       suffix: ".json"
@@ -175,6 +175,8 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
         }
       }
     };
+
+    $anchorScrollProvider.disableAutoScrolling();
   })
 
   .filter("range", function() {
@@ -685,11 +687,11 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
     $scope.emptyDomain = angular.copy(emptyDomain);
   })
 
-  .controller("domainsCtrl", function($scope, $translate, $timeout, domainService) {
+  .controller("domainsCtrl", function($scope, $translate, $timeout, $anchorScroll, $location, domainService) {
     $scope.pageSizes = [ 20, 40, 60, 80, 100 ];
     $scope.lastRetrieveDomains = moment();
 
-    $scope.retrieveDomains = function(page, pageSize, filter) {
+    $scope.retrieveDomains = function(page, pageSize, filter, successFunction) {
       var uri = "";
 
       if (page != undefined) {
@@ -721,20 +723,20 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
 
       uri = "/domains/" + uri;
 
-      $scope.retrieveDomainsByURI(uri);
+      $scope.retrieveDomainsByURI(uri, successFunction);
     };
 
-    $scope.retrieveDomainsByURI = function(uri) {
+    $scope.retrieveDomainsByURI = function(uri, successFunction) {
       $scope.retrieveDomainsURI = uri;
       $scope.lastRetrieveDomains = moment();
       
       domainService.retrieveDomains($scope.retrieveDomainsURI, $scope.etag).then(
         function(response) {
-          $scope.processDomainsResult(response);
+          $scope.processDomainsResult(response, successFunction);
         });
     };
 
-    $scope.processDomainsResult = function(response) {
+    $scope.processDomainsResult = function(response, successFunction) {
       if (response.status == 200) {
         $scope.etag = response.headers.Etag;
 
@@ -748,6 +750,10 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
           $scope.pagination.pageSize = response.data.pageSize;
           $scope.pagination.links = response.data.links;
           $scope.pagination.domains = response.data.domains;
+        }
+
+        if (successFunction != undefined) {
+          successFunction();
         }
 
       } else if (response.status == 304) {
@@ -786,6 +792,15 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
       }
 
       return findLink(pagination.links, type);
+    };
+
+    $scope.scrollToPagination = function() {
+      // We can't do this to fast, because the HTML page is not render yet
+      $timeout(function() {
+        $location.hash("domainPagination");
+        $anchorScroll();
+        $location.hash("");
+      }, 100);
     };
 
     $scope.retrieveDomainsWorker();
@@ -868,7 +883,7 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
     };
   })
 
-  .controller("scanCtrl", function($scope, $translate, $timeout, scanService) {
+  .controller("scanCtrl", function($scope, $translate, $timeout, $anchorScroll, $location, scanService) {
     $scope.pageSizes = [ 20, 40, 60, 80, 100 ];
     $scope.lastRetrieveScans = moment();
 
@@ -876,7 +891,7 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
       return $translate.use();
     };
 
-    $scope.retrieveScans = function(page, pageSize) {
+    $scope.retrieveScans = function(page, pageSize, successFunction) {
       var uri = "";
 
       if (page != undefined) {
@@ -899,20 +914,20 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
 
       uri = "/scans/" + uri;
 
-      $scope.retrieveScansByURI(uri);
+      $scope.retrieveScansByURI(uri, successFunction);
     };
 
-    $scope.retrieveScansByURI = function(uri) {
+    $scope.retrieveScansByURI = function(uri, successFunction) {
       $scope.retrieveScansURI = uri;
       $scope.lastRetrieveScans = moment();
       
       scanService.retrieve($scope.retrieveScansURI, $scope.etag).then(
         function(response) {
-          $scope.processScansResult(response);
+          $scope.processScansResult(response, successFunction);
         });
     };
 
-    $scope.processScansResult = function(response) {
+    $scope.processScansResult = function(response, successFunction) {
       if (response.status == 200) {
         $scope.etag = response.headers.Etag;
 
@@ -929,6 +944,10 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
         }
 
         $scope.currentScanURI = findLink($scope.pagination.links, "current");
+
+        if (successFunction != undefined) {
+          successFunction();
+        }
 
       } else if (response.status == 304) {
         // Not modified
@@ -995,6 +1014,15 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
       }
 
       return findLink(pagination.links, type);
+    };
+
+    $scope.scrollToPagination = function() {
+      // We can't do this to fast, because the HTML page is not render yet
+      $timeout(function() {
+        $location.hash("scanPagination");
+        $anchorScroll();
+        $location.hash("");
+      }, 100);
     };
 
     $scope.retrieveCurrentScan();

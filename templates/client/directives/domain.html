@@ -11,7 +11,7 @@
     <h3>{{domain.fqdn}}</h3>
   </header>
 
-  <div class="content" data-ng-show="details && !edit">
+  <div class="content" data-ng-show="details && !data.edit">
     <h4 data-ng-show="freshDomain.nameservers.length > 0" translate>Nameservers</h4>
     <div data-ng-repeat="nameserver in freshDomain.nameservers" class="fieldgroup">
       <div class="field">
@@ -70,9 +70,9 @@
     </div>
   </div>
 
-  <div class="buttons" data-ng-show="details && !edit">
+  <div class="buttons" data-ng-show="details && !data.edit">
     <button type="button" class="big-button"
-      data-ng-init="edit = false" data-ng-click="edit = true">
+      data-ng-init="data.edit = false" data-ng-click="data.edit = true">
       <i class="fa fa-edit"></i>
       {{ "Edit" | translate }}
     </button>
@@ -99,7 +99,11 @@
     </button>
   </div>
 
-  <div class="content-edit" data-ng-show="details && edit">
+  <div class="content-edit" data-ng-show="details && data.edit">
+    <button type="button" class="normal-button right-button"
+      data-ng-click="data.edit = false" translate>
+      Close
+    </button>
     <domainform domain="freshDomain" form-ctrl="form"></domainform>
   </div>
 </article>

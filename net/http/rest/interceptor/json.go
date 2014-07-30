@@ -95,6 +95,8 @@ func (c *JSONCodec) After(w http.ResponseWriter, r *http.Request) {
 			elemType.Kind() == reflect.Slice) &&
 			st.Field(c.resPosition).IsNil() {
 
+			// Nothing to write, add the default headers and move out
+			c.addResponseHeaders(w, nil)
 			return
 		}
 
