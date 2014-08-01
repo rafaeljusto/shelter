@@ -7,7 +7,7 @@ package interceptor
 
 import (
 	"errors"
-	"github.com/rafaeljusto/shelter/net/http/rest/messages"
+	"github.com/rafaeljusto/shelter/messages"
 	"net/http"
 	"net/http/httptest"
 	"strings"

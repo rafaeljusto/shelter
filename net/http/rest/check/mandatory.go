@@ -9,7 +9,7 @@ import (
 	"crypto/md5"
 	"encoding/base64"
 	"errors"
-	"github.com/rafaeljusto/shelter/net/http/rest/messages"
+	"github.com/rafaeljusto/shelter/messages"
 	"net/http"
 	"strings"
 	"time"

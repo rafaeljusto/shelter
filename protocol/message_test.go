@@ -6,7 +6,7 @@
 package protocol
 
 import (
-	"github.com/rafaeljusto/shelter/net/http/rest/messages"
+	"github.com/rafaeljusto/shelter/messages"
 	"testing"
 )
 

@@ -12,7 +12,7 @@ import (
 	"github.com/miekg/dns"
 	"github.com/rafaeljusto/shelter/config"
 	"github.com/rafaeljusto/shelter/model"
-	"github.com/rafaeljusto/shelter/net/http/rest/protocol"
+	"github.com/rafaeljusto/shelter/protocol"
 	"github.com/rafaeljusto/shelter/testing/utils"
 	"io/ioutil"
 	"net/http"

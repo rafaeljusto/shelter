@@ -13,7 +13,7 @@ import (
 	"github.com/rafaeljusto/shelter/database/mongodb"
 	"github.com/rafaeljusto/shelter/model"
 	"github.com/rafaeljusto/shelter/net/http/rest/handler"
-	"github.com/rafaeljusto/shelter/net/http/rest/protocol"
+	"github.com/rafaeljusto/shelter/protocol"
 	"github.com/rafaeljusto/shelter/testing/utils"
 	"github.com/trajber/handy"
 	"gopkg.in/mgo.v2"
