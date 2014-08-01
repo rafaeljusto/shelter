@@ -7,7 +7,7 @@ package utils
 
 import (
 	"github.com/rafaeljusto/shelter/model"
-	"github.com/rafaeljusto/shelter/net/http/rest/protocol"
+	"github.com/rafaeljusto/shelter/protocol"
 )
 
 // Function to compare if two domains are equal, cannot use operator == because of the

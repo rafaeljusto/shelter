@@ -7,7 +7,7 @@ package check
 
 import (
 	"errors"
-	"github.com/rafaeljusto/shelter/net/http/rest/messages"
+	"github.com/rafaeljusto/shelter/messages"
 	"net/http"
 	"strings"
 	"testing"
