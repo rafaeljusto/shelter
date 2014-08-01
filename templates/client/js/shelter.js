@@ -193,7 +193,11 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
     return function(input, language) {
       // We will keep the timezone from what we received, but we aren't showing the
       // timezone in the result string. This could be a problem!
-      var datetime = moment(input, ["YYYY-MM-DDTHH:mm:ss.SSSZ", "YYYY-MM-DDTHH:mm:ssZ"]).parseZone();
+
+      // http://momentjs.com/docs/#/parsing/string-formats/
+      // Note: Parsing multiple formats is considerably slower than parsing a single format. If you
+      // can avoid it, it is much faster to parse a single format.
+      var datetime = moment(input, "YYYY-MM-DDTHH:mm:ss.SSSZ").parseZone();
       if (datetime.isValid() && language) {
         // Detect empty datetime
         if (datetime.unix() <= 0) {
