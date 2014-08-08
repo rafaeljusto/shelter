@@ -6,8 +6,9 @@
 package dao
 
 import (
-	"errors"
+	"fmt"
 	"github.com/rafaeljusto/shelter/database/mongodb"
+	"github.com/rafaeljusto/shelter/errors"
 	"github.com/rafaeljusto/shelter/model"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
@@ -20,16 +21,12 @@ import (
 var (
 	// Programmer must set the Database attribute from DomainDAO with a valid connection
 	// before using this object
-	ErrDomainDAOUndefinedDatabase = errors.New("No database defined for DomainDAO")
+	ErrDomainDAOUndefinedDatabase = fmt.Errorf("No database defined for DomainDAO")
 
 	// Pagination attribute is mandatory, and it's a pointer only to fill some query
 	// informations in it. For the user that wants all records without pagination for a B2B
 	// integration need to pass zero in the page size
-	ErrDomainDAOPaginationUndefined = errors.New("Pagination was not defined")
-
-	// An invalid order by field was given to be converted in one of the known order by
-	// fields of the Domain DAO
-	ErrDomainDAOOrderByFieldUnknown = errors.New("Unknown order by field")
+	ErrDomainDAOPaginationUndefined = fmt.Errorf("Pagination was not defined")
 )
 
 const (
@@ -60,7 +57,8 @@ func DomainDAOOrderByFieldFromString(value string) (DomainDAOOrderByField, error
 		return DomainDAOOrderByFieldLastModifiedAt, nil
 	}
 
-	return DomainDAOOrderByFieldFQDN, ErrDomainDAOOrderByFieldUnknown
+	return DomainDAOOrderByFieldFQDN,
+		errors.NewInputError(errors.ErrorCodeInvalidQueryOrderBy, "orderby", value)
 }
 
 // Convert the DomainDAO order by field from enum into string. If the enum is unknown this
@@ -100,7 +98,11 @@ func init() {
 			DropDups: true,
 		}
 
-		return database.C(domainDAOCollection).EnsureIndex(index)
+		if err := database.C(domainDAOCollection).EnsureIndex(index); err != nil {
+			return errors.NewSystemError(err)
+		}
+
+		return nil
 	})
 
 	// Add index on nameserver.lastokat to speed up the query that check the domains that
@@ -113,7 +115,11 @@ func init() {
 			Key:  []string{"nameservers.lastokat"},
 		}
 
-		return database.C(domainDAOCollection).EnsureIndex(index)
+		if err := database.C(domainDAOCollection).EnsureIndex(index); err != nil {
+			return errors.NewSystemError(err)
+		}
+
+		return nil
 	})
 
 	// Add index on dsset.lastokat to speed up the query that check the domains that need to
@@ -125,7 +131,11 @@ func init() {
 			Key:  []string{"dsset.lastokat"},
 		}
 
-		return database.C(domainDAOCollection).EnsureIndex(index)
+		if err := database.C(domainDAOCollection).EnsureIndex(index); err != nil {
+			return errors.NewSystemError(err)
+		}
+
+		return nil
 	})
 }
 
@@ -141,7 +151,7 @@ type DomainDAO struct {
 func (dao DomainDAO) Save(domain *model.Domain) error {
 	// Check if the programmer forgot to set the database in DomainDAO object
 	if dao.Database == nil {
-		return ErrDomainDAOUndefinedDatabase
+		return errors.NewSystemError(ErrDomainDAOUndefinedDatabase)
 	}
 
 	// When creating a new domain object, the id will be probably nil (or kind of new
@@ -168,7 +178,11 @@ func (dao DomainDAO) Save(domain *model.Domain) error {
 		"revision": domain.Revision - 1,
 	}, domain)
 
-	return err
+	if err != nil {
+		return errors.NewSystemError(err)
+	}
+
+	return nil
 }
 
 // Save many domains at once, creating go routines to execute each domain in the classic
@@ -188,11 +202,12 @@ func (dao DomainDAO) SaveMany(domains []*model.Domain) []DomainResult {
 func (dao DomainDAO) FindAll(pagination *DomainDAOPagination, expand bool, filter string) ([]model.Domain, error) {
 	// Check if the programmer forgot to set the database in DomainDAO object
 	if dao.Database == nil {
-		return nil, ErrDomainDAOUndefinedDatabase
+		return nil, errors.NewSystemError(ErrDomainDAOUndefinedDatabase)
 	}
 
+	// Programmer must always give a pagination, with default values if necessary
 	if pagination == nil {
-		return nil, ErrDomainDAOPaginationUndefined
+		return nil, errors.NewSystemError(ErrDomainDAOPaginationUndefined)
 	}
 
 	var query *mgo.Query
@@ -238,7 +253,7 @@ func (dao DomainDAO) FindAll(pagination *DomainDAOPagination, expand bool, filte
 	// number of items of a page size
 	var err error
 	if pagination.NumberOfItems, err = query.Count(); err != nil {
-		return nil, err
+		return nil, errors.NewSystemError(err)
 	}
 
 	// Safety check to don't allow to set a page higher than the number of pages
@@ -262,7 +277,7 @@ func (dao DomainDAO) FindAll(pagination *DomainDAOPagination, expand bool, filte
 
 	var domains []model.Domain
 	if err := query.All(&domains); err != nil {
-		return nil, err
+		return nil, errors.NewSystemError(err)
 	}
 
 	if pagination.PageSize > 0 {
@@ -304,7 +319,7 @@ func (dao DomainDAO) FindAll(pagination *DomainDAOPagination, expand bool, filte
 func (dao DomainDAO) FindAllAsync() (chan DomainResult, error) {
 	// Check if the programmer forgot to set the database in DomainDAO object
 	if dao.Database == nil {
-		return nil, ErrDomainDAOUndefinedDatabase
+		return nil, errors.NewSystemError(ErrDomainDAOUndefinedDatabase)
 	}
 
 	// Channel to be used for returning each retrieved domain
@@ -324,6 +339,10 @@ func (dao DomainDAO) FindAllAsync() (chan DomainResult, error) {
 		}
 
 		err := it.Close()
+		if err != nil {
+			err = errors.NewSystemError(err)
+		}
+
 		domainChannel <- DomainResult{
 			Domain: nil,
 			Error:  err,
@@ -349,7 +368,7 @@ func (dao DomainDAO) FindAllAsyncToBeNotified(
 
 	// Check if the programmer forgot to set the database in DomainDAO object
 	if dao.Database == nil {
-		return nil, ErrDomainDAOUndefinedDatabase
+		return nil, errors.NewSystemError(ErrDomainDAOUndefinedDatabase)
 	}
 
 	// Channel to be used for returning each retrieved domain
@@ -428,6 +447,10 @@ func (dao DomainDAO) FindAllAsyncToBeNotified(
 		}
 
 		err := it.Close()
+		if err != nil {
+			err = errors.NewSystemError(err)
+		}
+
 		domainChannel <- DomainResult{
 			Domain: nil,
 			Error:  err,
@@ -445,7 +468,7 @@ func (dao DomainDAO) FindByFQDN(fqdn string) (model.Domain, error) {
 
 	// Check if the programmer forgot to set the database in DomainDAO object
 	if dao.Database == nil {
-		return domain, ErrDomainDAOUndefinedDatabase
+		return domain, errors.NewSystemError(ErrDomainDAOUndefinedDatabase)
 	}
 
 	// We must create a BSON object to be compared with MongoDB database entries
@@ -453,7 +476,14 @@ func (dao DomainDAO) FindByFQDN(fqdn string) (model.Domain, error) {
 		"fqdn": fqdn,
 	}).One(&domain)
 
-	return domain, err
+	if err == mgo.ErrNotFound {
+		return domain, errors.NotFound
+
+	} else if err != nil {
+		return domain, errors.NewSystemError(err)
+	}
+
+	return domain, nil
 }
 
 // Remove a database entry based on a given domain id. This method is useful as a
@@ -461,10 +491,14 @@ func (dao DomainDAO) FindByFQDN(fqdn string) (model.Domain, error) {
 func (dao DomainDAO) Remove(domain *model.Domain) error {
 	// Check if the programmer forgot to set the database in DomainDAO object
 	if dao.Database == nil {
-		return ErrDomainDAOUndefinedDatabase
+		return errors.NewSystemError(ErrDomainDAOUndefinedDatabase)
 	}
 
-	return dao.Database.C(domainDAOCollection).RemoveId(domain.Id)
+	if err := dao.Database.C(domainDAOCollection).RemoveId(domain.Id); err != nil {
+		return errors.NewSystemError(err)
+	}
+
+	return nil
 }
 
 // Remove a database entry that have a given FQDN. The system was designed to have an
@@ -473,14 +507,20 @@ func (dao DomainDAO) Remove(domain *model.Domain) error {
 func (dao DomainDAO) RemoveByFQDN(fqdn string) error {
 	// Check if the programmer forgot to set the database in DomainDAO object
 	if dao.Database == nil {
-		return ErrDomainDAOUndefinedDatabase
+		return errors.NewSystemError(ErrDomainDAOUndefinedDatabase)
 	}
 
 	// We must create a BSON object to be compared with MongoDB database entries to
 	// determinate wich one is going to be removed
-	return dao.Database.C(domainDAOCollection).Remove(bson.M{
+	err := dao.Database.C(domainDAOCollection).Remove(bson.M{
 		"fqdn": fqdn,
 	})
+
+	if err != nil {
+		return errors.NewSystemError(err)
+	}
+
+	return nil
 }
 
 // Remove many domain objects from database at once, is faster than removing each one
@@ -497,7 +537,12 @@ func (dao DomainDAO) RemoveMany(domains []*model.Domain) []DomainResult {
 // all your data)
 func (dao DomainDAO) RemoveAll() error {
 	_, err := dao.Database.C(domainDAOCollection).RemoveAll(bson.M{})
-	return err
+
+	if err != nil {
+		return errors.NewSystemError(err)
+	}
+
+	return nil
 }
 
 // Method used to execute an operation over domains concurrently. It was created because

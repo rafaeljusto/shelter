@@ -7,6 +7,8 @@ version 0.3:
   * Using new web framework Handy
   * Update domain in database when verifying it in service /domain/{fqdn}/verification
   * New parameter for /domains service to filter domains results
+  * Development test cover report now show all files in one tab
+  * New error logging system that gives more information of the problem
   Fixes:
   * Handy framework now use the same log of the shelter system
   * Fix current execution scan visualization

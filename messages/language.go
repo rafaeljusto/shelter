@@ -7,7 +7,8 @@ package messages
 
 import (
 	"encoding/json"
-	"errors"
+	"fmt"
+	"github.com/rafaeljusto/shelter/errors"
 	"github.com/rafaeljusto/shelter/model"
 	"io/ioutil"
 	"strings"
@@ -24,11 +25,11 @@ var (
 	// When the default language is not found in the language pack this error is used. This
 	// is a critical error because the ShelterRESTLanguagePack will be null and can cause
 	// panic when the system try to use it
-	ErrDefaultLanguageNotFound = errors.New("Default language not found in configuration file")
+	ErrDefaultLanguageNotFound = fmt.Errorf("Default language not found in configuration file")
 
 	// All loaded languages are checked to see if they match with the predefined list of
 	// IANA languages, if not this error is returned to alert the administrator
-	ErrInvalidLanguage = errors.New("Language is not valid")
+	ErrInvalidLanguage = fmt.Errorf("Language is not valid")
 )
 
 // Structure responsable for storing all messages from the REST server in different idioms
@@ -91,29 +92,29 @@ func (l *LanguagePack) Name() string {
 func LoadConfig(path string) error {
 	bytes, err := ioutil.ReadFile(path)
 	if err != nil {
-		return err
+		return errors.NewSystemError(err)
 	}
 
 	if err := json.Unmarshal(bytes, &ShelterRESTLanguagePacks); err != nil {
-		return err
+		return errors.NewSystemError(err)
 	}
 
 	// Check language formats. They should follow IANA language types
 
 	if !model.IsValidLanguage(ShelterRESTLanguagePacks.Default) {
-		return ErrInvalidLanguage
+		return errors.NewSystemError(ErrInvalidLanguage)
 	}
 
 	for _, language := range ShelterRESTLanguagePacks.Packs {
 		if !model.IsValidLanguage(language.Name()) {
-			return ErrInvalidLanguage
+			return errors.NewSystemError(ErrInvalidLanguage)
 		}
 	}
 
 	// Load the default language pack
 	ShelterRESTLanguagePack = ShelterRESTLanguagePacks.Select(ShelterRESTLanguagePacks.Default)
 	if ShelterRESTLanguagePack == nil {
-		return ErrDefaultLanguageNotFound
+		return errors.NewSystemError(ErrDefaultLanguageNotFound)
 	}
 
 	// TODO: Should we check if the configuration file languages are the same of the REST

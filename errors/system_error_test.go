@@ -35,3 +35,17 @@ func TestNewSystemErrorLog(t *testing.T) {
 			"Expected suffix '%s' and got '%s'", expected, got)
 	}
 }
+
+func TestLogError(t *testing.T) {
+	var buffer bytes.Buffer
+	shelterLog.Logger = log.New(&buffer, "", log.Lshortfile)
+
+	LogError(errors.New("Something went wrong!"))
+
+	got := strings.TrimSpace(buffer.String())
+	expected := "Something went wrong!"
+	if !strings.HasSuffix(got, expected) {
+		t.Errorf("Not logging correctly when there's a system error. "+
+			"Expected suffix '%s' and got '%s'", expected, got)
+	}
+}
