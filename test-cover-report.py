@@ -59,6 +59,7 @@ def runCoverReport():
       success = False
 
   if success:
+    # TODO: We should test this in Windows
     # http://lk4d4.darth.io/posts/multicover/
     mergeCommand = "|".join([
       "echo 'mode: set' > cover-profile.out && cat *.cover.out",
