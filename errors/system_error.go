@@ -6,8 +6,16 @@
 package errors
 
 import (
+	"errors"
+	"fmt"
 	"github.com/rafaeljusto/shelter/log"
 	"runtime"
+)
+
+var (
+	NotFound = SystemError{
+		Err: errors.New("Object not found"),
+	}
 )
 
 // SystemError was created to encapsulate all low level errors, so we could log the error exactly in
@@ -31,6 +39,16 @@ func NewSystemError(err error) SystemError {
 	return SystemError{
 		Err: err,
 	}
+}
+
+func LogError(err error) {
+	_, file, line, ok := runtime.Caller(1)
+	if !ok {
+		file = "???"
+		line = 0
+	}
+
+	log.Printf(fmt.Sprintf("[ERR] %s:%d: %s", file, line, err.Error()))
 }
 
 // Error retrieve the description of the low level error

@@ -6,14 +6,8 @@
 package dao
 
 import (
-	"errors"
+	"github.com/rafaeljusto/shelter/errors"
 	"strings"
-)
-
-var (
-	// An invalid order by direction was given to be converted in one of the known order by
-	// fields of the DAO
-	ErrDAOOrderByDirectionUnknown = errors.New("Unknown order by direction")
 )
 
 var (
@@ -44,7 +38,8 @@ func DAOOrderByDirectionFromString(value string) (DAOOrderByDirection, error) {
 		return DAOOrderByDirectionDescending, nil
 	}
 
-	return DAOOrderByDirectionAscending, ErrDAOOrderByDirectionUnknown
+	return DAOOrderByDirectionAscending,
+		errors.NewInputError(errors.ErrorCodeInvalidQueryOrderBy, "orderby", value)
 }
 
 // Convert the DAO order by direction from enum into string. If the enum is unknown this method will

@@ -7,6 +7,7 @@ package config
 
 import (
 	"encoding/json"
+	"github.com/rafaeljusto/shelter/errors"
 	"io/ioutil"
 )
 
@@ -388,11 +389,11 @@ type Config struct {
 func LoadConfig(path string) error {
 	bytes, err := ioutil.ReadFile(path)
 	if err != nil {
-		return err
+		return errors.NewSystemError(err)
 	}
 
 	if err := json.Unmarshal(bytes, &ShelterConfig); err != nil {
-		return err
+		return errors.NewSystemError(err)
 	}
 
 	return nil

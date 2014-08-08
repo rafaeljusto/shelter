@@ -6,6 +6,7 @@
 package mongodb
 
 import (
+	"github.com/rafaeljusto/shelter/errors"
 	"github.com/rafaeljusto/shelter/secret"
 	"gopkg.in/mgo.v2"
 	"sync"
@@ -117,5 +118,9 @@ func initializeSession(
 
 	// Connect to the database
 	session, err = mgo.DialWithInfo(&dialInfo)
-	return err
+	if err != nil {
+		return errors.NewSystemError(err)
+	}
+
+	return nil
 }

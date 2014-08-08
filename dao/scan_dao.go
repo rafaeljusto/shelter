@@ -6,8 +6,9 @@
 package dao
 
 import (
-	"errors"
+	"fmt"
 	"github.com/rafaeljusto/shelter/database/mongodb"
+	"github.com/rafaeljusto/shelter/errors"
 	"github.com/rafaeljusto/shelter/model"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
@@ -20,16 +21,12 @@ import (
 var (
 	// Programmer must set the Database attribute from ScanDAO with a valid connection before using
 	// this object
-	ErrScanDAOUndefinedDatabase = errors.New("No database defined for ScanDAO")
+	ErrScanDAOUndefinedDatabase = fmt.Errorf("No database defined for ScanDAO")
 
 	// Pagination attribute is mandatory, and it's a pointer only to fill some query
 	// informations in it. For the user that wants all records without pagination for a B2B
 	// integration need to pass zero in the page size
-	ErrScanDAOPaginationUndefined = errors.New("Pagination was not defined")
-
-	// An invalid order by field was given to be converted in one of the known order by
-	// fields of the Scan DAO
-	ErrScanDAOOrderByFieldUnknown = errors.New("Unknown order by field")
+	ErrScanDAOPaginationUndefined = fmt.Errorf("Pagination was not defined")
 )
 
 const (
@@ -62,7 +59,8 @@ func ScanDAOOrderByFieldFromString(value string) (ScanDAOOrderByField, error) {
 		return ScanDAOOrderByFieldDomainsWithDNSSECScanned, nil
 	}
 
-	return ScanDAOOrderByFieldStartedAt, ErrScanDAOOrderByFieldUnknown
+	return ScanDAOOrderByFieldStartedAt,
+		errors.NewInputError(errors.ErrorCodeInvalidQueryOrderBy, "orderby", value)
 }
 
 // Convert the ScanDAO order by field from enum into string. If the enum is unknown this
@@ -107,7 +105,11 @@ func init() {
 			DropDups: true,
 		}
 
-		return database.C(scanDAOCollection).EnsureIndex(index)
+		if err := database.C(scanDAOCollection).EnsureIndex(index); err != nil {
+			return errors.NewSystemError(err)
+		}
+
+		return nil
 	})
 }
 
@@ -122,7 +124,7 @@ type ScanDAO struct {
 func (dao ScanDAO) Save(scan *model.Scan) error {
 	// Check if the programmer forgot to set the database in scanDAO object
 	if dao.Database == nil {
-		return ErrScanDAOUndefinedDatabase
+		return errors.NewSystemError(ErrScanDAOUndefinedDatabase)
 	}
 
 	// When creating a new scan object, the id will be probably nil (or kind of new
@@ -149,7 +151,11 @@ func (dao ScanDAO) Save(scan *model.Scan) error {
 		"revision": scan.Revision - 1,
 	}, scan)
 
-	return err
+	if err != nil {
+		return errors.NewSystemError(err)
+	}
+
+	return nil
 }
 
 // Try to find the scan using the startedAt time attribute
@@ -161,14 +167,21 @@ func (dao ScanDAO) FindByStartedAt(startedAt time.Time) (model.Scan, error) {
 
 	// Check if the programmer forgot to set the database in ScanDAO object
 	if dao.Database == nil {
-		return scan, ErrScanDAOUndefinedDatabase
+		return scan, errors.NewSystemError(ErrScanDAOUndefinedDatabase)
 	}
 
 	err := dao.Database.C(scanDAOCollection).Find(bson.M{
 		"startedat": startedAt,
 	}).One(&scan)
 
-	return scan, err
+	if err == mgo.ErrNotFound {
+		return scan, errors.NotFound
+
+	} else if err != nil {
+		return scan, errors.NewSystemError(err)
+	}
+
+	return scan, nil
 }
 
 // Retrieve all scans using pagination control. This method is used by an end user to see
@@ -180,11 +193,12 @@ func (dao ScanDAO) FindByStartedAt(startedAt time.Time) (model.Scan, error) {
 func (dao ScanDAO) FindAll(pagination *ScanDAOPagination, expand bool) ([]model.Scan, error) {
 	// Check if the programmer forgot to set the database in ScanDAO object
 	if dao.Database == nil {
-		return nil, ErrScanDAOUndefinedDatabase
+		return nil, errors.NewSystemError(ErrScanDAOUndefinedDatabase)
 	}
 
+	// Programmer must always give a pagination, with default values if necessary
 	if pagination == nil {
-		return nil, ErrScanDAOPaginationUndefined
+		return nil, errors.NewSystemError(ErrScanDAOPaginationUndefined)
 	}
 
 	var query *mgo.Query
@@ -227,7 +241,7 @@ func (dao ScanDAO) FindAll(pagination *ScanDAOPagination, expand bool) ([]model.
 	// number of items of a page size
 	var err error
 	if pagination.NumberOfItems, err = query.Count(); err != nil {
-		return nil, err
+		return nil, errors.NewSystemError(err)
 	}
 
 	// Safety check to don't allow to set a page higher than the number of pages
@@ -251,7 +265,7 @@ func (dao ScanDAO) FindAll(pagination *ScanDAOPagination, expand bool) ([]model.
 
 	var scans []model.Scan
 	if err := query.All(&scans); err != nil {
-		return nil, err
+		return nil, errors.NewSystemError(err)
 	}
 
 	if pagination.PageSize > 0 {
@@ -280,14 +294,20 @@ func (dao ScanDAO) FindAll(pagination *ScanDAOPagination, expand bool) ([]model.
 func (dao ScanDAO) RemoveByStartedAt(startedAt time.Time) error {
 	// Check if the programmer forgot to set the database in ScanDAO object
 	if dao.Database == nil {
-		return ErrScanDAOUndefinedDatabase
+		return errors.NewSystemError(ErrScanDAOUndefinedDatabase)
 	}
 
 	// We must create a BSON object to be compared with MongoDB database entries to
 	// determinate wich one is going to be removed
-	return dao.Database.C(scanDAOCollection).Remove(bson.M{
+	err := dao.Database.C(scanDAOCollection).Remove(bson.M{
 		"startedat": startedAt,
 	})
+
+	if err != nil {
+		return errors.NewSystemError(err)
+	}
+
+	return nil
 }
 
 // Remove all scan entries from the database. This is a DANGEROUS method, use with
@@ -298,7 +318,12 @@ func (dao ScanDAO) RemoveByStartedAt(startedAt time.Time) error {
 // all your data)
 func (dao ScanDAO) RemoveAll() error {
 	_, err := dao.Database.C(scanDAOCollection).RemoveAll(bson.M{})
-	return err
+
+	if err != nil {
+		return errors.NewSystemError(err)
+	}
+
+	return nil
 }
 
 // ScanDAOPagination was created as a necessity for big result sets that needs to be
