@@ -57,14 +57,19 @@ func HandleScan(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Add("Content-Type", "application/json")
-	w.Header().Add("Etag", response.Header.Get("Etag"))
+	if response.ContentLength > 0 {
+		w.Header().Add("Content-Type", "application/json")
+		w.Header().Add("Etag", response.Header.Get("Etag"))
+	}
+
 	w.WriteHeader(response.StatusCode)
 
-	if _, err := io.Copy(w, response.Body); err != nil {
-		// Here we already set the response code, so the client will receive a OK result
-		// without body
-		log.Println("Error copying REST response to web client response. Details:", err)
-		return
+	if response.ContentLength > 0 {
+		if _, err := io.Copy(w, response.Body); err != nil {
+			// Here we already set the response code, so the client will receive a OK result
+			// without body
+			log.Println("Error copying REST response to web client response. Details:", err)
+			return
+		}
 	}
 }

@@ -81,6 +81,7 @@ func HandleDomain(w http.ResponseWriter, r *http.Request) {
 
 	if response.ContentLength > 0 {
 		w.Header().Add("Content-Type", "application/json")
+		w.Header().Add("Etag", response.Header.Get("Etag"))
 	}
 
 	w.WriteHeader(response.StatusCode)

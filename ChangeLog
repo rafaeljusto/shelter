@@ -22,6 +22,7 @@ version 0.3:
   * Keep current expand and filter information in domain response links
   * Web client now has a close button when editing a registered domain
   * Web client keeps the scroll position into the pagination when moving between pages
+  * Send ETag back to browser in GET /domain/{fqdn} service
 
 version 0.2:
   New Feature:
