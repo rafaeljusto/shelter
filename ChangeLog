@@ -23,6 +23,7 @@ version 0.3:
   * Web client now has a close button when editing a registered domain
   * Web client keeps the scroll position into the pagination when moving between pages
   * Send ETag back to browser in GET /domain/{fqdn} service
+  * Web client now updates the displayed information of the domain when verified
 
 version 0.2:
   New Feature:

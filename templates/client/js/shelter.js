@@ -478,8 +478,11 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
                   alertify.success(translation);
                 });
 
-                alertify.alert(verificationResponseToHTML(response.data));
                 $scope.verifyResult = response.data; // For unit tests only
+
+                // Cannot replace the whole object because we lose the reference
+                domain.nameservers = response.data.nameservers;
+                domain.dsset = response.data.dsset;
 
               } else if (response.status == 400) {
                 alertify.error(response.data.message);
