@@ -15,8 +15,8 @@ import (
 	"github.com/rafaeljusto/shelter/model"
 	"github.com/rafaeljusto/shelter/net/http/rest/protocol"
 	"github.com/rafaeljusto/shelter/testing/utils"
-	"io/ioutil"
 	"gopkg.in/mgo.v2"
+	"io/ioutil"
 	"net/http"
 	"time"
 )

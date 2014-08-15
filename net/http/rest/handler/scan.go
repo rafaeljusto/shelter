@@ -6,11 +6,11 @@
 package handler
 
 import (
+	"github.com/rafaeljusto/handy"
 	"github.com/rafaeljusto/shelter/model"
 	"github.com/rafaeljusto/shelter/net/http/rest/interceptor"
 	"github.com/rafaeljusto/shelter/net/http/rest/messages"
 	"github.com/rafaeljusto/shelter/net/http/rest/protocol"
-	"github.com/trajber/handy"
 	"gopkg.in/mgo.v2"
 	"net/http"
 	"strconv"

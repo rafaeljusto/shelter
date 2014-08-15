@@ -6,9 +6,9 @@
 package handler
 
 import (
+	"github.com/rafaeljusto/handy"
 	"github.com/rafaeljusto/shelter/config"
 	"github.com/rafaeljusto/shelter/net/http/client/interceptor"
-	"github.com/trajber/handy"
 	"net/http"
 	"path/filepath"
 )

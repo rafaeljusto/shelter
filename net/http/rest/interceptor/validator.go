@@ -8,11 +8,11 @@ package interceptor
 import (
 	"bytes"
 	"errors"
+	"github.com/rafaeljusto/handy/interceptor"
 	"github.com/rafaeljusto/shelter/config"
 	"github.com/rafaeljusto/shelter/log"
 	"github.com/rafaeljusto/shelter/net/http/rest/check"
 	"github.com/rafaeljusto/shelter/net/http/rest/messages"
-	"github.com/trajber/handy/interceptor"
 	"io/ioutil"
 	"net/http"
 )

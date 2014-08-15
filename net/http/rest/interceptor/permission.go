@@ -6,8 +6,8 @@
 package interceptor
 
 import (
+	"github.com/rafaeljusto/handy/interceptor"
 	"github.com/rafaeljusto/shelter/log"
-	"github.com/trajber/handy/interceptor"
 	"net"
 	"net/http"
 	"strings"

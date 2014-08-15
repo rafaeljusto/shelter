@@ -6,6 +6,7 @@
 package handler
 
 import (
+	"github.com/rafaeljusto/handy"
 	"github.com/rafaeljusto/shelter/dao"
 	"github.com/rafaeljusto/shelter/log"
 	"github.com/rafaeljusto/shelter/model"
@@ -13,7 +14,6 @@ import (
 	"github.com/rafaeljusto/shelter/net/http/rest/messages"
 	"github.com/rafaeljusto/shelter/net/http/rest/protocol"
 	"github.com/rafaeljusto/shelter/net/scan"
-	"github.com/trajber/handy"
 	"gopkg.in/mgo.v2"
 	"net/http"
 )

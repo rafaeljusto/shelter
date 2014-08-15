@@ -7,9 +7,9 @@ package handler
 
 import (
 	"fmt"
+	"github.com/rafaeljusto/handy"
 	"github.com/rafaeljusto/shelter/log"
 	"github.com/rafaeljusto/shelter/net/http/client/interceptor"
-	"github.com/trajber/handy"
 	"io"
 	"io/ioutil"
 	"net/http"

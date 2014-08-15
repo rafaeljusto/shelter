@@ -42,7 +42,7 @@ and it depends on the following Go packages:
 * code.google.com/p/go.net/idna
 * code.google.com/p/go.tools/cmd/cover
 * github.com/miekg/dns
-* github.com/trajber/handy
+* github.com/rafaeljusto/handy (forked from github.com/trajber/handy)
 * gopkg.in/mgo.v2
 
 All the above packages can be installed using the command:

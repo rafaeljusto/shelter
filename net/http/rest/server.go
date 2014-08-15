@@ -7,12 +7,12 @@ package rest
 
 import (
 	"crypto/tls"
+	"github.com/rafaeljusto/handy"
 	"github.com/rafaeljusto/shelter/config"
 	"github.com/rafaeljusto/shelter/log"
 	"github.com/rafaeljusto/shelter/net/http/rest/handler"
 	"github.com/rafaeljusto/shelter/net/http/rest/interceptor"
 	"github.com/rafaeljusto/shelter/net/http/rest/messages"
-	"github.com/trajber/handy"
 	"net"
 	"net/http"
 	"path/filepath"

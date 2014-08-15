@@ -6,7 +6,7 @@
 package interceptor
 
 import (
-	"github.com/trajber/handy/interceptor"
+	"github.com/rafaeljusto/handy/interceptor"
 	"net/http"
 )
 

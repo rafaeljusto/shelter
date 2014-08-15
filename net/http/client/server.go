@@ -7,11 +7,11 @@ package client
 
 import (
 	"crypto/tls"
+	"github.com/rafaeljusto/handy"
 	"github.com/rafaeljusto/shelter/config"
 	"github.com/rafaeljusto/shelter/log"
 	"github.com/rafaeljusto/shelter/net/http/client/handler"
 	"github.com/rafaeljusto/shelter/net/http/client/interceptor"
-	"github.com/trajber/handy"
 	"net"
 	"net/http"
 	"path/filepath"

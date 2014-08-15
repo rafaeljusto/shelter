@@ -6,7 +6,7 @@
 package handler
 
 import (
-	"github.com/trajber/handy"
+	"github.com/rafaeljusto/handy"
 )
 
 // Routes is responsable for storing the link beteween an URI and a handler. It uses a
