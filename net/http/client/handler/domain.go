@@ -8,18 +8,43 @@ package handler
 import (
 	"fmt"
 	"github.com/rafaeljusto/shelter/log"
+	"github.com/rafaeljusto/shelter/net/http/client/interceptor"
+	"github.com/trajber/handy"
 	"io"
 	"io/ioutil"
 	"net/http"
-	"regexp"
 	"strings"
 )
 
 func init() {
-	HandleFunc(regexp.MustCompile(`^/domain/([[:alnum:]]|\-|\.)+$`), HandleDomain)
+	HandleFunc("/domain/{fqdn}", func() handy.Handler {
+		return new(DomainHandler)
+	})
 }
 
-func HandleDomain(w http.ResponseWriter, r *http.Request) {
+// DomainHandler is responsable for keeping the state of a /domain/{fqdn} resource
+type DomainHandler struct {
+	handy.DefaultHandler        // Inject the HTTP methods that this resource does not implement
+	FQDN                 string `param:"fqdn"` // FQDN defined in the URI
+}
+
+func (h *DomainHandler) Get(w http.ResponseWriter, r *http.Request) {
+	h.handleDomain(w, r)
+}
+
+func (h *DomainHandler) Head(w http.ResponseWriter, r *http.Request) {
+	h.handleDomain(w, r)
+}
+
+func (h *DomainHandler) Put(w http.ResponseWriter, r *http.Request) {
+	h.handleDomain(w, r)
+}
+
+func (h *DomainHandler) Delete(w http.ResponseWriter, r *http.Request) {
+	h.handleDomain(w, r)
+}
+
+func (h *DomainHandler) handleDomain(w http.ResponseWriter, r *http.Request) {
 	restAddress, err := retrieveRESTAddress()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -94,4 +119,9 @@ func HandleDomain(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+}
+
+func (h *DomainHandler) Interceptors() handy.InterceptorChain {
+	return handy.NewInterceptorChain().
+		Chain(new(interceptor.Permission))
 }

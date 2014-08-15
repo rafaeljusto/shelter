@@ -8,16 +8,31 @@ package handler
 import (
 	"fmt"
 	"github.com/rafaeljusto/shelter/log"
+	"github.com/rafaeljusto/shelter/net/http/client/interceptor"
+	"github.com/trajber/handy"
 	"io"
 	"net/http"
-	"regexp"
 )
 
 func init() {
-	HandleFunc(regexp.MustCompile(`^/scans(/.*)?$`), HandleScans)
+	HandleFunc("/scans", func() handy.Handler {
+		return new(ScansHandler)
+	})
 }
 
-func HandleScans(w http.ResponseWriter, r *http.Request) {
+type ScansHandler struct {
+	handy.DefaultHandler
+}
+
+func (h *ScansHandler) Get(w http.ResponseWriter, r *http.Request) {
+	h.handleScans(w, r)
+}
+
+func (h *ScansHandler) Head(w http.ResponseWriter, r *http.Request) {
+	h.handleScans(w, r)
+}
+
+func (h *ScansHandler) handleScans(w http.ResponseWriter, r *http.Request) {
 	restAddress, err := retrieveRESTAddress()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -67,4 +82,9 @@ func HandleScans(w http.ResponseWriter, r *http.Request) {
 		log.Println("Error copying REST response to web client response. Details:", err)
 		return
 	}
+}
+
+func (h *ScansHandler) Interceptors() handy.InterceptorChain {
+	return handy.NewInterceptorChain().
+		Chain(new(interceptor.Permission))
 }

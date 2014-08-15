@@ -7,13 +7,36 @@ package handler
 
 import (
 	"github.com/rafaeljusto/shelter/config"
+	"github.com/rafaeljusto/shelter/net/http/client/interceptor"
+	"github.com/trajber/handy"
 	"net/http"
 	"path/filepath"
 )
 
 var (
-	StaticHandler Handler
+	staticHandler func(http.ResponseWriter, *http.Request)
 )
+
+func init() {
+	HandleFunc("/", func() handy.Handler {
+		return new(StaticHandler)
+	})
+	HandleFunc("/css/{file}", func() handy.Handler {
+		return new(StaticHandler)
+	})
+	HandleFunc("/js/{file}", func() handy.Handler {
+		return new(StaticHandler)
+	})
+	HandleFunc("/fonts/{file}", func() handy.Handler {
+		return new(StaticHandler)
+	})
+	HandleFunc("/languages/{file}", func() handy.Handler {
+		return new(StaticHandler)
+	})
+	HandleFunc("/directives/{file}", func() handy.Handler {
+		return new(StaticHandler)
+	})
+}
 
 func StartStaticHandler() {
 	staticPath := filepath.Join(
@@ -21,5 +44,18 @@ func StartStaticHandler() {
 		config.ShelterConfig.WebClient.StaticPath,
 	)
 
-	StaticHandler = http.FileServer(http.Dir(staticPath)).ServeHTTP
+	staticHandler = http.FileServer(http.Dir(staticPath)).ServeHTTP
+}
+
+type StaticHandler struct {
+	handy.DefaultHandler
+}
+
+func (h *StaticHandler) Get(w http.ResponseWriter, r *http.Request) {
+	staticHandler(w, r)
+}
+
+func (h *StaticHandler) Interceptors() handy.InterceptorChain {
+	return handy.NewInterceptorChain().
+		Chain(new(interceptor.Permission))
 }

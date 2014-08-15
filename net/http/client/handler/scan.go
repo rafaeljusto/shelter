@@ -8,16 +8,41 @@ package handler
 import (
 	"fmt"
 	"github.com/rafaeljusto/shelter/log"
+	"github.com/rafaeljusto/shelter/net/http/client/interceptor"
+	"github.com/trajber/handy"
 	"io"
 	"net/http"
-	"regexp"
 )
 
 func init() {
-	HandleFunc(regexp.MustCompile(`^/scan/([[:alnum:]]|\-|\.|\:)+$`), HandleScan)
+	HandleFunc("/scan/{started-at}", func() handy.Handler {
+		return new(ScanHandler)
+	})
 }
 
-func HandleScan(w http.ResponseWriter, r *http.Request) {
+// ScanHandler is responsable for keeping the state of a /scan/{started-at} resource
+type ScanHandler struct {
+	handy.DefaultHandler        // Inject the HTTP methods that this resource does not implement
+	StartedAt            string `param:"started-at"` // Scan start date in the URI
+}
+
+func (h *ScanHandler) Get(w http.ResponseWriter, r *http.Request) {
+	h.handleScan(w, r)
+}
+
+func (h *ScanHandler) Head(w http.ResponseWriter, r *http.Request) {
+	h.handleScan(w, r)
+}
+
+func (h *ScanHandler) Put(w http.ResponseWriter, r *http.Request) {
+	h.handleScan(w, r)
+}
+
+func (h *ScanHandler) Delete(w http.ResponseWriter, r *http.Request) {
+	h.handleScan(w, r)
+}
+
+func (h *ScanHandler) handleScan(w http.ResponseWriter, r *http.Request) {
 	restAddress, err := retrieveRESTAddress()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -72,4 +97,9 @@ func HandleScan(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+}
+
+func (h *ScanHandler) Interceptors() handy.InterceptorChain {
+	return handy.NewInterceptorChain().
+		Chain(new(interceptor.Permission))
 }

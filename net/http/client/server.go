@@ -8,7 +8,10 @@ package client
 import (
 	"crypto/tls"
 	"github.com/rafaeljusto/shelter/config"
+	"github.com/rafaeljusto/shelter/log"
 	"github.com/rafaeljusto/shelter/net/http/client/handler"
+	"github.com/rafaeljusto/shelter/net/http/client/interceptor"
+	"github.com/trajber/handy"
 	"net"
 	"net/http"
 	"path/filepath"
@@ -71,6 +74,18 @@ func Start(listeners []net.Listener) error {
 	// configure the root path. For that reason we can't build it in the init function
 	handler.StartStaticHandler()
 
+	// Handy logger should use the same logger of the Shelter system
+	handy.Logger = log.Logger
+
+	mux := handy.NewHandy()
+	mux.Recover = func(r interface{}) {
+		log.Println("Web client panic detected. Details:", r)
+	}
+
+	for pattern, handler := range handler.Routes {
+		mux.Handle(pattern, handler)
+	}
+
 	server := http.Server{
 		Handler: mux,
 	}
@@ -87,7 +102,7 @@ func Start(listeners []net.Listener) error {
 func loadACL() error {
 	for _, cidrStr := range config.ShelterConfig.RESTServer.ACL {
 		if _, cidr, err := net.ParseCIDR(cidrStr); err == nil {
-			mux.ACL = append(mux.ACL, cidr)
+			interceptor.ACL = append(interceptor.ACL, cidr)
 		} else {
 			return err
 		}

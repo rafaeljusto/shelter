@@ -4,7 +4,7 @@ Shelter
 version 0.3:
   New Feature:
   * API changed from /scan/current to /scans/?current
-  * Using new web framework Handy
+  * Using new web framework Handy for REST server and Web client
   * Update domain in database when verifying it in service /domain/{fqdn}/verification
   * New parameter for /domains service to filter domains results
   Fixes:
@@ -24,6 +24,7 @@ version 0.3:
   * Web client keeps the scroll position into the pagination when moving between pages
   * Send ETag back to browser in GET /domain/{fqdn} service
   * Web client now updates the displayed information of the domain when verified
+  * Web client now allows domains with accents (IDNA)
 
 version 0.2:
   New Feature:

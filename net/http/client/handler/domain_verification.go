@@ -8,18 +8,42 @@ package handler
 import (
 	"fmt"
 	"github.com/rafaeljusto/shelter/log"
+	"github.com/rafaeljusto/shelter/net/http/client/interceptor"
+	"github.com/trajber/handy"
 	"io"
 	"io/ioutil"
 	"net/http"
-	"regexp"
 	"strings"
 )
 
 func init() {
-	HandleFunc(regexp.MustCompile(`^/domain/([[:alnum:]]|\-|\.)+/verification$`), HandleDomainVerification)
+	HandleFunc("/domain/{fqdn}/verification", func() handy.Handler {
+		return new(DomainVerificationHandler)
+	})
 }
 
-func HandleDomainVerification(w http.ResponseWriter, r *http.Request) {
+type DomainVerificationHandler struct {
+	handy.DefaultHandler
+	FQDN string `param:"fqdn"`
+}
+
+func (h *DomainVerificationHandler) Get(w http.ResponseWriter, r *http.Request) {
+	h.handleDomainVerification(w, r)
+}
+
+func (h *DomainVerificationHandler) Head(w http.ResponseWriter, r *http.Request) {
+	h.handleDomainVerification(w, r)
+}
+
+func (h *DomainVerificationHandler) Put(w http.ResponseWriter, r *http.Request) {
+	h.handleDomainVerification(w, r)
+}
+
+func (h *DomainVerificationHandler) Delete(w http.ResponseWriter, r *http.Request) {
+	h.handleDomainVerification(w, r)
+}
+
+func (h *DomainVerificationHandler) handleDomainVerification(w http.ResponseWriter, r *http.Request) {
 	restAddress, err := retrieveRESTAddress()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -86,4 +110,9 @@ func HandleDomainVerification(w http.ResponseWriter, r *http.Request) {
 		log.Println("Error copying REST response to web client response. Details:", err)
 		return
 	}
+}
+
+func (h *DomainVerificationHandler) Interceptors() handy.InterceptorChain {
+	return handy.NewInterceptorChain().
+		Chain(new(interceptor.Permission))
 }
