@@ -7,7 +7,6 @@ package scheduler
 
 import (
 	"errors"
-	"github.com/rafaeljusto/shelter/log"
 	"sync"
 	"time"
 )
