@@ -17,7 +17,7 @@ def initialChecks():
 
 def findPath():
   goPath = os.environ["GOPATH"]
-  goPathParts = goPath.split(";")
+  goPathParts = goPath.split(":")
   for goPathPart in goPathParts:
     projectPath = os.path.join(goPathPart, "src", "github.com",
       "rafaeljusto", "shelter")
