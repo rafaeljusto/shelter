@@ -21,21 +21,6 @@ func init() {
 	HandleFunc("/", func() handy.Handler {
 		return new(StaticHandler)
 	})
-	HandleFunc("/css/{file}", func() handy.Handler {
-		return new(StaticHandler)
-	})
-	HandleFunc("/js/{file}", func() handy.Handler {
-		return new(StaticHandler)
-	})
-	HandleFunc("/fonts/{file}", func() handy.Handler {
-		return new(StaticHandler)
-	})
-	HandleFunc("/languages/{file}", func() handy.Handler {
-		return new(StaticHandler)
-	})
-	HandleFunc("/directives/{file}", func() handy.Handler {
-		return new(StaticHandler)
-	})
 }
 
 func StartStaticHandler() {
