@@ -84,11 +84,6 @@ func Start() {
 						// Next execution time is defined, let's use it as reference so that the job
 						// is always executed near the desired time
 						jobs[index].NextExecution = job.NextExecution.Add(job.Interval)
-
-						log.Printf("Job type %d scheduled for '%s' will be executed now '%s'. "+
-							"The next execution will be on '%s'",
-							job.Type, job.NextExecution, time.Now().UTC(), jobs[index].NextExecution)
-
 						go job.Task()
 					}
 				}
