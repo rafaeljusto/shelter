@@ -149,7 +149,9 @@ func main() {
 	}
 
 	if config.ShelterConfig.Scan.Enabled {
-		scanTime, err := time.Parse("15:04:05 MST", config.ShelterConfig.Scan.Time)
+		// Attention: Cannot use timezone abbreviations
+		// http://stackoverflow.com/questions/25368415/golang-timezone-parsing
+		scanTime, err := time.Parse("15:04:05 -0700", config.ShelterConfig.Scan.Time)
 		if err != nil {
 			log.Println("Scan time not in a valid format. Details:", err)
 			os.Exit(ErrScanTimeFormat)
@@ -190,7 +192,9 @@ func main() {
 			os.Exit(ErrNotificationTemplates)
 		}
 
-		notificationTime, err := time.Parse("15:04:05 MST", config.ShelterConfig.Scan.Time)
+		// Attention: Cannot use timezone abbreviations
+		// http://stackoverflow.com/questions/25368415/golang-timezone-parsing
+		notificationTime, err := time.Parse("15:04:05 -0700", config.ShelterConfig.Scan.Time)
 		if err != nil {
 			log.Println("Scan time not in a valid format. Details:", err)
 			os.Exit(ErrScanTimeFormat)

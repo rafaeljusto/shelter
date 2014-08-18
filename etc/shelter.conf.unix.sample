@@ -13,7 +13,7 @@
 
   "scan": {
     "enabled": true,
-    "time": "05:00:00 BRT",
+    "time": "05:00:00 -0300",
     "intervalHours": 24,
     "numberOfQueriers": 400,
     "domainsBufferSize": 100,
@@ -78,7 +78,7 @@
 
   "notification": {
     "enabled": true,
-    "time": "07:00:00 BRT",
+    "time": "07:00:00 -0300",
     "intervalHours": 24,
     "nameserverErrorAlertDays": 7,
     "nameserverTimeoutAlertDays": 30,
