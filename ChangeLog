@@ -1,12 +1,15 @@
 Shelter
 =======
 
-version 0.3:
+version 0.3
+-----------
+
   New Feature:
   * API changed from /scan/current to /scans/?current
   * Using new web framework Handy for REST server and Web client
   * Update domain in database when verifying it in service /domain/{fqdn}/verification
   * New parameter for /domains service to filter domains results
+
   Fixes:
   * Handy framework now use the same log of the shelter system
   * Fix current execution scan visualization
@@ -26,12 +29,15 @@ version 0.3:
   * Web client now updates the displayed information of the domain when verified
   * Web client now allows domains with accents (IDNA)
 
-version 0.2:
+version 0.2
+-----------
+
   New Feature:
   * Allow MongoDB authentication
   * Allow a cluster of MongoDB servers for data persistency
   * List services now accepts cache HTTP headers
   * List services by default receive compressed information
+
   Fix:
   * Checking QPS for nameservers with glue records
   * Web client now generates pagination dynamically
@@ -51,7 +57,9 @@ version 0.2:
   * Web client now has a new centralized message system (alertify.js)
   * Web client redirects to domains screen after new domain is saved
 
-version 0.1:
+version 0.1
+-----------
+
   New Feature:
   * Automatically detect DNS/DNSSEC configuration problems of the registered domains
   * Automatically sends e-mails notifying domain's owners of the configuration problems
