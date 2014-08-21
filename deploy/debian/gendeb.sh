@@ -51,6 +51,8 @@ workspace=$workspace/src/github.com/rafaeljusto/shelter
 current_dir=`pwd`
 cd $workspace
 go build
+cd $workspace/utils
+go build -o password password.go
 cd $workspace/deploy/easyconf
 go build
 cd $current_dir
@@ -71,6 +73,7 @@ mkdir -p $tmp_dir$install_path/var/log
 cp -r $workspace/etc $project_root/
 cp -r $workspace/templates $project_root/
 mv $workspace/shelter $project_root/bin/
+mv $workspace/utils/password $project_root/bin/
 mv $workspace/deploy/easyconf/easyconf $project_root/bin/
 
 fpm -s dir -t deb \

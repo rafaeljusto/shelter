@@ -27,6 +27,11 @@ cd $workspace/src/github.com/rafaeljusto/shelter
 # Build main binary
 go build shelter.go
 
+# Build binary to encrypt and decrypt passwords
+cd utils
+go build -o password password.go
+cd ..
+
 # <src> must be the path to a file or directory relative
 # to the source directory being built (also called the
 # context of the build) or a remote file URL.
@@ -37,6 +42,7 @@ mkdir -p container/bin
 mkdir -p container/etc/keys
 
 mv ../../shelter container/bin/
+mv ../../utils/password container/bin/
 cp entrypoint.sh container/bin/
 cp ../../etc/shelter.conf.unix.sample container/etc/shelter.conf
 cp ../../etc/messages.conf container/etc/

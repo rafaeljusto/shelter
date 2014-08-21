@@ -13,6 +13,7 @@ import (
 	"github.com/rafaeljusto/shelter/log"
 	"github.com/rafaeljusto/shelter/net/http/rest/check"
 	"github.com/rafaeljusto/shelter/net/http/rest/messages"
+	"github.com/rafaeljusto/shelter/secret"
 	"io/ioutil"
 	"net/http"
 )
@@ -144,15 +145,20 @@ func (i *Validator) Before(w http.ResponseWriter, r *http.Request) {
 	}
 
 	authorized, err := check.HTTPAuthorization(r, func(secretId string) (string, error) {
-		secret, ok := config.ShelterConfig.RESTServer.Secrets[secretId]
+		s, ok := config.ShelterConfig.RESTServer.Secrets[secretId]
 
 		if !ok {
 			return "", ErrSecretNotFound
 		}
 
+		s, err = secret.Decrypt(s)
+		if err != nil {
+			return "", err
+		}
+
 		// In the near future the secret will be encrypted in the configuration file and the
 		// decrypt process can generate problems
-		return secret, nil
+		return s, nil
 	})
 
 	if err == nil && !authorized {

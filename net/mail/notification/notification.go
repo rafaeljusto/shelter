@@ -15,6 +15,7 @@ import (
 	"github.com/rafaeljusto/shelter/log"
 	"github.com/rafaeljusto/shelter/model"
 	"github.com/rafaeljusto/shelter/net/mail/notification/protocol"
+	"github.com/rafaeljusto/shelter/secret"
 	"net/smtp"
 	"regexp"
 	"strings"
@@ -120,6 +121,15 @@ func notifyDomain(domain *model.Domain) error {
 		config.ShelterConfig.Notification.SMTPServer.Port,
 	)
 
+	password := config.ShelterConfig.Notification.SMTPServer.Auth.Password
+	if len(password) > 0 {
+		var err error
+		password, err = secret.Decrypt(password)
+		if err != nil {
+			return err
+		}
+	}
+
 	for language, emails := range emailsPerLanguage {
 		t := getTemplate(language)
 		if t == nil {
@@ -147,7 +157,7 @@ func notifyDomain(domain *model.Domain) error {
 		case config.AuthenticationTypePlain:
 			auth := smtp.PlainAuth("",
 				config.ShelterConfig.Notification.SMTPServer.Auth.Username,
-				config.ShelterConfig.Notification.SMTPServer.Auth.Password,
+				password,
 				config.ShelterConfig.Notification.SMTPServer.Server,
 			)
 
@@ -158,7 +168,7 @@ func notifyDomain(domain *model.Domain) error {
 		case config.AuthenticationTypeCRAMMD5Auth:
 			auth := smtp.CRAMMD5Auth(
 				config.ShelterConfig.Notification.SMTPServer.Auth.Username,
-				config.ShelterConfig.Notification.SMTPServer.Auth.Password,
+				password,
 			)
 
 			if err := smtp.SendMail(server, auth, from, emails, msgBytes); err != nil {

@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"github.com/rafaeljusto/shelter/config"
 	"github.com/rafaeljusto/shelter/net/http/rest/check"
+	"github.com/rafaeljusto/shelter/secret"
 	"net/http"
 	"time"
 )
@@ -33,6 +34,10 @@ var (
 	client http.Client
 )
 
+const (
+	ClientTimeout = 5
+)
+
 func init() {
 	transport := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
@@ -40,6 +45,7 @@ func init() {
 
 	client = http.Client{
 		Transport: transport,
+		Timeout:   ClientTimeout * time.Second,
 	}
 }
 
@@ -75,13 +81,19 @@ func signAndSend(r *http.Request, content []byte) (*http.Response, error) {
 		r.Header.Set("Content-MD5", hashBase64)
 	}
 
-	var key, secret string
-	for key, secret = range config.ShelterConfig.RESTServer.Secrets {
+	var key, s string
+	for key, s = range config.ShelterConfig.RESTServer.Secrets {
 		break
 	}
 
-	if len(key) == 0 || len(secret) == 0 {
+	if len(key) == 0 || len(s) == 0 {
 		return nil, ErrNoSecretFound
+	}
+
+	var err error
+	s, err = secret.Decrypt(s)
+	if err != nil {
+		return nil, err
 	}
 
 	stringToSign, err := check.BuildStringToSign(r, key)
@@ -89,7 +101,7 @@ func signAndSend(r *http.Request, content []byte) (*http.Response, error) {
 		return nil, err
 	}
 
-	signature := check.GenerateSignature(stringToSign, secret)
+	signature := check.GenerateSignature(stringToSign, s)
 	r.Header.Set("Authorization",
 		fmt.Sprintf("%s %s:%s", check.SupportedNamespace, key, signature))
 

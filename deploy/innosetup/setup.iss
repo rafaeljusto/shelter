@@ -27,6 +27,7 @@ Name: "{app}\templates"; Permissions: users-modify
 
 [Files]
 Source: "..\..\shelter.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\..\utils\password.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\easyconf\easyconf.exe"; DestDir: "{app}"; Flags: ignoreversion deleteafterinstall
 Source: "..\..\etc\shelter.conf.windows.sample"; DestDir: "{app}\etc"; Flags: ignoreversion
 Source: "..\..\templates\*"; DestDir: "{app}\templates"; Flags: ignoreversion recursesubdirs

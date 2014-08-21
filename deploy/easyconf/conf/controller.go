@@ -14,6 +14,7 @@ import (
 	"encoding/pem"
 	"fmt"
 	"github.com/rafaeljusto/shelter/config"
+	"github.com/rafaeljusto/shelter/secret"
 	"io/ioutil"
 	"log"
 	"math/big"
@@ -441,7 +442,7 @@ func readRESTSecret() bool {
 		return false
 	}
 
-	var secret string
+	var s string
 	if generateAutomatically {
 		for i := 0; i < 30; i++ {
 			randNumber, err := rand.Int(rand.Reader, big.NewInt(int64(len(secretAlphabet))))
@@ -450,17 +451,24 @@ func readRESTSecret() bool {
 				return false
 			}
 
-			secret += string(secretAlphabet[randNumber.Int64()])
+			s += string(secretAlphabet[randNumber.Int64()])
 		}
 
 	} else {
-		secret, continueProcessing = readRESTSecretContent(keyId)
+		s, continueProcessing = readRESTSecretContent(keyId)
 		if !continueProcessing {
 			return false
 		}
 	}
 
-	config.ShelterConfig.RESTServer.Secrets[keyId] = secret
+	var err error
+	s, err = secret.Encrypt(s)
+	if err != nil {
+		log.Println("Error encrypting secret. Details:", err)
+		return false
+	}
+
+	config.ShelterConfig.RESTServer.Secrets[keyId] = s
 	return true
 }
 
@@ -735,6 +743,12 @@ func readNotificationParameters() bool {
 
 			password, continueProcessing = readNotificationPassword()
 			if !continueProcessing {
+				return false
+			}
+
+			password, err = secret.Encrypt(password)
+			if err != nil {
+				log.Println(err)
 				return false
 			}
 		}

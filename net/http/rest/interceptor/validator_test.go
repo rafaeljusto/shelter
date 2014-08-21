@@ -38,8 +38,8 @@ func TestValidatorBefore(t *testing.T) {
 	validator := NewValidator(&validatorHandler)
 
 	config.ShelterConfig.RESTServer.Secrets = map[string]string{
-		"1": "abc123",
-		"2": "321cba",
+		"1": "ohV43/9bKlVNaXeNTqEuHQp57LCPCQ==",
+		"2": "xJVO/OLkL35GnFTSDtQaVqZfOE8rtw==",
 	}
 
 	data := []struct {

@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"github.com/rafaeljusto/shelter/config"
 	"github.com/rafaeljusto/shelter/net/http/rest/check"
+	"github.com/rafaeljusto/shelter/secret"
 	"net/http"
 	"time"
 )
@@ -34,6 +35,12 @@ func BuildHTTPHeader(r *http.Request, content []byte) {
 		Fatalln("Error creating authorization", err)
 	}
 
-	signature := check.GenerateSignature(stringToSign, config.ShelterConfig.RESTServer.Secrets["1"])
+	s := config.ShelterConfig.RESTServer.Secrets["1"]
+	s, err = secret.Decrypt(s)
+	if err != nil {
+		Fatalln("Error retrieving secret", err)
+	}
+
+	signature := check.GenerateSignature(stringToSign, s)
 	r.Header.Set("Authorization", fmt.Sprintf("%s %d:%s", check.SupportedNamespace, 1, signature))
 }

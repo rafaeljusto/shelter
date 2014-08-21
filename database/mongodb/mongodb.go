@@ -6,6 +6,7 @@
 package mongodb
 
 import (
+	"github.com/rafaeljusto/shelter/secret"
 	"gopkg.in/mgo.v2"
 	"sync"
 	"time"
@@ -90,8 +91,14 @@ func initializeSession(
 	}
 
 	var dialInfo mgo.DialInfo
+	var err error
 
 	if auth {
+		password, err = secret.Decrypt(password)
+		if err != nil {
+			return err
+		}
+
 		dialInfo = mgo.DialInfo{
 			Addrs:    uris,
 			Timeout:  Timeout,
@@ -109,7 +116,6 @@ func initializeSession(
 	}
 
 	// Connect to the database
-	var err error
 	session, err = mgo.DialWithInfo(&dialInfo)
 	return err
 }

@@ -149,7 +149,7 @@ func TestSignAndSend(t *testing.T) {
 			Secrets map[string]string
 		}{
 			Secrets: map[string]string{
-				"key01": "abc123",
+				"key01": "ohV43/9bKlVNaXeNTqEuHQp57LCPCQ==",
 			},
 		},
 	}
