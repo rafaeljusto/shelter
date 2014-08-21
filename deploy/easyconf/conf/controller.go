@@ -746,6 +746,7 @@ func readNotificationParameters() bool {
 				return false
 			}
 
+			var err error
 			password, err = secret.Encrypt(password)
 			if err != nil {
 				log.Println(err)
