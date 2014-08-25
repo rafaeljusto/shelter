@@ -22,12 +22,11 @@ fi
 #fi
 
 workspace=`echo $GOPATH | cut -d: -f1`
-cd $workspace/src/github.com/rafaeljusto/shelter
 
 # <src> must be the path to a file or directory relative
 # to the source directory being built (also called the
 # context of the build) or a remote file URL.
-cd deploy/docker
+cd $workspace/src/github.com/rafaeljusto/shelter/deploy/docker
 
 # Create container
 sudo docker build --rm -t $username/shelter .
