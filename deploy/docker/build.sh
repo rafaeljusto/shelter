@@ -24,35 +24,13 @@ fi
 workspace=`echo $GOPATH | cut -d: -f1`
 cd $workspace/src/github.com/rafaeljusto/shelter
 
-# Build main binary
-go build shelter.go
-
-# Build binary to encrypt and decrypt passwords
-cd utils
-go build -o password password.go
-cd ..
-
 # <src> must be the path to a file or directory relative
 # to the source directory being built (also called the
 # context of the build) or a remote file URL.
 cd deploy/docker
 
-rm -fr container
-mkdir -p container/bin
-mkdir -p container/etc/keys
-
-mv ../../shelter container/bin/
-mv ../../utils/password container/bin/
-cp entrypoint.sh container/bin/
-cp ../../etc/shelter.conf.unix.sample container/etc/shelter.conf
-cp ../../etc/messages.conf container/etc/
-cp -r ../../templates container/
-
 # Create container
 sudo docker build --rm -t $username/shelter .
-
-# Remove deploy data
-rm -fr container
 
 # Push the container to the index
 if [ "$2" = "--push" ]; then
