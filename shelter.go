@@ -258,7 +258,7 @@ func manageSystemSignals() {
 				}
 				clientListeners = []net.Listener{}
 
-				// TODO: Wait the last requests to be processed? On epossibly solution is to
+				// TODO: Wait the last requests to be processed? One possibly solution is to
 				// create a request counter in MUX, we wait while this counter is non-zero. If
 				// there's a scan running what are we going to do?
 
