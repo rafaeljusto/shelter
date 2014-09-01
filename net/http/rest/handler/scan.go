@@ -11,7 +11,6 @@ import (
 	"github.com/rafaeljusto/shelter/model"
 	"github.com/rafaeljusto/shelter/net/http/rest/interceptor"
 	"github.com/rafaeljusto/shelter/protocol"
-	"github.com/trajber/handy"
 	"gopkg.in/mgo.v2"
 	"net/http"
 	"strconv"

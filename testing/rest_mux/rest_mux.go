@@ -98,7 +98,7 @@ func checkHeaders() {
 		utils.Fatalln("Error sending request", err)
 	}
 
-	if response.StatusCode != http.StatusServiceUnavailable {
+	if response.StatusCode != http.StatusNotFound {
 		utils.Fatalln("Not returning HTTP Service Unavailable when the URI is not registered", nil)
 	}
 
