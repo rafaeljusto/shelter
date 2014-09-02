@@ -6,46 +6,24 @@
 package errors
 
 import (
-	"bytes"
 	"errors"
-	shelterLog "github.com/rafaeljusto/shelter/log"
-	"log"
 	"strings"
 	"testing"
 )
 
 func TestNewSystemError(t *testing.T) {
-	err := NewSystemError(errors.New("Error!"))
+	err := NewSystemError(errors.New("Something went wrong!"))
 
-	if err.Error() != "Error!" {
+	sysErr, ok := err.(SystemError)
+	if !ok {
+		t.Fatal("Not creating a system error")
+	}
+
+	if !strings.HasSuffix(sysErr.File, "system_error_test.go") {
+		t.Error("Not storing the file where the error occurred")
+	}
+
+	if !strings.HasSuffix(sysErr.Error(), "Something went wrong!") {
 		t.Error("Not storing low level error correctly")
-	}
-}
-
-func TestNewSystemErrorLog(t *testing.T) {
-	var buffer bytes.Buffer
-	shelterLog.Logger = log.New(&buffer, "", log.Lshortfile)
-
-	NewSystemError(errors.New("Something went wrong!"))
-
-	got := strings.TrimSpace(buffer.String())
-	expected := "Something went wrong!"
-	if !strings.HasSuffix(got, expected) {
-		t.Errorf("Not logging correctly when there's a system error. "+
-			"Expected suffix '%s' and got '%s'", expected, got)
-	}
-}
-
-func TestLogError(t *testing.T) {
-	var buffer bytes.Buffer
-	shelterLog.Logger = log.New(&buffer, "", log.Lshortfile)
-
-	LogError(errors.New("Something went wrong!"))
-
-	got := strings.TrimSpace(buffer.String())
-	expected := "Something went wrong!"
-	if !strings.HasSuffix(got, expected) {
-		t.Errorf("Not logging correctly when there's a system error. "+
-			"Expected suffix '%s' and got '%s'", expected, got)
 	}
 }

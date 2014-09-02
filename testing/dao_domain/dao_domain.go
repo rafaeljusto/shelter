@@ -352,13 +352,13 @@ func domainsPagination(domainDAO dao.DomainDAO) {
 		}
 	}
 
-	pagination := dao.DomainDAOPagination{
+	pagination := model.DomainPagination{
 		PageSize: 10,
 		Page:     5,
-		OrderBy: []dao.DomainDAOSort{
+		OrderBy: []model.DomainSort{
 			{
-				Field:     dao.DomainDAOOrderByFieldFQDN,
-				Direction: dao.DAOOrderByDirectionAscending,
+				Field:     model.DomainOrderByFieldFQDN,
+				Direction: model.OrderByDirectionAscending,
 			},
 		},
 	}
@@ -380,13 +380,13 @@ func domainsPagination(domainDAO dao.DomainDAO) {
 		utils.Errorln("Number of domains not following page size", nil)
 	}
 
-	pagination = dao.DomainDAOPagination{
+	pagination = model.DomainPagination{
 		PageSize: 10000,
 		Page:     1,
-		OrderBy: []dao.DomainDAOSort{
+		OrderBy: []model.DomainSort{
 			{
-				Field:     dao.DomainDAOOrderByFieldFQDN,
-				Direction: dao.DAOOrderByDirectionAscending,
+				Field:     model.DomainOrderByFieldFQDN,
+				Direction: model.OrderByDirectionAscending,
 			},
 		},
 	}
@@ -583,7 +583,7 @@ func domainsExpand(domainDAO dao.DomainDAO) {
 		}
 	}
 
-	pagination := dao.DomainDAOPagination{}
+	pagination := model.DomainPagination{}
 	domains, err := domainDAO.FindAll(&pagination, false, "")
 
 	if err != nil {
@@ -675,13 +675,13 @@ func domainFilter(domainDAO dao.DomainDAO) {
 		}
 	}
 
-	pagination := dao.DomainDAOPagination{
+	pagination := model.DomainPagination{
 		PageSize: 10,
 		Page:     5,
-		OrderBy: []dao.DomainDAOSort{
+		OrderBy: []model.DomainSort{
 			{
-				Field:     dao.DomainDAOOrderByFieldFQDN,
-				Direction: dao.DAOOrderByDirectionAscending,
+				Field:     model.DomainOrderByFieldFQDN,
+				Direction: model.OrderByDirectionAscending,
 			},
 		},
 	}

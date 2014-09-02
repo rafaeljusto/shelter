@@ -6,7 +6,6 @@
 package protocol
 
 import (
-	"github.com/rafaeljusto/shelter/dao"
 	"github.com/rafaeljusto/shelter/model"
 	"testing"
 )
@@ -30,17 +29,17 @@ func TestToDomainsResponse(t *testing.T) {
 		},
 	}
 
-	pagination := dao.DomainDAOPagination{
+	pagination := model.DomainPagination{
 		PageSize: 10,
 		Page:     1,
-		OrderBy: []dao.DomainDAOSort{
+		OrderBy: []model.DomainSort{
 			{
-				Field:     dao.DomainDAOOrderByFieldFQDN,
-				Direction: dao.DAOOrderByDirectionAscending,
+				Field:     model.DomainOrderByFieldFQDN,
+				Direction: model.OrderByDirectionAscending,
 			},
 			{
-				Field:     dao.DomainDAOOrderByFieldLastModifiedAt,
-				Direction: dao.DAOOrderByDirectionDescending,
+				Field:     model.DomainOrderByFieldLastModifiedAt,
+				Direction: model.OrderByDirectionDescending,
 			},
 		},
 		NumberOfItems: len(domains),
@@ -94,17 +93,17 @@ func TestToDomainsResponseLinks(t *testing.T) {
 		},
 	}
 
-	pagination := dao.DomainDAOPagination{
+	pagination := model.DomainPagination{
 		PageSize: 2,
 		Page:     2,
-		OrderBy: []dao.DomainDAOSort{
+		OrderBy: []model.DomainSort{
 			{
-				Field:     dao.DomainDAOOrderByFieldFQDN,
-				Direction: dao.DAOOrderByDirectionAscending,
+				Field:     model.DomainOrderByFieldFQDN,
+				Direction: model.OrderByDirectionAscending,
 			},
 			{
-				Field:     dao.DomainDAOOrderByFieldLastModifiedAt,
-				Direction: dao.DAOOrderByDirectionDescending,
+				Field:     model.DomainOrderByFieldLastModifiedAt,
+				Direction: model.OrderByDirectionDescending,
 			},
 		},
 		NumberOfItems: len(domains),
@@ -118,17 +117,17 @@ func TestToDomainsResponseLinks(t *testing.T) {
 		t.Error("Response not adding the necessary links when we are navigating")
 	}
 
-	pagination = dao.DomainDAOPagination{
+	pagination = model.DomainPagination{
 		PageSize: 2,
 		Page:     1,
-		OrderBy: []dao.DomainDAOSort{
+		OrderBy: []model.DomainSort{
 			{
-				Field:     dao.DomainDAOOrderByFieldFQDN,
-				Direction: dao.DAOOrderByDirectionAscending,
+				Field:     model.DomainOrderByFieldFQDN,
+				Direction: model.OrderByDirectionAscending,
 			},
 			{
-				Field:     dao.DomainDAOOrderByFieldLastModifiedAt,
-				Direction: dao.DAOOrderByDirectionDescending,
+				Field:     model.DomainOrderByFieldLastModifiedAt,
+				Direction: model.OrderByDirectionDescending,
 			},
 		},
 		NumberOfItems: len(domains),
@@ -142,17 +141,17 @@ func TestToDomainsResponseLinks(t *testing.T) {
 		t.Error("Response not adding the necessary links when we are at the first page")
 	}
 
-	pagination = dao.DomainDAOPagination{
+	pagination = model.DomainPagination{
 		PageSize: 2,
 		Page:     3,
-		OrderBy: []dao.DomainDAOSort{
+		OrderBy: []model.DomainSort{
 			{
-				Field:     dao.DomainDAOOrderByFieldFQDN,
-				Direction: dao.DAOOrderByDirectionAscending,
+				Field:     model.DomainOrderByFieldFQDN,
+				Direction: model.OrderByDirectionAscending,
 			},
 			{
-				Field:     dao.DomainDAOOrderByFieldLastModifiedAt,
-				Direction: dao.DAOOrderByDirectionDescending,
+				Field:     model.DomainOrderByFieldLastModifiedAt,
+				Direction: model.OrderByDirectionDescending,
 			},
 		},
 		NumberOfItems: len(domains),

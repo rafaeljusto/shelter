@@ -210,13 +210,13 @@ func scansPagination(scanDAO dao.ScanDAO) {
 		}
 	}
 
-	pagination := dao.ScanDAOPagination{
+	pagination := model.ScanPagination{
 		PageSize: 10,
 		Page:     5,
-		OrderBy: []dao.ScanDAOSort{
+		OrderBy: []model.ScanSort{
 			{
-				Field:     dao.ScanDAOOrderByFieldStartedAt,
-				Direction: dao.DAOOrderByDirectionAscending,
+				Field:     model.ScanOrderByFieldStartedAt,
+				Direction: model.OrderByDirectionAscending,
 			},
 		},
 	}
@@ -238,13 +238,13 @@ func scansPagination(scanDAO dao.ScanDAO) {
 		utils.Errorln("Number of scans not following page size", nil)
 	}
 
-	pagination = dao.ScanDAOPagination{
+	pagination = model.ScanPagination{
 		PageSize: 10000,
 		Page:     1,
-		OrderBy: []dao.ScanDAOSort{
+		OrderBy: []model.ScanSort{
 			{
-				Field:     dao.ScanDAOOrderByFieldStartedAt,
-				Direction: dao.DAOOrderByDirectionAscending,
+				Field:     model.ScanOrderByFieldStartedAt,
+				Direction: model.OrderByDirectionAscending,
 			},
 		},
 	}
@@ -271,7 +271,7 @@ func scansExpand(scanDAO dao.ScanDAO) {
 		}
 	}
 
-	pagination := dao.ScanDAOPagination{}
+	pagination := model.ScanPagination{}
 	scans, err := scanDAO.FindAll(&pagination, false)
 
 	if err != nil {

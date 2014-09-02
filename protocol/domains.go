@@ -7,7 +7,6 @@ package protocol
 
 import (
 	"fmt"
-	"github.com/rafaeljusto/shelter/dao"
 	"github.com/rafaeljusto/shelter/model"
 )
 
@@ -24,7 +23,7 @@ type DomainsResponse struct {
 // Convert a list of domain objects into protocol format with pagination support
 func ToDomainsResponse(
 	domains []model.Domain,
-	pagination dao.DomainDAOPagination,
+	pagination model.DomainPagination,
 	expand bool,
 	filter string,
 ) DomainsResponse {
@@ -41,8 +40,8 @@ func ToDomainsResponse(
 		}
 
 		orderBy += fmt.Sprintf("%s:%s",
-			dao.DomainDAOOrderByFieldToString(sort.Field),
-			dao.DAOOrderByDirectionToString(sort.Direction),
+			model.DomainOrderByFieldToString(sort.Field),
+			model.OrderByDirectionToString(sort.Direction),
 		)
 	}
 

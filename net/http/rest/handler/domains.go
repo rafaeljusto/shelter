@@ -13,6 +13,7 @@ import (
 	"github.com/rafaeljusto/shelter/dao"
 	"github.com/rafaeljusto/shelter/log"
 	"github.com/rafaeljusto/shelter/messages"
+	"github.com/rafaeljusto/shelter/model"
 	"github.com/rafaeljusto/shelter/net/http/rest/interceptor"
 	"github.com/rafaeljusto/shelter/protocol"
 	"gopkg.in/mgo.v2"
@@ -103,7 +104,7 @@ func (h *DomainsHandler) Head(w http.ResponseWriter, r *http.Request) {
 // body in the response. But now the responsability for don't adding the body is from the
 // mux while writing the response
 func (h *DomainsHandler) retrieveDomains(w http.ResponseWriter, r *http.Request) {
-	var pagination dao.DomainDAOPagination
+	var pagination model.DomainPagination
 	expand := false
 	filter := ""
 
@@ -150,8 +151,8 @@ func (h *DomainsHandler) retrieveDomains(w http.ResponseWriter, r *http.Request)
 						return
 					}
 
-					orderByField, err := dao.DomainDAOOrderByFieldFromString(field)
-					if err != nil {
+					orderByField, ok := model.DomainOrderByFieldFromString(field)
+					if !ok {
 						if err := h.MessageResponse("invalid-query-order-by", ""); err == nil {
 							w.WriteHeader(http.StatusBadRequest)
 
@@ -162,8 +163,8 @@ func (h *DomainsHandler) retrieveDomains(w http.ResponseWriter, r *http.Request)
 						return
 					}
 
-					orderByDirection, err := dao.DAOOrderByDirectionFromString(direction)
-					if err != nil {
+					orderByDirection, ok := model.OrderByDirectionFromString(direction)
+					if !ok {
 						if err := h.MessageResponse("invalid-query-order-by", ""); err == nil {
 							w.WriteHeader(http.StatusBadRequest)
 
@@ -174,7 +175,7 @@ func (h *DomainsHandler) retrieveDomains(w http.ResponseWriter, r *http.Request)
 						return
 					}
 
-					pagination.OrderBy = append(pagination.OrderBy, dao.DomainDAOSort{
+					pagination.OrderBy = append(pagination.OrderBy, model.DomainSort{
 						Field:     orderByField,
 						Direction: orderByDirection,
 					})

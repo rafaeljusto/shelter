@@ -104,7 +104,7 @@ func (h *ScansHandler) Head(w http.ResponseWriter, r *http.Request) {
 // body in the response. But now the responsability for don't adding the body is from the
 // mux while writing the response
 func (h *ScansHandler) retrieveScans(w http.ResponseWriter, r *http.Request) {
-	var pagination dao.ScanDAOPagination
+	var pagination model.ScanPagination
 
 	expand := false
 	returnCurrent := false
@@ -153,8 +153,8 @@ func (h *ScansHandler) retrieveScans(w http.ResponseWriter, r *http.Request) {
 						return
 					}
 
-					orderByField, err := dao.ScanDAOOrderByFieldFromString(field)
-					if err != nil {
+					orderByField, ok := model.ScanOrderByFieldFromString(field)
+					if !ok {
 						if err := h.MessageResponse("invalid-query-order-by", ""); err == nil {
 							w.WriteHeader(http.StatusBadRequest)
 
@@ -166,8 +166,8 @@ func (h *ScansHandler) retrieveScans(w http.ResponseWriter, r *http.Request) {
 						return
 					}
 
-					orderByDirection, err := dao.DAOOrderByDirectionFromString(direction)
-					if err != nil {
+					orderByDirection, ok := model.OrderByDirectionFromString(direction)
+					if !ok {
 						if err := h.MessageResponse("invalid-query-order-by", ""); err == nil {
 							w.WriteHeader(http.StatusBadRequest)
 
@@ -179,7 +179,7 @@ func (h *ScansHandler) retrieveScans(w http.ResponseWriter, r *http.Request) {
 						return
 					}
 
-					pagination.OrderBy = append(pagination.OrderBy, dao.ScanDAOSort{
+					pagination.OrderBy = append(pagination.OrderBy, model.ScanSort{
 						Field:     orderByField,
 						Direction: orderByDirection,
 					})

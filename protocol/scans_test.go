@@ -6,7 +6,6 @@
 package protocol
 
 import (
-	"github.com/rafaeljusto/shelter/dao"
 	"github.com/rafaeljusto/shelter/model"
 	"testing"
 	"time"
@@ -31,21 +30,21 @@ func TestScansToScansResponse(t *testing.T) {
 		},
 	}
 
-	pagination := dao.ScanDAOPagination{
+	pagination := model.ScanPagination{
 		PageSize: 10,
 		Page:     1,
-		OrderBy: []dao.ScanDAOSort{
+		OrderBy: []model.ScanSort{
 			{
-				Field:     dao.ScanDAOOrderByFieldStartedAt,
-				Direction: dao.DAOOrderByDirectionAscending,
+				Field:     model.ScanOrderByFieldStartedAt,
+				Direction: model.OrderByDirectionAscending,
 			},
 			{
-				Field:     dao.ScanDAOOrderByFieldDomainsScanned,
-				Direction: dao.DAOOrderByDirectionDescending,
+				Field:     model.ScanOrderByFieldDomainsScanned,
+				Direction: model.OrderByDirectionDescending,
 			},
 			{
-				Field:     dao.ScanDAOOrderByFieldDomainsWithDNSSECScanned,
-				Direction: dao.DAOOrderByDirectionDescending,
+				Field:     model.ScanOrderByFieldDomainsWithDNSSECScanned,
+				Direction: model.OrderByDirectionDescending,
 			},
 		},
 		NumberOfItems: len(scans),
@@ -99,21 +98,21 @@ func TestScansToScansResponseLinks(t *testing.T) {
 		},
 	}
 
-	pagination := dao.ScanDAOPagination{
+	pagination := model.ScanPagination{
 		PageSize: 2,
 		Page:     2,
-		OrderBy: []dao.ScanDAOSort{
+		OrderBy: []model.ScanSort{
 			{
-				Field:     dao.ScanDAOOrderByFieldStartedAt,
-				Direction: dao.DAOOrderByDirectionAscending,
+				Field:     model.ScanOrderByFieldStartedAt,
+				Direction: model.OrderByDirectionAscending,
 			},
 			{
-				Field:     dao.ScanDAOOrderByFieldDomainsScanned,
-				Direction: dao.DAOOrderByDirectionDescending,
+				Field:     model.ScanOrderByFieldDomainsScanned,
+				Direction: model.OrderByDirectionDescending,
 			},
 			{
-				Field:     dao.ScanDAOOrderByFieldDomainsWithDNSSECScanned,
-				Direction: dao.DAOOrderByDirectionDescending,
+				Field:     model.ScanOrderByFieldDomainsWithDNSSECScanned,
+				Direction: model.OrderByDirectionDescending,
 			},
 		},
 		NumberOfItems: len(scans),
@@ -127,21 +126,21 @@ func TestScansToScansResponseLinks(t *testing.T) {
 		t.Error("Response not adding the necessary links when we are navigating")
 	}
 
-	pagination = dao.ScanDAOPagination{
+	pagination = model.ScanPagination{
 		PageSize: 2,
 		Page:     1,
-		OrderBy: []dao.ScanDAOSort{
+		OrderBy: []model.ScanSort{
 			{
-				Field:     dao.ScanDAOOrderByFieldStartedAt,
-				Direction: dao.DAOOrderByDirectionAscending,
+				Field:     model.ScanOrderByFieldStartedAt,
+				Direction: model.OrderByDirectionAscending,
 			},
 			{
-				Field:     dao.ScanDAOOrderByFieldDomainsScanned,
-				Direction: dao.DAOOrderByDirectionDescending,
+				Field:     model.ScanOrderByFieldDomainsScanned,
+				Direction: model.OrderByDirectionDescending,
 			},
 			{
-				Field:     dao.ScanDAOOrderByFieldDomainsWithDNSSECScanned,
-				Direction: dao.DAOOrderByDirectionDescending,
+				Field:     model.ScanOrderByFieldDomainsWithDNSSECScanned,
+				Direction: model.OrderByDirectionDescending,
 			},
 		},
 		NumberOfItems: len(scans),
@@ -155,21 +154,21 @@ func TestScansToScansResponseLinks(t *testing.T) {
 		t.Error("Response not adding the necessary links when we are at the first page")
 	}
 
-	pagination = dao.ScanDAOPagination{
+	pagination = model.ScanPagination{
 		PageSize: 2,
 		Page:     3,
-		OrderBy: []dao.ScanDAOSort{
+		OrderBy: []model.ScanSort{
 			{
-				Field:     dao.ScanDAOOrderByFieldStartedAt,
-				Direction: dao.DAOOrderByDirectionAscending,
+				Field:     model.ScanOrderByFieldStartedAt,
+				Direction: model.OrderByDirectionAscending,
 			},
 			{
-				Field:     dao.ScanDAOOrderByFieldDomainsScanned,
-				Direction: dao.DAOOrderByDirectionDescending,
+				Field:     model.ScanOrderByFieldDomainsScanned,
+				Direction: model.OrderByDirectionDescending,
 			},
 			{
-				Field:     dao.ScanDAOOrderByFieldDomainsWithDNSSECScanned,
-				Direction: dao.DAOOrderByDirectionDescending,
+				Field:     model.ScanOrderByFieldDomainsWithDNSSECScanned,
+				Direction: model.OrderByDirectionDescending,
 			},
 		},
 		NumberOfItems: len(scans),
@@ -195,21 +194,21 @@ func TestCurrentScanToScansResponse(t *testing.T) {
 		},
 	}
 
-	pagination := dao.ScanDAOPagination{
+	pagination := model.ScanPagination{
 		PageSize: 2,
 		Page:     2,
-		OrderBy: []dao.ScanDAOSort{
+		OrderBy: []model.ScanSort{
 			{
-				Field:     dao.ScanDAOOrderByFieldStartedAt,
-				Direction: dao.DAOOrderByDirectionAscending,
+				Field:     model.ScanOrderByFieldStartedAt,
+				Direction: model.OrderByDirectionAscending,
 			},
 			{
-				Field:     dao.ScanDAOOrderByFieldDomainsScanned,
-				Direction: dao.DAOOrderByDirectionDescending,
+				Field:     model.ScanOrderByFieldDomainsScanned,
+				Direction: model.OrderByDirectionDescending,
 			},
 			{
-				Field:     dao.ScanDAOOrderByFieldDomainsWithDNSSECScanned,
-				Direction: dao.DAOOrderByDirectionDescending,
+				Field:     model.ScanOrderByFieldDomainsWithDNSSECScanned,
+				Direction: model.OrderByDirectionDescending,
 			},
 		},
 		NumberOfItems: 6,

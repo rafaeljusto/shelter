@@ -12,7 +12,6 @@ import (
 	"github.com/rafaeljusto/shelter/model"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
-	"strings"
 	"time"
 )
 
@@ -32,60 +31,6 @@ var (
 const (
 	domainDAOCollection  = "domain" // Collection used to store all domain objects in the MongoDB database
 	concurrentOperations = 1000     // Number of Go routines that will be used to execute many operations at once
-)
-
-// List of possible fields that can be used to order a result set
-const (
-	DomainDAOOrderByFieldFQDN           DomainDAOOrderByField = 0 // Order by domain's FQDN
-	DomainDAOOrderByFieldLastModifiedAt DomainDAOOrderByField = 1 // Order by the last modification date of the domain object
-)
-
-// Enumerate definition for the OrderBy so that we can limit the fields that the user can
-// use in a query
-type DomainDAOOrderByField int
-
-// Convert the DomainDAO order by field from string into enum. If the string is unknown an
-// error will be returned. The string is case insensitive and spaces around it are ignored
-func DomainDAOOrderByFieldFromString(value string) (DomainDAOOrderByField, error) {
-	value = strings.ToLower(value)
-	value = strings.TrimSpace(value)
-
-	switch value {
-	case "fqdn":
-		return DomainDAOOrderByFieldFQDN, nil
-	case "lastmodified":
-		return DomainDAOOrderByFieldLastModifiedAt, nil
-	}
-
-	return DomainDAOOrderByFieldFQDN,
-		errors.NewInputError(errors.ErrorCodeInvalidQueryOrderBy, "orderby", value)
-}
-
-// Convert the DomainDAO order by field from enum into string. If the enum is unknown this
-// method will return an empty string
-func DomainDAOOrderByFieldToString(value DomainDAOOrderByField) string {
-	switch value {
-	case DomainDAOOrderByFieldFQDN:
-		return "fqdn"
-
-	case DomainDAOOrderByFieldLastModifiedAt:
-		return "lastmodified"
-	}
-
-	return ""
-}
-
-// Default values when the user don't define pagination. After watching a presentation
-// from layer7 at http://www.layer7tech.com/tutorials/api-pagination-tutorial I agree that
-// when the user don't define the pagination we shouldn't return all the result set,
-// instead we assume default pagination values
-var (
-	domainDAODefaultPaginationOrderBy = []DomainDAOSort{
-		{
-			Field:     DomainDAOOrderByFieldFQDN,    // Default ordering is by FQDN
-			Direction: DAOOrderByDirectionAscending, // Default ordering is ascending
-		},
-	}
 )
 
 func init() {
@@ -199,7 +144,7 @@ func (dao DomainDAO) SaveMany(domains []*model.Domain) []DomainResult {
 // default values are adopted. There's also an expand flag that can control if each domain
 // object from the list will have only the FQDN, last modification, nameserver and DS
 // status or the full information
-func (dao DomainDAO) FindAll(pagination *DomainDAOPagination, expand bool, filter string) ([]model.Domain, error) {
+func (dao DomainDAO) FindAll(pagination *model.DomainPagination, expand bool, filter string) ([]model.Domain, error) {
 	// Check if the programmer forgot to set the database in DomainDAO object
 	if dao.Database == nil {
 		return nil, errors.NewSystemError(ErrDomainDAOUndefinedDatabase)
@@ -213,29 +158,29 @@ func (dao DomainDAO) FindAll(pagination *DomainDAOPagination, expand bool, filte
 	var query *mgo.Query
 
 	if len(pagination.OrderBy) == 0 {
-		pagination.OrderBy = domainDAODefaultPaginationOrderBy
+		pagination.OrderBy = model.DomainDefaultPaginationOrderBy
 	}
 
 	if pagination.PageSize == 0 {
-		pagination.PageSize = defaultPaginationPageSize
+		pagination.PageSize = model.DefaultPaginationPageSize
 	}
 
 	if pagination.Page == 0 {
-		pagination.Page = defaultPaginationPage
+		pagination.Page = model.DefaultPaginationPage
 	}
 
 	var sortList []string
 	for _, sort := range pagination.OrderBy {
 		var sortTmp string
 
-		if sort.Direction == DAOOrderByDirectionDescending {
+		if sort.Direction == model.OrderByDirectionDescending {
 			sortTmp = "-"
 		}
 
 		switch sort.Field {
-		case DomainDAOOrderByFieldFQDN:
+		case model.DomainOrderByFieldFQDN:
 			sortTmp += "fqdn"
-		case DomainDAOOrderByFieldLastModifiedAt:
+		case model.DomainOrderByFieldLastModifiedAt:
 			sortTmp += "lastModifiedAt"
 		}
 
@@ -614,22 +559,4 @@ func (dao DomainDAO) executeMany(domains []*model.Domain,
 type DomainResult struct {
 	Domain *model.Domain // Domain related to the result
 	Error  error         // When different of nil, represents an error of the operation
-}
-
-// DomainDAOPagination was created as a necessity for big result sets that needs to be
-// sent for an end-user. With pagination we can control the size of the data and make it
-// faster for the user to interact with it in a web interface as example
-type DomainDAOPagination struct {
-	OrderBy       []DomainDAOSort // Sort the list before the pagination
-	PageSize      int             // Number of items that are going to be considered in one page
-	Page          int             // Current page that will be returned
-	NumberOfItems int             // Total number of items in the result set
-	NumberOfPages int             // Total number of pages calculated for the current result set
-}
-
-// DomainDAOSort is an object responsable to relate the order by field and direction. Each
-// field used for sort, can be sorted in both directions
-type DomainDAOSort struct {
-	Field     DomainDAOOrderByField // Field to be sorted
-	Direction DAOOrderByDirection   // Direction used in the sort
 }

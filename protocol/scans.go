@@ -7,7 +7,6 @@ package protocol
 
 import (
 	"fmt"
-	"github.com/rafaeljusto/shelter/dao"
 	"github.com/rafaeljusto/shelter/model"
 )
 
@@ -22,7 +21,7 @@ type ScansResponse struct {
 }
 
 // Convert a list of scan objects into protocol format with pagination support
-func ScansToScansResponse(scans []model.Scan, pagination dao.ScanDAOPagination) ScansResponse {
+func ScansToScansResponse(scans []model.Scan, pagination model.ScanPagination) ScansResponse {
 	var scansResponses []ScanResponse
 	for _, scan := range scans {
 		scansResponses = append(scansResponses, ScanToScanResponse(scan))
@@ -35,8 +34,8 @@ func ScansToScansResponse(scans []model.Scan, pagination dao.ScanDAOPagination) 
 		}
 
 		orderBy += fmt.Sprintf("%s:%s",
-			dao.ScanDAOOrderByFieldToString(sort.Field),
-			dao.DAOOrderByDirectionToString(sort.Direction),
+			model.ScanOrderByFieldToString(sort.Field),
+			model.OrderByDirectionToString(sort.Direction),
 		)
 	}
 
@@ -103,7 +102,7 @@ func ScansToScansResponse(scans []model.Scan, pagination dao.ScanDAOPagination) 
 // Convert a current scan object data being executed of the system into a format easy to interpret
 // by the user
 func CurrentScanToScansResponse(currentScan model.CurrentScan,
-	pagination dao.ScanDAOPagination) ScansResponse {
+	pagination model.ScanPagination) ScansResponse {
 
 	var scansResponses []ScanResponse
 	scansResponses = append(scansResponses, CurrentScanToScanResponse(currentScan))
@@ -115,8 +114,8 @@ func CurrentScanToScansResponse(currentScan model.CurrentScan,
 		}
 
 		orderBy += fmt.Sprintf("%s:%s",
-			dao.ScanDAOOrderByFieldToString(sort.Field),
-			dao.DAOOrderByDirectionToString(sort.Direction),
+			model.ScanOrderByFieldToString(sort.Field),
+			model.OrderByDirectionToString(sort.Direction),
 		)
 	}
 
