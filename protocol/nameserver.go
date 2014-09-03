@@ -32,9 +32,9 @@ type NameserverRequest struct {
 func (n *NameserverRequest) toNameserverModel() (model.Nameserver, error) {
 	var nameserver model.Nameserver
 
-	host, err := model.NormalizeDomainName(n.Host)
-	if err != nil {
-		return nameserver, err
+	host, ok := model.NormalizeDomainName(n.Host)
+	if !ok {
+		return nameserver, ErrInvalidFQDN
 	}
 	nameserver.Host = host
 

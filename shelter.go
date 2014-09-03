@@ -283,8 +283,8 @@ func loadSettings() error {
 	// don't want to create a dependency between the model and the config taht could become
 	// a cross reference
 	for _, language := range config.ShelterConfig.Languages {
-		if err := model.AddLanguage(language); err != nil {
-			return err
+		if !model.AddLanguage(language) {
+			return fmt.Errorf("Language '%s' is not valid", language)
 		}
 	}
 

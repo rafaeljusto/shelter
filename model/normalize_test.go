@@ -12,10 +12,10 @@ import (
 
 func TestNormalizeDomainName(t *testing.T) {
 	domainName := "NS1.bücher.EXAMPLE.com"
-	normalizedDomainName, err := NormalizeDomainName(domainName)
+	normalizedDomainName, ok := NormalizeDomainName(domainName)
 
-	if err != nil {
-		t.Fatal(err)
+	if !ok {
+		t.Fatal("Error normalizing a valid domain name")
 	}
 
 	if normalizedDomainName != "ns1.xn--bcher-kva.example.com." {
@@ -23,10 +23,10 @@ func TestNormalizeDomainName(t *testing.T) {
 	}
 
 	domainName = ""
-	normalizedDomainName, err = NormalizeDomainName(domainName)
+	normalizedDomainName, ok = NormalizeDomainName(domainName)
 
-	if err != nil {
-		t.Fatal(err)
+	if !ok {
+		t.Fatal("Error normalizing a valid domain name")
 	}
 
 	if normalizedDomainName != "" {
@@ -34,23 +34,23 @@ func TestNormalizeDomainName(t *testing.T) {
 	}
 
 	domainName = strings.Repeat("x", 65536) + "\uff00" // int32 overflow
-	normalizedDomainName, err = NormalizeDomainName(domainName)
+	normalizedDomainName, ok = NormalizeDomainName(domainName)
 
-	if err == nil {
+	if ok {
 		t.Error("Accepting an invalid IDNA name")
 	}
 
 	domainName = "-.br"
-	normalizedDomainName, err = NormalizeDomainName(domainName)
+	normalizedDomainName, ok = NormalizeDomainName(domainName)
 
-	if err == nil {
+	if ok {
 		t.Error("Accepting an invalid FQDN taht starts with hyphen")
 	}
 
 	domainName = "example.-"
-	normalizedDomainName, err = NormalizeDomainName(domainName)
+	normalizedDomainName, ok = NormalizeDomainName(domainName)
 
-	if err == nil {
+	if ok {
 		t.Error("Accepting an invalid FQDN that ends with only one letter")
 	}
 }

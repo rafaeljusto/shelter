@@ -6,19 +6,20 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"encoding/base64"
+	"github.com/rafaeljusto/shelter/errors"
 )
 
 // Encrypt uses the secret to encode the password in the configuration file
 func Encrypt(input string) (string, error) {
 	block, err := aes.NewCipher(key())
 	if err != nil {
-		return "", err
+		return "", errors.NewSystemError(err)
 	}
 
 	iv := make([]byte, block.BlockSize())
 	_, err = rand.Read(iv)
 	if err != nil {
-		return "", err
+		return "", errors.NewSystemError(err)
 	}
 
 	output := make([]byte, len(input))
@@ -35,12 +36,12 @@ func Encrypt(input string) (string, error) {
 func Decrypt(input string) (string, error) {
 	block, err := aes.NewCipher(key())
 	if err != nil {
-		return "", err
+		return "", errors.NewSystemError(err)
 	}
 
 	inputBytes, err := base64.StdEncoding.DecodeString(input)
 	if err != nil {
-		return "", err
+		return "", errors.NewSystemError(err)
 	}
 
 	iv := inputBytes[:block.BlockSize()]

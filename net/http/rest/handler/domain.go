@@ -123,7 +123,7 @@ func (h *DomainHandler) Put(w http.ResponseWriter, r *http.Request) {
 		messageId := ""
 
 		switch err {
-		case model.ErrInvalidFQDN:
+		case protocol.ErrInvalidFQDN:
 			messageId = "invalid-fqdn"
 		case protocol.ErrInvalidDNSKEY:
 			messageId = "invalid-dnskey"

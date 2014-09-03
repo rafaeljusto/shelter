@@ -28,8 +28,8 @@ func NewFQDN(h FQDNHandler) *FQDN {
 }
 
 func (i *FQDN) Before(w http.ResponseWriter, r *http.Request) {
-	fqdn, err := model.NormalizeDomainName(i.fqdnHandler.GetFQDN())
-	if err != nil {
+	fqdn, ok := model.NormalizeDomainName(i.fqdnHandler.GetFQDN())
+	if !ok {
 		if err := i.fqdnHandler.MessageResponse("invalid-uri", r.URL.RequestURI()); err == nil {
 			w.WriteHeader(http.StatusBadRequest)
 

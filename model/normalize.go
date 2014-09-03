@@ -7,7 +7,6 @@ package model
 
 import (
 	"code.google.com/p/go.net/idna"
-	"errors"
 	"regexp"
 	"strings"
 )
@@ -17,18 +16,11 @@ var (
 	isFQDN = regexp.MustCompile(`^(([[:alnum:]](([[:alnum:]]|\-){0,61}[[:alnum:]])?\.)*[[:alnum:]](([[:alnum:]]|\-){0,61}[[:alnum:]])?)?(\.)?$`)
 )
 
-// List of possible errors that can occur when calling methods from this object. Other
-// erros can also occurs from low level layers
-var (
-	// Error returned when the FQDN is not valid
-	ErrInvalidFQDN = errors.New("FQDN is not valid according to RFCs 1034 and 1123")
-)
-
 // Normalize the domain name to have always the same mask. The following rules applied
 // are, all in lower case, no spaces in the edges (spaces in the middle are going to be
 // detected by other validation mechanisms), dot at the end of the name and the ASCII
 // format (for IDNA domains)
-func NormalizeDomainName(domainName string) (string, error) {
+func NormalizeDomainName(domainName string) (string, bool) {
 	domainName = strings.ToLower(domainName)
 	domainName = strings.TrimSpace(domainName)
 
@@ -44,15 +36,15 @@ func NormalizeDomainName(domainName string) (string, error) {
 	var err error
 	domainName, err = idna.ToASCII(domainName)
 	if err != nil {
-		return domainName, err
+		return domainName, false
 	}
 
 	// Check FQDN format
 	if !isFQDN.MatchString(domainName) {
-		return domainName, ErrInvalidFQDN
+		return domainName, false
 	}
 
-	return domainName, nil
+	return domainName, true
 }
 
 // We will store the digest always in lower case. According to RFC 4034 (section 5.3):

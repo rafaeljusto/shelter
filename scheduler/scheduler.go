@@ -6,7 +6,8 @@
 package scheduler
 
 import (
-	"errors"
+	"fmt"
+	"github.com/rafaeljusto/shelter/errors"
 	"sync"
 	"time"
 )
@@ -17,7 +18,7 @@ var (
 )
 
 var (
-	ErrJobTypeNotFound = errors.New("Job type not found in scheduler")
+	ErrJobTypeNotFound = fmt.Errorf("Job type not found in scheduler")
 )
 
 var (
@@ -104,5 +105,5 @@ func NextExecutionByType(jobType JobType) (time.Time, error) {
 		}
 	}
 
-	return time.Time{}, ErrJobTypeNotFound
+	return time.Time{}, errors.NewSystemError(ErrJobTypeNotFound)
 }

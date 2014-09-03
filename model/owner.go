@@ -6,16 +6,9 @@
 package model
 
 import (
-	"errors"
 	"net/mail"
 	"strings"
 	"sync"
-)
-
-var (
-	// Error returned when a language input doesn't respect the language/region types
-	// defined by IANA
-	ErrInvalidLanguage = errors.New("Language is not valid")
 )
 
 var (
@@ -37,9 +30,11 @@ type Owner struct {
 }
 
 // AddLanguage is a safe way to add a supported language for the owner
-func AddLanguage(language string) error {
+func AddLanguage(language string) bool {
 	if !IsValidLanguage(language) {
-		return ErrInvalidLanguage
+		// Error returned when a language input doesn't respect the language/region types
+		// defined by IANA
+		return false
 	}
 
 	languagesLock.Lock()
@@ -53,12 +48,12 @@ func AddLanguage(language string) error {
 	for _, existingLanguage := range languages {
 		if existingLanguage == language {
 			// Ignore when we already have the language
-			return nil
+			return true
 		}
 	}
 
 	languages = append(languages, language)
-	return nil
+	return true
 }
 
 // LanguageExists checks if a current language is supported

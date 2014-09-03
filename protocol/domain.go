@@ -16,6 +16,9 @@ import (
 var (
 	// Error returned when trying to merge to domain objects with different FQDNs
 	ErrDomainsFQDNDontMatch = errors.New("Cannot merge domains with different FQDNs")
+
+	// Error returned when the FQDN is not valid
+	ErrInvalidFQDN = fmt.Errorf("FQDN is not valid according to RFCs 1034 and 1123")
 )
 
 // Domain object from the protocol used to determinate what the user can update
@@ -31,9 +34,9 @@ type DomainRequest struct {
 // the database. It can return errors related to merge problems that are problem caused by
 // data format of the user input
 func Merge(domain model.Domain, domainRequest DomainRequest) (model.Domain, error) {
-	var err error
-	if domainRequest.FQDN, err = model.NormalizeDomainName(domainRequest.FQDN); err != nil {
-		return domain, err
+	var ok bool
+	if domainRequest.FQDN, ok = model.NormalizeDomainName(domainRequest.FQDN); !ok {
+		return domain, ErrInvalidFQDN
 	}
 
 	// Detect when the domain object is empty, that is the case when we are creating a new

@@ -10,21 +10,21 @@ import (
 )
 
 func TestAddLanguage(t *testing.T) {
-	if AddLanguage("zzz") == nil {
+	if AddLanguage("zzz") {
 		t.Error("Not detecting an invalid language")
 	}
 
-	if AddLanguage("pt-br") != nil {
+	if !AddLanguage("pt-br") {
 		t.Error("Not allowing a valid language")
 	}
 
-	if AddLanguage("pt-br") != nil {
+	if !AddLanguage("pt-br") {
 		t.Error("Repeating same add language is not being ignored")
 	}
 }
 
 func TestLanguageExists(t *testing.T) {
-	if AddLanguage("pt-br") != nil {
+	if !AddLanguage("pt-br") {
 		t.Fatal("Not allowing a valid language")
 	}
 
