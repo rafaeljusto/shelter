@@ -35,6 +35,3 @@ Source: "..\..\templates\*"; DestDir: "{app}\templates"; Flags: ignoreversion re
 [Icons]
 Name: "{group}\shelter"; Filename: "{app}\shelter.exe"
 Name: "{commondesktop}\shelter"; Filename: "{app}\shelter.exe"; Tasks: desktopicon
-
-[Run]
-Filename: "{app}\easyconf.exe"; Parameters: "-sample={app}\etc\shelter.conf.windows.sample"
