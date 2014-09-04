@@ -98,8 +98,8 @@ func checkHeaders() {
 		utils.Fatalln("Error sending request", err)
 	}
 
-	if response.StatusCode != http.StatusServiceUnavailable {
-		utils.Fatalln("Not returning HTTP Service Unavailable when the URI is not registered", nil)
+	if response.StatusCode != http.StatusNotFound {
+		utils.Fatalln("Not returning HTTP Not Found when the URI is not registered", nil)
 	}
 
 	data := []struct {
