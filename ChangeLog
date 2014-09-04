@@ -32,6 +32,7 @@ version 0.3
   * Web client now updates the displayed information of the domain when verified
   * Web client now allows domains with accents (IDNA)
   * Scheduler now uses timezone in number format to avoid abbreviation problems
+  * Disabling easyconf until it works properly
 
 version 0.2
 -----------
