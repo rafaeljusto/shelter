@@ -34,6 +34,11 @@ client
 * On-the-fly domain verification interface
 * Allow a cluster of MongoDB servers for data persistency
 
+installing
+----------
+
+The install information can be found [here](https://github.com/rafaeljusto/shelter/wiki/Install-and-configure).
+
 building
 --------
 
