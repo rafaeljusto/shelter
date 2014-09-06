@@ -10,6 +10,8 @@ describe("Scan controller", function() {
   beforeEach(module('shelter'));
 
   beforeEach(inject(function($rootScope, $controller, $injector) {
+    localStorage.clear();
+
     $httpBackend = $injector.get("$httpBackend");
     $httpBackend.whenGET(/languages\/.+\.json/).respond(200, "{}");
     $httpBackend.flush();

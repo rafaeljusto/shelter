@@ -10,6 +10,8 @@ describe("Domain controller", function() {
   beforeEach(module('shelter'));
 
   beforeEach(inject(function($rootScope, $controller) {
+    localStorage.clear();
+
     scope = $rootScope.$new();
     ctrl = $controller("domainCtrl", {
       $scope: scope

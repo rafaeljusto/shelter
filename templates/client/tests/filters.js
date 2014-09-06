@@ -10,6 +10,7 @@ describe("Filters", function() {
   beforeEach(module('shelter'));
 
   beforeEach(inject(function($filter) {
+    localStorage.clear();
     datetimeFilter = $filter("datetime");
     rangeFilter = $filter("range");
   }));
