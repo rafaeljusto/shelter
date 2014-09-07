@@ -68,16 +68,19 @@ fi
 
 mkdir -p $tmp_dir$install_path
 mkdir -p $tmp_dir$install_path/bin
+mkdir -p $tmp_dir$install_path/etc
 mkdir -p $tmp_dir$install_path/var/log
 
-cp -r $workspace/etc $project_root/
 cp -r $workspace/templates $project_root/
+cp $workspace/etc/messages.conf $project_root/etc/
+cp $workspace/etc/shelter.conf.unix.sample $project_root/etc/shelter.conf
 mv $workspace/shelter $project_root/bin/
 mv $workspace/utils/password $project_root/bin/
 mv $workspace/deploy/easyconf/easyconf $project_root/bin/
 
+# For now the easyconf isn't working really well for all host scenarios (like VM shells), so we will
+# remove the automatically execution (post-script)
 fpm -s dir -t deb \
-  --after-install "$project_root/bin/easyconf" \
   --exclude=.git -n $pack_name -v "$version" --iteration "$release" --vendor "$vendor" \
   --maintainer "$maintainer" --url $url --license $license --description "$description" \
   --deb-upstart $workspace/deploy/debian/shelter.upstart \
