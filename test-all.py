@@ -72,6 +72,9 @@ def runUnitTests(benchmark):
     try:
       subprocess.check_call(["go", "install", goPackage])
 
+      # Uncomment this after handy framework fix for error tag
+      #subprocess.check_call(["go", "vet", goPackage])
+
       if benchmark:
         subprocess.check_call(["go", "test", "-cover", "-bench", ".", "-benchmem", goPackage])
       else:
