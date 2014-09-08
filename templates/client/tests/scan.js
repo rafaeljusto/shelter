@@ -11,6 +11,8 @@ describe("Scan directive", function() {
   beforeEach(module('directives'));
 
   beforeEach(inject(function($rootScope, $compile, $injector) {
+    localStorage.clear();
+
     $httpBackend = $injector.get("$httpBackend");
     $httpBackend.whenGET(/languages\/.+\.json/).respond(200, "{}");
     $httpBackend.flush();
