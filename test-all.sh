@@ -36,18 +36,22 @@ if [ $return_code -ne 0 ]; then
   exit $return_code
 fi
 
-# Integration tests
-echo "\n[[ INTEGRATION TESTS ]]\n"
+# For now on we are only testing the unit and interface layers in Travis. Because are tests takes
+# too long and consume resources that Travis don't have. The full test will be performed by the
+# integration tool.
 
-find . -type f -wholename './testing/*.go' | grep -v 'utils' | sort -u | awk -F '/' '{ print $0 " -config=\"" substr($0, 1, length($0)-3) ".conf\"" }' | xargs -I@ sh -c "go run -race @"
-return_code=$?
-rm -f scan.log
+# Integration tests
+#echo "\n[[ INTEGRATION TESTS ]]\n"
+
+#find . -type f -wholename './testing/*.go' | grep -v 'utils' | sort -u | awk -F '/' '{ print $0 " -config=\"" substr($0, 1, length($0)-3) ".conf\"" }' | xargs -I@ sh -c "go run -race @"
+#return_code=$?
+#rm -f scan.log
 
 # If there was any error in the integration tests, we shouldn't
 # run the interface tests!
-if [ $return_code -ne 0 ]; then
-  exit $return_code
-fi
+#if [ $return_code -ne 0 ]; then
+#  exit $return_code
+#fi
 
 # Interface tests
 echo "\n[[ INTERFACE TESTS ]]\n"

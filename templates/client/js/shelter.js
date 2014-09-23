@@ -597,6 +597,19 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
               if (response.status == 200) {
                 $scope.domain = response.data;
 
+                if ($scope.domain.nameservers == undefined) {
+                  $scope.domain.nameservers = [];
+                }
+                if ($scope.domain.dsset == undefined) {
+                  $scope.domain.dsset = [];
+                }
+                if ($scope.domain.dnskeys == undefined) {
+                  $scope.domain.dnskeys = [];
+                }
+                if ($scope.domain.owners == undefined) {
+                  $scope.domain.owners = [];
+                }
+
               } else if (response.status == 400) {
                 alertify.error(response.data.message);
 

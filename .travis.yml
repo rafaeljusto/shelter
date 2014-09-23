@@ -42,5 +42,9 @@ notifications:
     on_success: change
     on_failure: always
 
-services:
-  - mongodb
+# For now on we are only testing the unit and interface layers in Travis. Because are tests takes
+# too long and consume resources that Travis don't have. The full test will be performed by the
+# integration tool.
+
+#services:
+#  - mongodb

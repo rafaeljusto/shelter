@@ -95,6 +95,8 @@ describe("Domain form directive", function() {
     expect(ctrl.domain.nameservers[0].host).toBe("a.dns.br");
     expect(ctrl.domain.dsset.length).toBe(1);
     expect(ctrl.domain.dsset[0].keytag).toBe(41674);
+    expect(ctrl.domain.owners).not.toBeUndefined();
+    expect(ctrl.domain.dnskeys).not.toBeUndefined();
   }));
 
   it("should verify a domain", inject(function($injector) {
