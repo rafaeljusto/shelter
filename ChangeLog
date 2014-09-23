@@ -30,6 +30,7 @@ version 0.3
   * Web client now updates the displayed information of the domain when verified
   * Web client now allows domains with accents (IDNA)
   * Scheduler now uses timezone in number format to avoid abbreviation problems
+  * Add buttons after importing a domain in the web client are now working
 
 version 0.2
 -----------
