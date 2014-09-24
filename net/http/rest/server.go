@@ -16,6 +16,7 @@ import (
 	"net"
 	"net/http"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"time"
 )
@@ -82,7 +83,10 @@ func Start(listeners []net.Listener) error {
 
 	mux := handy.NewHandy()
 	mux.Recover = func(r interface{}) {
-		log.Println("REST panic detected. Details:", r)
+		const size = 64 << 10
+		buf := make([]byte, size)
+		buf = buf[:runtime.Stack(buf, false)]
+		log.Printf("REST panic detected. Details: %v\n%s", r, buf)
 	}
 
 	for pattern, handler := range handler.Routes {
