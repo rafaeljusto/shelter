@@ -13,6 +13,7 @@ import (
 	"github.com/rafaeljusto/shelter/database/mongodb"
 	"github.com/rafaeljusto/shelter/log"
 	"github.com/rafaeljusto/shelter/model"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -33,7 +34,10 @@ func ScanDomains() {
 		// Something went really wrong while scanning the domains. Log the error stacktrace
 		// and move out
 		if r := recover(); r != nil {
-			log.Println("Panic detected while scanning domains. Details:", r)
+			const size = 64 << 10
+			buf := make([]byte, size)
+			buf = buf[:runtime.Stack(buf, false)]
+			log.Printf("Panic detected while scanning domains. Details: %v\n%s", r, buf)
 		}
 	}()
 

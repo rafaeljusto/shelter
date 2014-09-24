@@ -18,6 +18,7 @@ import (
 	"github.com/rafaeljusto/shelter/secret"
 	"net/smtp"
 	"regexp"
+	"runtime"
 	"strings"
 )
 
@@ -44,7 +45,10 @@ func Notify() {
 		// Something went really wrong while notifying the owners. Log the error stacktrace
 		// and move out
 		if r := recover(); r != nil {
-			log.Println("Panic detected while notifying the owners. Details:", r)
+			const size = 64 << 10
+			buf := make([]byte, size)
+			buf = buf[:runtime.Stack(buf, false)]
+			log.Printf("Panic detected while notifying the owners. Details: %v\n%s", r, buf)
 		}
 	}()
 

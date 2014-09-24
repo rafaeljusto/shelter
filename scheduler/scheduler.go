@@ -7,6 +7,8 @@ package scheduler
 
 import (
 	"errors"
+	"github.com/rafaeljusto/shelter/log"
+	"runtime"
 	"sync"
 	"time"
 )
@@ -73,6 +75,16 @@ func Clear() {
 func Start() {
 	ticker := time.NewTicker(SchedulerExecutionInterval)
 	go func() {
+		defer func() {
+			// Something went really wrong while scheduling. Log the error stacktrace and move out
+			if r := recover(); r != nil {
+				const size = 64 << 10
+				buf := make([]byte, size)
+				buf = buf[:runtime.Stack(buf, false)]
+				log.Printf("Panic detected while scheduling. Details: %v\n%s", r, buf)
+			}
+		}()
+
 		for {
 			select {
 			case <-ticker.C:
