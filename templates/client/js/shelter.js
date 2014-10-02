@@ -699,6 +699,100 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
               $scope.saveWorking = false;
             });
         };
+
+        $scope.importCSV = function(csv) {
+          var lines = csv.split("\n");
+          lines.forEach(function(line, index) {
+            // Parse first level using comma:
+            // fqdn,ns1,ns2,ns3,ns4,ns5,ns6,ds1,ds2,owner1,owner2,owner3
+            var fields = line.split(",");
+
+            if (fields.length != 12) {
+              // TODO: Error!
+              return;
+            }
+
+            var domain = angular.copy(emptyDomain);
+            domain.fqdn = fields[0];
+            domain.nameservers = [];
+            domain.dsset = [];
+
+            // Loop between the nameservers fields
+            for (var i = 1; i <= 6; i++) {
+              if (fields[i].length == 0) {
+                continue;
+              }
+
+              // Parse the nameserver:
+              // host$ipv4$ipv6
+              var nsParts = fields[i].split("$");
+
+              if (nsParts.length > 3) {
+                // TODO: Error!
+                continue;
+              }
+
+              var nameserver;
+              nameserver.host = nsParts[0];
+
+              if (nsParts.length > 1) {
+                nameserver.ipv4 = nsParts[1];
+              }
+
+              if (nsParts.length > 2) {
+                nameserver.ipv4 = nsParts[2];
+              }
+
+              domain.nameservers.push(nameserver);
+            }
+
+            // Loop between the DS set fields
+            for (var i = 7; i <= 8; i++) {
+              if (fields[i].length == 0) {
+                continue;
+              }
+
+              // Parse the DS:
+              // keytag$algorithm$digestType$digest
+              var dsFields = fields[i].split("$");
+
+              if (dsParts.length != 4) {
+                // TODO: Error!
+                continue;
+              }
+
+              domain.dsset.push({
+                keytag: dsParts[0],
+                algorithm: dsParts[1],
+                digestType: dsParts[2],
+                digest: dsParts[3]
+              });
+            }
+
+            // Loop between the owner fields
+            for (var i = 9; i <= 11; i++) {
+              if (fields[i].length == 0) {
+                continue;
+              }
+
+              // Parse the owner:
+              // email$language
+              var ownerFields = fields[i].split("$");
+
+              if (ownerParts.length != 2) {
+                // TODO: Error!
+                continue;
+              }
+
+              domain.owners.push({
+                email: ownerParts[0],
+                language: ownerParts[1]
+              });
+            }
+
+            $scope.saveDomain(domain);
+          });
+        };
       }
     };
   })
@@ -824,6 +918,30 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
     };
 
     $scope.retrieveDomainsWorker();
+  })
+
+  // Directive retrieved from:
+  // http://veamospues.wordpress.com/2014/01/27/reading-files-with-angularjs/
+  .directive('onReadFile', function ($parse) {
+    return {
+      restrict: 'A',
+      scope: false,
+      link: function(scope, element, attrs) {
+        var fn = $parse(attrs.onReadFile);
+              
+        element.on('change', function(onChangeEvent) {
+          var reader = new FileReader();
+                  
+          reader.onload = function(onLoadEvent) {
+            scope.$apply(function() {
+              fn(scope, {$fileContent:onLoadEvent.target.result});
+            });
+          };
+
+          reader.readAsText((onChangeEvent.srcElement || onChangeEvent.target).files[0]);
+        });
+      }
+    };
   })
 
 

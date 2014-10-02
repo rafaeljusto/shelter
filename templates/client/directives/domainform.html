@@ -6,6 +6,10 @@
 
 <form data-ng-submit="saveDomain(domain)">
   <fieldset>
+    <legend translate>Upload CSV</legend>
+    <input type="file" on-read-file="importCSV($fileContent)" />
+  </fieldset>
+  <fieldset>
     <legend translate>Basic information</legend>
     <label for="fqdn" autofocus translate>FQDN</label>
     <input type="text" data-ng-model="domain.fqdn"
