@@ -7,8 +7,9 @@
 <form data-ng-submit="saveDomain(domain)">
   <fieldset>
     <legend translate>Upload CSV</legend>
-    <input type="file" on-read-file="importCSV($fileContent)" />
+    <input type="file" data-on-read-file="importCSV($fileContent)" />
   </fieldset>
+  <span class="choose-title">OR</span>
   <fieldset>
     <legend translate>Basic information</legend>
     <label for="fqdn" autofocus translate>FQDN</label>

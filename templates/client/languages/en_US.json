@@ -4,6 +4,10 @@
   "Basic information": "Basic information",
   "Checked": "Checked",
   "Close": "Close",
+  "CSV DS error": "CSV contain an invalid DS syntax",
+  "CSV fields count error": "CSV file has the wrong number of fields",
+  "CSV NS error": "CSV contain an invalid nameserver syntax",
+  "CSV owner error": "CSV contain an invalid owner syntax",
   "Digest Type": "Digest Type",
   "Digest": "Digest",
   "DNSKEY": "DNSKEY",
@@ -51,6 +55,7 @@
   "Server error": "Problem while connecting to the server. Retry again in a few minutes or contact the system administrator",
   "Started": "Started",
   "Status": "Status",
+  "Upload CSV": "Upload CSV",
   "Verify result": "Domain verification result",
   "Verify": "Verify"
 }

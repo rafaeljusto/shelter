@@ -4,6 +4,10 @@
   "Basic information": "Datos Básicos",
   "Checked": "Verificado",
   "Close": "Cerrar",
+  "CSV DS error": "Archivo CSV tiene un DS con sintaxis no válida",
+  "CSV fields count error": "Archivo CSV tiene el número equivocado de campos",
+  "CSV NS error": "Archivo CSV tiene un DNS con sintaxis no válida",
+  "CSV owner error": "Archivo CSV tiene un responsable con sintaxis no válida",
   "Digest Type": "Tipo del Digest",
   "Digest": "Digest",
   "DNSKEY": "DNSKEY",
@@ -51,6 +55,7 @@
   "Server error": "Problema a conectar con el servidor. Inténtelo de nuevo después de unos minutos o póngase en contacto con el administrador del sistema",
   "Started": "Inicio",
   "Status": "Situación",
+  "Upload CSV": "Cargar CSV",
   "Verify result": "Los resultados de la verificación de dominio",
   "Verify": "Comprobar"
 }

@@ -80,6 +80,16 @@ h3 {
   margin: 0px 20px 0px 20px;
 }
 
+/* Used to split the registration form to fill the form or upload a CSV file */
+.choose-title {
+  color: #fff;
+  display: block;
+  font-size:1.5em;
+  margin: 20px auto 20px auto;
+  text-align: center;
+  text-shadow: 0 0 5px rgba(0,0,0,0.9);
+}
+
 section {
   margin: auto;
   padding: 0.2rem 0.4rem 0.2rem 0.4rem;

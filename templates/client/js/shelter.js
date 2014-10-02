@@ -703,19 +703,26 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
         $scope.importCSV = function(csv) {
           var lines = csv.split("\n");
           lines.forEach(function(line, index) {
+            if (line.length == 0) {
+              return;
+            }
+
             // Parse first level using comma:
             // fqdn,ns1,ns2,ns3,ns4,ns5,ns6,ds1,ds2,owner1,owner2,owner3
             var fields = line.split(",");
 
             if (fields.length != 12) {
-              // TODO: Error!
+              $translate("CSV fields count error").then(function(translation) {
+                  alertify.error(translation);
+              });
               return;
             }
 
-            var domain = angular.copy(emptyDomain);
+            var domain = {};
             domain.fqdn = fields[0];
             domain.nameservers = [];
             domain.dsset = [];
+            domain.owners = [];
 
             // Loop between the nameservers fields
             for (var i = 1; i <= 6; i++) {
@@ -728,12 +735,15 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
               var nsParts = fields[i].split("$");
 
               if (nsParts.length > 3) {
-                // TODO: Error!
+                $translate("CSV NS error").then(function(translation) {
+                  alertify.error(translation);
+                });
                 continue;
               }
 
-              var nameserver;
-              nameserver.host = nsParts[0];
+              var nameserver = {
+                host: nsParts[0]
+              };
 
               if (nsParts.length > 1) {
                 nameserver.ipv4 = nsParts[1];
@@ -754,17 +764,19 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
 
               // Parse the DS:
               // keytag$algorithm$digestType$digest
-              var dsFields = fields[i].split("$");
+              var dsParts = fields[i].split("$");
 
               if (dsParts.length != 4) {
-                // TODO: Error!
+                $translate("CSV DS error").then(function(translation) {
+                  alertify.error(translation);
+                });
                 continue;
               }
 
               domain.dsset.push({
-                keytag: dsParts[0],
-                algorithm: dsParts[1],
-                digestType: dsParts[2],
+                keytag: parseInt(dsParts[0], 10),
+                algorithm: parseInt(dsParts[1], 10),
+                digestType: parseInt(dsParts[2], 10),
                 digest: dsParts[3]
               });
             }
@@ -777,10 +789,12 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
 
               // Parse the owner:
               // email$language
-              var ownerFields = fields[i].split("$");
+              var ownerParts = fields[i].split("$");
 
               if (ownerParts.length != 2) {
-                // TODO: Error!
+                $translate("CSV owener error").then(function(translation) {
+                  alertify.error(translation);
+                });
                 continue;
               }
 
@@ -790,6 +804,7 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
               });
             }
 
+            console.log("Saving domain", domain.fqdn);
             $scope.saveDomain(domain);
           });
         };
