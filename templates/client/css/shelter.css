@@ -282,6 +282,27 @@ button[type=button]:active {
   width: 20%;
 }
 
+.csv-results {
+  font-size: 1.6rem;
+  text-align: center;
+}
+
+.csv-results > .fa-check {
+  color: green;
+}
+
+.csv-results > .fa-times {
+  color: red;
+}
+
+.scroll {
+  background: linear-gradient(to right, #f24537 0%,#8f0222 70%,#6d0019 100%);
+  background-color: #f24537;
+  max-height: 200px;
+  overflow: auto;
+  text-shadow: 1px 1px 0px #810e05;
+}
+
 /**********************************/
 /* List related styles            */
 /**********************************/

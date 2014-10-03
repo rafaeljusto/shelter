@@ -549,10 +549,27 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
         $scope.dsDigestTypes = dsDigestTypes;
         $scope.ownerLanguages = ownerLanguages;
 
+        $scope.csv = {
+          working: false,
+          content: "",
+          domainsToUpload: 0,
+          domainsUploaded: 0,
+          success: 0,
+          errors: []
+        };
+
         // Easy way to allow extenal scopes to call a function in the directive
         $scope.formCtrl = $scope.formCtrl || {};
         $scope.formCtrl.clear = function() {
           $scope.domain = angular.copy(emptyDomain);
+          $scope.csv = {
+            working: false,
+            content: "",
+            domainsToUpload: 0,
+            domainsUploaded: 0,
+            success: 0,
+            errors: []
+          };
         };
 
         $scope.needsGlue = function(fqdn, host) {
@@ -700,10 +717,28 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
             });
         };
 
-        $scope.importCSV = function(csv) {
-          var lines = csv.split("\n");
-          lines.forEach(function(line, index) {
+        $scope.storeCSVFile = function(content) {
+          $scope.csv.content = content;
+        };
+
+        $scope.importCSV = function() {
+          $scope.csv.working = true;
+          $scope.csv.domainsUploaded = 0;
+          $scope.csv.success = 0;
+          $scope.csv.errors = [];
+
+          var lines = $scope.csv.content.split("\n");
+          $scope.csv.domainsToUpload = lines.length;
+
+          lines.forEach(function(line, lineNumber) {
+            // Start line number as one instead of zero
+            lineNumber += 1;
+
             if (line.length == 0) {
+              $scope.csv.domainsUploaded += 1;
+              if ($scope.csv.domainsUploaded == $scope.csv.domainsToUpload) {
+                $scope.csv.working = false;
+              }
               return;
             }
 
@@ -713,8 +748,16 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
 
             if (fields.length != 12) {
               $translate("CSV fields count error").then(function(translation) {
-                  alertify.error(translation);
+                $scope.csv.errors.push({
+                  message: translation,
+                  lineNumber: lineNumber
+                });
               });
+
+              $scope.csv.domainsUploaded += 1;
+              if ($scope.csv.domainsUploaded == $scope.csv.domainsToUpload) {
+                $scope.csv.working = false;
+              }
               return;
             }
 
@@ -736,7 +779,10 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
 
               if (nsParts.length > 3) {
                 $translate("CSV NS error").then(function(translation) {
-                  alertify.error(translation);
+                  $scope.csv.errors.push({
+                    message: translation,
+                    lineNumber: lineNumber
+                  });
                 });
                 continue;
               }
@@ -768,17 +814,34 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
 
               if (dsParts.length != 4) {
                 $translate("CSV DS error").then(function(translation) {
-                  alertify.error(translation);
+                  $scope.csv.errors.push({
+                    message: translation,
+                    lineNumber: lineNumber
+                  });
                 });
                 continue;
               }
 
-              domain.dsset.push({
+              var ds = {
                 keytag: parseInt(dsParts[0], 10),
                 algorithm: parseInt(dsParts[1], 10),
                 digestType: parseInt(dsParts[2], 10),
                 digest: dsParts[3]
-              });
+              };
+
+              if (ds.keytag == NaN) {
+                ds.keytag = 0;
+              }
+
+              if (ds.algorithm == NaN) {
+                ds.algorithm = 0;
+              }
+
+              if (ds.digestType == NaN) {
+                ds.digestType = 0;
+              }
+
+              domain.dsset.push(ds);
             }
 
             // Loop between the owner fields
@@ -793,7 +856,10 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
 
               if (ownerParts.length != 2) {
                 $translate("CSV owener error").then(function(translation) {
-                  alertify.error(translation);
+                  $scope.csv.errors.push({
+                    message: translation,
+                    lineNumber: lineNumber
+                  });
                 });
                 continue;
               }
@@ -804,8 +870,32 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
               });
             }
 
-            console.log("Saving domain", domain.fqdn);
-            $scope.saveDomain(domain);
+            domainService.saveDomain(domain, domain.etag).then(
+              function(response) {
+                if (response.status == 201 || response.status == 204) {
+                  $scope.csv.success += 1;
+                  $scope.success = true; // For unit tests only
+
+                } else if (response.status == 400) {
+                  $scope.csv.errors.push({
+                    message: response.data.message,
+                    lineNumber: lineNumber
+                  });
+
+                } else {
+                  $translate("Server error").then(function(translation) {
+                    $scope.csv.errors.push({
+                      message: translation,
+                      lineNumber: lineNumber
+                    });
+                  });
+                }
+
+                $scope.csv.domainsUploaded += 1;
+                if ($scope.csv.domainsUploaded == $scope.csv.domainsToUpload) {
+                  $scope.csv.working = false;
+                }
+              });
           });
         };
       }
