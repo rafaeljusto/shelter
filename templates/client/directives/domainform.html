@@ -6,7 +6,12 @@
 
 <form data-ng-submit="saveDomain(domain)">
   <fieldset>
-    <legend translate>Upload CSV</legend>
+    <legend>
+      {{ "Upload CSV" | translate }} 
+      <a href="https://github.com/rafaeljusto/shelter/wiki/CSV-format">
+        <i class="fa fa-question-circle"></i>
+      </a>
+    </legend>
     <input type="file" data-on-read-file="storeCSVFile($fileContent)" />
     <button type="button" class="normal-button" data-ng-init="csv.working = false"
       data-ng-click="importCSV()"
