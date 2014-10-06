@@ -11,6 +11,7 @@ version 0.3
   * New parameter for /domains service to filter domains results
   * Encrypted passwords and secrets in configuration file
   * Register domains in web client via CSV file upload (idea from Jan Alvarado, nic.hn)
+  * FQDN is now returned in unicode format for IDN domains
 
   Fixes:
   * Handy framework now use the same log of the shelter system

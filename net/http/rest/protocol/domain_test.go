@@ -232,7 +232,7 @@ func TestToDomainResponse(t *testing.T) {
 	}
 
 	domain := model.Domain{
-		FQDN: "example.com.br.",
+		FQDN: "xn--exmpl-4qa6c.com.br.",
 		Nameservers: []model.Nameserver{
 			{
 				Host:       "ns1.example.com.br.",
@@ -258,7 +258,7 @@ func TestToDomainResponse(t *testing.T) {
 
 	domainResponse := ToDomainResponse(domain, true)
 
-	if domainResponse.FQDN != "example.com.br." {
+	if domainResponse.FQDN != "exâmplé.com.br." {
 		t.Error("Fail to convert FQDN")
 	}
 
@@ -285,5 +285,23 @@ func TestToDomainResponse(t *testing.T) {
 
 	if len(domainResponse.Links) != 0 {
 		t.Error("Shouldn't return links when the object doesn't exist in the system")
+	}
+
+	// Testing case problem
+	domain.FQDN = "XN--EXMPL-4QA6C.COM.BR."
+	domainResponse = ToDomainResponse(domain, false)
+
+	if domainResponse.FQDN != "exâmplé.com.br." {
+		t.Errorf("Should convert to unicode even in upper case. "+
+			"Expected '%s' and got '%s'", "exâmplé.com.br.", domainResponse.FQDN)
+	}
+
+	// Testing an invalid FQDN ACE format
+	domain.FQDN = "xn--x1x2x3x4x5.com.br."
+	domainResponse = ToDomainResponse(domain, false)
+
+	if domainResponse.FQDN != "xn--x1x2x3x4x5.com.br." {
+		t.Errorf("Should keep the ACE format when there's an error converting to unicode. "+
+			"Expected '%s' and got '%s'", "xn--x1x2x3x4x5.com.br.", domainResponse.FQDN)
 	}
 }
