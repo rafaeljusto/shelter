@@ -570,6 +570,7 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
             success: 0,
             errors: []
           };
+          document.getElementById("csv").value = "";
         };
 
         $scope.needsGlue = function(fqdn, host) {
