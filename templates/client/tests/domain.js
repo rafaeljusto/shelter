@@ -17,10 +17,11 @@ describe("Domain directive", function() {
     $httpBackend.whenGET(/languages\/.+\.json/).respond(200, "{}");
     $httpBackend.flush();
 
-    var elm = angular.element("<domain domain='domain'></domain>");
+    var elm = angular.element("<domain domain='domain' selected-domains='selectedDomains'></domain>");
 
     scope = $rootScope;
     scope.domain = {};
+    scope.selectedDomains = {};
 
     $compile(elm)(scope);
     scope.$digest();

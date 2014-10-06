@@ -77,7 +77,9 @@ h2 {
 }
 
 h3 {
-  margin: 0px 20px 0px 20px;
+  display: table-cell;
+  padding: 10px 10px 10px 20px;
+  width: 100%;
 }
 
 /* Used to split the registration form to fill the form or upload a CSV file */
@@ -212,6 +214,44 @@ input {
   font-size: 1rem;
 }
 
+/* http://cssdeck.com/labs/css-checkbox-styles */
+
+.checkbox {
+  background: linear-gradient(top, #222 0%, #45484d 100%);
+  border-radius: 4px;
+  box-shadow: inset 0px 1px 1px rgba(0,0,0,0.5), 0px 1px 0px rgba(255,255,255,.4);
+  cursor: pointer;
+  display: inline-block;
+  height: 25px;
+  left: 5px; /* This will not look good when total height is different from 45px */
+  position: relative;
+  top: 5px; /* This will not look good when total height is different from 45px */
+  width: 25px;
+}
+
+.checkbox:after {
+  background: transparent;
+  border: 3px solid #fcfff4;
+  border-right: none;
+  border-top: none;
+  content: '';
+  height: 9px;
+  left: 5px;
+  opacity: 0;
+  position: absolute;
+  top: 5px;
+  transform: rotate(-45deg);
+  width: 13px;
+}
+
+.checkbox:hover::after {
+  opacity: 0.3;
+}
+
+.checkbox-selected:after {
+  opacity: 1 !important;
+}
+
 /* http://www.cssbuttongenerator.com/ */
 
 button[type=submit] {
@@ -318,6 +358,7 @@ article header {
   border-bottom: 1px solid #000;
   color: #fff;
   cursor: pointer;
+  display: table;
   font-size: 1rem !important;
   font-style: normal;
   font-weight: bold;

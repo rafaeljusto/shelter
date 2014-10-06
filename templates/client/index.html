@@ -70,10 +70,12 @@
         <label for="filter" translate>Filter</label>
         <input type="text" id="filter" data-ng-model="filter" 
           data-ng-change="retrieveDomains(pagination.page, pagination.pageSize, filter)" />
+        {{countSelectedDomains()}}
       </div>
 
       <domain class="animate"
-        data-ng-repeat="domain in pagination.domains track by domain.fqdn" domain="domain"></domain>
+        data-ng-repeat="domain in pagination.domains track by domain.fqdn"
+        domain="domain" selected-domains="selectedDomains"></domain>
 
       <div class="pagination" id="domainPagination">
         <label translate>Page</label>

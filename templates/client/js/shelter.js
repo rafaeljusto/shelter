@@ -317,7 +317,8 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
     return {
       restrict: 'E',
       scope: {
-        domain: '='
+        domain: '=',
+        selectedDomains: '='
       },
       templateUrl: "/directives/domain.html",
       controller: function($scope, $translate, domainService) {
@@ -520,7 +521,19 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
 
               $scope.removeWorking = false;
             });
-        }
+        };
+
+        $scope.selectDomain = function(fqdn) {
+          if (fqdn in $scope.selectedDomains) {
+            delete $scope.selectedDomains[fqdn];
+          } else {
+            $scope.selectedDomains[fqdn] = true;
+          }
+        };
+
+        $scope.isDomainSelected = function(fqdn) {
+          return (fqdn in $scope.selectedDomains);
+        };
       }
     };
   })
@@ -909,6 +922,11 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
   .controller("domainsCtrl", function($scope, $translate, $timeout, $anchorScroll, $location, domainService) {
     $scope.pageSizes = [ 20, 40, 60, 80, 100 ];
     $scope.lastRetrieveDomains = moment();
+    $scope.selectedDomains = {};
+
+    $scope.countSelectedDomains = function() {
+      return Object.keys($scope.selectedDomains).length;
+    };
 
     $scope.retrieveDomains = function(page, pageSize, filter, successFunction) {
       var uri = "";
