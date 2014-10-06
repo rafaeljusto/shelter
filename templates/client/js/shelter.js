@@ -523,16 +523,32 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
             });
         };
 
-        $scope.selectDomain = function(fqdn) {
-          if (fqdn in $scope.selectedDomains) {
-            delete $scope.selectedDomains[fqdn];
+        $scope.selectDomain = function(domain) {
+          var foundIndex = -1;
+          $scope.selectedDomains.forEach(function(selectedDomain, index) {
+            if (selectedDomain.fqdn == domain.fqdn) {
+              foundIndex = index;
+              return;
+            }
+          });
+
+          if (foundIndex >= 0) {
+            $scope.selectedDomains.splice(foundIndex, 1);
           } else {
-            $scope.selectedDomains[fqdn] = true;
+            $scope.selectedDomains.push(domain);
           }
         };
 
-        $scope.isDomainSelected = function(fqdn) {
-          return (fqdn in $scope.selectedDomains);
+        $scope.isDomainSelected = function(domain) {
+          var found = false;
+          $scope.selectedDomains.forEach(function(selectedDomain, index) {
+            if (selectedDomain.fqdn == domain.fqdn) {
+              found = true;
+              return;
+            }
+          });
+
+          return found;
         };
       }
     };
@@ -923,10 +939,10 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
   .controller("domainsCtrl", function($scope, $translate, $timeout, $anchorScroll, $location, domainService) {
     $scope.pageSizes = [ 20, 40, 60, 80, 100 ];
     $scope.lastRetrieveDomains = moment();
-    $scope.selectedDomains = {};
+    $scope.selectedDomains = [];
 
     $scope.countSelectedDomains = function() {
-      return Object.keys($scope.selectedDomains).length;
+      return $scope.selectedDomains.length;
     };
 
     $scope.retrieveDomains = function(page, pageSize, filter, successFunction) {
@@ -1039,6 +1055,38 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
         $anchorScroll();
         $location.hash("");
       }, 100);
+    };
+
+    $scope.removeDomains = function() {
+      $scope.removeWorking = true;
+      var removed = 0;
+
+      $scope.selectedDomains.forEach(function(selectedDomain) {
+        var uri = findLink(selectedDomain.links, "self");
+        domainService.removeDomain(uri, selectedDomain.etag).then(
+          function(response) {
+            if (response.status == 204) {
+              $translate("Domain removed").then(function(translation) {
+                alertify.success(translation);
+              });
+              $scope.success = true; // For unit tests only
+
+            } else if (response.status == 400) {
+              alertify.error(response.data.message);
+
+            } else {
+              $translate("Server error").then(function(translation) {
+                alertify.error(translation);
+              });
+            }
+
+            removed += 1;
+            if (removed == $scope.selectedDomains.length) {
+              $scope.removeWorking = false;
+              $scope.selectedDomains = [];
+            }
+          });
+      });
     };
 
     $scope.retrieveDomainsWorker();

@@ -450,13 +450,17 @@ progress {
   cursor: default;
 }
 
-.filter {
+.filter, .multi-actions {
   margin-bottom: 20px;
 }
 
 .filter label {
   color: #fff;
   font-size: 1rem;
+}
+
+.multi-actions {
+  text-align: right;
 }
 
 /**********************************/

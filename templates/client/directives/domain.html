@@ -7,8 +7,8 @@
 <article data-ng-init="details = false; form = {}">
   <header data-ng-class="{'domain-error': hasErrors(domain),
       'domain-ok': !hasErrors(domain) && wasChecked(domain)}">
-    <label class="checkbox" data-ng-click="selectDomain(domain.fqdn)"
-      data-ng-class="{'checkbox-selected': isDomainSelected(domain.fqdn)}"></label>
+    <label class="checkbox" data-ng-click="selectDomain(domain)"
+      data-ng-class="{'checkbox-selected': isDomainSelected(domain)}"></label>
     <h3 data-ng-click="toggleDetails(domain)">{{domain.fqdn}}</h3>
   </header>
 
