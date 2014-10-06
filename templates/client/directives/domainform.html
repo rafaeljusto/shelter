@@ -12,7 +12,7 @@
         <i class="fa fa-question-circle"></i>
       </a>
     </legend>
-    <input type="file" data-on-read-file="storeCSVFile($fileContent)" />
+    <input type="file" data-on-read-file="storeCSVFile($fileContent)" id="csv" />
     <button type="button" class="normal-button" data-ng-init="csv.working = false"
       data-ng-click="importCSV()"
       data-ng-disabled="csv.working">
