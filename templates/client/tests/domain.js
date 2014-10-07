@@ -21,7 +21,7 @@ describe("Domain directive", function() {
 
     scope = $rootScope;
     scope.domain = {};
-    scope.selectedDomains = {};
+    scope.selectedDomains = [];
 
     $compile(elm)(scope);
     scope.$digest();
