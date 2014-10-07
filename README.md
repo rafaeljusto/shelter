@@ -49,6 +49,7 @@ and it depends on the following Go packages:
 * github.com/miekg/dns
 * github.com/rafaeljusto/handy (forked from github.com/trajber/handy)
 * gopkg.in/mgo.v2
+* github.com/nsf/termbox-go
 
 All the above packages can be installed using the command:
 
