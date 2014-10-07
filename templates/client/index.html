@@ -66,21 +66,6 @@
         </h2>
       </header>
 
-      <div class="multi-actions">
-        <button type="button" class="big-button remove-button"
-          data-ng-init="removeWorking = false"
-          data-ng-click="removeDomains()" data-ng-disabled="removeWorking"
-          data-ng-if="countSelectedDomains() > 0">
-          <div data-ng-if="removeWorking">
-            <i class="fa fa-spinner fa-2x fa-spin"></i>
-          </div>
-          <div data-ng-if="!removeWorking">
-            <i class="fa fa-trash-o"></i>
-            {{ "Remove" | translate }} ({{countSelectedDomains()}})
-          </div>
-        </button>
-      </div>
-
       <div class="filter">
         <label for="filter" translate>Filter</label>
         <input type="text" id="filter" data-ng-model="filter" 
@@ -90,6 +75,21 @@
       <domain class="animate"
         data-ng-repeat="domain in pagination.domains track by domain.fqdn"
         domain="domain" selected-domains="selectedDomains"></domain>
+
+      <div class="multi-actions">
+        <a href="" class="red-action"
+          data-ng-click="confirmDomainsRemoval()"
+          data-ng-if="countSelectedDomains() > 0">
+          <i class="fa fa-trash-o"></i>
+          {{ "Remove" | translate }} ({{countSelectedDomains()}})
+        </a>
+        <a href="" class="white-action"
+          data-ng-click="selectAllDomains()">
+          <i class="fa fa-list-ul"></i>
+          <span data-ng-if="!allDomainsSelected()">{{ "Select All" | translate }}</span>
+          <span data-ng-if="allDomainsSelected()">{{ "Deselect All" | translate }}</span>
+        </a>
+      </div>
 
       <div class="pagination" id="domainPagination">
         <label translate>Page</label>

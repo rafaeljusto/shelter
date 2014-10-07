@@ -450,7 +450,7 @@ progress {
   cursor: default;
 }
 
-.filter, .multi-actions {
+.filter {
   margin-bottom: 20px;
 }
 
@@ -460,7 +460,22 @@ progress {
 }
 
 .multi-actions {
+  margin-top: 10px;
   text-align: right;
+}
+
+.multi-actions a {
+  font-weight: bold;
+  margin-left: 10px;
+  text-decoration: none;
+}
+
+.red-action {
+  color: red;
+}
+
+.white-action {
+  color: white;
 }
 
 /**********************************/

@@ -1057,8 +1057,65 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
       }, 100);
     };
 
+    $scope.allDomainsSelected = function() {
+      if (!$scope.pagination) {
+        return false;
+      }
+
+      for (var j = 0; j < $scope.pagination.domains.length; j++) {
+        var found = false;
+        for (var i = 0; i < $scope.selectedDomains.length; i++) {
+          if ($scope.selectedDomains[i].fqdn == $scope.pagination.domains[j].fqdn) {
+            found = true;
+            break;
+          }
+        }
+
+        if (!found) {
+          return false;
+        }
+      }
+
+      return true;
+    };
+
+    $scope.selectAllDomains = function() {
+      if (!$scope.pagination) {
+        return;
+      }
+
+      // The same function can select or deselect all the domains from this page
+      var deselect = $scope.allDomainsSelected();
+
+      $scope.pagination.domains.forEach(function(domain) {
+        for (var i = 0; i < $scope.selectedDomains.length; i++) {
+          if ($scope.selectedDomains[i].fqdn == domain.fqdn) {
+            if (deselect) {
+              $scope.selectedDomains.splice(i, 1);
+              break;
+            }
+            
+            return;
+          }
+        }
+
+        if (!deselect) {
+          $scope.selectedDomains.push(domain);
+        }
+      });
+    };
+
+    $scope.confirmDomainsRemoval = function() {
+      $translate("Confirm domain(s) removal").then(function(translation) {
+        alertify.confirm(translation, function(e) {
+          if (e) {
+            $scope.removeDomains();
+          }
+        });
+      });
+    };
+
     $scope.removeDomains = function() {
-      $scope.removeWorking = true;
       var removed = 0;
 
       $scope.selectedDomains.forEach(function(selectedDomain) {
@@ -1082,7 +1139,6 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
 
             removed += 1;
             if (removed == $scope.selectedDomains.length) {
-              $scope.removeWorking = false;
               $scope.selectedDomains = [];
             }
           });
