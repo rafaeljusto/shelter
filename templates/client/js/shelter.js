@@ -317,7 +317,8 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
     return {
       restrict: 'E',
       scope: {
-        domain: '='
+        domain: '=',
+        selectedDomains: '='
       },
       templateUrl: "/directives/domain.html",
       controller: function($scope, $translate, domainService) {
@@ -520,7 +521,36 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
 
               $scope.removeWorking = false;
             });
-        }
+        };
+
+        $scope.selectDomain = function(domain) {
+          var foundIndex = -1;
+          $scope.selectedDomains.forEach(function(selectedDomain, index) {
+            if (selectedDomain.fqdn == domain.fqdn) {
+              foundIndex = index;
+              return;
+            }
+          });
+
+          if (foundIndex >= 0) {
+            // Deselect the domain with the same function
+            $scope.selectedDomains.splice(foundIndex, 1);
+          } else {
+            $scope.selectedDomains.push(domain);
+          }
+        };
+
+        $scope.isDomainSelected = function(domain) {
+          var found = false;
+          $scope.selectedDomains.forEach(function(selectedDomain, index) {
+            if (selectedDomain.fqdn == domain.fqdn) {
+              found = true;
+              return;
+            }
+          });
+
+          return found;
+        };
       }
     };
   })
@@ -910,6 +940,11 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
   .controller("domainsCtrl", function($scope, $translate, $timeout, $anchorScroll, $location, domainService) {
     $scope.pageSizes = [ 20, 40, 60, 80, 100 ];
     $scope.lastRetrieveDomains = moment();
+    $scope.selectedDomains = [];
+
+    $scope.countSelectedDomains = function() {
+      return $scope.selectedDomains.length;
+    };
 
     $scope.retrieveDomains = function(page, pageSize, filter, successFunction) {
       var uri = "";
@@ -1021,6 +1056,94 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
         $anchorScroll();
         $location.hash("");
       }, 100);
+    };
+
+    $scope.allDomainsSelected = function() {
+      if (!$scope.pagination) {
+        return false;
+      }
+
+      for (var j = 0; j < $scope.pagination.domains.length; j++) {
+        var found = false;
+        for (var i = 0; i < $scope.selectedDomains.length; i++) {
+          if ($scope.selectedDomains[i].fqdn == $scope.pagination.domains[j].fqdn) {
+            found = true;
+            break;
+          }
+        }
+
+        if (!found) {
+          return false;
+        }
+      }
+
+      return true;
+    };
+
+    $scope.selectAllDomains = function() {
+      if (!$scope.pagination) {
+        return;
+      }
+
+      // The same function can select or deselect all the domains from this page
+      var deselect = $scope.allDomainsSelected();
+
+      $scope.pagination.domains.forEach(function(domain) {
+        for (var i = 0; i < $scope.selectedDomains.length; i++) {
+          if ($scope.selectedDomains[i].fqdn == domain.fqdn) {
+            if (deselect) {
+              $scope.selectedDomains.splice(i, 1);
+              break;
+            }
+            
+            return;
+          }
+        }
+
+        if (!deselect) {
+          $scope.selectedDomains.push(domain);
+        }
+      });
+    };
+
+    $scope.confirmDomainsRemoval = function() {
+      $translate("Confirm domain(s) removal").then(function(translation) {
+        alertify.confirm(translation, function(e) {
+          if (e) {
+            $scope.removeDomains();
+          }
+        });
+      });
+    };
+
+    $scope.removeDomains = function() {
+      var removed = 0;
+
+      $scope.selectedDomains.forEach(function(selectedDomain) {
+        var uri = findLink(selectedDomain.links, "self");
+        domainService.removeDomain(uri, selectedDomain.etag).then(
+          function(response) {
+            if (response.status == 204) {
+              $translate("Domain removed").then(function(translation) {
+                alertify.success(translation);
+              });
+              $scope.success = true; // For unit tests only
+
+            } else if (response.status == 400) {
+              alertify.error(response.data.message);
+
+            } else {
+              $translate("Server error").then(function(translation) {
+                alertify.error(translation);
+              });
+            }
+
+            removed += 1;
+            if (removed == $scope.selectedDomains.length) {
+              $scope.selectedDomains = [];
+            }
+          });
+      });
     };
 
     $scope.retrieveDomainsWorker();

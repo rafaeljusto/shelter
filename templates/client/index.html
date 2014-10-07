@@ -73,7 +73,23 @@
       </div>
 
       <domain class="animate"
-        data-ng-repeat="domain in pagination.domains track by domain.fqdn" domain="domain"></domain>
+        data-ng-repeat="domain in pagination.domains track by domain.fqdn"
+        domain="domain" selected-domains="selectedDomains"></domain>
+
+      <div class="multi-actions">
+        <a href="" class="red-action"
+          data-ng-click="confirmDomainsRemoval()"
+          data-ng-if="countSelectedDomains() > 0">
+          <i class="fa fa-trash-o"></i>
+          {{ "Remove" | translate }} ({{countSelectedDomains()}})
+        </a>
+        <a href="" class="white-action"
+          data-ng-click="selectAllDomains()">
+          <i class="fa fa-list-ul"></i>
+          <span data-ng-if="!allDomainsSelected()">{{ "Select All" | translate }}</span>
+          <span data-ng-if="allDomainsSelected()">{{ "Deselect All" | translate }}</span>
+        </a>
+      </div>
 
       <div class="pagination" id="domainPagination">
         <label translate>Page</label>
