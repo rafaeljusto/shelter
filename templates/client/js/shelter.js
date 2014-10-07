@@ -533,6 +533,7 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
           });
 
           if (foundIndex >= 0) {
+            // Deselect the domain with the same function
             $scope.selectedDomains.splice(foundIndex, 1);
           } else {
             $scope.selectedDomains.push(domain);
