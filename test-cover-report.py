@@ -50,17 +50,42 @@ def runCoverReport():
   success = True
 
   for goPackage in goPackages:
+    packageName = goPackage.replace("/", "-")
+
     try:
       subprocess.check_call(["go", "install", goPackage])
-      subprocess.check_call(["go", "test", "-coverprofile=cover-profile.out", "-cover", goPackage])
-      subprocess.check_call(["go", "tool", "cover", "-html=cover-profile.out"])
+      output = subprocess.check_output(["go", "test", "-covermode=count", "-coverprofile=" + packageName + ".cover.out", "-cover", goPackage])
+      sys.stdout.write(output)
+
     except subprocess.CalledProcessError:
       success = False
+
+  # http://lk4d4.darth.io/posts/multicover/
+  mergeCommand = "|".join([
+    "echo 'mode: count' > cover-profile.out && cat *.cover.out",
+    "grep -v mode:",
+    "sort -r",
+    "awk '{if($1 != last) {print $0;last=$1}}' >> cover-profile.out"
+  ])
+
+  try:
+    subprocess.check_call(["sh", "-c", mergeCommand])
+    subprocess.check_call(["go", "tool", "cover", "-html=cover-profile.out"])
+
+  except subprocess.CalledProcessError:
+    success = False
 
   # Remove the temporary file created for the
   # covering reports
   try:
     os.remove("cover-profile.out")
+
+    for goPackage in goPackages:
+      filename = goPackage.replace("/", "-") + ".cover.out"
+
+      if os.path.isfile(filename):
+        os.remove(filename)
+
   except OSError:
     pass
 
