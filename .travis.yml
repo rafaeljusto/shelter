@@ -19,6 +19,7 @@ install:
   - go get github.com/miekg/dns
   - go get code.google.com/p/go.net/idna
   - go get github.com/rafaeljusto/handy
+  - go get github.com/nsf/termbox-go
 
 before_script:
   - npm install karma
