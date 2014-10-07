@@ -17,10 +17,11 @@ describe("Domain directive", function() {
     $httpBackend.whenGET(/languages\/.+\.json/).respond(200, "{}");
     $httpBackend.flush();
 
-    var elm = angular.element("<domain domain='domain'></domain>");
+    var elm = angular.element("<domain domain='domain' selected-domains='selectedDomains'></domain>");
 
     scope = $rootScope;
     scope.domain = {};
+    scope.selectedDomains = [];
 
     $compile(elm)(scope);
     scope.$digest();
@@ -256,5 +257,41 @@ describe("Domain directive", function() {
     expect(ctrl.freshDomain.dsset).not.toBeUndefined();
     expect(ctrl.freshDomain.dnskeys).not.toBeUndefined();
     expect(ctrl.freshDomain.owners).not.toBeUndefined();
+  }));
+
+  it("should select a domain", inject(function($injector) {
+    expect(ctrl.selectDomain).not.toBeUndefined();
+    expect(ctrl.selectedDomains.length).toBe(0);
+
+    ctrl.selectDomain({
+      fqdn: "example1.com.br."
+    });
+
+    expect(ctrl.selectedDomains.length).toBe(1);
+  }));
+
+  it("should deselect a domain", inject(function($injector) {
+    expect(ctrl.selectDomain).not.toBeUndefined();
+
+    ctrl.selectedDomains = [
+      {fqdn: "example1.com.br."}
+    ];
+
+    ctrl.selectDomain({
+      fqdn: "example1.com.br."
+    });
+
+    expect(ctrl.selectedDomains.length).toBe(0);
+  }));
+
+  it("should check if a domain is selected", inject(function($injector) {
+    expect(ctrl.isDomainSelected).not.toBeUndefined();
+
+    ctrl.selectedDomains = [
+      {fqdn: "example1.com.br."}
+    ];
+
+    expect(ctrl.isDomainSelected({fqdn: "example1.com.br."})).toBe(true);
+    expect(ctrl.isDomainSelected({fqdn: "example2.com.br."})).toBe(false);
   }));
 });

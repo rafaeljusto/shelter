@@ -54,34 +54,38 @@ def runCoverReport():
 
     try:
       subprocess.check_call(["go", "install", goPackage])
-      subprocess.check_call(["go", "test", "-coverprofile=" + packageName + ".cover.out", "-cover", goPackage])
+      output = subprocess.check_output(["go", "test", "-covermode=count", "-coverprofile=" + packageName + ".cover.out", "-cover", goPackage])
+      sys.stdout.write(output)
+
     except subprocess.CalledProcessError:
       success = False
 
-  if success:
-    # TODO: We should test this in Windows
-    # http://lk4d4.darth.io/posts/multicover/
-    mergeCommand = "|".join([
-      "echo 'mode: set' > cover-profile.out && cat *.cover.out",
-      "grep -v mode:",
-      "sort -r",
-      "awk '{if($1 != last) {print $0;last=$1}}' >> cover-profile.out"
-    ])
+  # http://lk4d4.darth.io/posts/multicover/
+  mergeCommand = "|".join([
+    "echo 'mode: count' > cover-profile.out && cat *.cover.out",
+    "grep -v mode:",
+    "sort -r",
+    "awk '{if($1 != last) {print $0;last=$1}}' >> cover-profile.out"
+  ])
 
-    try:
-      subprocess.check_call(["sh", "-c", mergeCommand])
-      subprocess.check_call(["go", "tool", "cover", "-html=cover-profile.out"])
-    except subprocess.CalledProcessError:
-      success = False
+  try:
+    subprocess.check_call(["sh", "-c", mergeCommand])
+    subprocess.check_call(["go", "tool", "cover", "-html=cover-profile.out"])
 
-  # Remove the temporary files created for the
+  except subprocess.CalledProcessError:
+    success = False
+
+  # Remove the temporary file created for the
   # covering reports
   try:
     os.remove("cover-profile.out")
 
     for goPackage in goPackages:
-      packageName = goPackage.replace("/", "-")
-      os.remove(packageName + ".cover.out")
+      filename = goPackage.replace("/", "-") + ".cover.out"
+
+      if os.path.isfile(filename):
+        os.remove(filename)
+
   except OSError:
     pass
 

@@ -6,9 +6,11 @@
 package protocol
 
 import (
+	"code.google.com/p/go.net/idna"
 	"errors"
 	"fmt"
 	"github.com/rafaeljusto/shelter/model"
+	"strings"
 )
 
 // List of possible errors that can occur when calling methods from this object. Other
@@ -135,8 +137,19 @@ func ToDomainResponse(domain model.Domain, persisted bool) DomainResponse {
 		})
 	}
 
+	// We will try to show the FQDN always in unicode format. To solve a little bug in IDN library, we
+	// will always convert the FQDN to lower case
+	fqdn := strings.ToLower(domain.FQDN)
+
+	var err error
+	fqdn, err = idna.ToUnicode(fqdn)
+	if err != nil {
+		// On error, keep the ace format
+		fqdn = strings.ToLower(domain.FQDN)
+	}
+
 	return DomainResponse{
-		FQDN:        domain.FQDN,
+		FQDN:        fqdn,
 		Nameservers: toNameserversResponse(domain.Nameservers),
 		DSSet:       toDSSetResponse(domain.DSSet),
 		Owners:      toOwnersResponse(domain.Owners),

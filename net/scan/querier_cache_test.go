@@ -74,7 +74,7 @@ func TestQuerierCacheGet(t *testing.T) {
 	}
 
 	// Localhost can have IPv4 and IPv6 addresses
-	if len(addresses) == 0 || len(addresses) > 2 {
+	if len(addresses) == 0 {
 		t.Fatal("Something wrong with the number of IP address obtained from localhost")
 	}
 

@@ -29,7 +29,7 @@ softwares
 owner
 * Built-in web client to manage domains easily without the necessity to develop a REST
 client
-* IDNA support for domains' names
+* IDN support for domains' names
 * Optimized scan strategy to verify all registered domains configurations
 * On-the-fly domain verification interface
 * Allow a cluster of MongoDB servers for data persistency
@@ -101,9 +101,9 @@ To deploy the project you will need one or more programs bellow, depending on th
 that you choose, and if you want a CI enviroment.
 
 * FPM - https://github.com/jordansissel/fpm (Debian packages)
-* Termbox - https://github.com/nsf/termbox-go (Debian packages)
+* ~~Termbox - https://github.com/nsf/termbox-go (Debian packages)~~
 * Docker - http://docker.io/
-* OpenSSL - https://www.openssl.org/‎ (used in Docker build)
+* ~~OpenSSL - https://www.openssl.org/ (used in Docker build)~~
 * Inno Setup - http://www.jrsoftware.org/isinfo.php (Windows)
 
 All necessary scripts to generate the packages are under the deploy folder in the project

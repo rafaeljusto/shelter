@@ -187,4 +187,70 @@ describe("Domain form directive", function() {
     expect(ctrl.success).not.toBeUndefined();
     expect(ctrl.success).toBe(true);
   }));
+
+  it("should store a CSV content correctly", inject(function($injector) {
+    expect(ctrl.storeCSVFile).not.toBeUndefined();
+    expect(ctrl.csv).not.toBeUndefined();
+
+    ctrl.storeCSVFile("example1.com,ns1.example1.com$127.0.0.1$::1,ns2.example1.com$127.0.0.2$::2,,,,,123$5$1$EAA0978F38879DB70A53F9FF1ACF21D046A98B5C,,test@example1.com$en-us,,")
+    expect(ctrl.csv.content).toBe("example1.com,ns1.example1.com$127.0.0.1$::1,ns2.example1.com$127.0.0.2$::2,,,,,123$5$1$EAA0978F38879DB70A53F9FF1ACF21D046A98B5C,,test@example1.com$en-us,,");
+  }));
+
+  it("should import a CSV correctly", inject(function($injector) {
+    expect(ctrl.importCSV).not.toBeUndefined();
+    expect(ctrl.csv).not.toBeUndefined();
+
+    $httpBackend = $injector.get("$httpBackend");
+    $httpBackend.whenPUT("/domain/example1.com").respond(201);
+    $httpBackend.whenPUT("/domain/example2.com").respond(201);
+
+    ctrl.csv.content = "example1.com,ns1.example1.com$127.0.0.1$::1,ns2.example1.com$127.0.0.2$::2,,,,,123$5$1$EAA0978F38879DB70A53F9FF1ACF21D046A98B5C,,test@example1.com$en-us,,\nexample2.com,ns1.example1.com$$,ns2.example1.com$$,,,,,,,,,";
+    ctrl.importCSV();
+
+    $httpBackend.flush();
+
+    expect(ctrl.csv.domainsToUpload).toBe(2);
+    expect(ctrl.csv.domainsUploaded).toBe(2);
+    expect(ctrl.csv.success).toBe(2);
+    expect(ctrl.csv.errors.length).toBe(0);
+  }));
+
+  it("should detect CSV format errors", inject(function($injector) {
+    expect(ctrl.importCSV).not.toBeUndefined();
+    expect(ctrl.csv).not.toBeUndefined();
+
+    $httpBackend = $injector.get("$httpBackend");
+    $httpBackend.whenPUT("/domain/example1.com").respond(201);
+
+    ctrl.csv.content = "example1.com,ns1.example1.com$127.0.0.1$::1,ns2.example1.com$127.0.0.2$::2,,,,,123$5$1$EAA0978F38879DB70A53F9FF1ACF21D046A98B5C,,test@example1.com$en-us,,\nexample2.com,ns1.example1.com$$,ns2.example1.com$$,,,,,,,,";
+    ctrl.importCSV();
+
+    $httpBackend.flush();
+
+    expect(ctrl.csv.domainsToUpload).toBe(2);
+    expect(ctrl.csv.domainsUploaded).toBe(2);
+    expect(ctrl.csv.success).toBe(1);
+    expect(ctrl.csv.errors.length).toBe(1);
+    expect(ctrl.csv.errors[0].lineNumber).toBe(2);
+  }));
+
+  it("should detect CSV network errors", inject(function($injector) {
+    expect(ctrl.importCSV).not.toBeUndefined();
+    expect(ctrl.csv).not.toBeUndefined();
+
+    $httpBackend = $injector.get("$httpBackend");
+    $httpBackend.whenPUT("/domain/example1.com").respond(500);
+    $httpBackend.whenPUT("/domain/example2.com").respond(201);
+
+    ctrl.csv.content = "example1.com,ns1.example1.com$127.0.0.1$::1,ns2.example1.com$127.0.0.2$::2,,,,,123$5$1$EAA0978F38879DB70A53F9FF1ACF21D046A98B5C,,test@example1.com$en-us,,\nexample2.com,ns1.example1.com$$,ns2.example1.com$$,,,,,,,,,";
+    ctrl.importCSV();
+
+    $httpBackend.flush();
+
+    expect(ctrl.csv.domainsToUpload).toBe(2);
+    expect(ctrl.csv.domainsUploaded).toBe(2);
+    expect(ctrl.csv.success).toBe(1);
+    expect(ctrl.csv.errors.length).toBe(1);
+    expect(ctrl.csv.errors[0].lineNumber).toBe(1);
+  }));
 });

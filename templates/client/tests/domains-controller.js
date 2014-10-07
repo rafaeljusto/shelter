@@ -113,4 +113,104 @@ describe("Domains controller", function() {
     expect(scope.pagination.domains.length).toBe(1);
     expect(scope.pagination.domains).toEqual(result.domains);
   }));
+
+  it("should check if all domains were selected", inject(function($injector) {
+    scope.pagination = {
+      domains: [
+        { fqdn: "example1.com.br." },
+        { fqdn: "example2.com.br." },
+        { fqdn: "example3.com.br." }
+      ]
+    };
+    scope.selectedDomains = [
+      { fqdn: "example1.com.br." },
+      { fqdn: "example2.com.br." },
+      { fqdn: "example3.com.br." }
+    ];
+
+    expect(scope.allDomainsSelected()).toBe(true);
+
+    scope.selectedDomains = [
+      { fqdn: "example1.com.br." },
+      { fqdn: "example2.com.br." },
+    ];
+
+    expect(scope.allDomainsSelected()).toBe(false);
+  }));
+
+  it("should select all domains of the current page", inject(function($injector) {
+    scope.pagination = {
+      domains: [
+        { fqdn: "example1.com.br." },
+        { fqdn: "example2.com.br." },
+        { fqdn: "example3.com.br." }
+      ]
+    };
+    scope.selectedDomains = [
+      { fqdn: "example1.com.br." },
+    ];
+
+    scope.selectAllDomains();
+    expect(scope.selectedDomains.length).toBe(3);
+    expect(scope.selectedDomains[0].fqdn).toBe("example1.com.br.");
+    expect(scope.selectedDomains[1].fqdn).toBe("example2.com.br.");
+    expect(scope.selectedDomains[2].fqdn).toBe("example3.com.br.");
+  }));
+
+  it("should deselect all domains of the current page", inject(function($injector) {
+    scope.pagination = {
+      domains: [
+        { fqdn: "example1.com.br." },
+        { fqdn: "example2.com.br." },
+        { fqdn: "example3.com.br." }
+      ]
+    };
+    scope.selectedDomains = [
+      { fqdn: "example1.com.br." },
+      { fqdn: "example2.com.br." },
+      { fqdn: "example3.com.br." },
+      { fqdn: "example4.com.br." }
+    ];
+
+    scope.selectAllDomains();
+    expect(scope.selectedDomains.length).toBe(1);
+    expect(scope.selectedDomains[0].fqdn).toBe("example4.com.br.");
+  }));
+
+  it("should remove selected domains", inject(function($injector) {
+    var result = {
+      numberOfItems: 2,
+      numberOfPages: 1,
+      pageSize: 20,
+      domains: [
+        { fqdn: "example1.com.br." },
+        { fqdn: "example2.com.br." }
+      ]
+    };
+
+    scope.selectedDomains = [
+      {
+        fqdn: "example1.com.br.",
+        links: [
+          { types: [ "self" ], href: "/domain/example1.com.br." }
+        ]
+      },
+      {
+        fqdn: "example2.com.br.",
+        links: [
+          { types: [ "self" ], href: "/domain/example1.com.br." }
+        ]
+      }
+    ];
+
+    httpBackend = $injector.get("$httpBackend");
+    $httpBackend.whenGET("/domains/").respond(200, result);
+    $httpBackend.whenDELETE("/domain/example1.com.br.").respond(204);
+    $httpBackend.whenDELETE("/domain/example2.com.br.").respond(204);
+
+    scope.removeDomains();
+    $httpBackend.flush();
+
+    expect(scope.selectedDomains.length).toBe(0);
+  }));
 });

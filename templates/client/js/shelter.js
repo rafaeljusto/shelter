@@ -317,7 +317,8 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
     return {
       restrict: 'E',
       scope: {
-        domain: '='
+        domain: '=',
+        selectedDomains: '='
       },
       templateUrl: "/directives/domain.html",
       controller: function($scope, $translate, domainService) {
@@ -520,7 +521,36 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
 
               $scope.removeWorking = false;
             });
-        }
+        };
+
+        $scope.selectDomain = function(domain) {
+          var foundIndex = -1;
+          $scope.selectedDomains.forEach(function(selectedDomain, index) {
+            if (selectedDomain.fqdn == domain.fqdn) {
+              foundIndex = index;
+              return;
+            }
+          });
+
+          if (foundIndex >= 0) {
+            // Deselect the domain with the same function
+            $scope.selectedDomains.splice(foundIndex, 1);
+          } else {
+            $scope.selectedDomains.push(domain);
+          }
+        };
+
+        $scope.isDomainSelected = function(domain) {
+          var found = false;
+          $scope.selectedDomains.forEach(function(selectedDomain, index) {
+            if (selectedDomain.fqdn == domain.fqdn) {
+              found = true;
+              return;
+            }
+          });
+
+          return found;
+        };
       }
     };
   })
@@ -549,10 +579,28 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
         $scope.dsDigestTypes = dsDigestTypes;
         $scope.ownerLanguages = ownerLanguages;
 
+        $scope.csv = {
+          working: false,
+          content: "",
+          domainsToUpload: 0,
+          domainsUploaded: 0,
+          success: 0,
+          errors: []
+        };
+
         // Easy way to allow extenal scopes to call a function in the directive
         $scope.formCtrl = $scope.formCtrl || {};
         $scope.formCtrl.clear = function() {
           $scope.domain = angular.copy(emptyDomain);
+          $scope.csv = {
+            working: false,
+            content: "",
+            domainsToUpload: 0,
+            domainsUploaded: 0,
+            success: 0,
+            errors: []
+          };
+          document.getElementById("csv").value = "";
         };
 
         $scope.needsGlue = function(fqdn, host) {
@@ -699,6 +747,188 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
               $scope.saveWorking = false;
             });
         };
+
+        $scope.storeCSVFile = function(content) {
+          $scope.csv.content = content;
+        };
+
+        $scope.importCSV = function() {
+          $scope.csv.working = true;
+          $scope.csv.domainsUploaded = 0;
+          $scope.csv.success = 0;
+          $scope.csv.errors = [];
+
+          var lines = $scope.csv.content.split("\n");
+          $scope.csv.domainsToUpload = lines.length;
+
+          lines.forEach(function(line, lineNumber) {
+            // Start line number as one instead of zero
+            lineNumber += 1;
+
+            if (line.length == 0) {
+              $scope.csv.domainsUploaded += 1;
+              if ($scope.csv.domainsUploaded == $scope.csv.domainsToUpload) {
+                $scope.csv.working = false;
+              }
+              return;
+            }
+
+            // Parse first level using comma:
+            // fqdn,ns1,ns2,ns3,ns4,ns5,ns6,ds1,ds2,owner1,owner2,owner3
+            var fields = line.split(",");
+
+            if (fields.length != 12) {
+              $translate("CSV fields count error").then(function(translation) {
+                $scope.csv.errors.push({
+                  message: translation,
+                  lineNumber: lineNumber
+                });
+              });
+
+              $scope.csv.domainsUploaded += 1;
+              if ($scope.csv.domainsUploaded == $scope.csv.domainsToUpload) {
+                $scope.csv.working = false;
+              }
+              return;
+            }
+
+            var domain = {};
+            domain.fqdn = fields[0];
+            domain.nameservers = [];
+            domain.dsset = [];
+            domain.owners = [];
+
+            // Loop between the nameservers fields
+            for (var i = 1; i <= 6; i++) {
+              if (fields[i].length == 0) {
+                continue;
+              }
+
+              // Parse the nameserver:
+              // host$ipv4$ipv6
+              var nsParts = fields[i].split("$");
+
+              if (nsParts.length > 3) {
+                $translate("CSV NS error").then(function(translation) {
+                  $scope.csv.errors.push({
+                    message: translation,
+                    lineNumber: lineNumber
+                  });
+                });
+                continue;
+              }
+
+              var nameserver = {
+                host: nsParts[0]
+              };
+
+              if (nsParts.length > 1) {
+                nameserver.ipv4 = nsParts[1];
+              }
+
+              if (nsParts.length > 2) {
+                nameserver.ipv4 = nsParts[2];
+              }
+
+              domain.nameservers.push(nameserver);
+            }
+
+            // Loop between the DS set fields
+            for (var i = 7; i <= 8; i++) {
+              if (fields[i].length == 0) {
+                continue;
+              }
+
+              // Parse the DS:
+              // keytag$algorithm$digestType$digest
+              var dsParts = fields[i].split("$");
+
+              if (dsParts.length != 4) {
+                $translate("CSV DS error").then(function(translation) {
+                  $scope.csv.errors.push({
+                    message: translation,
+                    lineNumber: lineNumber
+                  });
+                });
+                continue;
+              }
+
+              var ds = {
+                keytag: parseInt(dsParts[0], 10),
+                algorithm: parseInt(dsParts[1], 10),
+                digestType: parseInt(dsParts[2], 10),
+                digest: dsParts[3]
+              };
+
+              if (ds.keytag == NaN) {
+                ds.keytag = 0;
+              }
+
+              if (ds.algorithm == NaN) {
+                ds.algorithm = 0;
+              }
+
+              if (ds.digestType == NaN) {
+                ds.digestType = 0;
+              }
+
+              domain.dsset.push(ds);
+            }
+
+            // Loop between the owner fields
+            for (var i = 9; i <= 11; i++) {
+              if (fields[i].length == 0) {
+                continue;
+              }
+
+              // Parse the owner:
+              // email$language
+              var ownerParts = fields[i].split("$");
+
+              if (ownerParts.length != 2) {
+                $translate("CSV owener error").then(function(translation) {
+                  $scope.csv.errors.push({
+                    message: translation,
+                    lineNumber: lineNumber
+                  });
+                });
+                continue;
+              }
+
+              domain.owners.push({
+                email: ownerParts[0],
+                language: ownerParts[1]
+              });
+            }
+
+            domainService.saveDomain(domain, domain.etag).then(
+              function(response) {
+                if (response.status == 201 || response.status == 204) {
+                  $scope.csv.success += 1;
+                  $scope.success = true; // For unit tests only
+
+                } else if (response.status == 400) {
+                  $scope.csv.errors.push({
+                    message: response.data.message,
+                    lineNumber: lineNumber
+                  });
+
+                } else {
+                  $translate("Server error").then(function(translation) {
+                    $scope.csv.errors.push({
+                      message: translation,
+                      lineNumber: lineNumber
+                    });
+                  });
+                }
+
+                $scope.csv.domainsUploaded += 1;
+                if ($scope.csv.domainsUploaded == $scope.csv.domainsToUpload) {
+                  $scope.csv.working = false;
+                }
+              });
+          });
+        };
       }
     };
   })
@@ -710,6 +940,11 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
   .controller("domainsCtrl", function($scope, $translate, $timeout, $anchorScroll, $location, domainService) {
     $scope.pageSizes = [ 20, 40, 60, 80, 100 ];
     $scope.lastRetrieveDomains = moment();
+    $scope.selectedDomains = [];
+
+    $scope.countSelectedDomains = function() {
+      return $scope.selectedDomains.length;
+    };
 
     $scope.retrieveDomains = function(page, pageSize, filter, successFunction) {
       var uri = "";
@@ -823,7 +1058,119 @@ angular.module("shelter", ["ngAnimate", "ngCookies", "pascalprecht.translate"])
       }, 100);
     };
 
+    $scope.allDomainsSelected = function() {
+      if (!$scope.pagination) {
+        return false;
+      }
+
+      for (var j = 0; j < $scope.pagination.domains.length; j++) {
+        var found = false;
+        for (var i = 0; i < $scope.selectedDomains.length; i++) {
+          if ($scope.selectedDomains[i].fqdn == $scope.pagination.domains[j].fqdn) {
+            found = true;
+            break;
+          }
+        }
+
+        if (!found) {
+          return false;
+        }
+      }
+
+      return true;
+    };
+
+    $scope.selectAllDomains = function() {
+      if (!$scope.pagination) {
+        return;
+      }
+
+      // The same function can select or deselect all the domains from this page
+      var deselect = $scope.allDomainsSelected();
+
+      $scope.pagination.domains.forEach(function(domain) {
+        for (var i = 0; i < $scope.selectedDomains.length; i++) {
+          if ($scope.selectedDomains[i].fqdn == domain.fqdn) {
+            if (deselect) {
+              $scope.selectedDomains.splice(i, 1);
+              break;
+            }
+            
+            return;
+          }
+        }
+
+        if (!deselect) {
+          $scope.selectedDomains.push(domain);
+        }
+      });
+    };
+
+    $scope.confirmDomainsRemoval = function() {
+      $translate("Confirm domain(s) removal").then(function(translation) {
+        alertify.confirm(translation, function(e) {
+          if (e) {
+            $scope.removeDomains();
+          }
+        });
+      });
+    };
+
+    $scope.removeDomains = function() {
+      var removed = 0;
+
+      $scope.selectedDomains.forEach(function(selectedDomain) {
+        var uri = findLink(selectedDomain.links, "self");
+        domainService.removeDomain(uri, selectedDomain.etag).then(
+          function(response) {
+            if (response.status == 204) {
+              $translate("Domain removed").then(function(translation) {
+                alertify.success(translation);
+              });
+              $scope.success = true; // For unit tests only
+
+            } else if (response.status == 400) {
+              alertify.error(response.data.message);
+
+            } else {
+              $translate("Server error").then(function(translation) {
+                alertify.error(translation);
+              });
+            }
+
+            removed += 1;
+            if (removed == $scope.selectedDomains.length) {
+              $scope.selectedDomains = [];
+            }
+          });
+      });
+    };
+
     $scope.retrieveDomainsWorker();
+  })
+
+  // Directive retrieved from:
+  // http://veamospues.wordpress.com/2014/01/27/reading-files-with-angularjs/
+  .directive('onReadFile', function ($parse) {
+    return {
+      restrict: 'A',
+      scope: false,
+      link: function(scope, element, attrs) {
+        var fn = $parse(attrs.onReadFile);
+              
+        element.on('change', function(onChangeEvent) {
+          var reader = new FileReader();
+                  
+          reader.onload = function(onLoadEvent) {
+            scope.$apply(function() {
+              fn(scope, {$fileContent:onLoadEvent.target.result});
+            });
+          };
+
+          reader.readAsText((onChangeEvent.srcElement || onChangeEvent.target).files[0]);
+        });
+      }
+    };
   })
 
 

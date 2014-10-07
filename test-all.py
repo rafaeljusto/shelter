@@ -44,44 +44,29 @@ def buildMainBinary():
 
   try:
     os.remove("shelter")
+    os.remove("shelter.exe")
 
   except OSError:
     pass
 
-  # TODO: In windows the main binary is probably
-  #       generated as shelter.exe, we should also
-  #        remove it
-
 def runUnitTests(benchmark):
   print("\n[[ UNIT TESTS ]]\n")
 
-  goPackages = []
-  for root, dirnames, filenames in os.walk("."):
-    for filename in fnmatch.filter(filenames, "*_test.go"):
-      # TODO: We should test this in Windows
-      goPackage = "github.com/rafaeljusto/shelter" + root[1:]
-      goPackages.append(goPackage)
-
-  goPackages = set(goPackages)
-  goPackages = list(goPackages)
-  goPackages.sort()
-
   success = True
 
-  for goPackage in goPackages:
-    try:
-      subprocess.check_call(["go", "install", goPackage])
+  try:
+    subprocess.check_call(["go", "install", "./..."])
 
-      # Uncomment this after handy framework fix for error tag
-      #subprocess.check_call(["go", "vet", goPackage])
+    # Will turn on only when all problems are solved
+    #subprocess.check_call(["go", "vet", "./..."])
 
-      if benchmark:
-        subprocess.check_call(["go", "test", "-cover", "-bench", ".", "-benchmem", goPackage])
-      else:
-        subprocess.check_call(["go", "test", "-cover", goPackage])
+    if benchmark:
+      subprocess.check_call(["go", "test", "-cover", "-bench", ".", "-benchmem", "./..."])
+    else:
+      subprocess.check_call(["go", "test", "-cover", "./..."])
 
-    except subprocess.CalledProcessError:
-      success = False
+  except subprocess.CalledProcessError:
+    success = False
 
   if not success:
     print("Errors during the unit test execution")

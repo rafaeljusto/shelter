@@ -10,7 +10,6 @@ import (
 	"github.com/rafaeljusto/shelter/log"
 	"net"
 	"net/http"
-	"strings"
 )
 
 var (
@@ -29,21 +28,20 @@ func (i *Permission) Before(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	remoteAddrParts := strings.Split(r.RemoteAddr, ":")
-	if len(remoteAddrParts) != 2 {
-		// Remote address without port
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Println("Error checking CIDR whitelist. Details: Remote IP address could not be parsed")
+		log.Printf("Error checking CIDR whitelist. Details: Remote IP address '%s' could not be parsed. %s", r.RemoteAddr, err)
 		return
 	}
 
-	ip := net.ParseIP(remoteAddrParts[0])
+	ip := net.ParseIP(host)
 	if ip == nil {
 		// Something wrong, because the REST server could not identify the remote address
 		// properly. This is really awkward, because this is a responsability of the server,
 		// maybe this error will never be throw
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Println("Error checking CIDR whitelist. Details: Remote IP address could not be parsed")
+		log.Printf("Error checking CIDR whitelist. Details: Remote IP address '%s' could not be parsed", r.RemoteAddr)
 		return
 	}
 

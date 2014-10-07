@@ -6,6 +6,42 @@
 
 <form data-ng-submit="saveDomain(domain)">
   <fieldset>
+    <legend>
+      {{ "Upload CSV" | translate }} 
+      <a href="https://github.com/rafaeljusto/shelter/wiki/CSV-format">
+        <i class="fa fa-question-circle"></i>
+      </a>
+    </legend>
+    <input type="file" data-on-read-file="storeCSVFile($fileContent)" id="csv" />
+    <button type="button" class="normal-button" data-ng-init="csv.working = false"
+      data-ng-click="importCSV()"
+      data-ng-disabled="csv.working">
+      <div data-ng-if="csv.working">
+        <i class="fa fa-spinner fa-2x fa-spin"></i>
+      </div>
+      <div data-ng-if="!csv.working">
+        <i class="fa fa-sign-in"></i>
+        {{ "Import" | translate }}
+      </div>
+    </button>
+
+    <div data-ng-show="csv.domainsToUpload > 0">
+      <progress value="{{csv.domainsUploaded}}" max="{{csv.domainsToUpload}}"></progress>
+      <div class="csv-results">
+        <i class="fa fa-check"></i>{{ csv.success }}
+        <i class="fa fa-times"></i>{{ csv.errors.length }}
+      </div>
+      <div class="scroll" data-ng-show="csv.errors.length > 0">
+        <ul>
+          <li data-ng-repeat="error in csv.errors">
+            {{ "Line" | translate }} {{error.lineNumber}}: {{error.message}}
+          </li>
+        </ul>
+      </div>
+    </div>
+  </fieldset>
+  <span class="choose-title" translate>OR</span>
+  <fieldset>
     <legend translate>Basic information</legend>
     <label for="fqdn" autofocus translate>FQDN</label>
     <input type="text" data-ng-model="domain.fqdn"

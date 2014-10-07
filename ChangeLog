@@ -10,7 +10,9 @@ version 0.3
   * Update domain in database when verifying it in service /domain/{fqdn}/verification
   * New parameter for /domains service to filter domains results
   * Encrypted passwords and secrets in configuration file
-  * Development test cover report now show all files in one tab
+  * Register domains in web client via CSV file upload (idea from Jan Alvarado, nic.hn)
+  * FQDN is now returned in unicode format for IDN domains
+  * Web client now allows removing multiple domains at once
   * New error logging system that gives more information of the problem
 
   Fix:
@@ -34,6 +36,7 @@ version 0.3
   * Scheduler now uses timezone in number format to avoid abbreviation problems
   * Add buttons after importing a domain in the web client are now working
   * Disabling easyconf until it works properly
+  * Parsing IPv6 remote address correctly
 
 version 0.2
 -----------
