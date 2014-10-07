@@ -231,7 +231,9 @@ func (dao DomainDAO) FindAll(pagination *DomainDAOPagination, expand bool, filte
 		query = dao.Database.C(domainDAOCollection).Find(bson.M{})
 
 	} else {
-		query = dao.Database.C(domainDAOCollection).Find(bson.M{"fqdn": bson.RegEx{filter, "i"}})
+		query = dao.Database.C(domainDAOCollection).Find(bson.M{
+			"fqdn": bson.RegEx{Pattern: filter, Options: "i"},
+		})
 	}
 
 	// We store the number of items before applying pagination, if we do this after we get only the
