@@ -14,11 +14,18 @@ import (
 
 func TestACL(t *testing.T) {
 	data := []struct {
-		ACL        []string
-		RemoteAddr string
-		Code       int
+		ACL           []string
+		XForwardedFor string
+		XRealIP       string
+		RemoteAddr    string
+		Code          int
 	}{
 		{ACL: nil, RemoteAddr: "", Code: 200},
+		{ACL: []string{"127.0.0.0/8"}, XForwardedFor: "127.0.0.1", RemoteAddr: "192.168.0.1:1234", Code: 200},
+		{ACL: []string{"127.0.0.0/8"}, XForwardedFor: "127.0.0.1,192.168.0.1", RemoteAddr: "192.168.0.1:1234", Code: 200},
+		{ACL: []string{"127.0.0.0/8"}, XForwardedFor: "192.168.0.1,127.0.0.1", RemoteAddr: "127.0.0.1:1234", Code: 403},
+		{ACL: []string{"127.0.0.0/8"}, XRealIP: "127.0.0.1", RemoteAddr: "192.168.0.1:1234", Code: 200},
+		{ACL: []string{"127.0.0.0/8"}, XRealIP: "192.168.0.1", RemoteAddr: "127.0.0.1:1234", Code: 403},
 		{ACL: []string{"127.0.0.0/8"}, RemoteAddr: "127.0.0.1:1234", Code: 200},
 		{ACL: []string{"127.0.0.0/8"}, RemoteAddr: "127.0.0.1", Code: 500},
 		{ACL: []string{"127.0.0.0/8"}, RemoteAddr: "XXX.X.X.X:1234", Code: 500},
@@ -43,6 +50,8 @@ func TestACL(t *testing.T) {
 		}
 
 		r.RemoteAddr = item.RemoteAddr
+		r.Header.Set("X-Forwarded-For", item.XForwardedFor)
+		r.Header.Set("X-Real-IP", item.XRealIP)
 		w := httptest.NewRecorder()
 
 		permission.Before(w, r)

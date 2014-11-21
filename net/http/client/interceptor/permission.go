@@ -10,6 +10,7 @@ import (
 	"github.com/rafaeljusto/shelter/log"
 	"net"
 	"net/http"
+	"strings"
 )
 
 var (
@@ -28,20 +29,41 @@ func (i *Permission) Before(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	host, _, err := net.SplitHostPort(r.RemoteAddr)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Printf("Error checking CIDR whitelist. Details: Remote IP address '%s' could not be parsed. %s", r.RemoteAddr, err)
-		return
+	var clientAddress string
+
+	xff := r.Header.Get("X-Forwarded-For")
+	xff = strings.TrimSpace(xff)
+
+	if len(xff) > 0 {
+		xffParts := strings.Split(xff, ",")
+		if len(xffParts) == 1 {
+			clientAddress = strings.TrimSpace(xffParts[0])
+		} else if len(xffParts) > 1 {
+			clientAddress = strings.TrimSpace(xffParts[len(xffParts)-2])
+		}
+
+	} else {
+		clientAddress = strings.TrimSpace(r.Header.Get("X-Real-IP"))
 	}
 
-	ip := net.ParseIP(host)
+	if len(clientAddress) == 0 {
+		var err error
+		clientAddress, _, err = net.SplitHostPort(r.RemoteAddr)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			log.Printf("Error checking CIDR whitelist. Details: Remote IP address '%s' could not be parsed. %s", r.RemoteAddr, err)
+			return
+		}
+
+	}
+
+	ip := net.ParseIP(clientAddress)
 	if ip == nil {
-		// Something wrong, because the REST server could not identify the remote address
-		// properly. This is really awkward, because this is a responsability of the server,
-		// maybe this error will never be throw
+		// Something wrong, because the REST server could not identify the remote address properly. This
+		// is really awkward, because this is a responsability of the server, maybe this error will
+		// never be throw
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Printf("Error checking CIDR whitelist. Details: Remote IP address '%s' could not be parsed", r.RemoteAddr)
+		log.Printf("Error checking CIDR whitelist. Details: IP address '%s' could not be parsed.", clientAddress)
 		return
 	}
 
