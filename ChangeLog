@@ -13,7 +13,7 @@ version 0.3
   * Register domains in web client via CSV file upload (idea from Jan Alvarado, nic.hn)
   * FQDN is now returned in unicode format for IDN domains
   * Web client now allows removing multiple domains at once
-  * Detects proxy in ACL
+  * Detects proxy in ACL check
 
   Fixes:
   * Handy framework now use the same log of the shelter system
