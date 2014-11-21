@@ -253,7 +253,7 @@ func QueryDomain(fqdn string) (model.Domain, error) {
 			continue
 		}
 
-		dsRecord := dnskeyRecord.ToDS(int(DefaultDigestType))
+		dsRecord := dnskeyRecord.ToDS(uint8(DefaultDigestType))
 
 		domain.DSSet = append(domain.DSSet, model.DS{
 			Keytag:     dsRecord.KeyTag,

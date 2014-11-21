@@ -114,8 +114,6 @@ func ConvertKeyAlgorithm(algorithm uint8) model.DSAlgorithm {
 		return model.DSAlgorithmDH
 	case dns.DSA:
 		return model.DSAlgorithmDSASHA1
-	case dns.ECC:
-		return model.DSAlgorithmECC
 	case dns.RSASHA1:
 		return model.DSAlgorithmRSASHA1
 	case dns.DSANSEC3SHA1:

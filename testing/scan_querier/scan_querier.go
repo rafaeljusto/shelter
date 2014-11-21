@@ -180,7 +180,7 @@ func domainWithNoDNSSECErrors(config ScanQuerierTestConfigFile) {
 	if err != nil {
 		utils.Fatalln("Error creating DNSSEC keys and signatures", err)
 	}
-	ds := dnskey.ToDS(int(model.DSDigestTypeSHA1))
+	ds := dnskey.ToDS(uint8(model.DSDigestTypeSHA1))
 
 	domainsToQueryChannel := make(chan *model.Domain, config.Scan.DomainsBufferSize)
 	domainsToQueryChannel <- &model.Domain{
@@ -317,7 +317,7 @@ func scanQuerierReport(config ScanQuerierTestConfigFile) {
 	if err != nil {
 		utils.Fatalln("Error creating DNSSEC keys and signatures", err)
 	}
-	ds := dnskey.ToDS(int(model.DSDigestTypeSHA1))
+	ds := dnskey.ToDS(uint8(model.DSDigestTypeSHA1))
 
 	dns.HandleFunc(fqdn, func(w dns.ResponseWriter, dnsRequestMessage *dns.Msg) {
 		defer w.Close()

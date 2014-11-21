@@ -75,7 +75,7 @@ func TestRunPolicies(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	ds := dnskey.ToDS(int(model.DSDigestTypeSHA1))
+	ds := dnskey.ToDS(uint8(model.DSDigestTypeSHA1))
 
 	domain := &model.Domain{
 		DSSet: []model.DS{
@@ -190,7 +190,7 @@ func TestDNSSECPolicy(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	ds := dnskey.ToDS(int(model.DSDigestTypeSHA1))
+	ds := dnskey.ToDS(uint8(model.DSDigestTypeSHA1))
 
 	domain := &model.Domain{
 		DSSet: []model.DS{
@@ -223,7 +223,7 @@ func TestDNSSECPolicyMissingKey(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	ds := dnskey.ToDS(int(model.DSDigestTypeSHA1))
+	ds := dnskey.ToDS(uint8(model.DSDigestTypeSHA1))
 
 	otherDNSKEY, otherRRSIG, err := generateKeyAndSignZone("test.br.")
 	if err != nil {
@@ -262,7 +262,7 @@ func TestDNSSECPolicyNoSEPKey(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	ds := dnskey.ToDS(int(model.DSDigestTypeSHA1))
+	ds := dnskey.ToDS(uint8(model.DSDigestTypeSHA1))
 
 	domain := &model.Domain{
 		DSSet: []model.DS{
@@ -295,7 +295,7 @@ func TestDNSSECPolicyMissingSignature(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	ds := dnskey.ToDS(int(model.DSDigestTypeSHA1))
+	ds := dnskey.ToDS(uint8(model.DSDigestTypeSHA1))
 
 	otherDNSKEY, otherRRSIG, err := generateKeyAndSignZone("test.br.")
 	if err != nil {
@@ -337,7 +337,7 @@ func TestDNSSECPolicyExpiredSignature(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	ds := dnskey.ToDS(int(model.DSDigestTypeSHA1))
+	ds := dnskey.ToDS(uint8(model.DSDigestTypeSHA1))
 
 	domain := &model.Domain{
 		DSSet: []model.DS{
@@ -370,7 +370,7 @@ func TestDNSSECPolicySignatureError(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	ds := dnskey.ToDS(int(model.DSDigestTypeSHA1))
+	ds := dnskey.ToDS(uint8(model.DSDigestTypeSHA1))
 
 	// Changing signature timers turns it invalid
 	rrsig.Expiration = uint32(time.Now().Unix())
@@ -406,7 +406,7 @@ func TestDNSSECPolicyWrongDSDigest(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	ds := dnskey.ToDS(int(model.DSDigestTypeSHA1))
+	ds := dnskey.ToDS(uint8(model.DSDigestTypeSHA1))
 
 	domain := &model.Domain{
 		DSSet: []model.DS{
@@ -630,8 +630,6 @@ func convertKeyAlgorithm(algorithm uint8) model.DSAlgorithm {
 		return model.DSAlgorithmDH
 	case dns.DSA:
 		return model.DSAlgorithmDSASHA1
-	case dns.ECC:
-		return model.DSAlgorithmECC
 	case dns.RSASHA1:
 		return model.DSAlgorithmRSASHA1
 	case dns.DSANSEC3SHA1:

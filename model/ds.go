@@ -15,7 +15,6 @@ const (
 	DSAlgorithmRSAMD5       DSAlgorithm = 1   // RSA/MD5
 	DSAlgorithmDH           DSAlgorithm = 2   // DH
 	DSAlgorithmDSASHA1      DSAlgorithm = 3   // DSA/SHA-1 [DSA]
-	DSAlgorithmECC          DSAlgorithm = 4   // ECC
 	DSAlgorithmRSASHA1      DSAlgorithm = 5   // RSA/SHA-1 [RSASHA1]
 	DSAlgorithmDSASHA1NSEC3 DSAlgorithm = 6   // DSA/SHA1-NSEC3
 	DSAlgorithmRSASHA1NSEC3 DSAlgorithm = 7   // RSA/SHA1-NSEC3 [RSASHA1-NSEC3]
@@ -41,7 +40,6 @@ func IsValidDSAlgorithm(algorithm uint8) bool {
 	case uint8(DSAlgorithmRSAMD5),
 		uint8(DSAlgorithmDH),
 		uint8(DSAlgorithmDSASHA1),
-		uint8(DSAlgorithmECC),
 		uint8(DSAlgorithmRSASHA1),
 		uint8(DSAlgorithmDSASHA1NSEC3),
 		uint8(DSAlgorithmRSASHA1NSEC3),

@@ -50,7 +50,7 @@ func (d *DNSKEYRequest) toDSModel(fqdn string) (model.DS, error) {
 		PublicKey: publicKey,
 	}
 
-	rawDS := rawDNSKEY.ToDS(int(DefaultDigestType))
+	rawDS := rawDNSKEY.ToDS(uint8(DefaultDigestType))
 	if rawDS == nil {
 		return model.DS{}, ErrInvalidDNSKEY
 	}

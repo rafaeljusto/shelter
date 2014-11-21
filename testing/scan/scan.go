@@ -708,7 +708,7 @@ func generateAndSignDomain(fqdn string) (
 	if err != nil {
 		utils.Fatalln("Error creating KSK DNSSEC keys and signatures", err)
 	}
-	ds := dnskey.ToDS(int(model.DSDigestTypeSHA1))
+	ds := dnskey.ToDS(uint8(model.DSDigestTypeSHA1))
 
 	domain := model.Domain{
 		FQDN: fqdn,
@@ -773,7 +773,7 @@ func generateSignAndSaveDomain(fqdn string, domainDAO dao.DomainDAO) (
 
 // Function to mock a domain
 func generateAndSaveDomain(fqdn string, domainDAO dao.DomainDAO, dnskey *dns.DNSKEY) {
-	ds := dnskey.ToDS(int(model.DSDigestTypeSHA1))
+	ds := dnskey.ToDS(uint8(model.DSDigestTypeSHA1))
 
 	domain := model.Domain{
 		FQDN: fqdn,
