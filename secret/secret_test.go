@@ -55,4 +55,8 @@ func TestEncryptDecrypt(t *testing.T) {
 			t.Errorf("Expected '%s' and got '%s'", string(input), decrypted)
 		}
 	}
+
+	if Decrypt("XXX") == nil {
+		t.Error("Not detecting small input")
+	}
 }

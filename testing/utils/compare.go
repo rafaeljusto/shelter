@@ -8,6 +8,7 @@ package utils
 import (
 	"github.com/rafaeljusto/shelter/model"
 	"github.com/rafaeljusto/shelter/protocol"
+	"net"
 )
 
 // Function to compare if two domains are equal, cannot use operator == because of the
@@ -237,4 +238,20 @@ func CompareProtocolLinks(l1 []protocol.Link, l2 []protocol.Link) bool {
 	}
 
 	return true
+}
+
+func CompareStrings(p1, p2 *string) bool {
+	return (p1 != nil && p2 != nil && *p1 == *p2) || (p1 == p2)
+}
+
+func CompareIPs(p1, p2 net.IP) bool {
+	return (p1 != nil && p2 != nil && p1.Equal(p2)) || (p1 == p2)
+}
+
+func CompareUint8(p1, p2 *uint8) bool {
+	return (p1 != nil && p2 != nil && *p1 == *p2) || (p1 == p2)
+}
+
+func CompareUint16(p1, p2 *uint16) bool {
+	return (p1 != nil && p2 != nil && *p1 == *p2) || (p1 == p2)
 }

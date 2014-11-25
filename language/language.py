@@ -86,21 +86,21 @@ def writeLanguages(languages, regions, outputPath):
 
   print("""// Copyright 2014 Rafael Dantas Justo. All rights reserved.
 // Use of this source code is governed by a GPL
-// license that can be found in the LICENSE file.""", file=output)
-  print("""// Package model describes the objects of the system
-    package model""", file=output)
-  print("""
+// license that can be found in the LICENSE file.
+
+// Package language keep track of all IANA languages
+package language
+
 // File generated using the language.py script, that is responsable for parsing the IANA
 // Language Subtag Registry file obtained from
-// http://www.iana.org/assignments/language-subtag-registry/language-subtag-registry""", file=output)
+// http://www.iana.org/assignments/language-subtag-registry/language-subtag-registry
 
-  print("""import (
+import (
   "strings"
-)""", file=output)
+)
 
-  print("""
-// List of possible language types""", file=output)
-  print("const (", file=output)
+// List of possible language types
+const (""", file=output)
 
   for language in languages:
     normalizeName = language.name.upper().replace(".", "")

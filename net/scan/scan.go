@@ -13,6 +13,7 @@ import (
 	"github.com/rafaeljusto/shelter/database/mongodb"
 	"github.com/rafaeljusto/shelter/log"
 	"github.com/rafaeljusto/shelter/model"
+	"github.com/rafaeljusto/shelter/protocol"
 	"runtime"
 	"strings"
 	"sync"
@@ -23,7 +24,7 @@ import (
 // use, as we don't want to bother the user asking this information we assume a default
 // digest type
 const (
-	DefaultDigestType = model.DSDigestTypeSHA256
+	DefaultDigestType = protocol.DSDigestTypeSHA256
 )
 
 // Function responsible for running the domain scan system, checking the configuration of each
@@ -257,8 +258,8 @@ func QueryDomain(fqdn string) (model.Domain, error) {
 
 		domain.DSSet = append(domain.DSSet, model.DS{
 			Keytag:     dsRecord.KeyTag,
-			Algorithm:  model.DSAlgorithm(dsRecord.Algorithm),
-			DigestType: model.DSDigestType(dsRecord.DigestType),
+			Algorithm:  protocol.DSAlgorithm(dsRecord.Algorithm),
+			DigestType: protocol.DSDigestType(dsRecord.DigestType),
 			Digest:     dsRecord.Digest,
 		})
 	}

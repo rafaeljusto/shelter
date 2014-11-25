@@ -6,6 +6,7 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"encoding/base64"
+	"fmt"
 	"github.com/rafaeljusto/shelter/errors"
 )
 
@@ -37,6 +38,10 @@ func Decrypt(input string) (string, error) {
 	block, err := aes.NewCipher(key())
 	if err != nil {
 		return "", errors.NewSystemError(err)
+	}
+
+	if len(input) < block.BlockSize() {
+		return "", errors.NewSystemError(fmt.Errorf("input is to small to be decrypted"))
 	}
 
 	inputBytes, err := base64.StdEncoding.DecodeString(input)

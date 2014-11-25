@@ -2,12 +2,13 @@
 // Use of this source code is governed by a GPL
 // license that can be found in the LICENSE file.
 
-// Package model describes the objects of the system
-package model
+// Package language keep track of all IANA languages
+package language
 
 // File generated using the language.py script, that is responsable for parsing the IANA
 // Language Subtag Registry file obtained from
 // http://www.iana.org/assignments/language-subtag-registry/language-subtag-registry
+
 import (
 	"strings"
 )
@@ -318,7 +319,7 @@ const (
 	LanguageTypeAFE    LanguageType = "afe"      // Putukwam
 	LanguageTypeAFG    LanguageType = "afg"      // Afghan Sign Language
 	LanguageTypeAFH    LanguageType = "afh"      // Afrihili
-	LanguageTypeAFI    LanguageType = "afi"      // Akrukay
+	LanguageTypeAFI    LanguageType = "afi"      // Akrukay and Chini
 	LanguageTypeAFK    LanguageType = "afk"      // Nanubae
 	LanguageTypeAFN    LanguageType = "afn"      // Defaka
 	LanguageTypeAFO    LanguageType = "afo"      // Eloyi
@@ -553,6 +554,7 @@ const (
 	LanguageTypeAQN    LanguageType = "aqn"      // Northern Alta
 	LanguageTypeAQP    LanguageType = "aqp"      // Atakapa
 	LanguageTypeAQR    LanguageType = "aqr"      // Arhâ
+	LanguageTypeAQT    LanguageType = "aqt"      // Angaité
 	LanguageTypeAQZ    LanguageType = "aqz"      // Akuntsu
 	LanguageTypeARB    LanguageType = "arb"      // Standard Arabic
 	LanguageTypeARC    LanguageType = "arc"      // Official Aramaic (700-300 BCE) and Imperial Aramaic (700-300 BCE)
@@ -848,7 +850,7 @@ const (
 	LanguageTypeBEZ    LanguageType = "bez"      // Bena (Tanzania)
 	LanguageTypeBFA    LanguageType = "bfa"      // Bari
 	LanguageTypeBFB    LanguageType = "bfb"      // Pauri Bareli
-	LanguageTypeBFC    LanguageType = "bfc"      // Northern Bai
+	LanguageTypeBFC    LanguageType = "bfc"      // Panyi Bai and Northern Bai
 	LanguageTypeBFD    LanguageType = "bfd"      // Bafut
 	LanguageTypeBFE    LanguageType = "bfe"      // Betaf and Tena
 	LanguageTypeBFF    LanguageType = "bff"      // Bofi
@@ -1793,7 +1795,7 @@ const (
 	LanguageTypeDGZ    LanguageType = "dgz"      // Daga
 	LanguageTypeDHA    LanguageType = "dha"      // Dhanwar (India)
 	LanguageTypeDHD    LanguageType = "dhd"      // Dhundari
-	LanguageTypeDHG    LanguageType = "dhg"      // Djangu and Dhangu
+	LanguageTypeDHG    LanguageType = "dhg"      // Dhangu and Djangu
 	LanguageTypeDHI    LanguageType = "dhi"      // Dhimal
 	LanguageTypeDHL    LanguageType = "dhl"      // Dhalandji
 	LanguageTypeDHM    LanguageType = "dhm"      // Zemba
@@ -2061,6 +2063,7 @@ const (
 	LanguageTypeEND    LanguageType = "end"      // Ende
 	LanguageTypeENF    LanguageType = "enf"      // Forest Enets
 	LanguageTypeENH    LanguageType = "enh"      // Tundra Enets
+	LanguageTypeENL    LanguageType = "enl"      // Enlhet
 	LanguageTypeENM    LanguageType = "enm"      // Middle English (1100-1500)
 	LanguageTypeENN    LanguageType = "enn"      // Engenni
 	LanguageTypeENO    LanguageType = "eno"      // Enggano
@@ -2069,6 +2072,7 @@ const (
 	LanguageTypeENU    LanguageType = "enu"      // Enu
 	LanguageTypeENV    LanguageType = "env"      // Enwan (Edu State)
 	LanguageTypeENW    LanguageType = "enw"      // Enwan (Akwa Ibom State)
+	LanguageTypeENX    LanguageType = "enx"      // Enxet
 	LanguageTypeEOT    LanguageType = "eot"      // Beti (Côte d'Ivoire)
 	LanguageTypeEPI    LanguageType = "epi"      // Epie
 	LanguageTypeERA    LanguageType = "era"      // Eravallan
@@ -2093,6 +2097,7 @@ const (
 	LanguageTypeESS    LanguageType = "ess"      // Central Siberian Yupik
 	LanguageTypeESU    LanguageType = "esu"      // Central Yupik
 	LanguageTypeESX    LanguageType = "esx"      // Eskimo-Aleut languages
+	LanguageTypeESY    LanguageType = "esy"      // Eskayan
 	LanguageTypeETB    LanguageType = "etb"      // Etebi
 	LanguageTypeETC    LanguageType = "etc"      // Etchemin
 	LanguageTypeETH    LanguageType = "eth"      // Ethiopian Sign Language
@@ -2155,7 +2160,7 @@ const (
 	LanguageTypeFLL    LanguageType = "fll"      // North Fali
 	LanguageTypeFLN    LanguageType = "fln"      // Flinders Island
 	LanguageTypeFLR    LanguageType = "flr"      // Fuliiru
-	LanguageTypeFLY    LanguageType = "fly"      // Tsotsitaal
+	LanguageTypeFLY    LanguageType = "fly"      // Flaaitaal and Tsotsitaal
 	LanguageTypeFMP    LanguageType = "fmp"      // Fe'fe'
 	LanguageTypeFMU    LanguageType = "fmu"      // Far Western Muria
 	LanguageTypeFNG    LanguageType = "fng"      // Fanagalo
@@ -2294,6 +2299,7 @@ const (
 	LanguageTypeGEM    LanguageType = "gem"      // Germanic languages
 	LanguageTypeGEQ    LanguageType = "geq"      // Geme
 	LanguageTypeGES    LanguageType = "ges"      // Geser-Gorom
+	LanguageTypeGEV    LanguageType = "gev"      // Eviya
 	LanguageTypeGEW    LanguageType = "gew"      // Gera
 	LanguageTypeGEX    LanguageType = "gex"      // Garre
 	LanguageTypeGEY    LanguageType = "gey"      // Enya
@@ -2371,6 +2377,7 @@ const (
 	LanguageTypeGMB    LanguageType = "gmb"      // Gula'alaa
 	LanguageTypeGMD    LanguageType = "gmd"      // Mághdì
 	LanguageTypeGME    LanguageType = "gme"      // East Germanic languages
+	LanguageTypeGMG    LanguageType = "gmg"      // Magɨyi
 	LanguageTypeGMH    LanguageType = "gmh"      // Middle High German (ca. 1050-1500)
 	LanguageTypeGML    LanguageType = "gml"      // Middle Low German
 	LanguageTypeGMM    LanguageType = "gmm"      // Gbaya-Mbodomo
@@ -2664,7 +2671,7 @@ const (
 	LanguageTypeHOY    LanguageType = "hoy"      // Holiya
 	LanguageTypeHOZ    LanguageType = "hoz"      // Hozo
 	LanguageTypeHPO    LanguageType = "hpo"      // Hpon
-	LanguageTypeHPS    LanguageType = "hps"      // Hawai'i Pidgin Sign Language
+	LanguageTypeHPS    LanguageType = "hps"      // Hawai'i Sign Language (HSL) and Hawai'i Pidgin Sign Language
 	LanguageTypeHRA    LanguageType = "hra"      // Hrangkhol
 	LanguageTypeHRC    LanguageType = "hrc"      // Niwer Mil
 	LanguageTypeHRE    LanguageType = "hre"      // Hre
@@ -3697,7 +3704,7 @@ const (
 	LanguageTypeLAU    LanguageType = "lau"      // Laba
 	LanguageTypeLAW    LanguageType = "law"      // Lauje
 	LanguageTypeLAX    LanguageType = "lax"      // Tiwa
-	LanguageTypeLAY    LanguageType = "lay"      // Lama (Myanmar)
+	LanguageTypeLAY    LanguageType = "lay"      // Lama Bai
 	LanguageTypeLAZ    LanguageType = "laz"      // Aribwatsa
 	LanguageTypeLBA    LanguageType = "lba"      // Lui
 	LanguageTypeLBB    LanguageType = "lbb"      // Label
@@ -5210,6 +5217,7 @@ const (
 	LanguageTypeOLM    LanguageType = "olm"      // Oloma
 	LanguageTypeOLO    LanguageType = "olo"      // Livvi
 	LanguageTypeOLR    LanguageType = "olr"      // Olrat
+	LanguageTypeOLT    LanguageType = "olt"      // Old Lithuanian
 	LanguageTypeOMA    LanguageType = "oma"      // Omaha-Ponca
 	LanguageTypeOMB    LanguageType = "omb"      // East Ambae
 	LanguageTypeOMC    LanguageType = "omc"      // Mochica
@@ -5619,6 +5627,7 @@ const (
 	LanguageTypePTN    LanguageType = "ptn"      // Patani
 	LanguageTypePTO    LanguageType = "pto"      // Zo'é
 	LanguageTypePTP    LanguageType = "ptp"      // Patep
+	LanguageTypePTQ    LanguageType = "ptq"      // Pattapu
 	LanguageTypePTR    LanguageType = "ptr"      // Piamatsina
 	LanguageTypePTT    LanguageType = "ptt"      // Enrekang
 	LanguageTypePTU    LanguageType = "ptu"      // Bambam
@@ -6212,6 +6221,7 @@ const (
 	LanguageTypeSPK    LanguageType = "spk"      // Sengo
 	LanguageTypeSPL    LanguageType = "spl"      // Selepet
 	LanguageTypeSPM    LanguageType = "spm"      // Akukem
+	LanguageTypeSPN    LanguageType = "spn"      // Sanapaná
 	LanguageTypeSPO    LanguageType = "spo"      // Spokane
 	LanguageTypeSPP    LanguageType = "spp"      // Supyire Senoufo
 	LanguageTypeSPQ    LanguageType = "spq"      // Loreto-Ucayali Spanish
@@ -6609,6 +6619,7 @@ const (
 	LanguageTypeTKS    LanguageType = "tks"      // Takestani
 	LanguageTypeTKT    LanguageType = "tkt"      // Kathoriya Tharu
 	LanguageTypeTKU    LanguageType = "tku"      // Upper Necaxa Totonac
+	LanguageTypeTKV    LanguageType = "tkv"      // Mur Pano
 	LanguageTypeTKW    LanguageType = "tkw"      // Teanu
 	LanguageTypeTKX    LanguageType = "tkx"      // Tangko
 	LanguageTypeTKZ    LanguageType = "tkz"      // Takua
@@ -7359,6 +7370,7 @@ const (
 	LanguageTypeXAE    LanguageType = "xae"      // Aequian
 	LanguageTypeXAG    LanguageType = "xag"      // Aghwan
 	LanguageTypeXAI    LanguageType = "xai"      // Kaimbé
+	LanguageTypeXAJ    LanguageType = "xaj"      // Ararandewára
 	LanguageTypeXAL    LanguageType = "xal"      // Kalmyk and Oirat
 	LanguageTypeXAM    LanguageType = "xam"      // /Xam
 	LanguageTypeXAN    LanguageType = "xan"      // Xamtanga
@@ -7426,7 +7438,7 @@ const (
 	LanguageTypeXGG    LanguageType = "xgg"      // Goreng
 	LanguageTypeXGI    LanguageType = "xgi"      // Garingbal
 	LanguageTypeXGL    LanguageType = "xgl"      // Galindan
-	LanguageTypeXGM    LanguageType = "xgm"      // Guwinmal
+	LanguageTypeXGM    LanguageType = "xgm"      // Dharumbal and Guwinmal
 	LanguageTypeXGN    LanguageType = "xgn"      // Mongolian languages
 	LanguageTypeXGR    LanguageType = "xgr"      // Garza
 	LanguageTypeXGU    LanguageType = "xgu"      // Unggumi
@@ -7446,6 +7458,7 @@ const (
 	LanguageTypeXIN    LanguageType = "xin"      // Xinca
 	LanguageTypeXIP    LanguageType = "xip"      // Xipináwa
 	LanguageTypeXIR    LanguageType = "xir"      // Xiriâna
+	LanguageTypeXIS    LanguageType = "xis"      // Kisan
 	LanguageTypeXIV    LanguageType = "xiv"      // Indus Valley Language
 	LanguageTypeXIY    LanguageType = "xiy"      // Xipaya
 	LanguageTypeXJB    LanguageType = "xjb"      // Minjungbal
@@ -7727,6 +7740,7 @@ const (
 	LanguageTypeYGM    LanguageType = "ygm"      // Yagomi
 	LanguageTypeYGP    LanguageType = "ygp"      // Gepo
 	LanguageTypeYGR    LanguageType = "ygr"      // Yagaria
+	LanguageTypeYGS    LanguageType = "ygs"      // Yolŋu Sign Language
 	LanguageTypeYGU    LanguageType = "ygu"      // Yugul
 	LanguageTypeYGW    LanguageType = "ygw"      // Yagwoia
 	LanguageTypeYHA    LanguageType = "yha"      // Baha Buyang
@@ -8630,6 +8644,7 @@ var (
 		LanguageTypeAQN:    true,
 		LanguageTypeAQP:    true,
 		LanguageTypeAQR:    true,
+		LanguageTypeAQT:    true,
 		LanguageTypeAQZ:    true,
 		LanguageTypeARB:    true,
 		LanguageTypeARC:    true,
@@ -10138,6 +10153,7 @@ var (
 		LanguageTypeEND:    true,
 		LanguageTypeENF:    true,
 		LanguageTypeENH:    true,
+		LanguageTypeENL:    true,
 		LanguageTypeENM:    true,
 		LanguageTypeENN:    true,
 		LanguageTypeENO:    true,
@@ -10146,6 +10162,7 @@ var (
 		LanguageTypeENU:    true,
 		LanguageTypeENV:    true,
 		LanguageTypeENW:    true,
+		LanguageTypeENX:    true,
 		LanguageTypeEOT:    true,
 		LanguageTypeEPI:    true,
 		LanguageTypeERA:    true,
@@ -10170,6 +10187,7 @@ var (
 		LanguageTypeESS:    true,
 		LanguageTypeESU:    true,
 		LanguageTypeESX:    true,
+		LanguageTypeESY:    true,
 		LanguageTypeETB:    true,
 		LanguageTypeETC:    true,
 		LanguageTypeETH:    true,
@@ -10371,6 +10389,7 @@ var (
 		LanguageTypeGEM:    true,
 		LanguageTypeGEQ:    true,
 		LanguageTypeGES:    true,
+		LanguageTypeGEV:    true,
 		LanguageTypeGEW:    true,
 		LanguageTypeGEX:    true,
 		LanguageTypeGEY:    true,
@@ -10448,6 +10467,7 @@ var (
 		LanguageTypeGMB:    true,
 		LanguageTypeGMD:    true,
 		LanguageTypeGME:    true,
+		LanguageTypeGMG:    true,
 		LanguageTypeGMH:    true,
 		LanguageTypeGML:    true,
 		LanguageTypeGMM:    true,
@@ -13287,6 +13307,7 @@ var (
 		LanguageTypeOLM:    true,
 		LanguageTypeOLO:    true,
 		LanguageTypeOLR:    true,
+		LanguageTypeOLT:    true,
 		LanguageTypeOMA:    true,
 		LanguageTypeOMB:    true,
 		LanguageTypeOMC:    true,
@@ -13696,6 +13717,7 @@ var (
 		LanguageTypePTN:    true,
 		LanguageTypePTO:    true,
 		LanguageTypePTP:    true,
+		LanguageTypePTQ:    true,
 		LanguageTypePTR:    true,
 		LanguageTypePTT:    true,
 		LanguageTypePTU:    true,
@@ -14289,6 +14311,7 @@ var (
 		LanguageTypeSPK:    true,
 		LanguageTypeSPL:    true,
 		LanguageTypeSPM:    true,
+		LanguageTypeSPN:    true,
 		LanguageTypeSPO:    true,
 		LanguageTypeSPP:    true,
 		LanguageTypeSPQ:    true,
@@ -14686,6 +14709,7 @@ var (
 		LanguageTypeTKS:    true,
 		LanguageTypeTKT:    true,
 		LanguageTypeTKU:    true,
+		LanguageTypeTKV:    true,
 		LanguageTypeTKW:    true,
 		LanguageTypeTKX:    true,
 		LanguageTypeTKZ:    true,
@@ -15436,6 +15460,7 @@ var (
 		LanguageTypeXAE:    true,
 		LanguageTypeXAG:    true,
 		LanguageTypeXAI:    true,
+		LanguageTypeXAJ:    true,
 		LanguageTypeXAL:    true,
 		LanguageTypeXAM:    true,
 		LanguageTypeXAN:    true,
@@ -15523,6 +15548,7 @@ var (
 		LanguageTypeXIN:    true,
 		LanguageTypeXIP:    true,
 		LanguageTypeXIR:    true,
+		LanguageTypeXIS:    true,
 		LanguageTypeXIV:    true,
 		LanguageTypeXIY:    true,
 		LanguageTypeXJB:    true,
@@ -15804,6 +15830,7 @@ var (
 		LanguageTypeYGM:    true,
 		LanguageTypeYGP:    true,
 		LanguageTypeYGR:    true,
+		LanguageTypeYGS:    true,
 		LanguageTypeYGU:    true,
 		LanguageTypeYGW:    true,
 		LanguageTypeYHA:    true,
@@ -16233,7 +16260,7 @@ const (
 	RegionTypeCR   RegionType = "CR"     // Costa Rica
 	RegionTypeCS   RegionType = "CS"     // Serbia and Montenegro
 	RegionTypeCU   RegionType = "CU"     // Cuba
-	RegionTypeCV   RegionType = "CV"     // Cape Verde
+	RegionTypeCV   RegionType = "CV"     // Cabo Verde and Cape Verde
 	RegionTypeCW   RegionType = "CW"     // Curaçao
 	RegionTypeCX   RegionType = "CX"     // Christmas Island
 	RegionTypeCY   RegionType = "CY"     // Cyprus

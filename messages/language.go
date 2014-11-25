@@ -9,14 +9,27 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/rafaeljusto/shelter/errors"
-	"github.com/rafaeljusto/shelter/model"
+	"github.com/rafaeljusto/shelter/language"
+	"github.com/rafaeljusto/shelter/normalize"
 	"io/ioutil"
 	"strings"
+	"sync"
 )
 
 var (
 	ShelterRESTLanguagePacks LanguagePacks // Store all possible languages
 	ShelterRESTLanguagePack  *LanguagePack // Store the messages from the selected language
+)
+
+var (
+	// List of possible languages that can be used by the owner. This is an array of strings
+	// instead of constant values because it depends on the e-mail template files created by
+	// the system administrator.
+	languages []string
+
+	// As we are going to add and read the array of languages on-the-fly we need a lock
+	// mechanism to allow concurrent access
+	languagesLock sync.RWMutex
 )
 
 // List of possible errors that can occur in this language controller. There can be also
@@ -82,10 +95,10 @@ type LanguagePack struct {
 // all the names in lower case
 func (l *LanguagePack) Name() string {
 	if len(l.SpecificName) > 0 {
-		return model.NormalizeLanguage(l.SpecificName)
+		return normalize.NormalizeLanguage(l.SpecificName)
 	}
 
-	return model.NormalizeLanguage(l.GenericName)
+	return normalize.NormalizeLanguage(l.GenericName)
 }
 
 // Load the language packs from the configuration file
@@ -101,12 +114,12 @@ func LoadConfig(path string) error {
 
 	// Check language formats. They should follow IANA language types
 
-	if !model.IsValidLanguage(ShelterRESTLanguagePacks.Default) {
+	if !language.IsValidLanguage(ShelterRESTLanguagePacks.Default) {
 		return errors.NewSystemError(ErrInvalidLanguage)
 	}
 
-	for _, language := range ShelterRESTLanguagePacks.Packs {
-		if !model.IsValidLanguage(language.Name()) {
+	for _, l := range ShelterRESTLanguagePacks.Packs {
+		if !language.IsValidLanguage(l.Name()) {
 			return errors.NewSystemError(ErrInvalidLanguage)
 		}
 	}
@@ -122,4 +135,48 @@ func LoadConfig(path string) error {
 	// language consistency.
 
 	return nil
+}
+
+// AddLanguage is a safe way to add a supported language for the owner
+func AddLanguage(l string) bool {
+	if !language.IsValidLanguage(l) {
+		// Error returned when a language input doesn't respect the language/region types
+		// defined by IANA
+		return false
+	}
+
+	languagesLock.Lock()
+	defer languagesLock.Unlock()
+
+	// Normalize all languages
+	l = strings.ToLower(l)
+
+	// Try to find duplicated value, we don't use the LanguageExists method because of the
+	// language mutex
+	for _, existingLanguage := range languages {
+		if existingLanguage == l {
+			// Ignore when we already have the language
+			return true
+		}
+	}
+
+	languages = append(languages, l)
+	return true
+}
+
+// LanguageExists checks if a current language is supported
+func LanguageExists(language string) bool {
+	languagesLock.RLock()
+	defer languagesLock.RUnlock()
+
+	// Normalize all languages
+	language = strings.ToLower(language)
+
+	for _, existingLanguage := range languages {
+		if existingLanguage == language {
+			return true
+		}
+	}
+
+	return false
 }

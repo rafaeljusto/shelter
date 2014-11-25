@@ -2,8 +2,8 @@
 // Use of this source code is governed by a GPL
 // license that can be found in the LICENSE file.
 
-// Package model describes the objects of the system
-package model
+// Package normalize is used to format input data
+package normalize
 
 import (
 	"code.google.com/p/go.net/idna"

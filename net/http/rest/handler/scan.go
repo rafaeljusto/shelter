@@ -25,14 +25,13 @@ func init() {
 
 // ScanHandler is responsable for keeping the state of a /scan/{started-at} resource
 type ScanHandler struct {
-	handy.DefaultHandler                           // Inject the HTTP methods that this resource does not implement
-	database             *mgo.Database             // Database connection of the MongoDB session
-	databaseSession      *mgo.Session              // MongoDB session
-	scan                 model.Scan                // Scan object related to the resource
-	language             *messages.LanguagePack    // User preferred language based on HTTP header
-	StartedAt            string                    `param:"started-at"` // Scan start date in the URI
-	Response             *protocol.ScanResponse    `response:"get"`     // Scan response sent back to the user
-	Message              *protocol.MessageResponse `error`              // Message on error sent to the user
+	handy.DefaultHandler // Inject the HTTP methods that this resource does not implement
+	interceptor.DatabaseCompliant
+
+	language  *messages.LanguagePack    // User preferred language based on HTTP header
+	StartedAt string                    `param:"started-at"` // Scan start date in the URI
+	Response  *protocol.ScanResponse    `response:"get"`     // Scan response sent back to the user
+	Message   *protocol.MessageResponse `error`              // Message on error sent to the user
 }
 
 func (h *ScanHandler) SetDatabaseSession(session *mgo.Session) {

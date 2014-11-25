@@ -6,6 +6,7 @@
 package model
 
 import (
+	"github.com/rafaeljusto/shelter/protocol"
 	"net"
 	"strings"
 	"time"
@@ -92,4 +93,103 @@ func (n *Nameserver) ChangeStatus(status NameserverStatus) {
 	if status == NameserverStatusOK {
 		n.LastOKAt = n.LastCheckAt
 	}
+}
+
+// Convert a nameserver request object into a nameserver model object. It can return
+// errors related to the conversion of IP addresses and normalization of nameserver's
+// hostname
+func (n *Nameserver) Apply(nameserverRequest protocol.NameserverRequest) bool {
+	if nameserverRequest.Host != nil {
+		n.Host = *nameserverRequest.Host
+	}
+
+	if nameserverRequest.IPv4 != nil && len(*nameserverRequest.IPv4) > 0 {
+		ipv4 := net.ParseIP(*nameserverRequest.IPv4)
+		if ipv4 == nil {
+			return false
+		}
+		n.IPv4 = ipv4
+	}
+
+	if nameserverRequest.IPv6 != nil && len(*nameserverRequest.IPv6) > 0 {
+		ipv6 := net.ParseIP(*nameserverRequest.IPv6)
+		if ipv6 == nil {
+			return false
+		}
+		n.IPv6 = ipv6
+	}
+
+	return true
+}
+
+// Convert a nameserver of the system into a format with limited information to return it
+// to the user
+func (n *Nameserver) Protocol() protocol.NameserverResponse {
+	ipv4 := ""
+	if n.IPv4 != nil {
+		ipv4 = n.IPv4.String()
+	}
+
+	ipv6 := ""
+	if n.IPv6 != nil {
+		ipv6 = n.IPv6.String()
+	}
+
+	return protocol.NameserverResponse{
+		Host:        n.Host,
+		IPv4:        ipv4,
+		IPv6:        ipv6,
+		LastStatus:  NameserverStatusToString(n.LastStatus),
+		LastCheckAt: n.LastCheckAt,
+		LastOKAt:    n.LastOKAt,
+	}
+}
+
+type Nameservers []Nameserver
+
+// Convert a list of nameserver requests objects into a list of nameserver model objects.
+// Useful when merging domain object from the network with a domain object from the
+// database. It can return errors related to the conversion of IP addresses and
+// normalization of nameserver's hostname
+func (n Nameservers) Apply(nameserversRequest []protocol.NameserverRequest) (Nameservers, bool) {
+	for _, nameserverRequest := range nameserversRequest {
+		if nameserverRequest.Host == nil {
+			return n, false
+		}
+
+		found := false
+		for i, nameserver := range n {
+			if nameserver.Host == *nameserverRequest.Host {
+				if !nameserver.Apply(nameserverRequest) {
+					return n, false
+				}
+
+				n[i] = nameserver
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			var nameserver Nameserver
+			if !nameserver.Apply(nameserverRequest) {
+				return n, false
+			}
+
+			n = append(n, nameserver)
+		}
+	}
+
+	return n, true
+}
+
+// Convert a list of nameservers of the system into a format with limited information to
+// return it to the user. This is only a easy way to call toNameserverResponse for each
+// object in the list
+func (n Nameservers) Protocol() []protocol.NameserverResponse {
+	var nameserversResponse []protocol.NameserverResponse
+	for _, nameserver := range n {
+		nameserversResponse = append(nameserversResponse, nameserver.Protocol())
+	}
+	return nameserversResponse
 }

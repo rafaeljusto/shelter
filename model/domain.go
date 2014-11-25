@@ -6,9 +6,13 @@
 package model
 
 import (
+	"code.google.com/p/go.net/idna"
+	"fmt"
+	"github.com/rafaeljusto/shelter/protocol"
 	"gopkg.in/mgo.v2/bson"
 	"math"
 	"math/rand"
+	"strings"
 	"time"
 )
 
@@ -26,9 +30,9 @@ type Domain struct {
 	Revision       int           // Version of the object
 	LastModifiedAt time.Time     // Last time the object was modified
 	FQDN           string        // Actual domain name
-	Nameservers    []Nameserver  // Nameservers that asnwer with authority for this domain
-	DSSet          []DS          // Records for the DNS tree chain of trust
-	Owners         []Owner       // Responsables for the domains that will receive alerts
+	Nameservers    Nameservers   // Nameservers that asnwer with authority for this domain
+	DSSet          DSSet         // Records for the DNS tree chain of trust
+	Owners         Owners        // Responsables for the domains that will receive alerts
 }
 
 // ShouldBeScanned method is responsable for telling if the domain can be scanned or not
@@ -138,4 +142,163 @@ func (d Domain) isNearDNSSECExpirationDate(daysBefore int) bool {
 	// Now we can check if this expiration date is already in the alert period. The alert
 	// period is defined by the function parameter in days
 	return time.Now().Add(time.Duration(daysBefore*24) * time.Hour).After(expiresAt)
+}
+
+// Apply is used to merge a domain request object sent by the user into a domain object of the
+// database. It can return errors related to merge problems that are problem caused by data format
+// of the user input
+func (d *Domain) Apply(domainRequest protocol.DomainRequest) bool {
+	if domainRequest.FQDN == nil {
+		return false
+	}
+
+	// Detect when the domain object is empty, that is the case when we are creating a new
+	// domain in the Shelter project
+	if len(d.FQDN) == 0 {
+		d.FQDN = *domainRequest.FQDN
+
+	} else {
+		// Cannot merge domains with different FQDNs
+		if d.FQDN != *domainRequest.FQDN {
+			return false
+		}
+	}
+
+	var ok bool
+
+	if d.Nameservers, ok = d.Nameservers.Apply(domainRequest.Nameservers); !ok {
+		return false
+	}
+
+	if d.DSSet, ok = d.DSSet.Apply(domainRequest.DSSet); !ok {
+		return false
+	}
+
+	if d.DSSet, ok = d.DSSet.ApplyDNSKEYs(domainRequest.DNSKEYS); !ok {
+		return false
+	}
+
+	// We can replace the whole structure of the e-mail every time that a new UPDATE arrives
+	// because there's no extra information in server side that we need to keep
+	if d.Owners, ok = d.Owners.Apply(domainRequest.Owners); !ok {
+		return false
+	}
+
+	return true
+}
+
+// Convert the domain system object to a limited information user format. We have a persisted flag
+// to known when the object exists in our database or not to choose when we need to add the object
+// links or not
+func (d *Domain) Protocol() protocol.DomainResponse {
+	var links []protocol.Link
+
+	// We don't add links when the object doesn't exist in the system yet
+	if d.Id.Valid() {
+		// We should add more links here for system navigation. For example, we could add links
+		// for object update, delete, list, etc. But I did not found yet in IANA list the
+		// correct link type to be used. Also, the URI is hard coded, I didn't have any idea on
+		// how can we do this dynamically yet. We cannot get the URI from the handler because we
+		// are going to have a cross-reference problem
+		links = append(links, protocol.Link{
+			Types: []protocol.LinkType{protocol.LinkTypeSelf},
+			HRef:  fmt.Sprintf("/domain/%s", d.FQDN),
+		})
+	}
+
+	// We will try to show the FQDN always in unicode format. To solve a little bug in IDN library, we
+	// will always convert the FQDN to lower case
+	fqdn := strings.ToLower(d.FQDN)
+
+	var err error
+	fqdn, err = idna.ToUnicode(fqdn)
+	if err != nil {
+		// On error, keep the ace format
+		fqdn = strings.ToLower(d.FQDN)
+	}
+
+	return protocol.DomainResponse{
+		FQDN:        fqdn,
+		Nameservers: d.Nameservers.Protocol(),
+		DSSet:       d.DSSet.Protocol(),
+		Owners:      d.Owners.Protocol(),
+		Links:       links,
+	}
+}
+
+type Domains []Domain
+
+// Convert a list of domain objects into protocol format with pagination support
+func (d *Domains) Protocol(pagination DomainPagination, expand bool, filter string) protocol.DomainsResponse {
+	var domains []protocol.DomainResponse
+	for _, domain := range *d {
+		domains = append(domains, domain.Protocol())
+	}
+
+	var orderBy string
+	for _, sort := range pagination.OrderBy {
+		if len(orderBy) > 0 {
+			orderBy += "@"
+		}
+
+		orderBy += fmt.Sprintf("%s:%s",
+			DomainOrderByFieldToString(sort.Field),
+			OrderByDirectionToString(sort.Direction),
+		)
+	}
+
+	expandParameter := ""
+	if expand {
+		expandParameter = "&expand"
+	}
+
+	// Add pagination managment links to the response. The URI is hard coded, I didn't have
+	// any idea on how can we do this dynamically yet. We cannot get the URI from the
+	// handler because we are going to have a cross-reference problem
+	var links []protocol.Link
+
+	// Only add fast backward if we aren't in the first page
+	if pagination.Page > 1 {
+		links = append(links, protocol.Link{
+			Types: []protocol.LinkType{protocol.LinkTypeFirst},
+			HRef: fmt.Sprintf("/domains/?pagesize=%d&page=%d&orderby=%s&filter=%s%s",
+				pagination.PageSize, 1, orderBy, filter, expandParameter),
+		})
+	}
+
+	// Only add previous if theres a previous page
+	if pagination.Page-1 >= 1 {
+		links = append(links, protocol.Link{
+			Types: []protocol.LinkType{protocol.LinkTypePrev},
+			HRef: fmt.Sprintf("/domains/?pagesize=%d&page=%d&orderby=%s&filter=%s%s",
+				pagination.PageSize, pagination.Page-1, orderBy, filter, expandParameter),
+		})
+	}
+
+	// Only add next if there's a next page
+	if pagination.Page+1 <= pagination.NumberOfPages {
+		links = append(links, protocol.Link{
+			Types: []protocol.LinkType{protocol.LinkTypeNext},
+			HRef: fmt.Sprintf("/domains/?pagesize=%d&page=%d&orderby=%s&filter=%s%s",
+				pagination.PageSize, pagination.Page+1, orderBy, filter, expandParameter),
+		})
+	}
+
+	// Only add the fast forward if we aren't on the last page
+	if pagination.Page < pagination.NumberOfPages {
+		links = append(links, protocol.Link{
+			Types: []protocol.LinkType{protocol.LinkTypeLast},
+			HRef: fmt.Sprintf("/domains/?pagesize=%d&page=%d&orderby=%s&filter=%s%s",
+				pagination.PageSize, pagination.NumberOfPages, orderBy, filter, expandParameter),
+		})
+	}
+
+	return protocol.DomainsResponse{
+		Page:          pagination.Page,
+		PageSize:      pagination.PageSize,
+		NumberOfPages: pagination.NumberOfPages,
+		NumberOfItems: pagination.NumberOfItems,
+		Domains:       domains,
+		Links:         links,
+	}
 }

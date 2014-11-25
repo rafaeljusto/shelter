@@ -6,20 +6,9 @@
 package model
 
 import (
+	"github.com/rafaeljusto/shelter/protocol"
 	"net/mail"
 	"strings"
-	"sync"
-)
-
-var (
-	// List of possible languages that can be used by the owner. This is an array of strings
-	// instead of constant values because it depends on the e-mail template files created by
-	// the system administrator.
-	languages []string
-
-	// As we are going to add and read the array of languages on-the-fly we need a lock
-	// mechanism to allow concurrent access
-	languagesLock sync.RWMutex
 )
 
 // Owner represents the responsable for the domain that can be alerted if any
@@ -29,46 +18,67 @@ type Owner struct {
 	Language string        // Language used to send alerts
 }
 
-// AddLanguage is a safe way to add a supported language for the owner
-func AddLanguage(language string) bool {
-	if !IsValidLanguage(language) {
-		// Error returned when a language input doesn't respect the language/region types
-		// defined by IANA
-		return false
-	}
-
-	languagesLock.Lock()
-	defer languagesLock.Unlock()
-
-	// Normalize all languages
-	language = strings.ToLower(language)
-
-	// Try to find duplicated value, we don't use the LanguageExists method because of the
-	// language mutex
-	for _, existingLanguage := range languages {
-		if existingLanguage == language {
-			// Ignore when we already have the language
-			return true
+// Convert a owner request object into a owner model object. It can return errors related
+// to the e-mail format
+func (o *Owner) Apply(ownerRequest protocol.OwnerRequest) bool {
+	if ownerRequest.Email != nil {
+		email, err := mail.ParseAddress(*ownerRequest.Email)
+		if err != nil {
+			return false
 		}
+
+		o.Email = email
 	}
 
-	languages = append(languages, language)
+	if ownerRequest.Language != nil {
+		o.Language = *ownerRequest.Language
+	}
+
 	return true
 }
 
-// LanguageExists checks if a current language is supported
-func LanguageExists(language string) bool {
-	languagesLock.RLock()
-	defer languagesLock.RUnlock()
+// Convert a owner of the system into a format with limited information to return it to
+// the user. For now we are not limiting any information
+func (o *Owner) Protocol() protocol.OwnerResponse {
+	// E-mail to string conversion formats the address as a valid RFC 5322 address. If the
+	// address's name contains non-ASCII characters the name will be rendered according to
+	// RFC 2047. We are going to remove the "<" and ">" from the e-mail address for better
+	// look
+	email := o.Email.String()
+	email = strings.TrimLeft(email, "<")
+	email = strings.TrimRight(email, ">")
 
-	// Normalize all languages
-	language = strings.ToLower(language)
+	return protocol.OwnerResponse{
+		Email:    email,
+		Language: o.Language,
+	}
+}
 
-	for _, existingLanguage := range languages {
-		if existingLanguage == language {
-			return true
+type Owners []Owner
+
+// Convert a list of owner requests objects into a list of owner model objects. Useful
+// when merging domain object from the network with a domain object from the database. It
+// can return errors related to the e-mail format in one of the converted owners
+func (o Owners) Apply(ownersRequest []protocol.OwnerRequest) (Owners, bool) {
+	for _, ownerRequest := range ownersRequest {
+		var owner Owner
+		if !owner.Apply(ownerRequest) {
+			return o, false
 		}
+
+		o = append(o, owner)
 	}
 
-	return false
+	return o, true
+}
+
+// Convert a list of owners of the system into a format with limited information to return
+// it to the user. This is only a easy way to call toOwnerResponse for each object in the
+// list
+func (o Owners) Protocol() []protocol.OwnerResponse {
+	var ownersResponse []protocol.OwnerResponse
+	for _, owner := range o {
+		ownersResponse = append(ownersResponse, owner.Protocol())
+	}
+	return ownersResponse
 }

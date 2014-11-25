@@ -2,8 +2,8 @@
 // Use of this source code is governed by a GPL
 // license that can be found in the LICENSE file.
 
-// Package model describes the objects of the system
-package model
+// Package language keep track of all IANA languages
+package language
 
 import (
 	"testing"

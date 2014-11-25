@@ -6,174 +6,160 @@
 package protocol
 
 import (
-	"github.com/rafaeljusto/shelter/model"
+	"github.com/rafaeljusto/shelter/testing/utils"
 	"testing"
 	"time"
 )
 
-func TestToDSModel(t *testing.T) {
-	dsRequest := DSRequest{
-		Keytag:     41674,
-		Algorithm:  5,
-		Digest:     "EAA0978F38879DB70A53F9FF1ACF21D046A98B5C",
-		DigestType: 1,
+func TestValidDSAlgorithm(t *testing.T) {
+	if !IsValidDSAlgorithm(1) || !IsValidDSAlgorithm(8) || !IsValidDSAlgorithm(254) {
+		t.Error("Not accepting valid DS algorithms")
 	}
 
-	ds, err := dsRequest.toDSModel()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if ds.Keytag != 41674 {
-		t.Error("Not keeping keytag in conversion")
-	}
-
-	if ds.Algorithm != model.DSAlgorithmRSASHA1 {
-		t.Error("Not converting DS algorithm correctly")
-	}
-
-	if ds.Digest != "eaa0978f38879db70a53f9ff1acf21d046a98b5c" {
-		t.Error("Not keeping digest in conversion")
-	}
-
-	if ds.DigestType != model.DSDigestTypeSHA1 {
-		t.Error("Not converting DS digest type correctly")
-	}
-
-	dsRequest = DSRequest{
-		Keytag:     41674,
-		Algorithm:  0,
-		Digest:     "EAA0978F38879DB70A53F9FF1ACF21D046A98B5C",
-		DigestType: 1,
-	}
-
-	ds, err = dsRequest.toDSModel()
-	if err == nil {
-		t.Error("Allowing an invalid DS algorithm")
-	}
-
-	dsRequest = DSRequest{
-		Keytag:     41674,
-		Algorithm:  5,
-		Digest:     "EAA0978F38879DB70A53F9FF1ACF21D046A98B5C",
-		DigestType: 6,
-	}
-
-	ds, err = dsRequest.toDSModel()
-	if err == nil {
-		t.Error("Allowing an invalid DS digest type")
+	if IsValidDSAlgorithm(0) || IsValidDSAlgorithm(255) {
+		t.Error("Accepting invalid DS algorithms")
 	}
 }
 
-func TestToDSSetModel(t *testing.T) {
-	dsSetRequest := []DSRequest{
-		{
-			Keytag:     41674,
-			Algorithm:  5,
-			Digest:     "EAA0978F38879DB70A53F9FF1ACF21D046A98B5C",
-			DigestType: 1,
-		},
-		{
-			Keytag:     45966,
-			Algorithm:  7,
-			Digest:     "B7C0BDE8F3C90E573B956B14A14CAF5001A3E841",
-			DigestType: 1,
-		},
+func TestValidDSDigestType(t *testing.T) {
+	if !IsValidDSDigestType(0) || !IsValidDSDigestType(3) || !IsValidDSDigestType(5) {
+		t.Error("Not accepting valid DS digest type")
 	}
 
-	_, err := toDSSetModel(dsSetRequest)
-	if err != nil {
-		t.Error(err)
-	}
-
-	dsSetRequest = []DSRequest{
-		{
-			Keytag:     41674,
-			Algorithm:  5,
-			Digest:     "EAA0978F38879DB70A53F9FF1ACF21D046A98B5C",
-			DigestType: 1,
-		},
-		{
-			Keytag:     45966,
-			Algorithm:  0,
-			Digest:     "B7C0BDE8F3C90E573B956B14A14CAF5001A3E841",
-			DigestType: 1,
-		},
-	}
-
-	_, err = toDSSetModel(dsSetRequest)
-	if err == nil {
-		t.Error("Not verifying errors in DS set conversion")
+	if IsValidDSDigestType(6) {
+		t.Error("Accepting invalid digest type")
 	}
 }
 
-func TestToDSResponse(t *testing.T) {
-	now := time.Now()
-
-	ds := model.DS{
-		Keytag:      41674,
-		Algorithm:   model.DSAlgorithmRSASHA1,
-		Digest:      "eaa0978f38879db70a53f9ff1acf21d046a98b5c",
-		DigestType:  model.DSDigestTypeSHA1,
-		LastStatus:  model.DSStatusOK,
-		LastCheckAt: now,
-		LastOKAt:    now,
+func TestDSNormalize(t *testing.T) {
+	data := []struct {
+		description string
+		request     DSRequest
+		expected    DSRequest
+	}{
+		{
+			description: "it should normalize DS digest",
+			request: DSRequest{
+				Digest: utils.NewString("   EaA0978f38879db70A53f9FF1ACF21D046a98B5C   "),
+			},
+			expected: DSRequest{
+				Digest: utils.NewString("eaa0978f38879db70a53f9ff1acf21d046a98b5c"),
+			},
+		},
 	}
 
-	dsResponse := toDSResponse(ds)
+	for i, item := range data {
+		item.request.Normalize()
 
-	if dsResponse.Keytag != 41674 {
-		t.Error("Fail to convert keytag")
-	}
+		if !utils.CompareUint16(item.request.Keytag, item.expected.Keytag) {
+			t.Errorf(
+				"Item %d, “%s”: mismatch results. Expecting '%v'; found '%v'",
+				i,
+				item.description,
+				item.request.Keytag,
+				item.expected.Keytag,
+			)
+		}
 
-	if dsResponse.Algorithm != 5 {
-		t.Error("Fail to convert algorithm")
-	}
+		if !utils.CompareUint8(item.request.Algorithm, item.expected.Algorithm) {
+			t.Errorf(
+				"Item %d, “%s”: mismatch results. Expecting '%v'; found '%v'",
+				i,
+				item.description,
+				item.request.Algorithm,
+				item.expected.Algorithm,
+			)
+		}
 
-	if dsResponse.Digest != "eaa0978f38879db70a53f9ff1acf21d046a98b5c" {
-		t.Error("Fail to convert digest")
-	}
+		if !utils.CompareStrings(item.request.Digest, item.expected.Digest) {
+			t.Errorf(
+				"Item %d, “%s”: mismatch results. Expecting '%v'; found '%v'",
+				i,
+				item.description,
+				item.request.Digest,
+				item.expected.Digest,
+			)
+		}
 
-	if dsResponse.DigestType != 1 {
-		t.Error("Fail to convert digest type")
-	}
-
-	if dsResponse.LastStatus != model.DSStatusToString(model.DSStatusOK) {
-		t.Error("Fail to convert last status")
-	}
-
-	if dsResponse.LastCheckAt.Unix() != now.Unix() ||
-		dsResponse.LastOKAt.Unix() != now.Unix() {
-
-		t.Error("Fail to convert dates")
+		if !utils.CompareUint8(item.request.DigestType, item.expected.DigestType) {
+			t.Errorf(
+				"Item %d, “%s”: mismatch results. Expecting '%v'; found '%v'",
+				i,
+				item.description,
+				item.request.DigestType,
+				item.expected.DigestType,
+			)
+		}
 	}
 }
 
-func TestToDSSetResponse(t *testing.T) {
-	now := time.Now()
-
-	dsSet := []model.DS{
+func TestDSValidate(t *testing.T) {
+	data := []struct {
+		description      string
+		request          DSRequest
+		expectedError    bool
+		expectedMessages bool
+	}{
 		{
-			Keytag:      41674,
-			Algorithm:   model.DSAlgorithmRSASHA1,
-			Digest:      "eaa0978f38879db70a53f9ff1acf21d046a98b5c",
-			DigestType:  model.DSDigestTypeSHA1,
-			LastStatus:  model.DSStatusOK,
-			LastCheckAt: now,
-			LastOKAt:    now,
+			description: "it should accept a valid DS",
+			request: DSRequest{
+				Keytag:     utils.NewUint16(41895),
+				Algorithm:  utils.NewUint8(5),
+				Digest:     utils.NewString("eaa0978f38879db70a53f9ff1acf21d046a98b5c"),
+				DigestType: utils.NewUint8(1),
+			},
+			expectedError:    false,
+			expectedMessages: false,
 		},
 		{
-			Keytag:      45966,
-			Algorithm:   model.DSAlgorithmRSASHA1NSEC3,
-			Digest:      "b7c0bde8f3c90e573b956b14a14caf5001a3e841",
-			DigestType:  model.DSDigestTypeSHA1,
-			LastStatus:  model.DSStatusTimeout,
-			LastCheckAt: now,
+			description: "it should alert when keytag is nil",
+			request: DSRequest{
+				Keytag:     nil,
+				Algorithm:  utils.NewUint8(5),
+				Digest:     utils.NewString("eaa0978f38879db70a53f9ff1acf21d046a98b5c"),
+				DigestType: utils.NewUint8(1),
+			},
+			expectedError:    false,
+			expectedMessages: true,
+		},
+		{
+			description: "it should alert when the DS has an invalid algorithm",
+			request: DSRequest{
+				Keytag:     utils.NewUint16(41895),
+				Algorithm:  utils.NewUint8(0),
+				Digest:     utils.NewString("eaa0978f38879db70a53f9ff1acf21d046a98b5c"),
+				DigestType: utils.NewUint8(1),
+			},
+			expectedError:    false,
+			expectedMessages: true,
+		},
+		{
+			description: "it should alert when the DS has an invalid digest type",
+			request: DSRequest{
+				Keytag:     utils.NewUint16(41895),
+				Algorithm:  utils.NewUint8(5),
+				Digest:     utils.NewString("eaa0978f38879db70a53f9ff1acf21d046a98b5c"),
+				DigestType: utils.NewUint8(0),
+			},
+			expectedError:    false,
+			expectedMessages: true,
 		},
 	}
 
-	dsSetResponse := toDSSetResponse(dsSet)
-	if len(dsSetResponse) != 2 {
-		t.Error("Fail to convert a DS set")
+	for i, item := range data {
+		messages, err := item.request.Validate()
+		if err != nil && !item.expectedError {
+			t.Errorf("Item %d, “%s”: did not expect error '%s'", i, item.description, err)
+
+		} else if err == nil && item.expectedError {
+			t.Errorf("Item %d, “%s”: expected error", i, item.description)
+		}
+
+		if messages != nil && !item.expectedMessages {
+			t.Errorf("Item %d, “%s”: did not expect messages '%v'", i, item.description, messages)
+
+		} else if messages == nil && item.expectedMessages {
+			t.Errorf("Item %d, “%s”: expected messages", i, item.description)
+		}
 	}
 }

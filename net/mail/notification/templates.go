@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"github.com/rafaeljusto/shelter/config"
 	"github.com/rafaeljusto/shelter/model"
+	"github.com/rafaeljusto/shelter/normalize"
 	"io/ioutil"
 	"path/filepath"
 	"strings"
@@ -101,7 +102,7 @@ func LoadTemplates() error {
 // (LoadTemplates) and there's no read while we add them, but for consistency we are using
 // it
 func addTemplate(language string, t *template.Template) {
-	language = model.NormalizeLanguage(language)
+	language = normalize.NormalizeLanguage(language)
 
 	templatesLock.Lock()
 	defer templatesLock.Unlock()
@@ -111,7 +112,7 @@ func addTemplate(language string, t *template.Template) {
 // While notifing we will use a specific template to send an e-mail for the owner. To
 // allow concurrent access over the templates map we should use this function
 func getTemplate(language string) *template.Template {
-	language = model.NormalizeLanguage(language)
+	language = normalize.NormalizeLanguage(language)
 
 	templatesLock.RLock()
 	defer templatesLock.RUnlock()

@@ -10,6 +10,7 @@ import (
 	"github.com/rafaeljusto/shelter/dao"
 	"github.com/rafaeljusto/shelter/log"
 	"github.com/rafaeljusto/shelter/model"
+	"gopkg.in/mgo.v2"
 	"net/http"
 	"regexp"
 	"strings"
@@ -24,7 +25,7 @@ var (
 )
 
 type ScanHandler interface {
-	DatabaseHandler
+	DB() *mgo.Database
 	GetStartedAt() string
 	SetScan(scan model.Scan)
 	MessageResponse(string, string) error
@@ -53,7 +54,7 @@ func (i *Scan) Before(w http.ResponseWriter, r *http.Request) {
 	}
 
 	scanDAO := dao.ScanDAO{
-		Database: i.scanHandler.GetDatabase(),
+		Database: i.scanHandler.DB(),
 	}
 
 	scan, err := scanDAO.FindByStartedAt(date)

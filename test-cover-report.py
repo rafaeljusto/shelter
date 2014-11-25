@@ -34,8 +34,6 @@ def changePath():
   os.chdir(projectPath)
 
 def runCoverReport():
-  print("\n[[ UNIT TESTS ]]\n")
-
   goPackages = []
   for root, dirnames, filenames in os.walk("."):
     for filename in fnmatch.filter(filenames, "*_test.go"):

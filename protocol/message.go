@@ -7,7 +7,6 @@ package protocol
 
 import (
 	"github.com/rafaeljusto/shelter/messages"
-	"net/url"
 )
 
 // List of possible input error types. This is useful for translating input errors to good messages
@@ -30,6 +29,7 @@ const (
 	ErrorCodeInvalidDNSKEY        ErrorCode = "invalid-dnskey"
 	ErrorCodeInvalidDSAlgorithm   ErrorCode = "invalid-ds-algorithm"
 	ErrorCodeInvalidDSDigestType  ErrorCode = "invalid-ds-digest-type"
+	ErrorCodeInvalidDSKeytag      ErrorCode = "invalid-ds-keytag"
 	ErrorCodeInvalidFQDN          ErrorCode = "invalid-fqdn"
 	ErrorCodeInvalidHeaderDate    ErrorCode = "invalid-header-date"
 	ErrorCodeInvalidIfMatch       ErrorCode = "invalid-if-match"
@@ -37,6 +37,7 @@ const (
 	ErrorCodeInvalidIP            ErrorCode = "invalid-ip"
 	ErrorCodeInvalidJSONContent   ErrorCode = "invalid-json-content"
 	ErrorCodeInvalidLanguage      ErrorCode = "invalid-language"
+	ErrorCodeInvalidEmail         ErrorCode = "invalid-email"
 	ErrorCodeInvalidQueryOrderBy  ErrorCode = "invalid-query-order-by"
 	ErrorCodeInvalidQueryPage     ErrorCode = "invalid-query-page"
 	ErrorCodeInvalidQueryPageSize ErrorCode = "invalid-query-page-size"
@@ -56,63 +57,40 @@ type Translator interface {
 // MessageResponse struct was created to return a message to the user with more
 // information to easy integrate and solve problems
 type MessageResponse struct {
-	Id      string `json:"id,omitempty"`      // Code for integration systems to automatically solve the problem
-	Field   string `json:"field,omitempty"`   // Field that the message is related to
-	Value   string `json:"value,omitempty"`   // Current value of the field
-	Message string `json:"message,omitempty"` // Message in the user's desired language
-	Links   []Link `json:"links,omitempty"`   // Links associating this message with other resources
+	Id      ErrorCode `json:"id,omitempty"`      // Code for integration systems to automatically solve the problem
+	Field   string    `json:"field,omitempty"`   // Field that the message is related to
+	Value   string    `json:"value,omitempty"`   // Current value of the field
+	Message string    `json:"message,omitempty"` // Message in the user's desired language
+	Links   []Link    `json:"links,omitempty"`   // Links associating this message with other resources
 }
 
 // NewMessageResponse builds a message adding necessary links for the response
-func NewMessageResponse(
-	id string, roid string,
-	language *messages.LanguagePack,
-) (*MessageResponse, error) {
-
+func NewMessageResponse(id ErrorCode, language *messages.LanguagePack) *MessageResponse {
 	messageResponse := &MessageResponse{
 		Id: id,
 	}
 
 	if language != nil && language.Messages != nil {
-		messageResponse.Message = language.Messages[id]
+		messageResponse.Message = language.Messages[string(id)]
+
 	} else {
 		// When we don't find the message file, at least add the message id to make it easy to
 		// identify the error. Useful on test scenarios
-		messageResponse.Message = id
+		messageResponse.Message = string(id)
 	}
 
-	// Add the object related to the message according to RFC 4287
-	if len(roid) != 0 {
-		// roid must be an URI to be a valid link
-		uri, err := url.Parse(roid)
-		if err != nil {
-			return nil, err
-		}
-
-		messageResponse.Links = []Link{
-			{
-				Types: []LinkType{LinkTypeRelated},
-				HRef:  uri.RequestURI(),
-			},
-		}
-	}
-
-	return messageResponse, nil
+	return messageResponse
 }
 
 // NewMessageResponseWithField builds a message with a specific field adding necessary links for the
 // response. This type of message is better for the end-user determinates what was the problem
-func NewMessageResponseWithField(id string, field, value, roid string,
-	language *messages.LanguagePack) (*MessageResponse, error) {
+func NewMessageResponseWithField(id ErrorCode,
+	field, value string, language *messages.LanguagePack) *MessageResponse {
 
-	messageResponse, err := NewMessageResponse(id, roid, language)
-	if err != nil {
-		return nil, err
-	}
-
+	messageResponse := NewMessageResponse(id, language)
 	messageResponse.Field = field
 	messageResponse.Value = value
-	return messageResponse, nil
+	return messageResponse
 }
 
 // Translate fills the convert the message content to the desired language before returning it to

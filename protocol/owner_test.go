@@ -6,155 +6,111 @@
 package protocol
 
 import (
-	"github.com/rafaeljusto/shelter/model"
-	"net/mail"
+	"github.com/rafaeljusto/shelter/testing/utils"
 	"testing"
 )
 
-func TestToOwnerModel(t *testing.T) {
-	ownerRequest := OwnerRequest{
-		Email:    "example01@example.com.br",
-		Language: "pt-br",
+func TestOwnerNormalize(t *testing.T) {
+	data := []struct {
+		description string
+		request     OwnerRequest
+		expected    OwnerRequest
+	}{
+		{
+			description: "it should normalize the language",
+			request: OwnerRequest{
+				Language: utils.NewString("   PT   "),
+			},
+			expected: OwnerRequest{
+				Language: utils.NewString("pt"),
+			},
+		},
+		{
+			description: "it should normalize the language with specific region",
+			request: OwnerRequest{
+				Language: utils.NewString("   PT   -   br   "),
+			},
+			expected: OwnerRequest{
+				Language: utils.NewString("pt-BR"),
+			},
+		},
 	}
 
-	owner, err := ownerRequest.toOwnerModel()
-	if err != nil {
-		t.Fatal(err)
-	}
+	for i, item := range data {
+		item.request.Normalize()
 
-	if owner.Email.Address != "example01@example.com.br" {
-		t.Error("Not converting e-mail properly")
-	}
+		if !utils.CompareStrings(item.request.Email, item.expected.Email) {
+			t.Errorf(
+				"Item %d, “%s”: mismatch results. Expecting '%v'; found '%v'",
+				i,
+				item.description,
+				item.request.Email,
+				item.expected.Email,
+			)
+		}
 
-	if owner.Language != "pt-BR" {
-		t.Error("Not converting language properly")
-	}
-
-	ownerRequest = OwnerRequest{
-		Email:    "notavalidemail",
-		Language: "pt-br",
-	}
-
-	owner, err = ownerRequest.toOwnerModel()
-	if err == nil {
-		t.Error("Not checking e-mail format on conversion")
-	}
-
-	ownerRequest = OwnerRequest{
-		Email:    "example01@example.com.br",
-		Language: "zzz",
-	}
-
-	owner, err = ownerRequest.toOwnerModel()
-	if err == nil {
-		t.Error("Not checking language on conversion")
+		if !utils.CompareStrings(item.request.Language, item.expected.Language) {
+			t.Errorf(
+				"Item %d, “%s”: mismatch results. Expecting '%v'; found '%v'",
+				i,
+				item.description,
+				item.request.Language,
+				item.expected.Language,
+			)
+		}
 	}
 }
 
-func TestToOwnersModel(t *testing.T) {
-	ownersRequest := []OwnerRequest{
+func TestOwnerValidate(t *testing.T) {
+	data := []struct {
+		description      string
+		request          OwnerRequest
+		expectedError    bool
+		expectedMessages bool
+	}{
 		{
-			Email:    "example01@example.com.br.",
-			Language: "pt-br",
+			description: "it should validate correctly",
+			request: OwnerRequest{
+				Email:    utils.NewString("test@example.com"),
+				Language: utils.NewString("pt-BR"),
+			},
+			expectedError:    false,
+			expectedMessages: false,
 		},
 		{
-			Email:    "example02@example.com.br.",
-			Language: "en-US",
-		},
-	}
-
-	if _, err := toOwnersModel(ownersRequest); err != nil {
-		t.Error(err)
-	}
-
-	ownersRequest = []OwnerRequest{
-		{
-			Email:    "notavalidemail",
-			Language: "pt-br",
+			description: "it should alert when there's an invalid e-mail",
+			request: OwnerRequest{
+				Email:    utils.NewString("testexamplecom"),
+				Language: utils.NewString("pt-BR"),
+			},
+			expectedError:    false,
+			expectedMessages: true,
 		},
 		{
-			Email:    "example02@example.com.br.",
-			Language: "en-US",
-		},
-	}
-
-	if _, err := toOwnersModel(ownersRequest); err == nil {
-		t.Error("Not checking invalid e-mail on conversion")
-	}
-
-	ownersRequest = []OwnerRequest{
-		{
-			Email:    "example01@example.com.br.",
-			Language: "zzzzz",
-		},
-		{
-			Email:    "example02@example.com.br.",
-			Language: "en-US",
+			description: "it should alert when there's an invalid language",
+			request: OwnerRequest{
+				Email:    utils.NewString("test@example.com"),
+				Language: utils.NewString("xxx"),
+			},
+			expectedError:    false,
+			expectedMessages: true,
 		},
 	}
 
-	if _, err := toOwnersModel(ownersRequest); err == nil {
-		t.Error("Not checking invalid language on conversion")
-	}
-}
+	for i, item := range data {
+		messages, err := item.request.Validate()
+		if err != nil && !item.expectedError {
+			t.Errorf("Item %d, “%s”: did not expect error '%s'", i, item.description, err)
 
-func TestToOwnerResponse(t *testing.T) {
-	email, err := mail.ParseAddress("example@example.com.br")
-	if err != nil {
-		t.Fatal(err)
-	}
+		} else if err == nil && item.expectedError {
+			t.Errorf("Item %d, “%s”: expected error", i, item.description)
+		}
 
-	owner := model.Owner{
-		Email:    email,
-		Language: "en-US",
-	}
+		if messages != nil && !item.expectedMessages {
+			t.Errorf("Item %d, “%s”: did not expect messages '%v'", i, item.description, messages)
 
-	ownerResponse := toOwnerResponse(owner)
-
-	if ownerResponse.Email != "example@example.com.br" {
-		t.Error("Not converting e-mail properly")
-	}
-
-	if ownerResponse.Language != "en-US" {
-		t.Error("Not converting language properly")
-	}
-}
-
-func TestToOwnersResponse(t *testing.T) {
-	email1, err := mail.ParseAddress("example1@example.com.br")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	email2, err := mail.ParseAddress("example2@example.com.br")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	owners := []model.Owner{
-		{
-			Email:    email1,
-			Language: "en-US",
-		},
-		{
-			Email:    email2,
-			Language: "pt-BR",
-		},
-	}
-
-	ownersResponse := toOwnersResponse(owners)
-
-	if len(ownersResponse) != 2 {
-		t.Fatal("Not adding all owners to response")
-	}
-
-	if ownersResponse[0].Email != "example1@example.com.br" ||
-		ownersResponse[0].Language != "en-US" {
-		t.Error("Owner 1 was converted with problems")
-	}
-
-	if ownersResponse[1].Email != "example2@example.com.br" ||
-		ownersResponse[1].Language != "pt-BR" {
-		t.Error("Owner 2 was converted with problems")
+		} else if messages == nil && item.expectedMessages {
+			t.Errorf("Item %d, “%s”: expected messages", i, item.description)
+		}
 	}
 }

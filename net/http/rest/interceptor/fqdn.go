@@ -8,7 +8,7 @@ package interceptor
 import (
 	"github.com/rafaeljusto/handy/interceptor"
 	"github.com/rafaeljusto/shelter/log"
-	"github.com/rafaeljusto/shelter/model"
+	"github.com/rafaeljusto/shelter/normalize"
 	"net/http"
 )
 
@@ -28,7 +28,7 @@ func NewFQDN(h FQDNHandler) *FQDN {
 }
 
 func (i *FQDN) Before(w http.ResponseWriter, r *http.Request) {
-	fqdn, ok := model.NormalizeDomainName(i.fqdnHandler.GetFQDN())
+	fqdn, ok := normalize.NormalizeDomainName(i.fqdnHandler.GetFQDN())
 	if !ok {
 		if err := i.fqdnHandler.MessageResponse("invalid-uri", r.URL.RequestURI()); err == nil {
 			w.WriteHeader(http.StatusBadRequest)

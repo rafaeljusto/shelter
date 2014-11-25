@@ -6,170 +6,131 @@
 package protocol
 
 import (
-	"github.com/rafaeljusto/shelter/model"
+	"github.com/rafaeljusto/shelter/testing/utils"
 	"net"
-	"strings"
 	"testing"
-	"time"
 )
 
-func TestToNameserverModel(t *testing.T) {
-	nameserverRequest := NameserverRequest{
-		Host: "ns1.example.com.br",
-		IPv4: "127.0.0.1",
-		IPv6: "::1",
+func TestNameserverNormalize(t *testing.T) {
+	data := []struct {
+		description string
+		request     NameserverRequest
+		expected    NameserverRequest
+	}{
+		{
+			description: "it should normalize host with different case and spaces",
+			request: NameserverRequest{
+				Host: utils.NewString("   Ns1.EXAmPlE.cOM   "),
+			},
+			expected: NameserverRequest{
+				Host: utils.NewString("ns1.example.com."),
+			},
+		},
+		{
+			description: "it should normalize host with IDNA",
+			request: NameserverRequest{
+				Host: utils.NewString("ns1.itaú.com.br"),
+			},
+			expected: NameserverRequest{
+				Host: utils.NewString("ns1.xn--ita-boa.com.br."),
+			},
+		},
 	}
 
-	nameserver, err := nameserverRequest.toNameserverModel()
-	if err != nil {
-		t.Fatal(err)
-	}
+	for i, item := range data {
+		item.expected.Normalize()
 
-	if nameserver.Host != "ns1.example.com.br." {
-		t.Error("Not normalizing nameserver's host")
-	}
+		if !utils.CompareStrings(item.request.Host, item.expected.Host) {
+			t.Errorf(
+				"Item %d, “%s”: mismatch results. Expecting '%v'; found '%v'",
+				i,
+				item.description,
+				item.request.Host,
+				item.expected.Host,
+			)
+		}
 
-	if nameserver.IPv4.String() != "127.0.0.1" {
-		t.Error("Not parsing correctly IPv4")
-	}
+		if !utils.CompareIPs(item.request.IPv4, item.expected.IPv4) {
+			t.Errorf(
+				"Item %d, “%s”: mismatch results. Expecting '%v'; found '%v'",
+				i,
+				item.description,
+				item.request.IPv4,
+				item.expected.IPv4,
+			)
+		}
 
-	if nameserver.IPv6.String() != "::1" {
-		t.Error("Not parsing correctly IPv6")
-	}
-
-	nameserverRequest = NameserverRequest{
-		Host: "ns1.example.com.br",
-		IPv4: "127..0.0.1",
-		IPv6: "::1",
-	}
-
-	nameserver, err = nameserverRequest.toNameserverModel()
-	if err == nil {
-		t.Error("Accepting an invalid IPv4")
-	}
-
-	nameserverRequest = NameserverRequest{
-		Host: "ns1.example.com.br",
-		IPv4: "127.0.0.1",
-		IPv6: ":::1",
-	}
-
-	nameserver, err = nameserverRequest.toNameserverModel()
-	if err == nil {
-		t.Error("Accepting an invalid IPv6")
-	}
-
-	nameserverRequest = NameserverRequest{
-		Host: strings.Repeat("x", 65536) + "\uff00", // int32 overflow
-		IPv4: "127.0.0.1",
-		IPv6: "::1",
-	}
-
-	nameserver, err = nameserverRequest.toNameserverModel()
-	if err == nil {
-		t.Error("Accepting an invalid FQDN for IDNA")
+		if !utils.CompareIPs(item.request.IPv6, item.expected.IPv6) {
+			t.Errorf(
+				"Item %d, “%s”: mismatch results. Expecting '%v'; found '%v'",
+				i,
+				item.description,
+				item.request.IPv6,
+				item.expected.IPv6,
+			)
+		}
 	}
 }
 
-func TestToNameserversModel(t *testing.T) {
-	nameserversRequest := []NameserverRequest{
+func TestNameserverValidate(t *testing.T) {
+	data := []struct {
+		description      string
+		request          NameserverRequest
+		expectedError    bool
+		expectedMessages bool
+	}{
 		{
-			Host: "ns1.example.com.br",
-			IPv4: "127.0.0.1",
-			IPv6: "::1",
+			request: NameserverRequest{
+				Host: utils.NewString("ns1.example.com."),
+				IPV4: utils.NewString("127.0.0.1"),
+				IPV6: utils.NewString("::1"),
+			},
+			expectedError:    false,
+			expectedMessages: false,
 		},
 		{
-			Host: "ns2.example.com.br",
-			IPv4: "127.0.0.2",
-			IPv6: "::2",
-		},
-	}
-
-	if _, err := toNameserversModel(nameserversRequest); err != nil {
-		t.Error(err)
-	}
-
-	nameserversRequest = []NameserverRequest{
-		{
-			Host: "ns1.example.com.br",
-			IPv4: "127.ABC.0.1",
-			IPv6: "::1",
+			request: NameserverRequest{
+				Host: nil,
+				IPV4: utils.NewString("127.0.0.1"),
+				IPV6: utils.NewString("::1"),
+			},
+			expectedError:    false,
+			expectedMessages: true,
 		},
 		{
-			Host: "ns2.example.com.br",
-			IPv4: "127.0.0.2",
-			IPv6: "::2",
-		},
-	}
-
-	if _, err := toNameserversModel(nameserversRequest); err == nil {
-		t.Error("Not checking errors from nameservers conversion")
-	}
-}
-
-func TestToNameserverResponse(t *testing.T) {
-	now := time.Now()
-
-	nameserver := model.Nameserver{
-		Host:        "ns1.example.com.br.",
-		IPv4:        net.ParseIP("127.0.0.1"),
-		IPv6:        net.ParseIP("::1"),
-		LastStatus:  model.NameserverStatusOK,
-		LastCheckAt: now,
-		LastOKAt:    now,
-	}
-
-	nameserverResponse := toNameserverResponse(nameserver)
-
-	if nameserverResponse.Host != "ns1.example.com.br." {
-		t.Error("Fail to convert host")
-	}
-
-	if nameserverResponse.IPv4 != "127.0.0.1" {
-		t.Error("Fail to convert IPv4")
-	}
-
-	if nameserverResponse.IPv6 != "::1" {
-		t.Error("Fail to convert IPv6")
-	}
-
-	if nameserverResponse.LastStatus !=
-		model.NameserverStatusToString(model.NameserverStatusOK) {
-
-		t.Error("Fail to convert last status")
-	}
-
-	if nameserverResponse.LastCheckAt.Unix() != now.Unix() ||
-		nameserverResponse.LastOKAt.Unix() != now.Unix() {
-
-		t.Error("Fail to convert dates")
-	}
-}
-
-func TestToNameserversResponse(t *testing.T) {
-	now := time.Now()
-
-	nameservers := []model.Nameserver{
-		{
-			Host:        "ns1.example.com.br.",
-			IPv4:        net.ParseIP("127.0.0.1"),
-			IPv6:        net.ParseIP("::1"),
-			LastStatus:  model.NameserverStatusOK,
-			LastCheckAt: now,
-			LastOKAt:    now,
+			request: NameserverRequest{
+				Host: utils.NewString("ns1.example.com."),
+				IPV4: utils.NewString("not valid IP"),
+				IPV6: utils.NewString("::1"),
+			},
+			expectedError:    false,
+			expectedMessages: true,
 		},
 		{
-			Host:        "ns2.example.com.br.",
-			IPv4:        net.ParseIP("127.0.0.2"),
-			IPv6:        net.ParseIP("::2"),
-			LastStatus:  model.NameserverStatusError,
-			LastCheckAt: now,
+			request: NameserverRequest{
+				Host: utils.NewString("ns1.example.com."),
+				IPV4: utils.NewString("127.0.0.1"),
+				IPV6: utils.NewString("not valid IP"),
+			},
+			expectedError:    false,
+			expectedMessages: true,
 		},
 	}
 
-	nameserversResponse := toNameserversResponse(nameservers)
+	for i, item := range data {
+		messages, err := item.request.Validate()
+		if err != nil && !item.expectedError {
+			t.Errorf("Item %d, “%s”: did not expect error '%s'", i, item.description, err)
 
-	if len(nameserversResponse) != 2 {
-		t.Error("Fail to convert multiple nameservers")
+		} else if err == nil && item.expectedError {
+			t.Errorf("Item %d, “%s”: expected error", i, item.description)
+		}
+
+		if messages != nil && !item.expectedMessages {
+			t.Errorf("Item %d, “%s”: did not expect messages '%v'", i, item.description, messages)
+
+		} else if messages == nil && item.expectedMessages {
+			t.Errorf("Item %d, “%s”: expected messages", i, item.description)
+		}
 	}
 }

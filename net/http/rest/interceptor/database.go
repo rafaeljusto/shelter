@@ -14,10 +14,9 @@ import (
 )
 
 type DatabaseHandler interface {
-	SetDatabaseSession(*mgo.Session)
-	GetDatabaseSession() *mgo.Session
-	SetDatabase(*mgo.Database)
-	GetDatabase() *mgo.Database
+	SetDBSession(*mgo.Session)
+	SetDB(*mgo.Database)
+	DBSession() *mgo.Session
 }
 
 type Database struct {
@@ -43,10 +42,10 @@ func (i *Database) Before(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	i.databaseHandler.SetDatabaseSession(databaseSession)
-	i.databaseHandler.SetDatabase(database)
+	i.databaseHandler.SetDBSession(databaseSession)
+	i.databaseHandler.SetDB(database)
 }
 
 func (i *Database) After(w http.ResponseWriter, r *http.Request) {
-	i.databaseHandler.GetDatabaseSession().Close()
+	i.databaseHandler.DBSession().Close()
 }

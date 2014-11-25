@@ -126,3 +126,150 @@ func TestNameserverStatusToString(t *testing.T) {
 		t.Error("Unknown nameserver status associated to some existing status")
 	}
 }
+
+func TestNameserverApply(t *testing.T) {
+	nameserverRequest := NameserverRequest{
+		Host: "ns1.example.com.br",
+		IPv4: "127.0.0.1",
+		IPv6: "::1",
+	}
+
+	var nameserver Nameserver
+	if !nameserver.Apply(nameserverRequest) {
+		t.Fatal("Error applying nameserver")
+	}
+
+	if nameserver.Host != "ns1.example.com.br." {
+		t.Error("Not normalizing nameserver's host")
+	}
+
+	if nameserver.IPv4.String() != "127.0.0.1" {
+		t.Error("Not parsing correctly IPv4")
+	}
+
+	if nameserver.IPv6.String() != "::1" {
+		t.Error("Not parsing correctly IPv6")
+	}
+
+	nameserverRequest = NameserverRequest{
+		Host: "ns1.example.com.br",
+		IPv4: "127..0.0.1",
+		IPv6: "::1",
+	}
+
+	if nameserver.Apply(nameserverRequest) {
+		t.Error("Accepting an invalid IPv4")
+	}
+
+	nameserverRequest = NameserverRequest{
+		Host: "ns1.example.com.br",
+		IPv4: "127.0.0.1",
+		IPv6: ":::1",
+	}
+
+	if nameserver.Apply(nameserverRequest) {
+		t.Error("Accepting an invalid IPv6")
+	}
+}
+
+func TestNameserverProtocol(t *testing.T) {
+	now := time.Now()
+
+	nameserver := model.Nameserver{
+		Host:        "ns1.example.com.br.",
+		IPv4:        net.ParseIP("127.0.0.1"),
+		IPv6:        net.ParseIP("::1"),
+		LastStatus:  model.NameserverStatusOK,
+		LastCheckAt: now,
+		LastOKAt:    now,
+	}
+
+	nameserverResponse := nameserver.Protocol()
+
+	if nameserverResponse.Host != "ns1.example.com.br." {
+		t.Error("Fail to convert host")
+	}
+
+	if nameserverResponse.IPv4 != "127.0.0.1" {
+		t.Error("Fail to convert IPv4")
+	}
+
+	if nameserverResponse.IPv6 != "::1" {
+		t.Error("Fail to convert IPv6")
+	}
+
+	if nameserverResponse.LastStatus != NameserverStatusToString(model.NameserverStatusOK) {
+		t.Error("Fail to convert last status")
+	}
+
+	if nameserverResponse.LastCheckAt.Unix() != now.Unix() ||
+		nameserverResponse.LastOKAt.Unix() != now.Unix() {
+
+		t.Error("Fail to convert dates")
+	}
+}
+
+func TestNameserversApply(t *testing.T) {
+	nameserversRequest := []NameserverRequest{
+		{
+			Host: "ns1.example.com.br",
+			IPv4: "127.0.0.1",
+			IPv6: "::1",
+		},
+		{
+			Host: "ns2.example.com.br",
+			IPv4: "127.0.0.2",
+			IPv6: "::2",
+		},
+	}
+
+	var nameservers Nameservers
+	if !nameservers.Apply(nameserversRequest) {
+		t.Error("Not accepting a valid nameservers request")
+	}
+
+	nameserversRequest = []NameserverRequest{
+		{
+			Host: "ns1.example.com.br",
+			IPv4: "127.ABC.0.1",
+			IPv6: "::1",
+		},
+		{
+			Host: "ns2.example.com.br",
+			IPv4: "127.0.0.2",
+			IPv6: "::2",
+		},
+	}
+
+	if nameservers.Apply(nameserversRequest) {
+		t.Error("Not checking errors from nameservers conversion")
+	}
+}
+
+func TestNameserversProtocol(t *testing.T) {
+	now := time.Now()
+
+	nameservers := Nameservers{
+		{
+			Host:        "ns1.example.com.br.",
+			IPv4:        net.ParseIP("127.0.0.1"),
+			IPv6:        net.ParseIP("::1"),
+			LastStatus:  model.NameserverStatusOK,
+			LastCheckAt: now,
+			LastOKAt:    now,
+		},
+		{
+			Host:        "ns2.example.com.br.",
+			IPv4:        net.ParseIP("127.0.0.2"),
+			IPv6:        net.ParseIP("::2"),
+			LastStatus:  model.NameserverStatusError,
+			LastCheckAt: now,
+		},
+	}
+
+	nameserversResponse := nameservers.Protocol()
+
+	if len(nameserversResponse) != 2 {
+		t.Error("Fail to convert multiple nameservers")
+	}
+}

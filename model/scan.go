@@ -6,6 +6,8 @@
 package model
 
 import (
+	"fmt"
+	"github.com/rafaeljusto/shelter/protocol"
 	"github.com/rafaeljusto/shelter/scheduler"
 	"gopkg.in/mgo.v2/bson"
 	"sync"
@@ -68,6 +70,107 @@ type Scan struct {
 	DSStatistics             map[string]uint64 // Statistics from DS records' status (text format) in number of DS records
 }
 
+// Convert a scan object data of the system into a format easy to interpret by the user
+func (s Scan) Protocol() protocol.ScanResponse {
+	return protocol.ScanResponse{
+		Status:                   ScanStatusToString(s.Status),
+		StartedAt:                protocol.PreciseTime{s.StartedAt},
+		FinishedAt:               protocol.PreciseTime{s.FinishedAt},
+		DomainsToBeScanned:       0,
+		DomainsScanned:           s.DomainsScanned,
+		DomainsWithDNSSECScanned: s.DomainsWithDNSSECScanned,
+		NameserverStatistics:     s.NameserverStatistics,
+		DSStatistics:             s.DSStatistics,
+		Links: []protocol.Link{
+			{
+				Types: []protocol.LinkType{protocol.LinkTypeSelf},
+				HRef:  fmt.Sprintf("/scan/%s", s.StartedAt.Format(time.RFC3339Nano)),
+			},
+		},
+	}
+}
+
+type Scans []Scan
+
+// Convert a list of scan objects into protocol format with pagination support
+func (s Scans) Protocol(pagination ScanPagination) protocol.ScansResponse {
+	var scansResponses []protocol.ScanResponse
+	for _, scan := range s {
+		scansResponses = append(scansResponses, scan.Protocol())
+	}
+
+	var orderBy string
+	for _, sort := range pagination.OrderBy {
+		if len(orderBy) > 0 {
+			orderBy += "@"
+		}
+
+		orderBy += fmt.Sprintf("%s:%s",
+			ScanOrderByFieldToString(sort.Field),
+			OrderByDirectionToString(sort.Direction),
+		)
+	}
+
+	// Add pagination managment links to the response. The URI is hard coded, I didn't have
+	// any idea on how can we do this dynamically yet. We cannot get the URI from the
+	// handler because we are going to have a cross-reference problem
+	links := []protocol.Link{
+		{
+			Types: []protocol.LinkType{protocol.LinkTypeCurrent},
+			HRef:  "/scans/?current",
+		},
+	}
+
+	// Only add fast backward if we aren't in the first page
+	if pagination.Page > 1 {
+		links = append(links, protocol.Link{
+			Types: []protocol.LinkType{protocol.LinkTypeFirst},
+			HRef: fmt.Sprintf("/scans/?pagesize=%d&page=%d&orderby=%s",
+				pagination.PageSize, 1, orderBy,
+			),
+		})
+	}
+
+	// Only add previous if theres a previous page
+	if pagination.Page-1 >= 1 {
+		links = append(links, protocol.Link{
+			Types: []protocol.LinkType{protocol.LinkTypePrev},
+			HRef: fmt.Sprintf("/scans/?pagesize=%d&page=%d&orderby=%s",
+				pagination.PageSize, pagination.Page-1, orderBy,
+			),
+		})
+	}
+
+	// Only add next if there's a next page
+	if pagination.Page+1 <= pagination.NumberOfPages {
+		links = append(links, protocol.Link{
+			Types: []protocol.LinkType{protocol.LinkTypeNext},
+			HRef: fmt.Sprintf("/scans/?pagesize=%d&page=%d&orderby=%s",
+				pagination.PageSize, pagination.Page+1, orderBy,
+			),
+		})
+	}
+
+	// Only add the fast forward if we aren't on the last page
+	if pagination.Page < pagination.NumberOfPages {
+		links = append(links, protocol.Link{
+			Types: []protocol.LinkType{protocol.LinkTypeLast},
+			HRef: fmt.Sprintf("/scans/?pagesize=%d&page=%d&orderby=%s",
+				pagination.PageSize, pagination.NumberOfPages, orderBy,
+			),
+		})
+	}
+
+	return protocol.ScansResponse{
+		Page:          pagination.Page,
+		PageSize:      pagination.PageSize,
+		NumberOfPages: pagination.NumberOfPages,
+		NumberOfItems: pagination.NumberOfItems,
+		Scans:         scansResponses,
+		Links:         links,
+	}
+}
+
 // CurrentScan is a Scan that is the next to be executed or is executing at this moment. The data
 // from this struct is not stored until the scan is finished and become only a Scan struct. This
 // should be used to tell the user (using a service) how is a progress of a scan on-the-fly
@@ -76,6 +179,94 @@ type CurrentScan struct {
 	ScheduledAt        time.Time // Initial date and time that the scan was schedule to execute
 	DomainsToBeScanned uint64    // Domains selected to be scanned
 	LastModifiedAt     time.Time // Last time that the object changed
+}
+
+// Convert a current scan object data being executed of the system into a format easy to interpret
+// by the user
+func (c CurrentScan) Protocol(pagination ScanPagination) protocol.ScansResponse {
+	var scansResponses []protocol.ScanResponse
+	scansResponses = append(scansResponses, protocol.ScanResponse{
+		Status:                   ScanStatusToString(shelterCurrentScan.Status),
+		ScheduledAt:              protocol.PreciseTime{shelterCurrentScan.ScheduledAt},
+		StartedAt:                protocol.PreciseTime{shelterCurrentScan.StartedAt},
+		FinishedAt:               protocol.PreciseTime{shelterCurrentScan.FinishedAt},
+		DomainsToBeScanned:       shelterCurrentScan.DomainsToBeScanned,
+		DomainsScanned:           shelterCurrentScan.DomainsScanned,
+		DomainsWithDNSSECScanned: shelterCurrentScan.DomainsWithDNSSECScanned,
+		NameserverStatistics:     shelterCurrentScan.NameserverStatistics,
+		DSStatistics:             shelterCurrentScan.DSStatistics,
+		Links: []protocol.Link{
+			{
+				Types: []protocol.LinkType{protocol.LinkTypeSelf},
+				HRef:  "/scan/current",
+			},
+			{
+				Types: []protocol.LinkType{protocol.LinkTypeArchives},
+				HRef:  "/scans",
+			},
+		},
+	})
+
+	var orderBy string
+	for _, sort := range pagination.OrderBy {
+		if len(orderBy) > 0 {
+			orderBy += "@"
+		}
+
+		orderBy += fmt.Sprintf("%s:%s",
+			ScanOrderByFieldToString(sort.Field),
+			OrderByDirectionToString(sort.Direction),
+		)
+	}
+
+	// Add pagination managment links to the response. The URI is hard coded, I didn't have
+	// any idea on how can we do this dynamically yet. We cannot get the URI from the
+	// handler because we are going to have a cross-reference problem
+	links := []protocol.Link{
+		{
+			Types: []protocol.LinkType{protocol.LinkTypeCurrent},
+			HRef:  "/scans/?current",
+		},
+	}
+
+	// Only add fast backward if we aren't in the first page
+	if pagination.Page > 1 {
+		links = append(links, protocol.Link{
+			Types: []protocol.LinkType{protocol.LinkTypeFirst},
+			HRef: fmt.Sprintf("/scans/?pagesize=%d&page=%d&orderby=%s",
+				pagination.PageSize, 1, orderBy,
+			),
+		})
+	}
+
+	// Only add next if there's a next page
+	if pagination.Page+1 <= pagination.NumberOfPages {
+		links = append(links, protocol.Link{
+			Types: []protocol.LinkType{protocol.LinkTypeNext},
+			HRef: fmt.Sprintf("/scans/?pagesize=%d&page=%d&orderby=%s",
+				pagination.PageSize, pagination.Page+1, orderBy,
+			),
+		})
+	}
+
+	// Only add the fast forward if we aren't on the last page
+	if pagination.Page < pagination.NumberOfPages {
+		links = append(links, protocol.Link{
+			Types: []protocol.LinkType{protocol.LinkTypeLast},
+			HRef: fmt.Sprintf("/scans/?pagesize=%d&page=%d&orderby=%s",
+				pagination.PageSize, pagination.NumberOfPages, orderBy,
+			),
+		})
+	}
+
+	return protocol.ScansResponse{
+		Page:          pagination.Page,
+		PageSize:      pagination.PageSize,
+		NumberOfPages: pagination.NumberOfPages,
+		NumberOfItems: pagination.NumberOfItems,
+		Scans:         scansResponses,
+		Links:         links,
+	}
 }
 
 // Function to fill current scan variable for the first time. Should run after the

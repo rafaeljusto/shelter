@@ -6,162 +6,130 @@
 package interceptor
 
 import (
-	"crypto/md5"
-	"encoding/base64"
 	"encoding/json"
-	"fmt"
-	"github.com/rafaeljusto/shelter/log"
 	"github.com/rafaeljusto/shelter/messages"
-	"github.com/rafaeljusto/shelter/net/http/rest/check"
+	"github.com/rafaeljusto/shelter/protocol"
+	"io"
 	"net/http"
 	"reflect"
-	"strconv"
 	"strings"
-	"time"
 )
 
-type CodecHandler interface {
-	GetLanguage() *messages.LanguagePack
-	MessageResponse(string, string) error
+type requestResponser interface {
+	RequestValue() reflect.Value
+	SetRequestValue(reflect.Value)
+	ResponseValue() reflect.Value
+	SetResponseValue(reflect.Value)
+	Message() protocol.Translator
+	SetMessage(protocol.Translator)
+	Language() *messages.LanguagePack
 }
 
-type JSONCodec struct {
-	codecHandler CodecHandler
-	errPosition  int
-	reqPosition  int
-	resPosition  int
+type JSON struct {
+	handler requestResponser
 }
 
-func NewJSONCodec(h CodecHandler) *JSONCodec {
-	return &JSONCodec{codecHandler: h}
+func NewJSON(h requestResponser) *JSON {
+	return &JSON{handler: h}
 }
 
-func (c *JSONCodec) Before(w http.ResponseWriter, r *http.Request) {
+func (i *JSON) Before(w http.ResponseWriter, r *http.Request) {
 	m := strings.ToLower(r.Method)
-	c.parse(m)
+	i.parse(m)
 
-	if c.reqPosition >= 0 {
-		st := reflect.ValueOf(c.codecHandler).Elem()
+	if request := i.handler.RequestValue(); request.IsValid() {
 		decoder := json.NewDecoder(r.Body)
-		if err := decoder.Decode(st.Field(c.reqPosition).Addr().Interface()); err != nil {
-			log.Println("Received an invalid JSON. Details:", err)
-
-			if err := c.codecHandler.MessageResponse("invalid-json-content", r.URL.RequestURI()); err == nil {
+		for {
+			if err := decoder.Decode(request.Addr().Interface()); err == io.EOF {
+				break
+			} else if err != nil {
 				w.WriteHeader(http.StatusBadRequest)
+				i.handler.SetMessage(protocol.NewMessageResponse(protocol.ErrorCodeInvalidJSONContent, nil))
 
-			} else {
-				log.Println("Error while writing response. Details:", err)
-				w.WriteHeader(http.StatusInternalServerError)
-			}
-
-			return
-		}
-	}
-}
-
-func (c *JSONCodec) After(w http.ResponseWriter, r *http.Request) {
-	st := reflect.ValueOf(c.codecHandler).Elem()
-
-	// We are going to always send the content HTTP header fields even if we don't have a
-	// content, because if we don't set the GoLang HTTP server will add "text/plain"
-	w.Header().Set("Content-Type", fmt.Sprintf("application/vnd.shelter+json; charset=%s", check.SupportedCharset))
-
-	if c.errPosition >= 0 {
-		if elem := st.Field(c.errPosition).Interface(); elem != nil {
-			elemType := reflect.TypeOf(elem)
-
-			if elemType.Kind() == reflect.Ptr && !st.Field(c.errPosition).IsNil() {
-				body, err := json.Marshal(elem)
-				if err != nil {
-					log.Println("Error writing message response. Details:", err)
-					w.WriteHeader(http.StatusInternalServerError)
-					return
-				}
-
-				c.addResponseHeaders(w, body)
-				w.Write(body)
 				return
 			}
 		}
 	}
+}
 
-	if c.resPosition >= 0 {
-		elem := st.Field(c.resPosition).Interface()
-		elemType := reflect.TypeOf(elem)
+func (i *JSON) After(w http.ResponseWriter, r *http.Request) {
+	defer func() {
+		if !r.Close && r.Body != nil {
+			err := r.Body.Close()
 
-		// We are also checking for map types because the work like pointers
-		if (elemType.Kind() == reflect.Ptr ||
-			elemType.Kind() == reflect.Map ||
-			elemType.Kind() == reflect.Slice) &&
-			st.Field(c.resPosition).IsNil() {
+			if err != nil {
+				// TODO!
+				//i.handler.Logger().Error(err)
+			}
+		}
+	}()
 
-			// Nothing to write, add the default headers and move out
-			c.addResponseHeaders(w, nil)
-			return
+	if message := i.handler.Message(); message != nil {
+		if message.Translate(i.handler.Language()) {
+			if body, err := json.Marshal(message); err == nil {
+				w.Write(body)
+
+			} else {
+				// TODO!
+				//i.handler.Logger().Errorf("Error writing response. Details: %s", err)
+				w.WriteHeader(http.StatusInternalServerError)
+			}
+
+		} else {
+			w.WriteHeader(http.StatusNotAcceptable)
 		}
 
-		body, err := json.Marshal(elem)
-		if err != nil {
-			log.Println("Error writing message response. Details:", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
+		return
+	}
 
-		c.addResponseHeaders(w, body)
+	response := i.handler.ResponseValue()
 
-		// For HTTP HEAD method we never add the body, but we add the other headers as a
-		// normal GET method. For more information check the RFC 2616 - 14.13.
-		if len(body) > 0 && r.Method != "HEAD" {
-			w.Write(body)
-		}
+	if !response.IsValid() {
+		return
+	}
 
-	} else {
-		c.addResponseHeaders(w, nil)
+	elem := response.Interface()
+	elemType := reflect.TypeOf(elem)
+
+	// We are also checking for map types because they work like pointers
+	if (elemType.Kind() == reflect.Ptr ||
+		elemType.Kind() == reflect.Map ||
+		elemType.Kind() == reflect.Slice) &&
+		response.IsNil() {
+
+		return
+	}
+
+	body, err := json.Marshal(elem)
+
+	if err != nil {
+		//i.handler.Logger().Errorf("Error writing response. Details: %s", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// For HTTP HEAD method we never add the body, but we add the other headers as a
+	// normal GET method. For more information check the RFC 2616 - 14.13.
+	if len(body) > 0 && r.Method != "HEAD" {
+		w.Write(body)
 	}
 }
 
-func (c *JSONCodec) parse(m string) {
-	c.errPosition, c.reqPosition, c.resPosition = -1, -1, -1
+func (i *JSON) parse(m string) {
+	st := reflect.ValueOf(i.handler).Elem()
 
-	st := reflect.ValueOf(c.codecHandler).Elem()
-	for i := 0; i < st.NumField(); i++ {
-		field := st.Type().Field(i)
-		if field.Tag == "error" {
-			c.errPosition = i
-			continue
-		}
+	for j := 0; j < st.NumField(); j++ {
+		field := st.Type().Field(j)
 
 		value := field.Tag.Get("request")
 		if value == "all" || strings.Contains(value, m) {
-			c.reqPosition = i
+			i.handler.SetRequestValue(st.Field(j))
 			continue
 		}
 
 		value = field.Tag.Get("response")
 		if value == "all" || strings.Contains(value, m) {
-			c.resPosition = i
+			i.handler.SetResponseValue(st.Field(j))
 		}
 	}
-}
-
-func (c *JSONCodec) addResponseHeaders(w http.ResponseWriter, body []byte) {
-	w.Header().Set("Content-Length", strconv.Itoa(len(body)))
-
-	if l := c.codecHandler.GetLanguage(); l != nil {
-		w.Header().Set("Content-Language", l.Name())
-	}
-
-	if len(body) > 0 {
-		hash := md5.New()
-		hash.Write(body)
-		hashBytes := hash.Sum(nil)
-		hashBase64 := base64.StdEncoding.EncodeToString(hashBytes)
-		w.Header().Set("Content-MD5", hashBase64)
-	}
-
-	w.Header().Set("Accept", check.SupportedContentType)
-	w.Header().Set("Accept-Language", messages.ShelterRESTLanguagePacks.Names())
-	w.Header().Set("Accept-Charset", "utf-8")
-	w.Header().Set("Accept-Encoding", "gzip")
-	w.Header().Set("Date", time.Now().UTC().Format(time.RFC1123))
 }
