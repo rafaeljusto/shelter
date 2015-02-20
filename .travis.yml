@@ -1,17 +1,9 @@
 language: go
 
 go:
+  - 1.3
+  - 1.4
   - tip
-
-env:
-  # "gvm update" resets GOOS and GOARCH environment variable, workaround it by setting
-  # BUILD_GOOS and BUILD_GOARCH and overriding GOARCH and GOOS in the build script
-  global:
-    - BUILD_GOARCH=amd64
-  matrix:
-    - BUILD_GOOS=linux
-    - BUILD_GOOS=darwin
-    - BUILD_GOOS=windows
 
 install:
   - go get golang.org/x/tools/cmd/cover
@@ -25,11 +17,7 @@ before_script:
   - "sh -e /etc/init.d/xvfb start"
 
 script:
-  - gvm cross $BUILD_GOOS $BUILD_GOARCH
-  - GOARCH=$BUILD_GOARCH GOOS=$BUILD_GOOS go build
-
-  # only test on linux
-  - if [ $BUILD_GOOS == "linux" ]; then GOARCH=$BUILD_GOARCH GOOS=$BUILD_GOOS ./test-all.sh; fi
+  - ./test-all.sh
 
 notifications:
   email:
