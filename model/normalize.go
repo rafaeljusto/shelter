@@ -6,8 +6,8 @@
 package model
 
 import (
-	"code.google.com/p/go.net/idna"
 	"errors"
+	"github.com/rafaeljusto/shelter/Godeps/_workspace/src/code.google.com/p/go.net/idna"
 	"regexp"
 	"strings"
 )

@@ -6,9 +6,9 @@
 package scan
 
 import (
+	"github.com/rafaeljusto/shelter/Godeps/_workspace/src/gopkg.in/mgo.v2"
 	"github.com/rafaeljusto/shelter/dao"
 	"github.com/rafaeljusto/shelter/model"
-	"gopkg.in/mgo.v2"
 	"sync"
 )
 

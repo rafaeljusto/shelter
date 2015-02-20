@@ -7,7 +7,7 @@ package scan
 
 import (
 	"fmt"
-	"github.com/miekg/dns"
+	"github.com/rafaeljusto/shelter/Godeps/_workspace/src/github.com/miekg/dns"
 	"github.com/rafaeljusto/shelter/config"
 	"github.com/rafaeljusto/shelter/dao"
 	"github.com/rafaeljusto/shelter/database/mongodb"

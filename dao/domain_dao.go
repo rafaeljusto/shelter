@@ -7,10 +7,10 @@ package dao
 
 import (
 	"errors"
+	"github.com/rafaeljusto/shelter/Godeps/_workspace/src/gopkg.in/mgo.v2"
+	"github.com/rafaeljusto/shelter/Godeps/_workspace/src/gopkg.in/mgo.v2/bson"
 	"github.com/rafaeljusto/shelter/database/mongodb"
 	"github.com/rafaeljusto/shelter/model"
-	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
 	"strings"
 	"time"
 )

@@ -6,9 +6,9 @@
 package protocol
 
 import (
-	"code.google.com/p/go.net/idna"
 	"errors"
 	"fmt"
+	"github.com/rafaeljusto/shelter/Godeps/_workspace/src/code.google.com/p/go.net/idna"
 	"github.com/rafaeljusto/shelter/model"
 	"strings"
 )

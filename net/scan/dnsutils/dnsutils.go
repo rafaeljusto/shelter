@@ -6,7 +6,7 @@
 package dnsutils
 
 import (
-	"github.com/miekg/dns"
+	"github.com/rafaeljusto/shelter/Godeps/_workspace/src/github.com/miekg/dns"
 )
 
 // Useful function to retrieve all records of a specific type from the DNS response

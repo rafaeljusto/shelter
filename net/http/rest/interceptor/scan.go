@@ -6,7 +6,7 @@
 package interceptor
 
 import (
-	"github.com/rafaeljusto/handy/interceptor"
+	"github.com/rafaeljusto/shelter/Godeps/_workspace/src/github.com/rafaeljusto/handy/interceptor"
 	"github.com/rafaeljusto/shelter/dao"
 	"github.com/rafaeljusto/shelter/log"
 	"github.com/rafaeljusto/shelter/model"

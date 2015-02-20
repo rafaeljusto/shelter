@@ -6,8 +6,8 @@
 package model
 
 import (
+	"github.com/rafaeljusto/shelter/Godeps/_workspace/src/gopkg.in/mgo.v2/bson"
 	"github.com/rafaeljusto/shelter/scheduler"
-	"gopkg.in/mgo.v2/bson"
 	"sync"
 	"sync/atomic"
 	"time"

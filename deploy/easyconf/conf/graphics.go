@@ -6,7 +6,7 @@
 package conf
 
 import (
-	"github.com/nsf/termbox-go"
+	"github.com/rafaeljusto/shelter/Godeps/_workspace/src/github.com/nsf/termbox-go"
 	"regexp"
 	"strconv"
 	"strings"

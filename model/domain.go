@@ -6,7 +6,7 @@
 package model
 
 import (
-	"gopkg.in/mgo.v2/bson"
+	"github.com/rafaeljusto/shelter/Godeps/_workspace/src/gopkg.in/mgo.v2/bson"
 	"math"
 	"math/rand"
 	"time"

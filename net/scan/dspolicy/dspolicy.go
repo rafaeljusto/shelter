@@ -6,7 +6,7 @@
 package dspolicy
 
 import (
-	"github.com/miekg/dns"
+	"github.com/rafaeljusto/shelter/Godeps/_workspace/src/github.com/miekg/dns"
 	"github.com/rafaeljusto/shelter/model"
 	"github.com/rafaeljusto/shelter/net/scan/dnsutils"
 	"net"

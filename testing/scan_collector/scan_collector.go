@@ -7,12 +7,12 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/rafaeljusto/shelter/Godeps/_workspace/src/gopkg.in/mgo.v2"
 	"github.com/rafaeljusto/shelter/dao"
 	"github.com/rafaeljusto/shelter/database/mongodb"
 	"github.com/rafaeljusto/shelter/model"
 	"github.com/rafaeljusto/shelter/net/scan"
 	"github.com/rafaeljusto/shelter/testing/utils"
-	"gopkg.in/mgo.v2"
 	"net"
 	"net/mail"
 	"sync"

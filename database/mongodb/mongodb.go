@@ -6,8 +6,8 @@
 package mongodb
 
 import (
+	"github.com/rafaeljusto/shelter/Godeps/_workspace/src/gopkg.in/mgo.v2"
 	"github.com/rafaeljusto/shelter/secret"
-	"gopkg.in/mgo.v2"
 	"sync"
 	"time"
 )

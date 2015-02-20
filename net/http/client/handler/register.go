@@ -6,7 +6,7 @@
 package handler
 
 import (
-	"github.com/rafaeljusto/handy"
+	"github.com/rafaeljusto/shelter/Godeps/_workspace/src/github.com/rafaeljusto/handy"
 )
 
 // Routes is responsable for storing the link beteween an URI and a handler. It uses a

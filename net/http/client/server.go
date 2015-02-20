@@ -7,7 +7,7 @@ package client
 
 import (
 	"crypto/tls"
-	"github.com/rafaeljusto/handy"
+	"github.com/rafaeljusto/shelter/Godeps/_workspace/src/github.com/rafaeljusto/handy"
 	"github.com/rafaeljusto/shelter/config"
 	"github.com/rafaeljusto/shelter/log"
 	"github.com/rafaeljusto/shelter/net/http/client/handler"

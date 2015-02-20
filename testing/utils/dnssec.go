@@ -6,7 +6,7 @@
 package utils
 
 import (
-	"github.com/miekg/dns"
+	"github.com/rafaeljusto/shelter/Godeps/_workspace/src/github.com/miekg/dns"
 	"github.com/rafaeljusto/shelter/model"
 	"time"
 )

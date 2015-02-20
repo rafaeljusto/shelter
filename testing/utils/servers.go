@@ -8,7 +8,7 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/miekg/dns"
+	"github.com/rafaeljusto/shelter/Godeps/_workspace/src/github.com/miekg/dns"
 	"github.com/rafaeljusto/shelter/config"
 	"github.com/rafaeljusto/shelter/net/http/client"
 	"github.com/rafaeljusto/shelter/net/http/rest"
