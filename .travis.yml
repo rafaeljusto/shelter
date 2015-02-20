@@ -1,7 +1,7 @@
 language: go
 
 go:
-  - 1.3
+  - tip
 
 env:
   # "gvm update" resets GOOS and GOARCH environment variable, workaround it by setting
@@ -15,11 +15,6 @@ env:
 
 install:
   - go get code.google.com/p/go.tools/cmd/cover
-  - go get gopkg.in/mgo.v2
-  - go get github.com/miekg/dns
-  - go get code.google.com/p/go.net/idna
-  - go get github.com/rafaeljusto/handy
-  - go get github.com/nsf/termbox-go
 
 before_script:
   - npm install karma
