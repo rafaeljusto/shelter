@@ -1,0 +1,35 @@
+{
+	"ImportPath": "github.com/rafaeljusto/shelter",
+	"GoVersion": "go1.4",
+	"Packages": [
+		"./..."
+	],
+	"Deps": [
+		{
+			"ImportPath": "code.google.com/p/go.net/idna",
+			"Comment": "null-135",
+			"Rev": "0d5da82b4799a671e710181878bf5ba0415751a7"
+		},
+		{
+			"ImportPath": "github.com/mattn/go-runewidth",
+			"Comment": "travisish-23-g36f63b8",
+			"Rev": "36f63b8223e701c16f36010094fb6e84ffbaf8e0"
+		},
+		{
+			"ImportPath": "github.com/miekg/dns",
+			"Rev": "cd2048a15af459f7a878a304c939906589f96cda"
+		},
+		{
+			"ImportPath": "github.com/nsf/termbox-go",
+			"Rev": "68216d77746e609896f5a9994bf8326fd6750f4b"
+		},
+		{
+			"ImportPath": "github.com/rafaeljusto/handy",
+			"Rev": "e3d6bee0f7a640ba31790110f8f5f490e8e6f1c7"
+		},
+		{
+			"ImportPath": "gopkg.in/mgo.v2",
+			"Rev": "3116f72d0fe0216b75201cb3a1ae61c82c2a4d63"
+		}
+	]
+}
