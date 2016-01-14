@@ -8,15 +8,16 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
+	"io/ioutil"
+	"net"
+	"net/http"
+
 	"github.com/rafaeljusto/shelter/config"
 	"github.com/rafaeljusto/shelter/database/mongodb"
 	"github.com/rafaeljusto/shelter/net/http/rest/check"
 	"github.com/rafaeljusto/shelter/net/http/rest/interceptor"
 	"github.com/rafaeljusto/shelter/net/http/rest/messages"
 	"github.com/rafaeljusto/shelter/testing/utils"
-	"io/ioutil"
-	"net"
-	"net/http"
 )
 
 var (
@@ -175,7 +176,7 @@ func checkHeaders() {
         { "host": "ns2.example.com.br.", "ipv6": "::1" }
       ],
       "Owners": [
-        { "email": "admin@example.com.br.", "language": "pt-br" }
+        { "email": "admin@example.com.br", "language": "pt-br" }
       ]
     }`)
 
@@ -221,7 +222,7 @@ func createDomain() {
         { "host": "ns2.example.com.br.", "ipv6": "::1" }
       ],
       "Owners": [
-        { "email": "admin@example.com.br.", "language": "en-us" }
+        { "email": "admin@example.com.br", "language": "en-us" }
       ]
     }`)
 

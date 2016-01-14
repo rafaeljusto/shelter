@@ -10,12 +10,13 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+
 	"github.com/rafaeljusto/shelter/config"
 	"github.com/rafaeljusto/shelter/database/mongodb"
 	"github.com/rafaeljusto/shelter/net/http/rest/protocol"
 	"github.com/rafaeljusto/shelter/testing/utils"
-	"io/ioutil"
-	"net/http"
 )
 
 var (
@@ -97,7 +98,7 @@ func createDomains() {
     { "host": "b.dns.br." }
   ],
   "Owners": [
-    { "email": "admin@gmail.com.", "language": "pt-br" }
+    { "email": "admin@gmail.com", "language": "pt-br" }
   ]
 }`
 

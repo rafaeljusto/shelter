@@ -84,7 +84,7 @@
     "nameserverTimeoutAlertDays": 30,
     "dsErrorAlertDays": 1,
     "dsTimeoutAlertDays": 7,
-    "from": "shelter@example.com.br.",
+    "from": "shelter@example.com.br",
     "templatesPath": "templates/notification",
 
     "smtpServer": {

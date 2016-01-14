@@ -222,9 +222,9 @@ func simpleNotification(domainDAO dao.DomainDAO, templateName string,
 
 	select {
 	case message := <-messageChannel:
-		if message.Header.Get("From") != "shelter@example.com.br." {
+		if message.Header.Get("From") != "shelter@example.com.br" {
 			utils.Fatalln(fmt.Sprintf("E-mail from header is different. Expected "+
-				"shelter@example.com.br. but found %s", message.Header.Get("From")), nil)
+				"shelter@example.com.br but found %s", message.Header.Get("From")), nil)
 		}
 
 		if message.Header.Get("To") != "test@rafael.net.br" {

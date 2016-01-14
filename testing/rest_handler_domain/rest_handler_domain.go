@@ -8,17 +8,18 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"time"
+
 	"github.com/rafaeljusto/shelter/Godeps/_workspace/src/github.com/rafaeljusto/handy"
 	"github.com/rafaeljusto/shelter/Godeps/_workspace/src/gopkg.in/mgo.v2"
 	"github.com/rafaeljusto/shelter/config"
 	"github.com/rafaeljusto/shelter/database/mongodb"
 	"github.com/rafaeljusto/shelter/net/http/rest/handler"
 	"github.com/rafaeljusto/shelter/testing/utils"
-	"io/ioutil"
-	"net/http"
-	"net/http/httptest"
-	"strings"
-	"time"
 )
 
 var (
@@ -127,7 +128,7 @@ func createDomain(database *mgo.Database) {
         { "host": "ns2.example.com.br.", "ipv6": "::1" }
       ],
       "Owners": [
-        { "email": "admin@example.com.br.", "language": "en-us" }
+        { "email": "admin@example.com.br", "language": "en-us" }
       ]
     }`
 
@@ -176,7 +177,7 @@ func updateDomain(database *mgo.Database) {
         { "host": "ns3.example.com.br.", "ipv6": "::1" }
       ],
       "Owners": [
-        { "email": "administrator@example.com.br.", "language": "pt-br" }
+        { "email": "administrator@example.com.br", "language": "pt-br" }
       ]
     }`
 
@@ -260,7 +261,7 @@ func retrieveDomain(database *mgo.Database) {
 	}
 
 	if len(h.Response.Owners) != 1 ||
-		h.Response.Owners[0].Email != "administrator@example.com.br." {
+		h.Response.Owners[0].Email != "administrator@example.com.br" {
 
 		utils.Fatalln("Domain's owners were not persisted correctly", nil)
 	}
@@ -400,7 +401,7 @@ func updateDomainIfModifiedSince(database *mgo.Database) {
         { "host": "ns3.example.com.br.", "ipv6": "::1" }
       ],
       "Owners": [
-        { "email": "administrator@example.com.br.", "language": "pt-br" }
+        { "email": "administrator@example.com.br", "language": "pt-br" }
       ]
     }`
 
@@ -428,7 +429,7 @@ func updateDomainIfUnmodifiedSince(database *mgo.Database) {
         { "host": "ns3.example.com.br.", "ipv6": "::1" }
       ],
       "Owners": [
-        { "email": "administrator@example.com.br.", "language": "pt-br" }
+        { "email": "administrator@example.com.br", "language": "pt-br" }
       ]
     }`
 
@@ -456,7 +457,7 @@ func updateDomainIfMatch(database *mgo.Database) {
         { "host": "ns3.example.com.br.", "ipv6": "::1" }
       ],
       "Owners": [
-        { "email": "administrator@example.com.br.", "language": "en-us" }
+        { "email": "administrator@example.com.br", "language": "en-us" }
       ]
     }`
 
@@ -488,7 +489,7 @@ func updateDomainIfNoneMatch(database *mgo.Database) {
         { "host": "ns3.example.com.br.", "ipv6": "::1" }
       ],
       "Owners": [
-        { "email": "administrator@example.com.br.", "language": "en-us" }
+        { "email": "administrator@example.com.br", "language": "en-us" }
       ]
     }`
 

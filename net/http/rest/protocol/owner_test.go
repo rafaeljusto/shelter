@@ -6,9 +6,10 @@
 package protocol
 
 import (
-	"github.com/rafaeljusto/shelter/model"
 	"net/mail"
 	"testing"
+
+	"github.com/rafaeljusto/shelter/model"
 )
 
 func TestToOwnerModel(t *testing.T) {
@@ -54,11 +55,11 @@ func TestToOwnerModel(t *testing.T) {
 func TestToOwnersModel(t *testing.T) {
 	ownersRequest := []OwnerRequest{
 		{
-			Email:    "example01@example.com.br.",
+			Email:    "example01@example.com.br",
 			Language: "pt-br",
 		},
 		{
-			Email:    "example02@example.com.br.",
+			Email:    "example02@example.com.br",
 			Language: "en-US",
 		},
 	}
@@ -73,7 +74,7 @@ func TestToOwnersModel(t *testing.T) {
 			Language: "pt-br",
 		},
 		{
-			Email:    "example02@example.com.br.",
+			Email:    "example02@example.com.br",
 			Language: "en-US",
 		},
 	}
@@ -84,11 +85,11 @@ func TestToOwnersModel(t *testing.T) {
 
 	ownersRequest = []OwnerRequest{
 		{
-			Email:    "example01@example.com.br.",
+			Email:    "example01@example.com.br",
 			Language: "zzzzz",
 		},
 		{
-			Email:    "example02@example.com.br.",
+			Email:    "example02@example.com.br",
 			Language: "en-US",
 		},
 	}

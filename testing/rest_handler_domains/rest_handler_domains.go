@@ -95,7 +95,7 @@ func createDomains(database *mgo.Database) {
         { "host": "ns2.example.com.br." }
       ],
       "Owners": [
-        { "email": "admin@example.com.br.", "language": "pt-br" }
+        { "email": "admin@example.com.br", "language": "pt-br" }
       ]
     }`
 

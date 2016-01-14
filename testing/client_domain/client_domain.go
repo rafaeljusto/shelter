@@ -9,11 +9,12 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+
 	"github.com/rafaeljusto/shelter/config"
 	"github.com/rafaeljusto/shelter/database/mongodb"
 	"github.com/rafaeljusto/shelter/testing/utils"
-	"io/ioutil"
-	"net/http"
 )
 
 var (
@@ -85,7 +86,7 @@ func domainLifeCycle() {
     { "host": "ns2.example.com.br.", "ipv6": "::1" }
   ],
   "Owners": [
-    { "email": "admin@example.com.br.", "language": "pt-br" }
+    { "email": "admin@example.com.br", "language": "pt-br" }
   ]
 }`,
 		},
@@ -98,7 +99,7 @@ func domainLifeCycle() {
     { "host": "ns1.example.com.br.", "ipv4": "127.0.0.1" }
   ],
   "Owners": [
-    { "email": "admin2@example.com.br.", "language": "en-us" }
+    { "email": "admin2@example.com.br", "language": "en-us" }
   ]
 }`,
 		},
@@ -106,7 +107,7 @@ func domainLifeCycle() {
 			method:         "GET",
 			uri:            "/domain/example.com.br.",
 			expectedStatus: http.StatusOK,
-			expectedBody:   `{"fqdn":"example.com.br.","nameservers":[{"host":"ns1.example.com.br.","ipv4":"127.0.0.1","lastStatus":"NOTCHECKED","lastCheckAt":"0001-01-01T00:00:00Z","lastOKAt":"0001-01-01T00:00:00Z"}],"owners":[{"email":"admin2@example.com.br.","language":"en-US"}],"links":[{"types":["self"],"href":"/domain/example.com.br."}]}`,
+			expectedBody:   `{"fqdn":"example.com.br.","nameservers":[{"host":"ns1.example.com.br.","ipv4":"127.0.0.1","lastStatus":"NOTCHECKED","lastCheckAt":"0001-01-01T00:00:00Z","lastOKAt":"0001-01-01T00:00:00Z"}],"owners":[{"email":"admin2@example.com.br","language":"en-US"}],"links":[{"types":["self"],"href":"/domain/example.com.br."}]}`,
 		},
 		{
 			method:         "DELETE",

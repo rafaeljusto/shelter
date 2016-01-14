@@ -7,10 +7,11 @@ package protocol
 
 import (
 	"fmt"
-	"github.com/rafaeljusto/shelter/model"
 	"net/mail"
 	"strings"
 	"testing"
+
+	"github.com/rafaeljusto/shelter/model"
 )
 
 func TestMerge(t *testing.T) {
@@ -66,7 +67,7 @@ func TestMerge(t *testing.T) {
 		},
 	}
 
-	email, err := mail.ParseAddress("example0@example.com.br.")
+	email, err := mail.ParseAddress("example0@example.com.br")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -226,7 +227,7 @@ func TestMerge(t *testing.T) {
 }
 
 func TestToDomainResponse(t *testing.T) {
-	email, err := mail.ParseAddress("example@example.com.br.")
+	email, err := mail.ParseAddress("example@example.com.br")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -271,7 +272,7 @@ func TestToDomainResponse(t *testing.T) {
 	}
 
 	if len(domainResponse.Owners) != 1 ||
-		domainResponse.Owners[0].Email != "example@example.com.br." ||
+		domainResponse.Owners[0].Email != "example@example.com.br" ||
 		domainResponse.Owners[0].Language != "pt-BR" {
 
 		t.Error("Fail to convert owners")
