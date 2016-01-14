@@ -29,7 +29,6 @@ ENV "DEBIAN_FRONTEND" ""
 RUN mkdir -p /data/db
 RUN mkdir /var/run/sshd
 RUN echo 'root:abc123' | chpasswd
-RUN cp /usr/shelter/etc/shelter.conf.unix.sample /usr/shelter/etc/shelter.conf
 
 # Copy necessary files to container
 ADD entrypoint.sh /usr/shelter/bin/entrypoint.sh
