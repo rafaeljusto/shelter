@@ -365,6 +365,7 @@ article header {
   padding: 0.2rem 0.4rem 0.2rem 0.4rem;
   text-shadow: 1px 1px 0px #1570cd;
   transition: all linear 1.5s;
+  width: 100%;
 }
 
 article header:hover {
