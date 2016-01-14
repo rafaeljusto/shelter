@@ -14,7 +14,7 @@ echo "#### Starting Mongodb server ####"
 echo "#################################"
 echo ""
 
-/usr/bin/mongod --fork --logpath /var/log/mongodb.log
+/usr/bin/mongod --fork --logpath /var/log/mongodb.log --smallfiles
 
 echo ""
 echo "#################################"
