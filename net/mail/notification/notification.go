@@ -9,6 +9,11 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"net/smtp"
+	"regexp"
+	"runtime"
+	"strings"
+
 	"github.com/rafaeljusto/shelter/config"
 	"github.com/rafaeljusto/shelter/dao"
 	"github.com/rafaeljusto/shelter/database/mongodb"
@@ -16,10 +21,6 @@ import (
 	"github.com/rafaeljusto/shelter/model"
 	"github.com/rafaeljusto/shelter/net/mail/notification/protocol"
 	"github.com/rafaeljusto/shelter/secret"
-	"net/smtp"
-	"regexp"
-	"runtime"
-	"strings"
 )
 
 // List of possible errors that can occur when calling functions from this file. Other
@@ -51,6 +52,18 @@ func Notify() {
 			log.Printf("Panic detected while notifying the owners. Details: %v\n%s", r, buf)
 		}
 	}()
+
+	log.Info("Start notification job")
+	defer func() {
+		log.Info("End notification job")
+	}()
+
+	log.Debugf("Initializing database with the parameters: URIS - %v | Name - %s | Auth - %t | Username - %s",
+		config.ShelterConfig.Database.URIs,
+		config.ShelterConfig.Database.Name,
+		config.ShelterConfig.Database.Auth.Enabled,
+		config.ShelterConfig.Database.Auth.Username,
+	)
 
 	database, databaseSession, err := mongodb.Open(
 		config.ShelterConfig.Database.URIs,
@@ -159,6 +172,9 @@ func notifyDomain(domain *model.Domain) error {
 
 		switch config.ShelterConfig.Notification.SMTPServer.Auth.Type {
 		case config.AuthenticationTypePlain:
+			log.Debugf("Sending notification for domain %s to %v via server %s with plain authentication",
+				domain.FQDN, emails, server)
+
 			auth := smtp.PlainAuth("",
 				config.ShelterConfig.Notification.SMTPServer.Auth.Username,
 				password,
@@ -170,6 +186,9 @@ func notifyDomain(domain *model.Domain) error {
 			}
 
 		case config.AuthenticationTypeCRAMMD5Auth:
+			log.Debugf("Sending notification for domain %s to %v via server %s with CRAM MD5 authentication",
+				domain.FQDN, emails, server)
+
 			auth := smtp.CRAMMD5Auth(
 				config.ShelterConfig.Notification.SMTPServer.Auth.Username,
 				password,
@@ -180,6 +199,9 @@ func notifyDomain(domain *model.Domain) error {
 			}
 
 		default:
+			log.Debugf("Sending notification for domain %s to %v via server %s without authentication",
+				domain.FQDN, emails, server)
+
 			if err := smtp.SendMail(server, nil, from, emails, msgBytes); err != nil {
 				return err
 			}

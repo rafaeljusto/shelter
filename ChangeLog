@@ -1,6 +1,18 @@
 Shelter
 =======
 
+version x.x
+-----------
+
+  New Feature:
+  * Log levels (normal, info and debug) to make the system more verbose
+
+  Fixes:
+  * Do not panic when we try to close a nil database connection
+  * Do not panic when the SMTP password is too small
+  * Web client header expanded to full screen width
+  * Dockerfile don't need to copy configuration file to the container anymore
+
 version 0.3
 -----------
 

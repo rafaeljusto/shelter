@@ -21,6 +21,14 @@ package main
 import (
 	"flag"
 	"fmt"
+	"net"
+	"os"
+	"os/signal"
+	"path/filepath"
+	"runtime"
+	"syscall"
+	"time"
+
 	"github.com/rafaeljusto/shelter/config"
 	"github.com/rafaeljusto/shelter/log"
 	"github.com/rafaeljusto/shelter/model"
@@ -29,13 +37,6 @@ import (
 	"github.com/rafaeljusto/shelter/net/mail/notification"
 	"github.com/rafaeljusto/shelter/net/scan"
 	"github.com/rafaeljusto/shelter/scheduler"
-	"net"
-	"os"
-	"os/signal"
-	"path/filepath"
-	"runtime"
-	"syscall"
-	"time"
 )
 
 const (
@@ -132,6 +133,8 @@ func main() {
 			log.Println("Error starting the REST server. Details:", err)
 			os.Exit(ErrStartingRESTServer)
 		}
+
+		log.Info("REST server started")
 	}
 
 	if config.ShelterConfig.WebClient.Enabled {
@@ -146,6 +149,8 @@ func main() {
 			log.Println("Error starting the Client server. Details:", err)
 			os.Exit(ErrStartingWebClient)
 		}
+
+		log.Info("Web client started")
 	}
 
 	if config.ShelterConfig.Scan.Enabled {

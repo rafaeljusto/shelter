@@ -7,16 +7,17 @@ package scan
 
 import (
 	"fmt"
+	"runtime"
+	"strings"
+	"sync"
+	"time"
+
 	"github.com/rafaeljusto/shelter/Godeps/_workspace/src/github.com/miekg/dns"
 	"github.com/rafaeljusto/shelter/config"
 	"github.com/rafaeljusto/shelter/dao"
 	"github.com/rafaeljusto/shelter/database/mongodb"
 	"github.com/rafaeljusto/shelter/log"
 	"github.com/rafaeljusto/shelter/model"
-	"runtime"
-	"strings"
-	"sync"
-	"time"
 )
 
 // When converting a DNSKEY into a DS we need to choose wich digest type are we going to
@@ -40,6 +41,18 @@ func ScanDomains() {
 			log.Printf("Panic detected while scanning domains. Details: %v\n%s", r, buf)
 		}
 	}()
+
+	log.Info("Start scan job")
+	defer func() {
+		log.Info("End scan job")
+	}()
+
+	log.Debugf("Initializing database with the parameters: URIS - %v | Name - %s | Auth - %t | Username - %s",
+		config.ShelterConfig.Database.URIs,
+		config.ShelterConfig.Database.Name,
+		config.ShelterConfig.Database.Auth.Enabled,
+		config.ShelterConfig.Database.Auth.Username,
+	)
 
 	database, databaseSession, err := mongodb.Open(
 		config.ShelterConfig.Database.URIs,

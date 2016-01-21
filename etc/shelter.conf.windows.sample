@@ -1,6 +1,7 @@
 {
   "basePath": "c:\\Program Files\\shelter",
   "logFilename": "log\\shelter.log",
+  "logLevel": "normal",
   "languages": [ "en-US", "pt-BR", "es-ES" ],
 
   "database": {

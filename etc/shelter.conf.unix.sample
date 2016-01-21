@@ -1,6 +1,7 @@
 {
   "basePath": "/usr/shelter",
   "logFilename": "var/log/shelter.log",
+  "logLevel": "normal",
   "languages": [ "en-US", "pt-BR", "es-ES" ],
 
   "database": {

@@ -27,6 +27,19 @@ const (
 // AuthenticationType is the text that represents the authentication type
 type AuthenticationType string
 
+// List of possible log levels
+const (
+	// LogLevelNormal logs only errors
+	LogLevelNormal LogLevel = "normal"
+	// LogLevelInfo logs services triggers
+	LogLevelInfo LogLevel = "info"
+	// LogLevelDebug logs development useful messages
+	LogLevelDebug LogLevel = "debug"
+)
+
+// LogLevel allows different types of verbosity in the log file
+type LogLevel string
+
 // Config structure describes all the configuration variables used in the Shelter system
 type Config struct {
 	// Base path of the system, all other paths will prepend this path. This is useful to
@@ -35,6 +48,9 @@ type Config struct {
 
 	// Path and name of the file that will receive all the messages from the Shelter system
 	LogFilename string
+
+	// LogLevel allows to define the verbosity of the system
+	LogLevel LogLevel
 
 	// List of supported languages. When adding a new language, remember to respect the IANA
 	// Language Subtag Registry file to define the name (e.g. en-US, pt-BR) and to add the

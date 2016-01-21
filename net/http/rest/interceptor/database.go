@@ -6,11 +6,12 @@
 package interceptor
 
 import (
+	"net/http"
+
 	"github.com/rafaeljusto/shelter/Godeps/_workspace/src/gopkg.in/mgo.v2"
 	"github.com/rafaeljusto/shelter/config"
 	"github.com/rafaeljusto/shelter/database/mongodb"
 	"github.com/rafaeljusto/shelter/log"
-	"net/http"
 )
 
 type DatabaseHandler interface {
@@ -29,6 +30,13 @@ func NewDatabase(h DatabaseHandler) *Database {
 }
 
 func (i *Database) Before(w http.ResponseWriter, r *http.Request) {
+	log.Debugf("Initializing database with the parameters: URIS - %v | Name - %s | Auth - %t | Username - %s",
+		config.ShelterConfig.Database.URIs,
+		config.ShelterConfig.Database.Name,
+		config.ShelterConfig.Database.Auth.Enabled,
+		config.ShelterConfig.Database.Auth.Username,
+	)
+
 	database, databaseSession, err := mongodb.Open(
 		config.ShelterConfig.Database.URIs,
 		config.ShelterConfig.Database.Name,
@@ -48,5 +56,7 @@ func (i *Database) Before(w http.ResponseWriter, r *http.Request) {
 }
 
 func (i *Database) After(w http.ResponseWriter, r *http.Request) {
-	i.databaseHandler.GetDatabaseSession().Close()
+	if i.databaseHandler.GetDatabaseSession() != nil {
+		i.databaseHandler.GetDatabaseSession().Close()
+	}
 }
