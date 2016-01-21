@@ -1,18 +1,6 @@
 Shelter
 =======
 
-version x.x
------------
-
-  New Feature:
-  * Log levels (normal, info and debug) to make the system more verbose
-
-  Fixes:
-  * Do not panic when we try to close a nil database connection
-  * Do not panic when the SMTP password is too small
-  * Web client header expanded to full screen width
-  * Dockerfile don't need to copy configuration file to the container anymore
-
 version 0.3
 -----------
 
@@ -26,6 +14,7 @@ version 0.3
   * FQDN is now returned in unicode format for IDN domains
   * Web client now allows removing multiple domains at once
   * Detects proxy in ACL check
+  * Log levels (normal, info and debug) to make the system more verbose
 
   Fixes:
   * Handy framework now use the same log of the shelter system
@@ -48,6 +37,10 @@ version 0.3
   * Scheduler now uses timezone in number format to avoid abbreviation problems
   * Add buttons after importing a domain in the web client are now working
   * Parsing IPv6 remote address correctly
+  * Do not panic when we try to close a nil database connection
+  * Do not panic when the SMTP password is too small
+  * Web client header expanded to full screen width
+  * Dockerfile don't need to copy configuration file to the container anymore
 
 version 0.2
 -----------

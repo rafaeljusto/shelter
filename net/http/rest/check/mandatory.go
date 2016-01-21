@@ -9,10 +9,12 @@ import (
 	"crypto/md5"
 	"encoding/base64"
 	"errors"
-	"github.com/rafaeljusto/shelter/net/http/rest/messages"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/rafaeljusto/shelter/log"
+	"github.com/rafaeljusto/shelter/net/http/rest/messages"
 )
 
 const (
@@ -253,5 +255,10 @@ func HTTPAuthorization(r *http.Request, secretFinder func(string) (string, error
 	}
 
 	signature := GenerateSignature(stringToSign, secret)
-	return signature == secretParts[1], nil
+	if ok := signature == secretParts[1]; !ok {
+		log.Debugf("REST server is expecting signature '%s' and got '%s'")
+		return false, nil
+	}
+
+	return true, nil
 }

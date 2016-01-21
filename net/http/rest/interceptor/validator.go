@@ -8,14 +8,15 @@ package interceptor
 import (
 	"bytes"
 	"errors"
+	"io/ioutil"
+	"net/http"
+
 	"github.com/rafaeljusto/shelter/Godeps/_workspace/src/github.com/rafaeljusto/handy/interceptor"
 	"github.com/rafaeljusto/shelter/config"
 	"github.com/rafaeljusto/shelter/log"
 	"github.com/rafaeljusto/shelter/net/http/rest/check"
 	"github.com/rafaeljusto/shelter/net/http/rest/messages"
 	"github.com/rafaeljusto/shelter/secret"
-	"io/ioutil"
-	"net/http"
 )
 
 // List of possible errors that can occur when calling functions from this file. Other
@@ -156,8 +157,6 @@ func (i *Validator) Before(w http.ResponseWriter, r *http.Request) {
 			return "", err
 		}
 
-		// In the near future the secret will be encrypted in the configuration file and the
-		// decrypt process can generate problems
 		return s, nil
 	})
 
