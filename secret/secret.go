@@ -6,6 +6,7 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"encoding/base64"
+	"fmt"
 )
 
 // Encrypt uses the secret to encode the password in the configuration file
@@ -41,6 +42,10 @@ func Decrypt(input string) (string, error) {
 	inputBytes, err := base64.StdEncoding.DecodeString(input)
 	if err != nil {
 		return "", err
+	}
+
+	if len(inputBytes) < block.BlockSize() {
+		return "", fmt.Errorf("invalid password size. It should be encrypted!")
 	}
 
 	iv := inputBytes[:block.BlockSize()]
