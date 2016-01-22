@@ -133,6 +133,10 @@ func notifyDomain(domain *model.Domain) error {
 			append(emailsPerLanguage[owner.Language], owner.Email.Address)
 	}
 
+	if len(emailsPerLanguage) == 0 {
+		log.Infof("There's no owner to notify domain %s", domain.FQDN)
+	}
+
 	server := fmt.Sprintf("%s:%d",
 		config.ShelterConfig.Notification.SMTPServer.Server,
 		config.ShelterConfig.Notification.SMTPServer.Port,
