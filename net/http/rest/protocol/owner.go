@@ -7,9 +7,9 @@ package protocol
 
 import (
 	"errors"
-	"github.com/rafaeljusto/shelter/model"
 	"net/mail"
-	"strings"
+
+	"github.com/rafaeljusto/shelter/model"
 )
 
 // List of possible errors that can occur when calling methods from this object. Other
@@ -75,16 +75,8 @@ type OwnerResponse struct {
 // Convert a owner of the system into a format with limited information to return it to
 // the user. For now we are not limiting any information
 func toOwnerResponse(owner model.Owner) OwnerResponse {
-	// E-mail to string conversion formats the address as a valid RFC 5322 address. If the
-	// address's name contains non-ASCII characters the name will be rendered according to
-	// RFC 2047. We are going to remove the "<" and ">" from the e-mail address for better
-	// look
-	email := owner.Email.String()
-	email = strings.TrimLeft(email, "<")
-	email = strings.TrimRight(email, ">")
-
 	return OwnerResponse{
-		Email:    email,
+		Email:    owner.Email.Address,
 		Language: owner.Language,
 	}
 }
