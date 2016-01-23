@@ -51,7 +51,7 @@ workspace=$workspace/src/github.com/rafaeljusto/shelter
 current_dir=`pwd`
 cd $workspace
 go build
-cd $workspace/utils
+cd $workspace/utils/password
 go build -o password password.go
 cd $workspace/deploy/easyconf
 go build
