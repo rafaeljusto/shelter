@@ -6,7 +6,7 @@
 
   "database": {
     "name": "shelter",
-    "uris": [ "localhost:27017" ],
+    "uris": [ "127.0.0.1:27017" ],
     "auth": {
       "enabled": false
     }
