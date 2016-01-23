@@ -33,6 +33,7 @@
 package bson
 
 import (
+	"bytes"
 	"crypto/md5"
 	"crypto/rand"
 	"encoding/binary"
@@ -117,7 +118,7 @@ type M map[string]interface{}
 // using a map is generally more comfortable. See bson.M and bson.RawD.
 type D []DocElem
 
-// See the D type.
+// DocElem is an element of the bson.D document representation.
 type DocElem struct {
 	Name  string
 	Value interface{}
@@ -188,15 +189,24 @@ func IsObjectIdHex(s string) bool {
 
 // objectIdCounter is atomically incremented when generating a new ObjectId
 // using NewObjectId() function. It's used as a counter part of an id.
-var objectIdCounter uint32 = 0
+var objectIdCounter uint32 = readRandomUint32()
+
+// readRandomUint32 returns a random objectIdCounter.
+func readRandomUint32() uint32 {
+	var b [4]byte
+	_, err := io.ReadFull(rand.Reader, b[:])
+	if err != nil {
+		panic(fmt.Errorf("cannot read random object id: %v", err))
+	}
+	return uint32((uint32(b[0]) << 0) | (uint32(b[1]) << 8) | (uint32(b[2]) << 16) | (uint32(b[3]) << 24))
+}
 
 // machineId stores machine id generated once and used in subsequent calls
 // to NewObjectId function.
 var machineId = readMachineId()
 
-// readMachineId generates machine id and puts it into the machineId global
-// variable. If this function fails to get the hostname, it will cause
-// a runtime error.
+// readMachineId generates and returns a machine id.
+// If this function fails to get the hostname it will cause a runtime error.
 func readMachineId() []byte {
 	var sum [3]byte
 	id := sum[:]
@@ -262,8 +272,14 @@ func (id ObjectId) MarshalJSON() ([]byte, error) {
 	return []byte(fmt.Sprintf(`"%x"`, string(id))), nil
 }
 
+var nullBytes = []byte("null")
+
 // UnmarshalJSON turns *bson.ObjectId into a json.Unmarshaller.
 func (id *ObjectId) UnmarshalJSON(data []byte) error {
+	if len(data) == 2 && data[0] == '"' && data[1] == '"' || bytes.Equal(data, nullBytes) {
+		*id = ""
+		return nil
+	}
 	if len(data) != 26 || data[0] != '"' || data[25] != '"' {
 		return errors.New(fmt.Sprintf("Invalid ObjectId in JSON: %s", string(data)))
 	}
@@ -386,6 +402,15 @@ type JavaScript struct {
 	Scope interface{}
 }
 
+// DBPointer refers to a document id in a namespace.
+//
+// This type is deprecated in the BSON specification and should not be used
+// except for backwards compatibility with ancient applications.
+type DBPointer struct {
+	Namespace string
+	Id        ObjectId
+}
+
 const initialBufferSize = 64
 
 func handleErr(err *error) {
@@ -405,7 +430,8 @@ func handleErr(err *error) {
 }
 
 // Marshal serializes the in value, which may be a map or a struct value.
-// In the case of struct values, only exported fields will be serialized.
+// In the case of struct values, only exported fields will be serialized,
+// and the order of serialized fields will match that of the struct itself.
 // The lowercased field name is used as the key for each exported field,
 // but this behavior may be changed using the respective field tag.
 // The tag may also contain flags to tweak the marshalling behavior for
@@ -481,10 +507,17 @@ func Marshal(in interface{}) (out []byte, err error) {
 //
 // Pointer values are initialized when necessary.
 func Unmarshal(in []byte, out interface{}) (err error) {
+	if raw, ok := out.(*Raw); ok {
+		raw.Kind = 3
+		raw.Data = in
+		return nil
+	}
 	defer handleErr(&err)
 	v := reflect.ValueOf(out)
 	switch v.Kind() {
-	case reflect.Map, reflect.Ptr:
+	case reflect.Ptr:
+		fallthrough
+	case reflect.Map:
 		d := newDecoder(in)
 		d.readDocTo(v)
 	case reflect.Struct:

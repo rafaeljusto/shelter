@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/codegangsta/cli"
+	"github.com/rafaeljusto/shelter/Godeps/_workspace/src/github.com/codegangsta/cli"
 	"github.com/rafaeljusto/shelter/net/http/rest/check"
 )
 
