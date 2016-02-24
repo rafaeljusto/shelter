@@ -13,6 +13,7 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/rafaeljusto/shelter/config"
 	"github.com/rafaeljusto/shelter/dao"
@@ -161,6 +162,7 @@ func notifyDomain(domain *model.Domain) error {
 			Domain: *domain,
 			From:   config.ShelterConfig.Notification.From,
 			To:     strings.Join(emails, ","),
+			Date:   FormatDate(time.Now()),
 		}
 
 		var msg bytes.Buffer
@@ -214,3 +216,9 @@ func notifyDomain(domain *model.Domain) error {
 
 	return nil
 }
+
+// FormatDate returns a compliant RFC5322 datetime
+func FormatDate(datetime time.Time) string {
+    return date.Format(datetime.RFC1123Z)
+}
+
