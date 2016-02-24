@@ -7,14 +7,15 @@ package notification
 
 import (
 	"fmt"
-	"github.com/rafaeljusto/shelter/config"
-	"github.com/rafaeljusto/shelter/model"
 	"io/ioutil"
 	"path/filepath"
 	"strings"
 	"sync"
 	"text/template"
 	"time"
+
+	"github.com/rafaeljusto/shelter/config"
+	"github.com/rafaeljusto/shelter/model"
 )
 
 var (
@@ -84,6 +85,9 @@ func LoadTemplates() error {
 			"nsStatusEq":       nameserverStatusEquals,
 			"dsStatusEq":       dsStatusEquals,
 			"isNearExpiration": isNearExpirationDS,
+			"dateNow": func() string {
+				return time.Now().UTC().Format(time.RFC1123Z)
+			},
 		}).Parse(string(templateContent))
 
 		if err != nil {
