@@ -3,7 +3,7 @@
 Date: {{dateNow}}
 From: {{.From}}
 To: {{.To}}
-Subject: Problema de configuración con el dominio {{$domain.FQDN}}
+Subject: {{normalizeEmailHeader (printf "%s %s" "Problema de configuración con el dominio" (fqdnToUnicode $domain.FQDN))}}
 
 
 Estimado Sr./Sra.,

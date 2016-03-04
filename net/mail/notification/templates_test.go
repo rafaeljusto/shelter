@@ -6,13 +6,14 @@
 package notification
 
 import (
-	"github.com/rafaeljusto/shelter/config"
-	"github.com/rafaeljusto/shelter/model"
 	"io/ioutil"
 	"os"
 	"testing"
 	"text/template"
 	"time"
+
+	"github.com/rafaeljusto/shelter/config"
+	"github.com/rafaeljusto/shelter/model"
 )
 
 func TestLoadTemplates(t *testing.T) {
@@ -139,5 +140,47 @@ func TestIsNearExpirationDS(t *testing.T) {
 		ExpiresAt: time.Now().Add(48 * time.Hour),
 	}) {
 		t.Error("Returning near expiration is wrong scenarios")
+	}
+}
+
+func TestFQDNToUnicode(t *testing.T) {
+	data := []struct {
+		fqdn     string
+		expected string
+	}{
+		{fqdn: "example.com", expected: "example.com"},
+		{fqdn: "xn--mgbaal8b0b9b2b.icom.museum", expected: "افغانستا.icom.museum"},
+		{fqdn: "xn--romnia-yta.icom.museum", expected: "românia.icom.museum"},
+		{fqdn: "xn--!.com", expected: "xn--!.com"},
+	}
+
+	for i, item := range data {
+		fqdn := fqdnToUnicode(item.fqdn)
+		if fqdn != item.expected {
+			t.Errorf("item %d: expected FQDN “%s” and got “%s”", i, item.expected, fqdn)
+		}
+	}
+}
+
+func TestNormalizeEmailHeader(t *testing.T) {
+	data := []struct {
+		value    string
+		expected string
+	}{
+		{
+			value:    "u understand the example.",
+			expected: "=?UTF-8?B?dSB1bmRlcnN0YW5kIHRoZSBleGFtcGxlLg==?=",
+		},
+		{
+			value:    "Problema de configuración con el dominio sebastián.cl",
+			expected: "=?UTF-8?B?UHJvYmxlbWEgZGUgY29uZmlndXJhY2nDs24gY29uIGVsIGRvbWluaW8gc2ViYXN0acOhbi5jbA==?=",
+		},
+	}
+
+	for i, item := range data {
+		value := normalizeEmailHeader(item.value)
+		if value != item.expected {
+			t.Errorf("item %d: expected value “%s” and got “%s”", i, item.expected, value)
+		}
 	}
 }

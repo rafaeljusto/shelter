@@ -3,7 +3,7 @@
 Date: {{dateNow}}
 From: {{.From}}
 To: {{.To}}
-Subject: Misconfiguration on domain {{$domain.FQDN}}
+Subject: {{normalizeEmailHeader (printf "%s %s" "Misconfiguration on domain" (fqdnToUnicode $domain.FQDN))}}
 
 
 Dear Sir/Madam,

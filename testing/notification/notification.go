@@ -7,17 +7,18 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io/ioutil"
+	"net"
+	"net/mail"
+	"os"
+	"time"
+
 	"github.com/rafaeljusto/shelter/config"
 	"github.com/rafaeljusto/shelter/dao"
 	"github.com/rafaeljusto/shelter/database/mongodb"
 	"github.com/rafaeljusto/shelter/model"
 	"github.com/rafaeljusto/shelter/net/mail/notification"
 	"github.com/rafaeljusto/shelter/testing/utils"
-	"io/ioutil"
-	"net"
-	"net/mail"
-	"os"
-	"time"
 )
 
 var (
@@ -90,7 +91,7 @@ func createTemplateFile() string {
 
 From: {{.From}}
 To: {{.To}}
-Subject: Misconfiguration on domain {{$domain.FQDN}}
+Subject: {{normalizeEmailHeader (printf "%s %s" "Misconfiguration on domain" (fqdnToUnicode $domain.FQDN))}}
 
 
 Dear Sir/Madam,
@@ -231,7 +232,7 @@ func simpleNotification(domainDAO dao.DomainDAO, templateName string,
 			utils.Fatalln("E-mail to header is different", nil)
 		}
 
-		if message.Header.Get("Subject") != "Misconfiguration on domain example.com.br." {
+		if message.Header.Get("Subject") != "=?UTF-8?B?TWlzY29uZmlndXJhdGlvbiBvbiBkb21haW4gZXhhbXBsZS5jb20uYnIu?=" {
 			utils.Fatalln("E-mail subject header is different", nil)
 		}
 

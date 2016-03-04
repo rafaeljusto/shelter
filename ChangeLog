@@ -15,6 +15,7 @@ version 0.3
   * Web client now allows removing multiple domains at once
   * Detects proxy in ACL check
   * Log levels (normal, info and debug) to make the system more verbose
+  * Allow non-ASCII characters in e-mail headers (normalizeEmailHeader function)
 
   Fixes:
   * Handy framework now use the same log of the shelter system
@@ -41,6 +42,7 @@ version 0.3
   * Do not panic when the SMTP password is too small
   * Web client header expanded to full screen width
   * Dockerfile don't need to copy configuration file to the container anymore
+  * Add missing Date header in notification e-mails
 
 version 0.2
 -----------

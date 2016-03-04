@@ -6,6 +6,7 @@
 package notification
 
 import (
+	"encoding/base64"
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
@@ -14,6 +15,7 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/rafaeljusto/shelter/Godeps/_workspace/src/code.google.com/p/go.net/idna"
 	"github.com/rafaeljusto/shelter/config"
 	"github.com/rafaeljusto/shelter/model"
 )
@@ -82,9 +84,11 @@ func LoadTemplates() error {
 		}
 
 		t, err := template.New("notification").Funcs(template.FuncMap{
-			"nsStatusEq":       nameserverStatusEquals,
-			"dsStatusEq":       dsStatusEquals,
-			"isNearExpiration": isNearExpirationDS,
+			"nsStatusEq":           nameserverStatusEquals,
+			"dsStatusEq":           dsStatusEquals,
+			"isNearExpiration":     isNearExpirationDS,
+			"fqdnToUnicode":        fqdnToUnicode,
+			"normalizeEmailHeader": normalizeEmailHeader,
 			"dateNow": func() string {
 				return time.Now().UTC().Format(time.RFC1123Z)
 			},
@@ -154,4 +158,20 @@ func isNearExpirationDS(ds model.DS) bool {
 	// some configuration problems
 	expirationAlert := time.Now().Add(time.Duration(maxExpirationAlertDays*24) * time.Hour)
 	return ds.ExpiresAt.Before(expirationAlert)
+}
+
+// fqdnToUnicode converts a FQDN from ACE format to unicode
+func fqdnToUnicode(fqdn string) string {
+	unicode, err := idna.ToUnicode(fqdn)
+	if err != nil {
+		// if it's an invalid ace format, just return the FQDN
+		return fqdn
+	}
+	return unicode
+}
+
+// normalizeEmailHeader uses the definitions of RFC 1342 to allow non ASCII
+// characters in e-mail headers
+func normalizeEmailHeader(value string) string {
+	return fmt.Sprintf("=?UTF-8?B?%s?=", base64.StdEncoding.EncodeToString([]byte(value)))
 }
