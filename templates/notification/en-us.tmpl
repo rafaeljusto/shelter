@@ -60,7 +60,7 @@ domain {{$domain.FQDN}}.
 
 {{range $ds := $domain.DSSet}}
   {{if dsStatusEq $ds.LastStatus "TIMEOUT"}}
-  * DS with keytag {{$ds.Keytag}} isn't answering the DNS requests.
+  * DS with keytag {{$ds.Keytag}} couldn't be retrieved (network timeout).
     Please check your firewalls and DNS server and make sure that the service is up and
     the port 53 via UDP and TCP are allowed. Also, verify if your network supports
     fragmented UDP packagaes and UDP packages above 512 bytes (check EDSN0 for more

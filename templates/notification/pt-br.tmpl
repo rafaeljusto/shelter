@@ -62,7 +62,7 @@ domínio {{$domain.FQDN}}.
 
 {{range $ds := $domain.DSSet}}
   {{if dsStatusEq $ds.LastStatus "TIMEOUT"}}
-  * DS com keytag {{$ds.Keytag}} não esta respondendo as consultas DNS.
+  * DS com keytag {{$ds.Keytag}} não pode ser obtido (timeout).
     Por favor verifique os seus firewalls e servidor DNS para garantir que o serviço esta
     liberado na porta 53 via protocolo UDP e TCP. Além disso, verifique se sua rede
     suporta pacotes UDP fragmentados e pacotes UDP com tamanho superior a 512 bytes (para
